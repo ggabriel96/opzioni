@@ -1,3 +1,5 @@
+build/
+
 # VS Code
 .vscode/
 .devcontainer/
