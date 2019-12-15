@@ -7,26 +7,6 @@
 namespace opz
 {
 
-template <>
-auto convert<std::string>(std::optional<std::string> value) -> std::string
-{
-    return value.value_or("");
-}
-
-// https://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/
-template <>
-auto convert<std::vector<int>>(std::optional<std::string> value) -> std::vector<int>
-{
-    std::vector<int> v;
-    if (!value) return v;
-    std::string token;
-    std::istringstream token_stream(value.value());
-    while (std::getline(token_stream, token, ',')) {
-        v.emplace_back(convert<int>(token));
-    }
-    return v;
-}
-
 SplitArg split_arg(std::string const &whole_arg) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
     auto const eq_idx = whole_arg.find('=', num_of_dashes);

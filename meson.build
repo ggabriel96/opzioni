@@ -9,7 +9,7 @@ include_dir = include_directories('include/')
 
 opzioni_lib = library(
     'opzioni',
-    'src/opzioni.cpp',
+    ['src/opzioni.cpp', 'src/converters.cpp'],
     include_directories: include_dir,
     install: true
 )
