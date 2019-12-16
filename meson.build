@@ -2,7 +2,7 @@ project(
     'opzioni', 'cpp',
     version: '0.1.0',
     license: 'MIT',
-    default_options: ['cpp_std=c++2a', 'cpp_args=-fconcepts']
+    default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
 
 include_dir = include_directories('include/')

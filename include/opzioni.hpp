@@ -23,25 +23,8 @@ using AnyConverter = std::function<std::any(std::optional<std::string>)>;
 template <typename TargetType>
 using TypedConverter = std::function<TargetType(std::optional<std::string>)>;
 
-template <class T>
-concept integral = std::is_integral_v<T>;
-
 template <typename TargetType>
 auto convert(std::optional<std::string>) -> TargetType;
-
-template <integral I>
-auto convert(std::optional<std::string> arg_val) -> I
-{
-    if (arg_val) {
-        I result;
-        auto const value = arg_val.value();
-        auto const cs = value.c_str();
-        // TODO: deal with return of from_chars
-        auto [read_stop_ptr, errc] = std::from_chars(cs, cs + value.length(), result);
-        return result;
-    }
-    throw std::invalid_argument("Cannot convert nonexistant number");
-}
 
 template <typename T>
 struct ArgSpec
