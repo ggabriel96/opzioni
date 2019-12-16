@@ -31,11 +31,11 @@ struct ArgSpec
 {
     std::string name;
     std::string help;
-    std::set<T> choices;
     bool required = false;
-    AnyConverter converter = opz::convert<T>;
+    std::set<T> choices;
     std::optional<T> default_value = std::nullopt;
-    std::optional<T> implicit_value = std::nullopt;
+    std::optional<T> flag_value = std::nullopt;
+    AnyConverter converter = opz::convert<T>;
 };
 
 template<typename T>
@@ -46,12 +46,6 @@ ArgSpec(std::string, std::string, std::set<T>, T) -> ArgSpec<T>;
 
 template<typename T>
 ArgSpec(std::string, std::string, std::set<T>, std::optional<T>) -> ArgSpec<T>;
-
-template<typename T>
-ArgSpec(std::string, std::string, std::set<T>, bool, AnyConverter, T) -> ArgSpec<T>;
-
-template<typename T>
-ArgSpec(std::string, std::string, std::set<T>, bool, AnyConverter, std::optional<T>) -> ArgSpec<T>;
 
 struct SplitArg
 {
@@ -66,6 +60,7 @@ struct ArgInfo
     std::string help;
     bool required = false;
     std::any default_value;
+    std::any flag_value;
     AnyConverter converter;
 };
 
@@ -93,13 +88,11 @@ public:
     template <typename T>
     void add_arg(ArgSpec<T> spec)
     {
-        if (!spec.choices.empty() || spec.implicit_value) {
+        if (!spec.choices.empty()) {
             spec.converter = [
                 choices = spec.choices,
-                converter = spec.converter,
-                implicit_value = spec.implicit_value
+                converter = spec.converter
             ](std::optional<std::string> value) -> std::any {
-                if (!value && implicit_value) return implicit_value.value();
                 auto const result = apply_conversion<T>(converter, value);
                 if (!choices.empty() && !choices.contains(result)) {
                     throw std::invalid_argument("Provided value is not in the set of possible values");
@@ -111,18 +104,17 @@ public:
             auto const num_of_dashes = name.find_first_not_of('-');
             return name.substr(num_of_dashes);
         }();
-        // TODO: deduce action from T, e.g. `flag` if T = bool
         this->index[spec.name] = this->arguments.size();
         this->arguments.emplace_back(ArgInfo{
             .name = spec.name,
             .help = spec.help,
             .required = spec.required,
-            .default_value = spec.default_value,
+            .default_value = spec.default_value ? *spec.default_value : std::any{},
+            .flag_value = spec.flag_value ? *spec.flag_value : std::any{},
             .converter = spec.converter
         });
     }
     
-
     ArgMap parse_args(int, char const *[]) const;
     ArgInfo get_arg(std::string const &) const;
 
