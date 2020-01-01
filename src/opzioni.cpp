@@ -80,6 +80,12 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
                 continue;
             } catch (std::out_of_range const &) {
                 // support for arguments like -v2, where v is name and 2 is value
+                auto const name = split.name.substr(0, 1);
+                auto const value = split.name.substr(1);
+                auto const arg = this->options.at(name);
+                auto const parsed_value = arg.converter(value);
+                arg_map.args[arg.name] = ParsedArg{parsed_value};
+                continue;
             }
         } else if (split.num_of_dashes == 0) {
             auto const positional_arg = this->positional_args[positional_idx];
