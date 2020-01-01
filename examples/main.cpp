@@ -18,9 +18,12 @@ int main(int argc, char const *argv[])
 
     opz::ArgParser ap;
     ap.add_arg<std::string>({
-        .name = "--name",
-        .help = "Your first name",
-        .required = true
+        .name = "name",
+        .help = "Your first name"
+    });
+    ap.add_arg<std::string>({
+        .name = "--last-name",
+        .help = "Your last name",
     });
     ap.add_arg<int>({
         .name = "-v",
@@ -49,6 +52,7 @@ int main(int argc, char const *argv[])
     std::cout << std::boolalpha;
     std::cout << "\nNumber of parsed arguments: " << args.size() << nl;
     std::cout << "name: " << args["name"].as<std::string>() << nl;
+    std::cout << "last name: " << args["last-name"].as<std::string>() << nl;
     std::cout << "v: " << args["v"].as<int>() << nl;
     std::cout << "a: " << args["a"].as<bool>() << nl;
     std::cout << "b: " << args["b"].as<bool>() << nl;

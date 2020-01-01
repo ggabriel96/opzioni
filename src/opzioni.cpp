@@ -9,7 +9,16 @@ namespace opz
 
 SplitArg split_arg(std::string const &whole_arg) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
+    if (num_of_dashes == 0) {
+        // no dashes prefix, hence positional argument
+        return SplitArg{
+            .num_of_dashes = 0,
+            .name = "",
+            .value = whole_arg
+        };
+    }
     if (num_of_dashes == std::string::npos) {
+        // all dashes, hence disables future parsing if length is 2
         return SplitArg{
             .num_of_dashes = whole_arg.length(),
             .name = "",
@@ -18,6 +27,8 @@ SplitArg split_arg(std::string const &whole_arg) {
     }
     auto const eq_idx = whole_arg.find('=', num_of_dashes);
     if (eq_idx == std::string::npos) {
+        // has dashes prefix, but no equals,
+        // hence either long flag or long option with next CLI argument as value
         auto const name = whole_arg.substr(num_of_dashes);
         return SplitArg{
             .num_of_dashes = num_of_dashes,
@@ -25,6 +36,7 @@ SplitArg split_arg(std::string const &whole_arg) {
             .value = std::nullopt
         };
     }
+    // has dashes prefix and equals, hence long option
     auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
     auto const value = whole_arg.substr(eq_idx + 1);
     return SplitArg{
@@ -32,11 +44,6 @@ SplitArg split_arg(std::string const &whole_arg) {
         .name = name,
         .value = value
     };
-}
-
-ArgInfo ArgParser::get_arg(std::string const &name) const {
-    auto const arg_idx = this->index.at(name);
-    return this->arguments[arg_idx];
 }
 
 auto ArgParser::get_remaining_args(int start_idx, int argc, char const *argv[]) const {
@@ -50,6 +57,7 @@ auto ArgParser::get_remaining_args(int start_idx, int argc, char const *argv[]) 
 ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
 {
     ArgMap arg_map;
+    int positional_idx = 0;
     std::cout << "> parse_args\n";
     for (int i = 1; i < argc; ++i)
     {
@@ -64,19 +72,29 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
         } else if (split.num_of_dashes == 1 && split.name.length() > 1 && !split.value) {
             // support for arguments like -abc where a, b and c are flags
             // TODO: extract into separate function!?
-            std::for_each(split.name.begin(), split.name.end(), [this, &arg_map](char const &c) {
-                auto const flag_arg = this->get_arg(std::string(1, c));
-                arg_map.args[flag_arg.name] = flag_arg.flag_value;
-            });
+            try {
+                std::for_each(split.name.begin(), split.name.end(), [this, &arg_map](char const &c) {
+                    auto const flag_arg = this->options.at(std::string(1, c));
+                    arg_map.args[flag_arg.name] = ParsedArg{flag_arg.flag_value};
+                });
+                continue;
+            } catch (std::out_of_range const &) {
+                // support for arguments like -v2, where v is name and 2 is value
+            }
+        } else if (split.num_of_dashes == 0) {
+            auto const positional_arg = this->positional_args[positional_idx];
+            auto const parsed_value = positional_arg.converter(split.value);
+            arg_map.args[positional_arg.name] = ParsedArg{parsed_value};
+            ++positional_idx;
             continue;
         }
-        auto const arg = this->get_arg(split.name);
-        std::cout << ">> get_arg: " << arg.help << '\n';
+        auto const arg = this->options.at(split.name);
+        std::cout << ">> arg: " << arg.help << '\n';
         if (arg.flag_value.has_value()) {
             std::cout << ">> flag_value\n";
             if (split.value.has_value())
                 throw std::invalid_argument("Flag argument must not have a value");
-            arg_map.args[split.name] = arg.flag_value;
+            arg_map.args[split.name] = ParsedArg{arg.flag_value};
         } else {
             std::cout << ">> not flag_value\n";
             auto const arg_value = [&]() {

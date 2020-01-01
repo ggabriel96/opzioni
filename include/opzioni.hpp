@@ -101,45 +101,38 @@ public:
                 return result;
             };
         }
-        spec.name = [&name = spec.name]() {
-            auto const num_of_dashes = name.find_first_not_of('-');
-            return name.substr(num_of_dashes);
-        }();
-        this->index[spec.name] = this->arguments.size();
-        this->arguments.emplace_back(ArgInfo{
+        auto const num_of_dashes = spec.name.find_first_not_of('-');
+        if (num_of_dashes != std::string::npos && num_of_dashes > 0) spec.name = spec.name.substr(num_of_dashes);
+        auto const arg_info = ArgInfo{
             .name = spec.name,
             .help = spec.help,
             .required = spec.required,
             .default_value = spec.default_value ? *spec.default_value : std::any{},
             .flag_value = spec.flag_value ? *spec.flag_value : std::any{},
             .converter = spec.converter
-        });
+        };
+        if (num_of_dashes == 0) this->positional_args.push_back(arg_info);
+        else this->options[spec.name] = arg_info;
     }
     
     ArgMap parse_args(int, char const *[]) const;
-    ArgInfo get_arg(std::string const &) const;
 
 private:
-    std::vector<ArgInfo> arguments;
-    std::unordered_map<std::string, int> index;
+    std::vector<ArgInfo> positional_args;
+    std::unordered_map<std::string, ArgInfo> options;
 
     auto get_remaining_args(int, int, char const *[]) const;
 };
 
 struct ParsedArg
 {
-public:
-    ParsedArg() = default;
-    ParsedArg(std::any value) : value(value) {}
+    std::any value;
 
     template <typename TargetType>
     TargetType as() const
     {
         return std::any_cast<TargetType>(this->value);
     }
-
-private:
-    std::any value;
 };
 
 class ArgMap
