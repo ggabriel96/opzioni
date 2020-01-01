@@ -9,6 +9,13 @@ namespace opz
 
 SplitArg split_arg(std::string const &whole_arg) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
+    if (num_of_dashes == std::string::npos) {
+        return SplitArg{
+            .num_of_dashes = whole_arg.length(),
+            .name = "",
+            .value = std::nullopt
+        };
+    }
     auto const eq_idx = whole_arg.find('=', num_of_dashes);
     if (eq_idx == std::string::npos) {
         auto const name = whole_arg.substr(num_of_dashes);
@@ -32,10 +39,17 @@ ArgInfo ArgParser::get_arg(std::string const &name) const {
     return this->arguments[arg_idx];
 }
 
+auto ArgParser::get_remaining_args(int start_idx, int argc, char const *argv[]) const {
+    auto remaining_args = std::make_unique<std::vector<std::string>>();
+    int const remaining_args_count = argc - start_idx;
+    remaining_args->reserve(remaining_args_count);
+    std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(*remaining_args));
+    return remaining_args;
+}
+
 ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
 {
     ArgMap arg_map;
-    bool positional_after_dashes = false;
     std::cout << "> parse_args\n";
     for (int i = 1; i < argc; ++i)
     {
@@ -45,11 +59,8 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
         auto const split = split_arg(whole_arg);
         std::cout << ">> split_arg: " << split.num_of_dashes << ' ' << split.name << ' ' << (split.value ? *split.value : "nullopt") << '\n';
         if (split.num_of_dashes == 2 && split.name.empty()) {
-            if (positional_after_dashes) {
-                throw std::invalid_argument("Only positional arguments are allowed after \"--\"");
-            }
-            positional_after_dashes = true;
-            continue;
+            arg_map.remaining_args = get_remaining_args(i + 1, argc, argv);
+            break;
         } else if (split.num_of_dashes == 1 && split.name.length() > 1 && !split.value) {
             // support for arguments like -abc where a, b and c are flags
             // TODO: extract into separate function!?

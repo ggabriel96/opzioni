@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -121,6 +122,8 @@ public:
 private:
     std::vector<ArgInfo> arguments;
     std::unordered_map<std::string, int> index;
+
+    auto get_remaining_args(int, int, char const *[]) const;
 };
 
 struct ParsedArg
@@ -154,6 +157,7 @@ public:
         return this->args.size();
     }
 
+    std::unique_ptr<std::vector<std::string>> remaining_args;
 private:
     std::unordered_map<std::string, ParsedArg> args;
 

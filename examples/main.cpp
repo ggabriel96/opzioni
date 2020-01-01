@@ -1,11 +1,10 @@
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <vector>
 
 #include <opzioni.hpp>
-
-using namespace std;
 
 constexpr char nl = '\n';
 
@@ -13,12 +12,12 @@ int main(int argc, char const *argv[])
 {
     using opz::ArgSpec;
 
-    cout << "argv:\n";
-    for_each(argv, argv + argc, [](char const *arg) { cout << arg << nl; });
-    cout << nl;
+    std::cout << "argv:\n";
+    std::for_each(argv, argv + argc, [](char const *arg) { std::cout << arg << nl; });
+    std::cout << nl;
 
     opz::ArgParser ap;
-    ap.add_arg<string>({
+    ap.add_arg<std::string>({
         .name = "--name",
         .help = "Your first name",
         .required = true
@@ -41,19 +40,25 @@ int main(int argc, char const *argv[])
         .default_value = false,
         .flag_value = true
     });
-    ap.add_arg<vector<int>>({
+    ap.add_arg<std::vector<int>>({
         .name = "--numbers",
         .help = "A list of numbers"
     });
 
     auto const args = ap.parse_args(argc, argv);
-    cout << boolalpha;
-    cout << "\nNumber of parsed arguments: " << args.size() << nl;
-    cout << "name: " << args["name"].as<string>() << nl;
-    cout << "v: " << args["v"].as<int>() << nl;
-    cout << "a: " << args["a"].as<bool>() << nl;
-    cout << "b: " << args["b"].as<bool>() << nl;
-    auto const numbers = args["numbers"].as<vector<int>>();
-    cout << "numbers: " << nl;
-    for_each(begin(numbers), end(numbers), [](auto const &elem) { cout << "- " << elem << nl; });
+    std::cout << std::boolalpha;
+    std::cout << "\nNumber of parsed arguments: " << args.size() << nl;
+    std::cout << "name: " << args["name"].as<std::string>() << nl;
+    std::cout << "v: " << args["v"].as<int>() << nl;
+    std::cout << "a: " << args["a"].as<bool>() << nl;
+    std::cout << "b: " << args["b"].as<bool>() << nl;
+    auto const numbers = args["numbers"].as<std::vector<int>>();
+    std::cout << "numbers:\n";
+    std::for_each(begin(numbers), end(numbers), [](auto const &elem) { std::cout << "- " << elem << nl; });
+    if (args.remaining_args != nullptr) {
+        std::cout << "remaining_args:\n";
+        std::cout << "- size: " << args.remaining_args->size() << nl;
+        std::cout << "- capacity: " << args.remaining_args->capacity() << nl;
+        std::for_each(args.remaining_args->begin(), args.remaining_args->end(), [](auto const &elem) { std::cout << "- " << elem << nl; });
+    }
 }
