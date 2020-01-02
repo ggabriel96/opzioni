@@ -31,6 +31,12 @@ int main(int argc, char const *argv[])
         .choices = {0, 1, 2, 3, 4},
         .default_value = 0
     });
+    ap.add_arg<int>({
+        .name = "--flag",
+        .help = "Long flag",
+        .default_value = 7,
+        .flag_value = 11
+    });
     ap.add_arg<bool>({
         .name = "-a",
         .help = "Flag a",
@@ -54,6 +60,7 @@ int main(int argc, char const *argv[])
     std::cout << "name: " << args["name"].as<std::string>() << nl;
     std::cout << "last name: " << args["last-name"].as<std::string>() << nl;
     std::cout << "v: " << args["v"].as<int>() << nl;
+    std::cout << "flag: " << args["flag"].as<int>() << nl;
     std::cout << "a: " << args["a"].as<bool>() << nl;
     std::cout << "b: " << args["b"].as<bool>() << nl;
     auto const numbers = args["numbers"].as<std::vector<int>>();

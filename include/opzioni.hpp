@@ -17,7 +17,7 @@ namespace opz
 {
 
 class ArgMap;
-class ParsedArg;
+class ArgValue;
 
 using AnyConverter = std::function<std::any(std::optional<std::string>)>;
 
@@ -63,6 +63,10 @@ struct ArgInfo
     std::any default_value;
     std::any flag_value;
     AnyConverter converter;
+
+    bool is_flag() const {
+        return this->flag_value.has_value();
+    }
 };
 
 
@@ -121,10 +125,10 @@ private:
     std::vector<ArgInfo> positional_args;
     std::unordered_map<std::string, ArgInfo> options;
 
-    auto get_remaining_args(int, int, char const *[]) const;
+    bool is_multiple_short_flags(std::string const &) const;
 };
 
-struct ParsedArg
+struct ArgValue
 {
     std::any value;
 
@@ -138,7 +142,7 @@ struct ParsedArg
 class ArgMap
 {
 public:
-    ParsedArg const &operator[](std::string arg_name) const { return args.at(arg_name); }
+    ArgValue const &operator[](std::string arg_name) const { return args.at(arg_name); }
 
     template <typename TargetType>
     TargetType operator()(std::string arg_name) const
@@ -152,7 +156,7 @@ public:
 
     std::unique_ptr<std::vector<std::string>> remaining_args;
 private:
-    std::unordered_map<std::string, ParsedArg> args;
+    std::unordered_map<std::string, ArgValue> args;
 
     friend ArgMap ArgParser::parse_args(int, char const *[]) const;
 };
