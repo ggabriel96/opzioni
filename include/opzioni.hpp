@@ -84,15 +84,6 @@ struct Arg
     }
 };
 
-template<typename T>
-Arg(std::string, std::string, std::set<T>) -> Arg<T>;
-
-template<typename T>
-Arg(std::string, std::string, std::set<T>, T) -> Arg<T>;
-
-template<typename T>
-Arg(std::string, std::string, std::set<T>, std::optional<T>) -> Arg<T>;
-
 struct SplitArg
 {
     size_t num_of_dashes;
