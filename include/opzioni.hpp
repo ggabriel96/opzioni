@@ -93,18 +93,7 @@ public:
     template <typename T>
     void add_arg(ArgSpec<T> spec)
     {
-        if (!spec.choices.empty()) {
-            spec.converter = [
-                choices = spec.choices,
-                converter = spec.converter
-            ](std::optional<std::string> value) -> std::any {
-                auto const result = apply_conversion<T>(converter, value);
-                if (!choices.empty() && !choices.contains(result)) {
-                    throw std::invalid_argument("Provided value is not in the set of possible values");
-                }
-                return result;
-            };
-        }
+        if (!spec.choices.empty()) add_choice_checking_to_conversion(spec);
         auto const num_of_dashes = spec.name.find_first_not_of('-');
         if (num_of_dashes != std::string::npos && num_of_dashes > 0) spec.name = spec.name.substr(num_of_dashes);
         auto const arg_info = ArgInfo{
@@ -126,6 +115,18 @@ private:
     std::unordered_map<std::string, ArgInfo> options;
 
     bool is_multiple_short_flags(std::string const &) const;
+
+    template <typename T>
+    void add_choice_checking_to_conversion(ArgSpec<T> &spec) const noexcept
+    {
+        spec.converter = [choices = spec.choices,
+                          converter = spec.converter](std::optional<std::string> value) -> std::any {
+            auto const result = apply_conversion<T>(converter, value);
+            if (!choices.contains(result))
+                throw std::invalid_argument("Provided value is not in the set of possible values");
+            return result;
+        };
+    }
 };
 
 struct ArgValue
