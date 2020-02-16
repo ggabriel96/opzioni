@@ -10,49 +10,20 @@ constexpr char nl = '\n';
 
 int main(int argc, char const *argv[])
 {
-    using opz::ArgSpec;
+    using opz::Arg;
 
     std::cout << "argv:\n";
     std::for_each(argv, argv + argc, [](char const *arg) { std::cout << arg << nl; });
     std::cout << nl;
 
     opz::ArgParser ap;
-    ap.add_arg<std::string>({
-        .name = "name",
-        .help = "Your first name"
-    });
-    ap.add_arg<std::string>({
-        .name = "--last-name",
-        .help = "Your last name",
-    });
-    ap.add_arg<int>({
-        .name = "-v",
-        .help = "Level of verbosity",
-        .choices = {0, 1, 2, 3, 4},
-        .default_value = 0
-    });
-    ap.add_arg<int>({
-        .name = "--flag",
-        .help = "Long flag",
-        .default_value = 7,
-        .flag_value = 11
-    });
-    ap.add_arg<bool>({
-        .name = "-a",
-        .help = "Flag a",
-        .default_value = false,
-        .flag_value = true
-    });
-    ap.add_arg<bool>({
-        .name = "-b",
-        .help = "Flag b",
-        .default_value = false,
-        .flag_value = true
-    });
-    ap.add_arg<std::vector<int>>({
-        .name = "--numbers",
-        .help = "A list of numbers"
-    });
+    ap.add(Arg<std::string>().named("name").help("Your name"));
+    ap.add(Arg<std::string>().named("--last-name").help("Your last name"));
+    ap.add(Arg<int>().named("-v").help("Level of verbosity").among({0, 1, 2, 3, 4}).with_default(0));
+    ap.add(Arg<int>().named("--flag").help("Long flag").with_default(7).as_flag(11));
+    ap.add(Arg<bool>().named("-a").help("Short flag a").with_default(false).as_flag(true));
+    ap.add(Arg<bool>().named("-b").help("Short flag b").as_flag());
+    ap.add(Arg<std::vector<int>>().named("--numbers").help("A list of numbers"));
 
     auto const args = ap.parse_args(argc, argv);
     std::cout << std::boolalpha;
