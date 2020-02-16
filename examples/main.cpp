@@ -24,6 +24,12 @@ int main(int argc, char const *argv[])
     ap.add(Arg<bool>().named("-a").help("Short flag a").with_default(false).as_flag(true));
     ap.add(Arg<bool>().named("-b").help("Short flag b").as_flag());
     ap.add(Arg<std::vector<int>>().named("--numbers").help("A list of numbers"));
+    ap.add<int>({
+        .name = "-x",
+        .help_text = "Example of aggregate initialization with CTAD",
+        .is_required = false,
+        .default_value = 0
+    });
 
     auto const args = ap.parse_args(argc, argv);
     std::cout << std::boolalpha;
@@ -34,6 +40,7 @@ int main(int argc, char const *argv[])
     std::cout << "flag: " << args["flag"].as<int>() << nl;
     std::cout << "a: " << args["a"].as<bool>() << nl;
     std::cout << "b: " << args["b"].as<bool>() << nl;
+    std::cout << "x: " << args["x"].as<int>() << nl;
     auto const numbers = args["numbers"].as<std::vector<int>>();
     std::cout << "numbers:\n";
     std::for_each(begin(numbers), end(numbers), [](auto const &elem) { std::cout << "- " << elem << nl; });
