@@ -181,12 +181,6 @@ class ArgMap
 public:
     ArgValue const &operator[](std::string arg_name) const { return args.at(arg_name); }
 
-    template <typename TargetType>
-    TargetType operator()(std::string arg_name) const
-    {
-        return args.at(arg_name).as<TargetType>();
-    }
-
     auto size() const noexcept {
         return this->args.size();
     }
