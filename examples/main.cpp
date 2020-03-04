@@ -33,7 +33,7 @@ int main(int argc, char const *argv[])
 
     auto const args = ap.parse_args(argc, argv);
     std::cout << std::boolalpha;
-    std::cout << "\nNumber of parsed arguments: " << args.size() << nl;
+    std::cout << "\nNumber of arguments: " << args.size() << nl;
     std::cout << "name: " << args["name"].as<std::string>() << nl;
     std::cout << "last name: " << args["last-name"].as<std::string>() << nl;
     std::cout << "v: " << args["v"].as<int>() << nl;
