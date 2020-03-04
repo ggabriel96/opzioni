@@ -119,12 +119,18 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
                     }
                 }();
                 std::cout << ">> arg_value: " << arg_value << '\n';
-                
+
                 auto const parsed_value = arg.converter(arg_value);
                 arg_map.args[split.name] = ArgValue{parsed_value};
             }
         }
     }
+    std::for_each(this->options.begin(), this->options.end(), [&arg_map](auto const &item) {
+        auto const &option = item.second;
+        if (!arg_map.args.contains(option.name) && option.default_value.has_value()) {
+            arg_map.args[option.name] = ArgValue{option.default_value};
+        }
+    });
     return arg_map;
 }
 
