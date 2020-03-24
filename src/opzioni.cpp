@@ -110,8 +110,11 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
             } else {
                 std::cout << ">> doesn't have flag_value\n";
                 auto const arg_value = [&]() {
-                    if (split.value) return *split.value;
-                    if (i + 1 < argc) {
+                    if (split.value) {
+                        // if `split_arg` managed to parse a value, use it
+                        return *split.value;
+                    } if (i + 1 < argc) {
+                        // if we have not yet exhausted argv, interpret next element as value
                         ++i;
                         return std::string(argv[i]);
                     } else {
@@ -125,13 +128,17 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const
             }
         }
     }
-    std::for_each(this->options.begin(), this->options.end(), [&arg_map](auto const &item) {
+    arg_map.set_defaults_for_missing_options(this->options);
+    return arg_map;
+}
+
+void ArgMap::set_defaults_for_missing_options(std::unordered_map<std::string, ArgInfo> const &options) {
+    std::for_each(options.begin(), options.end(), [this](auto const &item) {
         auto const &option = item.second;
-        if (!arg_map.args.contains(option.name) && option.default_value.has_value()) {
-            arg_map.args[option.name] = ArgValue{option.default_value};
+        if (!this->args.contains(option.name) && option.default_value.has_value()) {
+            this->args[option.name] = ArgValue{option.default_value};
         }
     });
-    return arg_map;
 }
 
 } // namespace opz

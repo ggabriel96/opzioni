@@ -120,7 +120,7 @@ TargetType apply_conversion(TypedConverter<TargetType> const &convert_fn, std::o
  * exec name
  * description
  * epilog
- * 
+ *
  * allow unknown arguments
  */
 class ArgParser
@@ -131,7 +131,12 @@ public:
     {
         if (!spec.choices.empty()) add_choice_checking_to_conversion(spec);
         auto const num_of_dashes = spec.name.find_first_not_of('-');
-        if (num_of_dashes != std::string::npos && num_of_dashes > 0) spec.name = spec.name.substr(num_of_dashes);
+        // static_assert(
+        //     num_of_dashes == 0 || spec.default_value.has_value() || spec.is_required,
+        //     "An argument must either be positional, have a default value, or be required"
+        // );
+        if (num_of_dashes != std::string::npos && num_of_dashes > 0)
+            spec.name = spec.name.substr(num_of_dashes);
         auto const arg_info = ArgInfo{
             .name = spec.name,
             .help = spec.help_text,
@@ -143,7 +148,7 @@ public:
         if (num_of_dashes == 0) this->positional_args.push_back(arg_info);
         else this->options[spec.name] = arg_info;
     }
-    
+
     ArgMap parse_args(int, char const *[]) const;
 
 private:
@@ -188,6 +193,8 @@ public:
     std::unique_ptr<std::vector<std::string>> remaining_args;
 private:
     std::unordered_map<std::string, ArgValue> args;
+
+    void set_defaults_for_missing_options(std::unordered_map<std::string, ArgInfo> const &);
 
     friend ArgMap ArgParser::parse_args(int, char const *[]) const;
 };
