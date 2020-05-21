@@ -38,10 +38,7 @@ struct Arg
     std::optional<T> flag_value = std::nullopt;
     AnyConverter converter = opz::convert<T>;
 
-    Arg<T> &named(std::string name) noexcept {
-        this->name = name;
-        return *this;
-    }
+    Arg(std::string name) noexcept : name(name) {}
 
     Arg<T> &help(std::string help_text) noexcept {
         this->help_text = help_text;
