@@ -81,13 +81,6 @@ struct Arg
     }
 };
 
-struct SplitArg
-{
-    size_t num_of_dashes;
-    std::string name;
-    std::optional<std::string> value;
-};
-
 struct ArgInfo
 {
     std::string name;
@@ -102,6 +95,12 @@ struct ArgInfo
     }
 };
 
+struct SplitArg
+{
+    size_t num_of_dashes;
+    std::string name;
+    std::optional<std::string> value;
+};
 
 template <typename TargetType>
 TargetType apply_conversion(AnyConverter const &convert_fn, std::optional<std::string> const &str_value) {
