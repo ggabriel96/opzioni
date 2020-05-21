@@ -94,6 +94,8 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
       auto const split = split_arg(whole_arg);
       std::cout << ">> split_arg: " << split.num_of_dashes << ' ' << split.name
                 << ' ' << (split.value ? *split.value : "nullopt") << '\n';
+      if (!this->options.contains(split.name))
+        throw UnknownArgument(whole_arg);
       auto const arg = this->options.at(split.name);
       std::cout << ">> arg: " << arg.help << '\n';
       if (arg.is_flag()) {

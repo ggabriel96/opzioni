@@ -13,6 +13,8 @@
 #include <string>
 #include <utility>
 
+#include "exceptions.hpp"
+
 namespace opz {
 
 class ArgMap;
@@ -83,9 +85,7 @@ template <typename T> struct Arg {
     return *this;
   }
 
-  bool is_positional() const noexcept {
-    return num_of_dashes == 0;
-  }
+  bool is_positional() const noexcept { return num_of_dashes == 0; }
 };
 
 struct ArgInfo {
@@ -178,6 +178,8 @@ struct ArgValue {
 class ArgMap {
 public:
   ArgValue const &operator[](std::string arg_name) const {
+    if (!args.contains(arg_name))
+      throw ArgumentNotFound(arg_name);
     return args.at(arg_name);
   }
 
