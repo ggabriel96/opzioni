@@ -84,7 +84,7 @@ template <typename T> struct Arg {
   }
 
   bool is_positional() const noexcept {
-    return num_of_dashes == std::string::npos;
+    return num_of_dashes == 0;
   }
 };
 
