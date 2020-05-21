@@ -38,7 +38,8 @@ int main(int argc, char const *argv[])
     auto const numbers = args["numbers"].as<std::vector<int>>();
     std::cout << "numbers:\n";
     std::for_each(begin(numbers), end(numbers), [](auto const &elem) { std::cout << "- " << elem << nl; });
-    if (args.remaining_args != nullptr) {
+    if (args.remaining_args != nullptr)
+    {
         std::cout << "remaining_args:\n";
         std::cout << "- size: " << args.remaining_args->size() << nl;
         std::cout << "- capacity: " << args.remaining_args->capacity() << nl;
