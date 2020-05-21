@@ -37,8 +37,15 @@ namespace opz
         std::optional<T> default_value = std::nullopt;
         std::optional<T> flag_value = std::nullopt;
         AnyConverter converter = opz::convert<T>;
+        decltype(std::string::npos) num_of_dashes;
 
-        Arg(std::string name) noexcept : name(name) {}
+        Arg(std::string name) noexcept : num_of_dashes{name.find_first_not_of('-')}
+        {
+            if (is_positional())
+                this->name = name;
+            else
+                this->name = name.substr(num_of_dashes);
+        }
 
         Arg<T> &help(std::string help_text) noexcept
         {
@@ -86,6 +93,11 @@ namespace opz
         {
             this->converter = converter;
             return *this;
+        }
+
+        bool is_positional() const noexcept
+        {
+            return num_of_dashes == std::string::npos;
         }
     };
 
@@ -151,18 +163,10 @@ namespace opz
         {
             if (!spec.choices.empty())
                 add_choice_checking_to_conversion(spec);
-            auto const num_of_dashes = spec.name.find_first_not_of('-');
-            // static_assert(
-            //     num_of_dashes == 0 || spec.default_value.has_value() || spec.is_required,
-            //     "An argument must either be positional, have a default value, or be required"
-            // );
-            if (num_of_dashes != std::string::npos && num_of_dashes > 0)
-                spec.name = spec.name.substr(num_of_dashes);
-            auto const arg_info = ArgInfo(spec);
-            if (num_of_dashes == 0)
-                this->positional_args.push_back(arg_info);
+            if (spec.is_positional())
+                this->positional_args.emplace_back(spec);
             else
-                this->options[spec.name] = arg_info;
+                this->options[spec.name] = ArgInfo(spec);
         }
 
         ArgMap parse_args(int, char const *[]) const;
