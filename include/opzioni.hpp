@@ -98,6 +98,19 @@ namespace opz
         std::any flag_value;
         AnyConverter converter;
 
+        ArgInfo() = default;
+
+        template <typename T>
+        explicit ArgInfo(Arg<T> const &arg) noexcept
+        {
+            name = arg.name;
+            help = arg.help_text;
+            required = arg.is_required;
+            default_value = arg.default_value ? *arg.default_value : std::any{};
+            flag_value = arg.flag_value ? *arg.flag_value : std::any{};
+            converter = arg.converter;
+        }
+
         bool is_flag() const
         {
             return this->flag_value.has_value();
@@ -145,13 +158,7 @@ namespace opz
             // );
             if (num_of_dashes != std::string::npos && num_of_dashes > 0)
                 spec.name = spec.name.substr(num_of_dashes);
-            auto const arg_info = ArgInfo{
-                .name = spec.name,
-                .help = spec.help_text,
-                .required = spec.is_required,
-                .default_value = spec.default_value ? *spec.default_value : std::any{},
-                .flag_value = spec.flag_value ? *spec.flag_value : std::any{},
-                .converter = spec.converter};
+            auto const arg_info = ArgInfo(spec);
             if (num_of_dashes == 0)
                 this->positional_args.push_back(arg_info);
             else
