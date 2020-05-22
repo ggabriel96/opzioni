@@ -6,6 +6,13 @@
 
 namespace opz {
 
+template <>
+Arg<bool> &Arg<bool>::as_flag(bool flag_value) {
+  this->flag_value = flag_value;
+  this->default_value = !flag_value;
+  return *this;
+}
+
 SplitArg split_arg(std::string const &whole_arg) {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   if (num_of_dashes == std::string::npos) {

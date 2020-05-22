@@ -36,7 +36,7 @@ template <typename T> struct Arg {
   std::string help_text;
   bool is_required = false;
   std::set<T> choices;
-  std::optional<T> default_value = std::nullopt;
+  std::optional<T> default_value = T{};
   std::optional<T> flag_value = std::nullopt;
   AnyConverter converter = opz::convert<T>;
   decltype(std::string::npos) num_of_dashes;
@@ -55,6 +55,8 @@ template <typename T> struct Arg {
 
   Arg<T> &required() noexcept {
     this->is_required = true;
+    if (this->default_value.has_value())
+      this->without_default();
     return *this;
   }
 
@@ -63,22 +65,38 @@ template <typename T> struct Arg {
     return *this;
   }
 
-  Arg<T> &among(std::set<T> choices) noexcept {
+  Arg<T> &among(std::set<T> choices) {
+    if (this->flag_value.has_value()) {
+      throw InvalidArgument(fmt::format(
+          "Trying to set `choices` for argument `{}` while it is set as flag. "
+          "Please reconsider, as they are mutually-exclusive options",
+          original_name()));
+    }
     this->choices = choices;
+    return *this;
+  }
+
+  Arg<T> &without_default() noexcept {
+    this->default_value = std::nullopt;
+    if (!this->is_required)
+      this->required();
     return *this;
   }
 
   Arg<T> &with_default(T default_value) noexcept {
     this->default_value = default_value;
+    if (this->is_required)
+      this->not_required();
     return *this;
   }
 
-  Arg<bool> &as_flag() noexcept {
-    this->flag_value = true;
-    return with_default(false);
-  }
-
-  Arg<T> &as_flag(T flag_value) noexcept {
+  Arg<T> &as_flag(T flag_value = !T{}) {
+    if (!this->choices.empty()) {
+      throw InvalidArgument(fmt::format(
+          "Trying to set argument `{}` as flag while also having `choices`. "
+          "Please reconsider, as they are mutually-exclusive options",
+          original_name()));
+    }
     this->flag_value = flag_value;
     return *this;
   }
@@ -89,6 +107,13 @@ template <typename T> struct Arg {
   }
 
   bool is_positional() const noexcept { return num_of_dashes == 0; }
+
+  std::string original_name() const noexcept {
+    if (this->is_positional())
+      return this->name;
+    else
+      return fmt::format("{:->{}}", name, name.length() + num_of_dashes);
+  }
 };
 
 struct ArgInfo {
