@@ -1,20 +1,15 @@
-#include <algorithm>
-#include <iostream>
-#include <iterator>
 #include <string>
 #include <vector>
 
-#include "opzioni.hpp"
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
-constexpr char nl = '\n';
+#include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
   using opz::Arg;
 
-  std::cout << "argv:\n";
-  std::for_each(argv, argv + argc,
-                [](char const *arg) { std::cout << arg << nl; });
-  std::cout << nl;
+  fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
   opz::ArgParser ap;
   ap.add(Arg<std::string>("name").help("Your name"));
@@ -30,23 +25,19 @@ int main(int argc, char const *argv[]) {
   ap.add(Arg<std::vector<int>>("--numbers").help("A list of numbers"));
 
   auto const args = ap.parse_args(argc, argv);
-  std::cout << std::boolalpha;
-  std::cout << "\nNumber of arguments: " << args.size() << nl;
-  std::cout << "name: " << args["name"].as<std::string>() << nl;
-  std::cout << "last name: " << args["last-name"].as<std::string>() << nl;
-  std::cout << "v: " << args["v"].as<int>() << nl;
-  std::cout << "flag: " << args["flag"].as<int>() << nl;
-  std::cout << "a: " << args["a"].as<bool>() << nl;
-  std::cout << "b: " << args["b"].as<bool>() << nl;
-  auto const numbers = args["numbers"].as<std::vector<int>>();
-  std::cout << "numbers:\n";
-  std::for_each(begin(numbers), end(numbers),
-                [](auto const &elem) { std::cout << "- " << elem << nl; });
+  fmt::print("\nNumber of arguments: {}\n", args.size());
+  fmt::print("name: {}\n", args["name"].as<std::string>());
+  fmt::print("last name: {}\n", args["last-name"].as<std::string>());
+  fmt::print("v: {}\n", args["v"].as<int>());
+  fmt::print("flag: {}\n", args["flag"].as<int>());
+  fmt::print("a: {}\n", args["a"].as<bool>());
+  fmt::print("b: {}\n", args["b"].as<bool>());
+  fmt::print("numbers: [{}]\n",
+             fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
   if (args.remaining_args != nullptr) {
-    std::cout << "remaining_args:\n";
-    std::cout << "- size: " << args.remaining_args->size() << nl;
-    std::cout << "- capacity: " << args.remaining_args->capacity() << nl;
-    std::for_each(args.remaining_args->begin(), args.remaining_args->end(),
-                  [](auto const &elem) { std::cout << "- " << elem << nl; });
+    fmt::print("remaining_args:\n");
+    fmt::print("- size: {}\n", args.remaining_args->size());
+    fmt::print("- capacity: {}\n", args.remaining_args->capacity());
+    fmt::print("- items: [{}]\n", fmt::join(*args.remaining_args, ", "));
   }
 }
