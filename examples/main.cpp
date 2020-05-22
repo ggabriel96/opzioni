@@ -38,7 +38,6 @@ int main(int argc, char const *argv[]) {
   std::cout << "flag: " << args["flag"].as<int>() << nl;
   std::cout << "a: " << args["a"].as<bool>() << nl;
   std::cout << "b: " << args["b"].as<bool>() << nl;
-  std::cout << "x: " << args["x"].as<int>() << nl;
   auto const numbers = args["numbers"].as<std::vector<int>>();
   std::cout << "numbers:\n";
   std::for_each(begin(numbers), end(numbers),
