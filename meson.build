@@ -7,15 +7,19 @@ project(
 
 include_dir = include_directories('include/')
 
+fmt_dep = dependency('fmt', version: '^6.2.1')
+
 opzioni_lib = library(
     'opzioni',
     ['src/opzioni.cpp', 'src/converters.cpp'],
+    dependencies: fmt_dep,
     include_directories: include_dir,
     install: true
 )
 
 # Make this library usable as a Meson subproject.
 opzioni_dep = declare_dependency(
+    dependencies: fmt_dep,
     include_directories: include_dir,
     link_with: opzioni_lib
 )
