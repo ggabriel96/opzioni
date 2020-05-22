@@ -157,11 +157,13 @@ TargetType apply_conversion(TypedConverter<TargetType> const &convert_fn,
 }
 
 /**
- * exec name
- * description
- * epilog
+ * @TODO:
+ * detect that required arguments are missing!
+ * save exec name
+ * program description
+ * proram epilog
  *
- * allow unknown arguments
+ * allow unknown arguments?
  */
 class ArgParser {
 public:
