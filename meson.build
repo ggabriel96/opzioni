@@ -1,6 +1,6 @@
 project(
     'opzioni', 'cpp',
-    version: '0.1.0',
+    version: '0.4.0',
     license: 'MIT',
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
@@ -36,5 +36,5 @@ pkg_mod.generate(
     url: 'https://github.com/ggabriel96/opzioni',
     filebase: 'opzioni',
     subdirs: 'opzioni/',
-    version: '0.1.0',
+    version: meson.project_version(),
 )
