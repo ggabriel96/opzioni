@@ -95,13 +95,16 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
       std::cout << ">> split_arg: " << split.num_of_dashes << ' ' << split.name
                 << ' ' << (split.value ? *split.value : "nullopt") << '\n';
       if (!this->options.contains(split.name))
-        throw UnknownArgument(whole_arg);
+        throw UnknownArgument(fmt::format("Unknown argument `{}`", split.name));
       auto const arg = this->options.at(split.name);
       std::cout << ">> arg: " << arg.help << '\n';
       if (arg.is_flag()) {
         std::cout << ">> has flag_value\n";
         if (split.value.has_value())
-          throw std::invalid_argument("Flag argument must not have a value");
+          throw FlagHasValue(
+              fmt::format("Argument `{0}` is a flag, thus cannot take a value "
+                          "as in `{1}`. Simply set it with `-{0}`",
+                          arg.name, whole_arg));
         arg_map.args[split.name] = ArgValue{arg.flag_value};
       } else {
         std::cout << ">> doesn't have flag_value\n";
@@ -116,7 +119,8 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
             ++i;
             return std::string(argv[i]);
           } else {
-            throw std::invalid_argument("Missing value for option");
+            throw MissingValue(
+                fmt::format("Missing value for option `{}`", whole_arg));
           }
         }();
         std::cout << ">> arg_value: " << arg_value << '\n';

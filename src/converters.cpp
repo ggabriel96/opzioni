@@ -1,5 +1,7 @@
 #include <sstream>
 
+#include <fmt/format.h>
+
 #include "opzioni.hpp"
 
 namespace opz {
@@ -10,15 +12,15 @@ template <> auto convert<bool>(std::optional<std::string> value) -> bool {
       return true;
     if (*value == "0" || *value == "false")
       return false;
-    throw std::invalid_argument("Invalud boolean value");
+    throw ConversionError(fmt::format("Cannot convert `{}` to bool", *value));
   }
-  throw std::invalid_argument("Cannot convert nonexistant boolean");
+  throw ConversionError("Cannot convert an empty string to bool");
 }
 
 template <> auto convert<int>(std::optional<std::string> arg_val) -> int {
   if (arg_val)
     return std::stoi(*arg_val);
-  throw std::invalid_argument("Cannot convert nonexistant number");
+  throw ConversionError("Cannot convert an empty string to int");
 }
 
 template <>

@@ -13,6 +13,9 @@
 #include <string>
 #include <utility>
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include "exceptions.hpp"
 
 namespace opz {
@@ -156,12 +159,14 @@ private:
 
   template <typename T>
   void add_choice_checking_to_conversion(Arg<T> &spec) const noexcept {
-    spec.converter = [choices = spec.choices, converter = spec.converter](
+    spec.converter = [arg_name = spec.name, choices = spec.choices,
+                      converter = spec.converter](
                          std::optional<std::string> value) -> std::any {
       auto const result = apply_conversion<T>(converter, value);
       if (!choices.contains(result))
-        throw std::invalid_argument(
-            "Provided value is not in the set of possible values");
+        throw InvalidChoice(fmt::format(
+            "Argument `{}` cannot be set to `{}`. Allowed values are: [{}]",
+            arg_name, result, fmt::join(choices, ", ")));
       return result;
     };
   }
@@ -179,7 +184,8 @@ class ArgMap {
 public:
   ArgValue const &operator[](std::string arg_name) const {
     if (!args.contains(arg_name))
-      throw ArgumentNotFound(arg_name);
+      throw ArgumentNotFound(
+          fmt::format("Could not find argument `{}`", arg_name));
     return args.at(arg_name);
   }
 
