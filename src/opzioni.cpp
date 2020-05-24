@@ -79,7 +79,6 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
   int positional_idx = 0;
   for (int i = 1; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
-    std::cout << "\n>> whole_arg: " << whole_arg << '\n';
     if (should_stop_parsing(whole_arg)) {
       arg_map.remaining_args = get_remaining_args(i + 1, argc, argv);
       break;
@@ -99,14 +98,10 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
           });
     } else {
       auto const split = split_arg(whole_arg);
-      std::cout << ">> split_arg: " << split.num_of_dashes << ' ' << split.name
-                << ' ' << (split.value ? *split.value : "nullopt") << '\n';
       if (!this->options.contains(split.name))
         throw UnknownArgument(fmt::format("Unknown argument `{}`", split.name));
       auto const arg = this->options.at(split.name);
-      std::cout << ">> arg: " << arg.help << '\n';
       if (arg.is_flag()) {
-        std::cout << ">> has flag_value\n";
         if (split.value.has_value())
           throw FlagHasValue(
               fmt::format("Argument `{0}` is a flag, thus cannot take a value "
@@ -114,7 +109,6 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
                           arg.name, whole_arg));
         arg_map.args[split.name] = ArgValue{arg.flag_value};
       } else {
-        std::cout << ">> doesn't have flag_value\n";
         auto const arg_value = [&]() {
           if (split.value) {
             // if `split_arg` managed to parse a value, use it
@@ -130,8 +124,6 @@ ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
                 fmt::format("Missing value for option `{}`", whole_arg));
           }
         }();
-        std::cout << ">> arg_value: " << arg_value << '\n';
-
         auto const parsed_value = arg.converter(arg_value);
         arg_map.args[split.name] = ArgValue{parsed_value};
       }
