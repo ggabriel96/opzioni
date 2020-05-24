@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug active example",
+            "name": "Debug example",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/${relativeFileDirname}/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/build/examples/main",
             "args": ["Some name"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
