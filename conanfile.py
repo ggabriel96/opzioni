@@ -3,7 +3,7 @@ import re
 from typing import List
 
 from conans import ConanFile, Meson
-from conans.tools import load
+from conans.tools import load, mkdir
 
 
 class OpzioniConan(ConanFile):
@@ -21,7 +21,7 @@ class OpzioniConan(ConanFile):
     source_folder = "src"
     build_folder = "build"
     generators = "pkg_config"
-    exports_sources = f"{source_folder}/*"
+    exports_sources = "include/*", f"{source_folder}/*"
     build_requires = "fmt/6.2.1"
 
     def set_version(self):
@@ -32,6 +32,8 @@ class OpzioniConan(ConanFile):
         self.version = version.strip()
 
     def build(self):
+        if not self.develop:
+            self.source_folder = os.path.join(self.source_folder, "src")
         meson_options = {"examples": self.options.build_examples}
         meson = Meson(self)
         meson.configure(
