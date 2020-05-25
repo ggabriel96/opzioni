@@ -5,7 +5,6 @@ from conans import ConanFile, Meson, tools
 
 class OpzioniTestConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    build_requires = "fmt/6.2.1"
     generators = "pkg_config"
 
     def build(self):

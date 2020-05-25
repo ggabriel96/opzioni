@@ -3,7 +3,7 @@ import re
 from typing import List
 
 from conans import ConanFile, Meson
-from conans.tools import collect_libs, load, mkdir
+from conans.tools import collect_libs, load
 
 
 class OpzioniConan(ConanFile):
@@ -15,29 +15,27 @@ class OpzioniConan(ConanFile):
     topics = "CLI", "terminal", "options", "arguments", "parameters"
 
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = {"shared": False}
+    options = {"shared": [True, False], "build_examples": [True, False]}
+    default_options = {"shared": False, "build_examples": False}
 
-    source_folder = "src"
-    build_folder = "build"
     generators = "pkg_config"
-    exports_sources = "include/*", f"{source_folder}/*"
-    build_requires = "fmt/6.2.1"
+    exports_sources = ["meson.build", "meson_options.txt", "include/*", "src/*"]
+    requires = "fmt/6.2.1"
 
     def set_version(self):
         content = load(
-            os.path.join(self.recipe_folder, self.source_folder, "meson.build")
+            os.path.join(self.recipe_folder, "meson.build")
         )
         version = re.search("version: '(.+)'", content).group(1)
         self.version = version.strip()
 
     def build(self):
         if self.source_folder == self.build_folder:
-            self.source_folder = os.path.join(self.source_folder, "src")
+            self.build_folder = os.path.join(self.build_folder, "build")
+
+        meson_options = {"examples": self.options.build_examples}
         meson = Meson(self)
-        meson.configure(
-            source_folder=self.source_folder, build_folder=self.build_folder,
-        )
+        meson.configure(defs=meson_options)
         meson.build()
 
     def package(self):
