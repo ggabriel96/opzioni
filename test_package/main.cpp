@@ -4,7 +4,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include "opzioni.hpp"
+#include <opzioni.hpp>
 
 int main(int argc, char const *argv[]) {
   using opz::Arg;

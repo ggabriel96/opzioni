@@ -3,7 +3,7 @@ import re
 from typing import List
 
 from conans import ConanFile, Meson
-from conans.tools import load, mkdir
+from conans.tools import collect_libs, load, mkdir
 
 
 class OpzioniConan(ConanFile):
@@ -15,8 +15,8 @@ class OpzioniConan(ConanFile):
     topics = "CLI", "terminal", "options", "arguments", "parameters"
 
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "build_examples": [True, False]}
-    default_options = {"shared": False, "build_examples": False}
+    options = {"shared": [True, False]}
+    default_options = {"shared": False}
 
     source_folder = "src"
     build_folder = "build"
@@ -32,24 +32,22 @@ class OpzioniConan(ConanFile):
         self.version = version.strip()
 
     def build(self):
-        if not self.develop:
+        if self.source_folder == self.build_folder:
             self.source_folder = os.path.join(self.source_folder, "src")
-        meson_options = {"examples": self.options.build_examples}
         meson = Meson(self)
         meson.configure(
-            defs=meson_options,
-            source_folder=self.source_folder,
-            build_folder=self.build_folder,
+            source_folder=self.source_folder, build_folder=self.build_folder,
         )
         meson.build()
 
-    # def package(self):
-    #     self.copy("*.hpp", dst="include", src="src")
-    #     self.copy("*.lib", dst="lib", keep_path=False)
-    #     self.copy("*.dll", dst="bin", keep_path=False)
-    #     self.copy("*.dylib*", dst="lib", keep_path=False)
-    #     self.copy("*.so", dst="lib", keep_path=False)
-    #     self.copy("*.a", dst="lib", keep_path=False)
+    def package(self):
+        self.copy("*.hpp", dst="include", src="include")
+        self.copy("*.lib", dst="lib", keep_path=False)
+        self.copy("*.dll", dst="bin", keep_path=False)
+        self.copy("*.dylib*", dst="lib", keep_path=False)
+        self.copy("*.so", dst="lib", keep_path=False)
+        self.copy("*.a", dst="lib", keep_path=False)
 
-    # def package_info(self):
-    #     self.cpp_info.libs = ["opzioni"]
+    def package_info(self):
+        self.cpp_info.names["pkg_config"] = "opzioni"
+        self.cpp_info.libs = collect_libs(self)

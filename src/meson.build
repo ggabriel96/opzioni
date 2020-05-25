@@ -17,19 +17,6 @@ opzioni_lib = library(
     install: true
 )
 
-# Make this library usable as a Meson subproject.
-opzioni_dep = declare_dependency(
-    dependencies: fmt_dep,
-    include_directories: include_dir,
-    link_with: opzioni_lib
-)
-
-if get_option('examples')
-    subdir('examples/')
-endif
-
-# install_headers('include/opzioni.hpp', subdir : 'opzioni/')
-
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(
     opzioni_lib,
