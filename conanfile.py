@@ -12,7 +12,16 @@ class OpzioniConan(ConanFile):
     author = "Gabriel Galli (ggabriel96@hotmail.com)"
     url = "https://github.com/ggabriel96/opzioni"
     description = "A simple command line arguments library for C++"
-    topics = "CLI", "terminal", "options", "arguments", "parameters"
+    topics = (
+        "CLI",
+        "parser",
+        "options",
+        "terminal",
+        "arguments",
+        "parameters",
+        "command-line",
+        "command-line-parser",
+    )
 
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "build_examples": [True, False]}
@@ -23,9 +32,7 @@ class OpzioniConan(ConanFile):
     requires = "fmt/6.2.1"
 
     def set_version(self):
-        content = load(
-            os.path.join(self.recipe_folder, "meson.build")
-        )
+        content = load(os.path.join(self.recipe_folder, "meson.build"))
         version = re.search("version: '(.+)'", content).group(1)
         self.version = version.strip()
 
