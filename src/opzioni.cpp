@@ -68,7 +68,8 @@ bool ArgParser::is_multiple_short_flags(std::string const &whole_arg) const {
   auto const flags = whole_arg.substr(1);
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
   auto is_option = [options = this->options](char c) {
-    return options.find(std::string(1, c)) != options.end();
+    auto const opt = options.find(std::string(1, c));
+    return opt != options.end() && opt->second.flag_value.has_value();
   };
   return idx_first_not_dash == 1 && flags.length() > 1 &&
          std::all_of(flags.begin(), flags.end(), is_option);
