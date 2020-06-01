@@ -17,12 +17,6 @@ template <> auto convert<bool>(std::optional<std::string> value) -> bool {
   throw ConversionError("Cannot convert an empty string to bool");
 }
 
-template <> auto convert<int>(std::optional<std::string> arg_val) -> int {
-  if (arg_val)
-    return std::stoi(*arg_val);
-  throw ConversionError("Cannot convert an empty string to int");
-}
-
 template <>
 auto convert<std::string>(std::optional<std::string> value) -> std::string {
   return value.value_or("");

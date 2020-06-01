@@ -3,6 +3,7 @@
 
 #include <any>
 #include <charconv>
+#include <concepts>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -17,6 +18,7 @@
 #include <fmt/ranges.h>
 
 #include "exceptions.hpp"
+#include "types.hpp"
 
 namespace opz {
 
@@ -30,6 +32,19 @@ using TypedConverter = std::function<TargetType(std::optional<std::string>)>;
 
 template <typename TargetType>
 auto convert(std::optional<std::string>) -> TargetType;
+
+template <Integer Int> auto convert(std::optional<std::string> arg_val) -> Int {
+  if (arg_val) {
+    Int integer;
+    auto const conv_result = std::from_chars(
+        arg_val->data(), arg_val->data() + arg_val->size(), integer);
+    if (conv_result.ec == std::errc::invalid_argument)
+      throw ConversionError(
+          fmt::format("Cannot convert `{}` to an integer type", *arg_val));
+    return integer;
+  }
+  throw ConversionError("Cannot convert an empty string to int");
+}
 
 template <typename T> struct Arg {
   std::string name;
