@@ -1,5 +1,5 @@
-#ifndef OPZIONI_TYPES_H
-#define OPZIONI_TYPES_H
+#ifndef OPZIONI_CONCEPTS_H
+#define OPZIONI_CONCEPTS_H
 
 #include <concepts>
 
@@ -10,4 +10,4 @@ concept Integer = std::integral<T> && !std::same_as<T, bool>;
 
 } // namespace opz
 
-#endif // OPZIONI_TYPES_H
+#endif // OPZIONI_CONCEPTS_H

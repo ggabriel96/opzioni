@@ -18,8 +18,8 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include "concepts.hpp"
 #include "exceptions.hpp"
-#include "types.hpp"
 
 namespace opz {
 
