@@ -1,7 +1,5 @@
 #include <sstream>
 
-#include <fmt/format.h>
-
 #include "converters.hpp"
 
 namespace opz {

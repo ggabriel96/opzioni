@@ -9,6 +9,8 @@
 #include <optional>
 #include <string>
 
+#include <fmt/format.h>
+
 #include "concepts.hpp"
 #include "exceptions.hpp"
 
