@@ -2,17 +2,8 @@
 #define OPZIONI_H
 
 #include <any>
-#include <cerrno>
-#include <charconv>
-#include <concepts>
-#include <functional>
-#include <iostream>
-#include <map>
 #include <memory>
-#include <optional>
 #include <set>
-#include <stdexcept>
-#include <string>
 #include <utility>
 
 #include <fmt/format.h>
