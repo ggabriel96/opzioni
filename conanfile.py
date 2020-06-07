@@ -45,6 +45,7 @@ class OpzioniConan(ConanFile):
         meson = Meson(self)
         meson.configure(defs=meson_options)
         meson.build()
+        meson.test()
 
     def package(self):
         self.copy("*.hpp", dst="include", src="include")
