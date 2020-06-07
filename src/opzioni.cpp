@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 
 #include "opzioni.hpp"
 
@@ -52,6 +53,11 @@ auto get_remaining_args(int start_idx, int argc, char const *argv[]) {
   return remaining_args;
 }
 
+bool all_chars(std::string const &s) {
+  return std::all_of(s.begin(), s.end(),
+                     [](char const &c) { return std::isalpha(c) != 0; });
+}
+
 bool should_stop_parsing(std::string const &whole_arg) {
   auto const all_dashes = whole_arg.find_first_not_of('-') == std::string::npos;
   return whole_arg.length() == 2 && all_dashes;
@@ -62,15 +68,16 @@ bool is_positional(std::string const &whole_arg) {
   return idx_first_not_dash == 0;
 }
 
-bool ArgParser::is_multiple_short_flags(std::string const &whole_arg) const {
+bool is_multiple_short_flags(std::string const &whole_arg) {
   auto const flags = whole_arg.substr(1);
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
-  auto is_option = [options = this->options](char c) {
-    auto const opt = options.find(std::string(1, c));
-    return opt != options.end() && opt->second.flag_value.has_value();
-  };
-  return idx_first_not_dash == 1 && flags.length() > 1 &&
-         std::all_of(flags.begin(), flags.end(), is_option);
+  return idx_first_not_dash == 1 && flags.length() > 1 && all_chars(flags);
+}
+
+bool is_flag(std::string const &whole_arg) {
+  auto const flag = whole_arg.substr(2);
+  auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
+  return idx_first_not_dash == 2 && flag.length() > 1 && all_chars(flag);
 }
 
 ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
