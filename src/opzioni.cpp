@@ -4,8 +4,7 @@
 
 namespace opz {
 
-template <>
-Arg<bool> &Arg<bool>::as_flag(bool flag_value) {
+template <> Arg<bool> &Arg<bool>::as_flag(bool flag_value) {
   this->flag_value = flag_value;
   this->default_value = !flag_value;
   return *this;
@@ -22,9 +21,10 @@ SplitArg split_arg(std::string const &whole_arg) {
   if (num_of_dashes == 1 && whole_arg.length() > 2 &&
       eq_idx == std::string::npos) {
     // has one dash, hence flag
-    // but is longer than two characters and has no equals, hence short option
-    // with value (e.g. `-O2`) (possibility of many short flags has already been
-    // tested for)
+    // but is longer than 2 characters
+    // has no equals
+    // hence short option with value (e.g. `-O2`)
+    // (possibility of many short flags has already been tested for)
     auto const name = whole_arg.substr(1, 1);
     auto const value = whole_arg.substr(2);
     return SplitArg{
