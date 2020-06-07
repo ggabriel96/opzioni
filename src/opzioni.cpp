@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cctype>
+#include <ranges>
 
 #include "opzioni.hpp"
 #include <fmt/format.h>
@@ -85,17 +86,24 @@ ArgMap ArgParser::parse(int argc, char const *argv[]) const {
   return convert_args(parse_args(argc, argv));
 }
 
+void ArgParser::assign_positional_args(
+    ArgMap &map, std::vector<std::string> const &positional_args) const {
+  if (positional_args.size() < this->positional_args.size()) {
+    auto const names = std::ranges::transform_view(
+        this->positional_args, [](auto const &arg) { return arg.name; });
+    throw ArgumentNotFound(fmt::format("Missing positional arguments: `{}`",
+                                       fmt::join(names, "`, `")));
+  }
+  for (size_t i = 0; i < this->positional_args.size(); ++i) {
+    auto const &arg = this->positional_args[i];
+    map.args[arg.name] = ArgValue{arg.converter(positional_args[i])};
+  }
+}
+
 ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
   ArgMap map;
   map.remaining_args = std::move(parse_result.remaining);
-  for (size_t i = 0; i < positional_args.size(); ++i) {
-    if (i >= parse_result.positional.size()) {
-      throw ArgumentNotFound(fmt::format("Missing positional argument `{}`",
-                                         positional_args[i].name));
-    }
-    map.args[positional_args[i].name] =
-        ArgValue{positional_args[i].converter(parse_result.positional[i])};
-  }
+  assign_positional_args(map, parse_result.positional);
   for (auto const &flag : parse_result.flags) {
     auto const arg = this->options.at(flag);
     map.args[arg.name] = ArgValue{arg.flag_value};
