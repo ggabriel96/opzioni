@@ -113,7 +113,8 @@ void ArgParser::assign_options(ArgMap &map, std::unordered_map<std::string, std:
                                    "take values. Simply set them with `-{}`",
                                    fmt::join(parsed_flags_with_value.begin(), parsed_flags_with_value.end(), "`, `"),
                                    fmt::join(parsed_flags_with_value.begin(), parsed_flags_with_value.end(), " -")));
-  auto spec_options = std::ranges::transform_view(options, [](auto const &item) { return item.second; });
+  auto spec_options = std::ranges::filter_view(options, [](auto const item) { return !item.second.is_flag(); }) |
+                      std::views::transform([](auto const &item) { return item.second; });
   for (auto const &option : spec_options) {
     if (auto const parsed_value = parsed_options.find(option.name); parsed_value != parsed_options.end())
       map.args[option.name] = ArgValue{option.converter(parsed_value->second)};
