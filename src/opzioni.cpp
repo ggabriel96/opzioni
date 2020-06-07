@@ -117,15 +117,31 @@ void ArgParser::assign_flags(
 
 void ArgParser::assign_options(
     ArgMap &map,
-    std::unordered_map<std::string, std::string> const &options) const {
-  for (auto const &[name, value] : options) {
-    auto const arg = this->options.at(name);
-    if (arg.is_flag()) {
-      throw FlagHasValue(fmt::format("Argument `{0}` is a flag, thus cannot "
-                                     "take a value. Simply set it with `-{0}`",
-                                     name));
-    }
-    map.args[name] = ArgValue{arg.converter(value)};
+    std::unordered_map<std::string, std::string> const &parsed_options) const {
+  auto parsed_flags_with_value =
+      std::ranges::filter_view(parsed_options,
+                               [&](auto const &item) {
+                                 auto const &option = options.find(item.first);
+                                 return option != options.end() &&
+                                        option->second.is_flag();
+                               }) |
+      std::views::transform([](auto const &item) { return item.first; });
+  if (!std::ranges::empty(parsed_flags_with_value))
+    throw FlagHasValue(
+        fmt::format("Arguments `{}` are flags, thus cannot "
+                    "take values. Simply set them with `-{}`",
+                    fmt::join(parsed_flags_with_value.begin(),
+                              parsed_flags_with_value.end(), "`, `"),
+                    fmt::join(parsed_flags_with_value.begin(),
+                              parsed_flags_with_value.end(), " -")));
+  auto spec_options = std::ranges::transform_view(
+      options, [](auto const &item) { return item.second; });
+  for (auto const &option : spec_options) {
+    if (auto const parsed_value = parsed_options.find(option.name);
+        parsed_value != parsed_options.end())
+      map.args[option.name] = ArgValue{option.converter(parsed_value->second)};
+    else
+      map.args[option.name] = ArgValue{option.default_value};
   }
 }
 
