@@ -130,18 +130,6 @@ struct SplitArg {
   std::optional<std::string> value;
 };
 
-template <typename TargetType>
-TargetType apply_conversion(AnyConverter const &convert_fn,
-                            std::optional<std::string> const &str_value) {
-  return std::any_cast<TargetType>(convert_fn(str_value));
-}
-
-template <typename TargetType>
-TargetType apply_conversion(TypedConverter<TargetType> const &convert_fn,
-                            std::optional<std::string> const &str_value) {
-  return convert_fn(str_value);
-}
-
 /**
  * @TODO:
  * detect that required arguments are missing!
@@ -175,7 +163,7 @@ private:
     spec.converter = [arg_name = spec.name, choices = spec.choices,
                       converter = spec.converter](
                          std::optional<std::string> value) -> std::any {
-      auto const result = apply_conversion<T>(converter, value);
+      auto const result = std::any_cast<T>(converter(value));
       if (!choices.contains(result))
         throw InvalidChoice(fmt::format(
             "Argument `{}` cannot be set to `{}`. Allowed values are: [{}]",
