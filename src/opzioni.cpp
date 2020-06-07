@@ -108,27 +108,26 @@ void ArgParser::assign_flags(
   }
 }
 
-ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
-  ArgMap map;
-  map.remaining_args = std::move(parse_result.remaining);
-  assign_positional_args(map, parse_result.positional);
-  assign_flags(map, parse_result.flags);
-  for (auto const &[name, value] : parse_result.options) {
+void ArgParser::assign_options(
+    ArgMap &map,
+    std::unordered_map<std::string, std::string> const &options) const {
+  for (auto const &[name, value] : options) {
     auto const arg = this->options.at(name);
     if (arg.is_flag()) {
       throw FlagHasValue(fmt::format("Argument `{0}` is a flag, thus cannot "
                                      "take a value. Simply set it with `-{0}`",
                                      name));
     }
-    map.args[arg.name] = ArgValue{arg.converter(value)};
+    map.args[name] = ArgValue{arg.converter(value)};
   }
-  std::for_each(options.begin(), options.end(), [&](auto const &item) {
-    auto const &option = item.second;
-    if (!parse_result.options.contains(option.name) &&
-        option.default_value.has_value()) {
-      map.args[option.name] = ArgValue{option.default_value};
-    }
-  });
+}
+
+ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
+  ArgMap map;
+  map.remaining_args = std::move(parse_result.remaining);
+  assign_positional_args(map, parse_result.positional);
+  assign_flags(map, parse_result.flags);
+  assign_options(map, parse_result.options);
   return map;
 }
 
