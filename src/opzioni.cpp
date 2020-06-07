@@ -79,14 +79,20 @@ bool is_flag(std::string const &whole_arg) {
 
 ArgMap ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
 
-void ArgParser::assign_positional_args(ArgMap &map, std::vector<std::string> const &positional_args) const {
-  if (positional_args.size() < this->positional_args.size()) {
-    auto const names = std::ranges::transform_view(this->positional_args, [](auto const &arg) { return arg.name; });
-    throw ArgumentNotFound(fmt::format("Missing positional arguments: `{}`", fmt::join(names, "`, `")));
+void ArgParser::assign_positional_args(ArgMap &map, std::vector<std::string> const &parsed_positional) const {
+  if (parsed_positional.size() < positional_args.size()) {
+    auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; });
+    throw ArgumentNotFound(fmt::format("Missing {} positional argument{:s<{}}: `{}`", names.size(), "",
+                                       static_cast<int>(names.size() != 1), fmt::join(names, "`, `")));
   }
-  for (size_t i = 0; i < this->positional_args.size(); ++i) {
-    auto const &arg = this->positional_args[i];
-    map.args[arg.name] = ArgValue{arg.converter(positional_args[i])};
+  if (parsed_positional.size() > positional_args.size()) {
+    auto const args = std::ranges::drop_view(parsed_positional, positional_args.size());
+    throw UnknownArgument(fmt::format("Got {} unexpected positional argument{:s<{}}: `{}`", args.size(), "",
+                                      static_cast<int>(args.size() != 1), fmt::join(args, "`, `")));
+  }
+  for (size_t i = 0; i < positional_args.size(); ++i) {
+    auto const &arg = positional_args[i];
+    map.args[arg.name] = ArgValue{arg.converter(parsed_positional[i])};
   }
 }
 
