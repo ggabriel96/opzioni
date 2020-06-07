@@ -35,6 +35,7 @@ private:
   ParseResult parse_args(int, char const *[]) const;
   ArgMap convert_args(ParseResult &&) const;
   void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
+  void assign_flags(ArgMap &, std::unordered_set<std::string> const &) const;
 
   template <typename T>
   void add_choice_checking_to_conversion(Arg<T> &spec) const noexcept {

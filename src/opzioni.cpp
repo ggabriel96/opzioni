@@ -100,14 +100,19 @@ void ArgParser::assign_positional_args(
   }
 }
 
+void ArgParser::assign_flags(
+    ArgMap &map, std::unordered_set<std::string> const &flags) const {
+  for (auto const &flag : flags) {
+    auto const arg = options.at(flag);
+    map.args[arg.name] = ArgValue{arg.flag_value};
+  }
+}
+
 ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
   ArgMap map;
   map.remaining_args = std::move(parse_result.remaining);
   assign_positional_args(map, parse_result.positional);
-  for (auto const &flag : parse_result.flags) {
-    auto const arg = this->options.at(flag);
-    map.args[arg.name] = ArgValue{arg.flag_value};
-  }
+  assign_flags(map, parse_result.flags);
   for (auto const &[name, value] : parse_result.options) {
     auto const arg = this->options.at(name);
     if (arg.is_flag()) {
