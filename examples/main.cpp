@@ -14,14 +14,10 @@ int main(int argc, char const *argv[]) {
   opz::ArgParser ap;
   ap.add(Arg<std::string>("name").help("Your name"));
   ap.add(Arg<std::string>("--last-name").help("Your last name"));
-  ap.add(Arg<int>("-v")
-             .help("Level of verbosity")
-             .among({0, 1, 2, 3, 4})
-             .with_default(0));
+  ap.add(Arg<int>("-v").help("Level of verbosity").among({0, 1, 2, 3, 4}).with_default(0));
   ap.add(Arg<double>("-d").help("A double"));
   ap.add(Arg<int>("--flag").help("Long flag").with_default(7).as_flag(11));
-  ap.add(
-      Arg<bool>("-a").help("Short flag a").with_default(false).as_flag(true));
+  ap.add(Arg<bool>("-a").help("Short flag a").with_default(false).as_flag(true));
   ap.add(Arg<bool>("-b").help("Short flag b").as_flag());
   ap.add(Arg<std::vector<int>>("--numbers").help("A list of numbers"));
 
@@ -34,8 +30,7 @@ int main(int argc, char const *argv[]) {
   fmt::print("flag: {}\n", args["flag"].as<int>());
   fmt::print("a: {}\n", args["a"].as<bool>());
   fmt::print("b: {}\n", args["b"].as<bool>());
-  fmt::print("numbers: [{}]\n",
-             fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
+  fmt::print("numbers: [{}]\n", fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
   if (args.remaining_args != nullptr) {
     fmt::print("remaining_args:\n");
     fmt::print("- size: {}\n", args.remaining_args->size());

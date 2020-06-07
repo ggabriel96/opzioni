@@ -1,9 +1,10 @@
+#include "opzioni.hpp"
+
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <ranges>
-
-#include "opzioni.hpp"
-#include <fmt/format.h>
 
 namespace opz {
 
@@ -17,12 +18,10 @@ SplitArg split_arg(std::string const &whole_arg) {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   if (num_of_dashes == std::string::npos) {
     // all dashes?
-    return SplitArg{
-        .num_of_dashes = whole_arg.length(), .name = "", .value = std::nullopt};
+    return SplitArg{.num_of_dashes = whole_arg.length(), .name = "", .value = std::nullopt};
   }
   auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  if (num_of_dashes == 1 && whole_arg.length() > 2 &&
-      eq_idx == std::string::npos) {
+  if (num_of_dashes == 1 && whole_arg.length() > 2 && eq_idx == std::string::npos) {
     // has one dash, hence flag
     // but is longer than 2 characters
     // has no equals
@@ -30,15 +29,13 @@ SplitArg split_arg(std::string const &whole_arg) {
     // (possibility of many short flags has already been tested for)
     auto const name = whole_arg.substr(1, 1);
     auto const value = whole_arg.substr(2);
-    return SplitArg{
-        .num_of_dashes = num_of_dashes, .name = name, .value = value};
+    return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = value};
   }
   if (eq_idx == std::string::npos) {
     // has dashes prefix, but no equals,
     // hence either flag or option with next CLI argument as value
     auto const name = whole_arg.substr(num_of_dashes);
-    return SplitArg{
-        .num_of_dashes = num_of_dashes, .name = name, .value = std::nullopt};
+    return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = std::nullopt};
   }
   // has dashes prefix and equals, hence option with value
   auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
@@ -50,14 +47,12 @@ auto get_remaining_args(int start_idx, int argc, char const *argv[]) {
   auto remaining_args = std::make_unique<std::vector<std::string>>();
   int const remaining_args_count = argc - start_idx;
   remaining_args->reserve(remaining_args_count);
-  std::copy_n(argv + start_idx, remaining_args_count,
-              std::back_inserter(*remaining_args));
+  std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(*remaining_args));
   return remaining_args;
 }
 
 bool all_chars(std::string const &s) {
-  return std::all_of(s.begin(), s.end(),
-                     [](char const &c) { return std::isalpha(c) != 0; });
+  return std::all_of(s.begin(), s.end(), [](char const &c) { return std::isalpha(c) != 0; });
 }
 
 bool should_stop_parsing(std::string const &whole_arg) {
@@ -82,17 +77,12 @@ bool is_flag(std::string const &whole_arg) {
   return idx_first_not_dash == 2 && flag.length() > 1 && all_chars(flag);
 }
 
-ArgMap ArgParser::parse(int argc, char const *argv[]) const {
-  return convert_args(parse_args(argc, argv));
-}
+ArgMap ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
 
-void ArgParser::assign_positional_args(
-    ArgMap &map, std::vector<std::string> const &positional_args) const {
+void ArgParser::assign_positional_args(ArgMap &map, std::vector<std::string> const &positional_args) const {
   if (positional_args.size() < this->positional_args.size()) {
-    auto const names = std::ranges::transform_view(
-        this->positional_args, [](auto const &arg) { return arg.name; });
-    throw ArgumentNotFound(fmt::format("Missing positional arguments: `{}`",
-                                       fmt::join(names, "`, `")));
+    auto const names = std::ranges::transform_view(this->positional_args, [](auto const &arg) { return arg.name; });
+    throw ArgumentNotFound(fmt::format("Missing positional arguments: `{}`", fmt::join(names, "`, `")));
   }
   for (size_t i = 0; i < this->positional_args.size(); ++i) {
     auto const &arg = this->positional_args[i];
@@ -100,13 +90,9 @@ void ArgParser::assign_positional_args(
   }
 }
 
-void ArgParser::assign_flags(
-    ArgMap &map, std::unordered_set<std::string> const &parsed_flags) const {
-  auto spec_flags = std::ranges::transform_view(
-                        options, [](auto const &item) { return item.second; }) |
-                    std::views::filter([](auto const &option) {
-                      return option.flag_value.has_value();
-                    });
+void ArgParser::assign_flags(ArgMap &map, std::unordered_set<std::string> const &parsed_flags) const {
+  auto spec_flags = std::ranges::transform_view(options, [](auto const &item) { return item.second; }) |
+                    std::views::filter([](auto const &option) { return option.flag_value.has_value(); });
   for (auto const &flag : spec_flags) {
     if (parsed_flags.contains(flag.name))
       map.args[flag.name] = ArgValue{flag.flag_value};
@@ -115,30 +101,21 @@ void ArgParser::assign_flags(
   }
 }
 
-void ArgParser::assign_options(
-    ArgMap &map,
-    std::unordered_map<std::string, std::string> const &parsed_options) const {
-  auto parsed_flags_with_value =
-      std::ranges::filter_view(parsed_options,
-                               [&](auto const &item) {
-                                 auto const &option = options.find(item.first);
-                                 return option != options.end() &&
-                                        option->second.is_flag();
-                               }) |
-      std::views::transform([](auto const &item) { return item.first; });
+void ArgParser::assign_options(ArgMap &map, std::unordered_map<std::string, std::string> const &parsed_options) const {
+  auto parsed_flags_with_value = std::ranges::filter_view(parsed_options,
+                                                          [&](auto const &item) {
+                                                            auto const &option = options.find(item.first);
+                                                            return option != options.end() && option->second.is_flag();
+                                                          }) |
+                                 std::views::transform([](auto const &item) { return item.first; });
   if (!std::ranges::empty(parsed_flags_with_value))
-    throw FlagHasValue(
-        fmt::format("Arguments `{}` are flags, thus cannot "
-                    "take values. Simply set them with `-{}`",
-                    fmt::join(parsed_flags_with_value.begin(),
-                              parsed_flags_with_value.end(), "`, `"),
-                    fmt::join(parsed_flags_with_value.begin(),
-                              parsed_flags_with_value.end(), " -")));
-  auto spec_options = std::ranges::transform_view(
-      options, [](auto const &item) { return item.second; });
+    throw FlagHasValue(fmt::format("Arguments `{}` are flags, thus cannot "
+                                   "take values. Simply set them with `-{}`",
+                                   fmt::join(parsed_flags_with_value.begin(), parsed_flags_with_value.end(), "`, `"),
+                                   fmt::join(parsed_flags_with_value.begin(), parsed_flags_with_value.end(), " -")));
+  auto spec_options = std::ranges::transform_view(options, [](auto const &item) { return item.second; });
   for (auto const &option : spec_options) {
-    if (auto const parsed_value = parsed_options.find(option.name);
-        parsed_value != parsed_options.end())
+    if (auto const parsed_value = parsed_options.find(option.name); parsed_value != parsed_options.end())
       map.args[option.name] = ArgValue{option.converter(parsed_value->second)};
     else
       map.args[option.name] = ArgValue{option.default_value};
@@ -181,9 +158,7 @@ ParseResult ArgParser::parse_args(int argc, char const *argv[]) const {
         ++i;
         parse_result.options[split.name] = std::string(argv[i]);
       } else {
-        throw ParseError(fmt::format("Could not parse option `{}`. Perhaps you "
-                                     "forgot to provide a value?",
-                                     whole_arg));
+        throw ParseError(fmt::format("Could not parse option `{}`. Perhaps you forgot to provide a value?", whole_arg));
       }
     }
   }

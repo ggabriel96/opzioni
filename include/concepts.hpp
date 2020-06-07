@@ -5,8 +5,7 @@
 
 namespace opz {
 
-template <typename T>
-concept Integer = std::integral<T> && !std::same_as<T, bool>;
+template <typename T> concept Integer = std::integral<T> && !std::same_as<T, bool>;
 
 } // namespace opz
 

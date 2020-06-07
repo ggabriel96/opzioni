@@ -53,10 +53,9 @@ template <typename T> struct Arg {
 
   Arg<T> &among(std::set<T> choices) {
     if (this->flag_value.has_value()) {
-      throw InvalidArgument(fmt::format(
-          "Trying to set `choices` for argument `{}` while it is set as flag. "
-          "Please reconsider, as they are mutually-exclusive options",
-          original_name()));
+      throw InvalidArgument(fmt::format("Trying to set `choices` for argument `{}` while it is set as flag. "
+                                        "Please reconsider, as they are mutually-exclusive options",
+                                        original_name()));
     }
     this->choices = choices;
     return *this;
@@ -78,10 +77,9 @@ template <typename T> struct Arg {
 
   Arg<T> &as_flag(T flag_value = !T{}) {
     if (!this->choices.empty()) {
-      throw InvalidArgument(fmt::format(
-          "Trying to set argument `{}` as flag while also having `choices`. "
-          "Please reconsider, as they are mutually-exclusive options",
-          original_name()));
+      throw InvalidArgument(fmt::format("Trying to set argument `{}` as flag while also having `choices`. "
+                                        "Please reconsider, as they are mutually-exclusive options",
+                                        original_name()));
     }
     this->flag_value = flag_value;
     return *this;
@@ -140,16 +138,13 @@ struct SplitArg {
 struct ArgValue {
   std::any value;
 
-  template <typename TargetType> TargetType as() const {
-    return std::any_cast<TargetType>(this->value);
-  }
+  template <typename TargetType> TargetType as() const { return std::any_cast<TargetType>(this->value); }
 };
 
 struct ArgMap {
   ArgValue const &operator[](std::string arg_name) const {
     if (!args.contains(arg_name))
-      throw ArgumentNotFound(
-          fmt::format("Could not find argument `{}`", arg_name));
+      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", arg_name));
     return args.at(arg_name);
   }
 

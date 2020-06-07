@@ -1,6 +1,6 @@
-#include <sstream>
-
 #include "converters.hpp"
+
+#include <sstream>
 
 namespace opz {
 
@@ -15,15 +15,10 @@ template <> auto convert<bool>(std::optional<std::string> value) -> bool {
   throw ConversionError("Cannot convert an empty string to bool");
 }
 
-template <>
-auto convert<std::string>(std::optional<std::string> value) -> std::string {
-  return value.value_or("");
-}
+template <> auto convert<std::string>(std::optional<std::string> value) -> std::string { return value.value_or(""); }
 
 // https://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/
-template <>
-auto convert<std::vector<int>>(std::optional<std::string> value)
-    -> std::vector<int> {
+template <> auto convert<std::vector<int>>(std::optional<std::string> value) -> std::vector<int> {
   std::vector<int> v;
   if (!value)
     return v;

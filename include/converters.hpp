@@ -18,27 +18,22 @@ namespace opz {
 
 using AnyConverter = std::function<std::any(std::optional<std::string>)>;
 
-template <typename TargetType>
-using TypedConverter = std::function<TargetType(std::optional<std::string>)>;
+template <typename TargetType> using TypedConverter = std::function<TargetType(std::optional<std::string>)>;
 
-template <typename TargetType>
-auto convert(std::optional<std::string>) -> TargetType;
+template <typename TargetType> auto convert(std::optional<std::string>) -> TargetType;
 
 template <Integer Int> auto convert(std::optional<std::string> arg_val) -> Int {
   if (arg_val) {
     Int integer;
-    auto const conv_result = std::from_chars(
-        arg_val->data(), arg_val->data() + arg_val->size(), integer);
+    auto const conv_result = std::from_chars(arg_val->data(), arg_val->data() + arg_val->size(), integer);
     if (conv_result.ec == std::errc::invalid_argument)
-      throw ConversionError(
-          fmt::format("Cannot convert `{}` to an integer type", *arg_val));
+      throw ConversionError(fmt::format("Cannot convert `{}` to an integer type", *arg_val));
     return integer;
   }
   throw ConversionError("Cannot convert an empty string to int");
 }
 
-template <std::floating_point Float>
-auto convert(std::optional<std::string> arg_val) -> Float {
+template <std::floating_point Float> auto convert(std::optional<std::string> arg_val) -> Float {
   if (arg_val) {
     char *end = nullptr;
     Float const floatnum = [&arg_val, &end]() -> Float {
@@ -53,8 +48,7 @@ auto convert(std::optional<std::string> arg_val) -> Float {
       }
     }();
     if (errno == ERANGE || end == arg_val->data())
-      throw ConversionError(
-          fmt::format("Could not convert `{}` to floating point", *arg_val));
+      throw ConversionError(fmt::format("Could not convert `{}` to floating point", *arg_val));
     return floatnum;
   }
   throw ConversionError("Cannot convert an empty string to floating point");
