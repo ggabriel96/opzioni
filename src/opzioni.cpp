@@ -101,10 +101,17 @@ void ArgParser::assign_positional_args(
 }
 
 void ArgParser::assign_flags(
-    ArgMap &map, std::unordered_set<std::string> const &flags) const {
-  for (auto const &flag : flags) {
-    auto const arg = options.at(flag);
-    map.args[arg.name] = ArgValue{arg.flag_value};
+    ArgMap &map, std::unordered_set<std::string> const &parsed_flags) const {
+  auto spec_flags = std::ranges::transform_view(
+                        options, [](auto const &item) { return item.second; }) |
+                    std::views::filter([](auto const &option) {
+                      return option.flag_value.has_value();
+                    });
+  for (auto const &flag : spec_flags) {
+    if (parsed_flags.contains(flag.name))
+      map.args[flag.name] = ArgValue{flag.flag_value};
+    else
+      map.args[flag.name] = ArgValue{flag.default_value};
   }
 }
 
