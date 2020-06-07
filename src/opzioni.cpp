@@ -68,13 +68,13 @@ bool is_positional(std::string const &whole_arg) {
 bool is_multiple_short_flags(std::string const &whole_arg) {
   auto const flags = whole_arg.substr(1);
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
-  return idx_first_not_dash == 1 && flags.length() > 1 && all_chars(flags);
+  return idx_first_not_dash == 1 && flags.length() >= 1 && all_chars(flags);
 }
 
 bool is_flag(std::string const &whole_arg) {
   auto const flag = whole_arg.substr(2);
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
-  return idx_first_not_dash == 2 && flag.length() > 1 && all_chars(flag);
+  return idx_first_not_dash == 2 && flag.length() >= 1 && all_chars(flag);
 }
 
 ArgMap ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
