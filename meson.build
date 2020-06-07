@@ -7,8 +7,15 @@ project(
 
 include_dir = include_directories('include/')
 
+# +--------------+
+# | Dependencies |
+# +--------------+
 fmt_dep = dependency('fmt', version: '^6.2.1')
+gtest_dep = dependency('gtest', version: '^1.10.0')
 
+# +--------------------+
+# | Library definition |
+# +--------------------+
 opzioni_lib = library(
     'opzioni',
     ['src/opzioni.cpp', 'src/converters.cpp'],
@@ -16,23 +23,27 @@ opzioni_lib = library(
     include_directories: include_dir,
     install: true
 )
-
-# Make this library usable as a Meson subproject.
+# Make it usable as a Meson subproject.
 opzioni_dep = declare_dependency(
     dependencies: fmt_dep,
     include_directories: include_dir,
     link_with: opzioni_lib
 )
 
+# +-------+
+# | Tests |
+# +-------+
+test_deps = [opzioni_dep, gtest_dep]
+converters_test = executable(
+    'converters',
+    'src/converters.test.cpp',
+    dependencies: test_deps
+)
+test('converters', converters_test)
+
+# +----------+
+# | Examples |
+# +----------+
 if get_option('examples')
     subdir('examples/')
 endif
-
-pkg_mod = import('pkgconfig')
-pkg_mod.generate(
-    opzioni_lib,
-    url: 'https://github.com/ggabriel96/opzioni',
-    filebase: 'opzioni',
-    subdirs: 'opzioni/',
-    version: meson.project_version(),
-)

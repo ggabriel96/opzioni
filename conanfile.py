@@ -30,6 +30,7 @@ class OpzioniConan(ConanFile):
     generators = "pkg_config"
     exports_sources = ["meson.build", "meson_options.txt", "include/*", "src/*"]
     requires = "fmt/6.2.1"
+    build_requires = "gtest/1.10.0"
 
     def set_version(self):
         content = load(os.path.join(self.recipe_folder, "meson.build"))
