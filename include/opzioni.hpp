@@ -11,6 +11,7 @@
 
 #include "converters.hpp"
 #include "exceptions.hpp"
+#include "types.hpp"
 
 namespace opz {
 
@@ -150,13 +151,14 @@ public:
       this->options[spec.name] = ArgInfo(spec);
   }
 
-  ArgMap parse_args(int, char const *[]) const;
+  ArgMap parse(int, char const *[]) const;
 
 private:
   std::vector<ArgInfo> positional_args;
   std::unordered_map<std::string, ArgInfo> options;
 
-  bool is_multiple_short_flags(std::string const &) const;
+  ParseResult parse_args(int, char const *[]) const;
+  ArgMap convert_args(ParseResult &&) const;
 
   template <typename T>
   void add_choice_checking_to_conversion(Arg<T> &spec) const noexcept {
@@ -171,6 +173,8 @@ private:
       return result;
     };
   }
+
+  friend ArgMap;
 };
 
 struct ArgValue {
@@ -197,10 +201,7 @@ public:
 private:
   std::unordered_map<std::string, ArgValue> args;
 
-  void set_defaults_for_missing_options(
-      std::unordered_map<std::string, ArgInfo> const &);
-
-  friend ArgMap ArgParser::parse_args(int, char const *[]) const;
+  friend ArgMap ArgParser::convert_args(ParseResult &&) const;
 };
 
 } // namespace opz

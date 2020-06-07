@@ -2,6 +2,7 @@
 #include <cctype>
 
 #include "opzioni.hpp"
+#include <fmt/format.h>
 
 namespace opz {
 
@@ -80,73 +81,78 @@ bool is_flag(std::string const &whole_arg) {
   return idx_first_not_dash == 2 && flag.length() > 1 && all_chars(flag);
 }
 
-ArgMap ArgParser::parse_args(int argc, char const *argv[]) const {
-  ArgMap arg_map;
-  int positional_idx = 0;
+ArgMap ArgParser::parse(int argc, char const *argv[]) const {
+  return convert_args(parse_args(argc, argv));
+}
+
+ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
+  ArgMap map;
+  map.remaining_args = std::move(parse_result.remaining);
+  for (size_t i = 0; i < positional_args.size(); ++i) {
+    if (i >= parse_result.positional.size()) {
+      throw ArgumentNotFound(fmt::format("Missing positional argument `{}`",
+                                         positional_args[i].name));
+    }
+    map.args[positional_args[i].name] =
+        ArgValue{positional_args[i].converter(parse_result.positional[i])};
+  }
+  for (auto const &flag : parse_result.flags) {
+    auto const arg = this->options.at(flag);
+    map.args[arg.name] = ArgValue{arg.flag_value};
+  }
+  for (auto const &[name, value] : parse_result.options) {
+    auto const arg = this->options.at(name);
+    if (arg.is_flag()) {
+      throw FlagHasValue(fmt::format("Argument `{0}` is a flag, thus cannot "
+                                     "take a value. Simply set it with `-{0}`",
+                                     name));
+    }
+    map.args[arg.name] = ArgValue{arg.converter(value)};
+  }
+  std::for_each(options.begin(), options.end(), [&](auto const &item) {
+    auto const &option = item.second;
+    if (!parse_result.options.contains(option.name) &&
+        option.default_value.has_value()) {
+      map.args[option.name] = ArgValue{option.default_value};
+    }
+  });
+  return map;
+}
+
+ParseResult ArgParser::parse_args(int argc, char const *argv[]) const {
+  ParseResult parse_result;
   for (int i = 1; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
     if (should_stop_parsing(whole_arg)) {
-      arg_map.remaining_args = get_remaining_args(i + 1, argc, argv);
+      parse_result.remaining = get_remaining_args(i + 1, argc, argv);
       break;
     }
     if (is_positional(whole_arg)) {
-      auto const positional_arg = this->positional_args.at(positional_idx);
-      auto const parsed_value = positional_arg.converter(whole_arg);
-      arg_map.args[positional_arg.name] = ArgValue{parsed_value};
-      ++positional_idx;
+      parse_result.positional.push_back(whole_arg);
     } else if (is_multiple_short_flags(whole_arg)) {
-      // support for arguments like -abc where a, b and c are flags
       auto const flags = whole_arg.substr(1);
-      std::for_each(
-          flags.begin(), flags.end(), [this, &arg_map](char const &c) {
-            auto const flag_arg = this->options.at(std::string(1, c));
-            arg_map.args[flag_arg.name] = ArgValue{flag_arg.flag_value};
-          });
+      for (char const &flag : flags) {
+        parse_result.flags.insert(std::string(1, flag));
+      }
+    } else if (is_flag(whole_arg)) {
+      parse_result.flags.insert(whole_arg.substr(2));
     } else {
       auto const split = split_arg(whole_arg);
-      if (!this->options.contains(split.name))
-        throw UnknownArgument(fmt::format("Unknown argument `{}`", split.name));
-      auto const arg = this->options.at(split.name);
-      if (arg.is_flag()) {
-        if (split.value.has_value())
-          throw FlagHasValue(
-              fmt::format("Argument `{0}` is a flag, thus cannot take a value "
-                          "as in `{1}`. Simply set it with `-{0}`",
-                          arg.name, whole_arg));
-        arg_map.args[split.name] = ArgValue{arg.flag_value};
+      if (split.value) {
+        parse_result.options[split.name] = *split.value;
+      } else if (i + 1 < argc) {
+        // if we have not yet exhausted argv,
+        // interpret next element as value
+        ++i;
+        parse_result.options[split.name] = std::string(argv[i]);
       } else {
-        auto const arg_value = [&]() {
-          if (split.value) {
-            // if `split_arg` managed to parse a value, use it
-            return *split.value;
-          }
-          if (i + 1 < argc) {
-            // if we have not yet exhausted argv, interpret next element as
-            // value
-            ++i;
-            return std::string(argv[i]);
-          } else {
-            throw MissingValue(
-                fmt::format("Missing value for option `{}`", whole_arg));
-          }
-        }();
-        auto const parsed_value = arg.converter(arg_value);
-        arg_map.args[split.name] = ArgValue{parsed_value};
+        throw ParseError(fmt::format("Could not parse option `{}`. Perhaps you "
+                                     "forgot to provide a value?",
+                                     whole_arg));
       }
     }
   }
-  arg_map.set_defaults_for_missing_options(this->options);
-  return arg_map;
-}
-
-void ArgMap::set_defaults_for_missing_options(
-    std::unordered_map<std::string, ArgInfo> const &options) {
-  std::for_each(options.begin(), options.end(), [this](auto const &item) {
-    auto const &option = item.second;
-    if (!this->args.contains(option.name) && option.default_value.has_value()) {
-      this->args[option.name] = ArgValue{option.default_value};
-    }
-  });
+  return parse_result;
 }
 
 } // namespace opz

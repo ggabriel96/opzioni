@@ -25,7 +25,7 @@ int main(int argc, char const *argv[]) {
   ap.add(Arg<bool>("-b").help("Short flag b").as_flag());
   ap.add(Arg<std::vector<int>>("--numbers").help("A list of numbers"));
 
-  auto const args = ap.parse_args(argc, argv);
+  auto const args = ap.parse(argc, argv);
   fmt::print("\nNumber of arguments: {}\n", args.size());
   fmt::print("name: {}\n", args["name"].as<std::string>());
   fmt::print("last name: {}\n", args["last-name"].as<std::string>());
