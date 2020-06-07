@@ -29,6 +29,10 @@ class MissingValue : public std::invalid_argument {
   using std::invalid_argument::invalid_argument;
 };
 
+class ParseError : public std::invalid_argument {
+  using std::invalid_argument::invalid_argument;
+};
+
 class UnknownArgument : public std::out_of_range {
   using std::out_of_range::out_of_range;
 };
