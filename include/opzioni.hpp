@@ -30,13 +30,13 @@ public:
 
 private:
   std::vector<ArgInfo> positional_args;
-  std::unordered_map<std::string, ArgInfo> options;
+  std::map<std::string, ArgInfo> options;
 
   ParseResult parse_args(int, char const *[]) const;
   ArgMap convert_args(ParseResult &&) const;
   void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
-  void assign_flags(ArgMap &, std::unordered_set<std::string> const &) const;
-  void assign_options(ArgMap &, std::unordered_map<std::string, std::string> const &) const;
+  void assign_flags(ArgMap &, std::set<std::string> const &) const;
+  void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
 
   template <typename T> void add_choice_checking_to_conversion(Arg<T> &spec) const noexcept {
     spec.converter = [arg_name = spec.name, choices = spec.choices,

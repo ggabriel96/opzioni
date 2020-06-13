@@ -7,8 +7,8 @@
 #include <optional>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <set>
 #include <vector>
 
 #include <fmt/format.h>
@@ -124,8 +124,8 @@ struct ArgInfo {
 
 struct ParseResult {
   std::unique_ptr<std::vector<std::string>> remaining;
-  std::unordered_map<std::string, std::string> options;
-  std::unordered_set<std::string> flags;
+  std::map<std::string, std::string> options;
+  std::set<std::string> flags;
   std::vector<std::string> positional;
 };
 
@@ -150,7 +150,7 @@ struct ArgMap {
 
   auto size() const noexcept { return this->args.size(); }
 
-  std::unordered_map<std::string, ArgValue> args;
+  std::map<std::string, ArgValue> args;
   std::unique_ptr<std::vector<std::string>> remaining_args;
 };
 

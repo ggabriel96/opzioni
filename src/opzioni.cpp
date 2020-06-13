@@ -96,7 +96,7 @@ void ArgParser::assign_positional_args(ArgMap &map, std::vector<std::string> con
   }
 }
 
-void ArgParser::assign_flags(ArgMap &map, std::unordered_set<std::string> const &parsed_flags) const {
+void ArgParser::assign_flags(ArgMap &map, std::set<std::string> const &parsed_flags) const {
   auto spec_flags = std::ranges::transform_view(options, [](auto const &item) { return item.second; }) |
                     std::views::filter([](auto const &option) { return option.flag_value.has_value(); });
   for (auto const &flag : spec_flags) {
@@ -107,7 +107,7 @@ void ArgParser::assign_flags(ArgMap &map, std::unordered_set<std::string> const 
   }
 }
 
-void ArgParser::assign_options(ArgMap &map, std::unordered_map<std::string, std::string> const &parsed_options) const {
+void ArgParser::assign_options(ArgMap &map, std::map<std::string, std::string> const &parsed_options) const {
   auto parsed_flags_with_value = std::ranges::filter_view(parsed_options,
                                                           [&](auto const &item) {
                                                             auto const &option = options.find(item.first);
