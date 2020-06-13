@@ -3,12 +3,11 @@
 
 #include <any>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
-#include <map>
-#include <set>
 #include <vector>
 
 #include <fmt/format.h>
@@ -16,6 +15,12 @@
 #include "converters.hpp"
 
 namespace opz {
+
+struct Command {
+  std::string name;
+  std::string epilog;
+  std::string description;
+};
 
 template <typename T> struct Arg {
   std::string name;
@@ -123,6 +128,8 @@ struct ArgInfo {
 };
 
 struct ParseResult {
+  std::string sub_name;
+  std::unique_ptr<ParseResult> sub;
   std::vector<std::string> positional;
   std::map<std::string, std::string> options;
   std::set<std::string> flags;
@@ -141,14 +148,18 @@ struct ArgValue {
 };
 
 struct ArgMap {
-  ArgValue const &operator[](std::string arg_name) const {
-    if (!args.contains(arg_name))
-      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", arg_name));
-    return args.at(arg_name);
+  ArgValue const &operator[](std::string name) const {
+    try {
+      return args.at(name);
+    } catch (std::out_of_range const &) {
+      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", name));
+    }
   }
 
   auto size() const noexcept { return this->args.size(); }
 
+  std::string sub_name;
+  std::unique_ptr<ArgMap> sub;
   std::map<std::string, ArgValue> args;
 };
 

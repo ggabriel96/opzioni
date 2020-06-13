@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <memory>
 #include <ranges>
 
 namespace opz {
@@ -69,9 +70,9 @@ bool is_flag(std::string const &whole_arg) {
   return idx_first_not_dash == 2 && flag.length() >= 1 && all_chars(flag);
 }
 
-ArgMap ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
+std::unique_ptr<ArgMap> ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
 
-void ArgParser::assign_positional_args(ArgMap &map, std::vector<std::string> const &parsed_positional) const {
+void ArgParser::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
   if (parsed_positional.size() < positional_args.size()) {
     auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; });
     throw ArgumentNotFound(fmt::format("Missing {} positional argument{:s<{}}: `{}`", names.size(), "",
@@ -84,22 +85,22 @@ void ArgParser::assign_positional_args(ArgMap &map, std::vector<std::string> con
   }
   for (size_t i = 0; i < positional_args.size(); ++i) {
     auto const &arg = positional_args[i];
-    map.args[arg.name] = ArgValue{arg.converter(parsed_positional[i])};
+    map->args[arg.name] = ArgValue{arg.converter(parsed_positional[i])};
   }
 }
 
-void ArgParser::assign_flags(ArgMap &map, std::set<std::string> const &parsed_flags) const {
+void ArgParser::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
   auto spec_flags = std::ranges::transform_view(options, [](auto const &item) { return item.second; }) |
                     std::views::filter([](auto const &option) { return option.flag_value.has_value(); });
   for (auto const &flag : spec_flags) {
     if (parsed_flags.contains(flag.name))
-      map.args[flag.name] = ArgValue{flag.flag_value};
+      map->args[flag.name] = ArgValue{flag.flag_value};
     else
-      map.args[flag.name] = ArgValue{flag.default_value};
+      map->args[flag.name] = ArgValue{flag.default_value};
   }
 }
 
-void ArgParser::assign_options(ArgMap &map, std::map<std::string, std::string> const &parsed_options) const {
+void ArgParser::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
   auto parsed_flags_with_value = std::ranges::filter_view(parsed_options,
                                                           [&](auto const &item) {
                                                             auto const &option = options.find(item.first);
@@ -115,49 +116,63 @@ void ArgParser::assign_options(ArgMap &map, std::map<std::string, std::string> c
                       std::views::transform([](auto const &item) { return item.second; });
   for (auto const &option : spec_options) {
     if (auto const parsed_value = parsed_options.find(option.name); parsed_value != parsed_options.end())
-      map.args[option.name] = ArgValue{option.converter(parsed_value->second)};
+      map->args[option.name] = ArgValue{option.converter(parsed_value->second)};
     else
-      map.args[option.name] = ArgValue{option.default_value};
+      map->args[option.name] = ArgValue{option.default_value};
   }
 }
 
-ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
-  ArgMap map;
-  assign_positional_args(map, parse_result.positional);
-  assign_flags(map, parse_result.flags);
-  assign_options(map, parse_result.options);
+[[no_discard]] decltype(auto) ArgParser::find_sub(std::string_view const arg) const noexcept {
+  return std::find_if(subs.begin(), subs.end(), [&arg](auto const &ptr) { return ptr->name == arg; });
+}
+
+std::unique_ptr<ArgMap> ArgParser::convert_args(std::unique_ptr<ParseResult> parse_result) const {
+  auto map = std::make_unique<ArgMap>();
+  if (parse_result->sub != nullptr) {
+    auto const sub = find_sub(parse_result->sub_name);
+    map->sub = std::move((*sub)->convert_args(std::move(parse_result->sub)));
+    map->sub_name = (*sub)->name;
+  }
+  assign_positional_args(map.get(), parse_result->positional);
+  assign_flags(map.get(), parse_result->flags);
+  assign_options(map.get(), parse_result->options);
   return map;
 }
 
-ParseResult ArgParser::parse_args(int argc, char const *argv[]) const {
-  ParseResult parse_result;
-  for (int i = 1; i < argc; ++i) {
+std::unique_ptr<ParseResult> ArgParser::parse_args(int argc, char const *argv[], int start) const {
+  auto parse_result = std::make_unique<ParseResult>();
+  for (int i = start; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
+    if (auto const sub = find_sub(whole_arg); sub != subs.end()) {
+      parse_result->sub_name = whole_arg;
+      parse_result->sub = std::move((*sub)->parse_args(argc, argv, i + 1));
+      break;
+    }
     if (is_two_dashes(whole_arg)) {
       int const start_idx = i + 1;
       int const remaining_args_count = argc - start_idx;
-      parse_result.positional.reserve(parse_result.positional.size() + remaining_args_count);
-      std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(parse_result.positional));
+      parse_result->positional.reserve(parse_result->positional.size() + remaining_args_count);
+      std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(parse_result->positional));
       break;
     }
     if (is_positional(whole_arg)) {
-      parse_result.positional.push_back(whole_arg);
+      parse_result->positional.push_back(whole_arg);
     } else if (is_multiple_short_flags(whole_arg)) {
       auto const flags = whole_arg.substr(1);
       for (char const &flag : flags) {
-        parse_result.flags.insert(std::string(1, flag));
+        parse_result->flags.insert(std::string(1, flag));
       }
     } else if (is_flag(whole_arg)) {
-      parse_result.flags.insert(whole_arg.substr(2));
+      parse_result->flags.insert(whole_arg.substr(2));
     } else {
       auto const split = split_arg(whole_arg);
       if (split.value) {
-        parse_result.options[split.name] = *split.value;
+        parse_result->options[split.name] = *split.value;
       } else if (i + 1 < argc) {
         // if we have not yet exhausted argv,
         // interpret next element as value
         ++i;
-        parse_result.options[split.name] = std::string(argv[i]);
+        parse_result->options[split.name] = std::string(argv[i]);
       } else {
         throw ParseError(fmt::format("Could not parse option `{}`. Perhaps you forgot to provide a value?", whole_arg));
       }
