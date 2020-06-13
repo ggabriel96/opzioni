@@ -43,19 +43,11 @@ SplitArg split_arg(std::string const &whole_arg) {
   return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = value};
 }
 
-auto get_remaining_args(int start_idx, int argc, char const *argv[]) {
-  auto remaining_args = std::make_unique<std::vector<std::string>>();
-  int const remaining_args_count = argc - start_idx;
-  remaining_args->reserve(remaining_args_count);
-  std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(*remaining_args));
-  return remaining_args;
-}
-
 bool all_chars(std::string const &s) {
   return std::all_of(s.begin(), s.end(), [](char const &c) { return std::isalpha(c) != 0; });
 }
 
-bool should_stop_parsing(std::string const &whole_arg) {
+bool is_two_dashes(std::string const &whole_arg) {
   auto const all_dashes = whole_arg.find_first_not_of('-') == std::string::npos;
   return whole_arg.length() == 2 && all_dashes;
 }
@@ -131,7 +123,6 @@ void ArgParser::assign_options(ArgMap &map, std::map<std::string, std::string> c
 
 ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
   ArgMap map;
-  map.remaining_args = std::move(parse_result.remaining);
   assign_positional_args(map, parse_result.positional);
   assign_flags(map, parse_result.flags);
   assign_options(map, parse_result.options);
@@ -142,8 +133,11 @@ ParseResult ArgParser::parse_args(int argc, char const *argv[]) const {
   ParseResult parse_result;
   for (int i = 1; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
-    if (should_stop_parsing(whole_arg)) {
-      parse_result.remaining = get_remaining_args(i + 1, argc, argv);
+    if (is_two_dashes(whole_arg)) {
+      int const start_idx = i + 1;
+      int const remaining_args_count = argc - start_idx;
+      parse_result.positional.reserve(parse_result.positional.size() + remaining_args_count);
+      std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(parse_result.positional));
       break;
     }
     if (is_positional(whole_arg)) {

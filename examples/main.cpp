@@ -31,10 +31,4 @@ int main(int argc, char const *argv[]) {
   fmt::print("a: {}\n", args["a"].as<bool>());
   fmt::print("b: {}\n", args["b"].as<bool>());
   fmt::print("numbers: [{}]\n", fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
-  if (args.remaining_args != nullptr) {
-    fmt::print("remaining_args:\n");
-    fmt::print("- size: {}\n", args.remaining_args->size());
-    fmt::print("- capacity: {}\n", args.remaining_args->capacity());
-    fmt::print("- items: [{}]\n", fmt::join(*args.remaining_args, ", "));
-  }
 }

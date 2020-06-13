@@ -123,10 +123,9 @@ struct ArgInfo {
 };
 
 struct ParseResult {
-  std::unique_ptr<std::vector<std::string>> remaining;
+  std::vector<std::string> positional;
   std::map<std::string, std::string> options;
   std::set<std::string> flags;
-  std::vector<std::string> positional;
 };
 
 struct SplitArg {
@@ -151,7 +150,6 @@ struct ArgMap {
   auto size() const noexcept { return this->args.size(); }
 
   std::map<std::string, ArgValue> args;
-  std::unique_ptr<std::vector<std::string>> remaining_args;
 };
 
 } // namespace opz
