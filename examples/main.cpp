@@ -38,7 +38,8 @@ int main(int argc, char const *argv[]) {
 
   if (args.sub != nullptr) {
     auto sub = args.sub.get();
-    fmt::print("\nNumber of sub-arguments: {}\n", sub->size());
+    fmt::print("\nSub-argument parsed: {}\n", sub->sub_name);
+    fmt::print("Number of sub-arguments: {}\n", sub->size());
     fmt::print("subname: {}\n", (*sub)["subname"].as<std::string>());
     fmt::print("x: {}\n", sub->args["x"].as<bool>());
   }
