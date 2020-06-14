@@ -54,7 +54,7 @@ private:
 
   ArgMap convert_args(ParseResult &&) const;
   void convert_args_into(ArgMap *, ParseResult *) const;
-  std::unique_ptr<ArgMap> convert_args(std::unique_ptr<ParseResult>) const;
+  std::unique_ptr<ArgMap> convert_args(ParseResult *) const;
 
   void assign_positional_args(ArgMap *, std::vector<std::string> const &) const;
   void assign_flags(ArgMap *, std::set<std::string> const &) const;

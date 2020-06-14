@@ -132,16 +132,16 @@ ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
   return map;
 }
 
-std::unique_ptr<ArgMap> ArgParser::convert_args(std::unique_ptr<ParseResult> parse_result) const {
+std::unique_ptr<ArgMap> ArgParser::convert_args(ParseResult *parse_result) const {
   auto map = std::make_unique<ArgMap>();
-  convert_args_into(map.get(), parse_result.get());
+  convert_args_into(map.get(), parse_result);
   return map;
 }
 
 void ArgParser::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
   if (parse_result->sub != nullptr) {
     auto const sub = find_sub(parse_result->sub_name);
-    map->sub = (*sub)->convert_args(std::move(parse_result->sub));
+    map->sub = (*sub)->convert_args(parse_result->sub.get());
     map->sub_name = (*sub)->name;
   }
   assign_positional_args(map, parse_result->positional);
