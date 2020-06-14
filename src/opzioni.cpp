@@ -70,8 +70,6 @@ bool is_flag(std::string const &whole_arg) {
   return idx_first_not_dash == 2 && flag.length() >= 1 && all_chars(flag);
 }
 
-std::unique_ptr<ArgMap> ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
-
 void ArgParser::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
   if (parsed_positional.size() < positional_args.size()) {
     auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; });
@@ -126,26 +124,53 @@ void ArgParser::assign_options(ArgMap *map, std::map<std::string, std::string> c
   return std::find_if(subs.begin(), subs.end(), [&arg](auto const &ptr) { return ptr->name == arg; });
 }
 
+ArgMap ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
+
+ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
+  ArgMap map;
+  convert_args_into(&map, &parse_result);
+  return map;
+}
+
 std::unique_ptr<ArgMap> ArgParser::convert_args(std::unique_ptr<ParseResult> parse_result) const {
   auto map = std::make_unique<ArgMap>();
+  convert_args_into(map.get(), parse_result.get());
+  return map;
+}
+
+void ArgParser::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
   if (parse_result->sub != nullptr) {
     auto const sub = find_sub(parse_result->sub_name);
-    map->sub = std::move((*sub)->convert_args(std::move(parse_result->sub)));
+    map->sub = (*sub)->convert_args(std::move(parse_result->sub));
     map->sub_name = (*sub)->name;
   }
-  assign_positional_args(map.get(), parse_result->positional);
-  assign_flags(map.get(), parse_result->flags);
-  assign_options(map.get(), parse_result->options);
-  return map;
+  assign_positional_args(map, parse_result->positional);
+  assign_flags(map, parse_result->flags);
+  assign_options(map, parse_result->options);
+}
+
+// +------------+
+// | parse_args |
+// +------------+
+
+ParseResult ArgParser::parse_args(int argc, char const *argv[]) const {
+  ParseResult parse_result;
+  parse_args_into(&parse_result, argc, argv);
+  return parse_result;
 }
 
 std::unique_ptr<ParseResult> ArgParser::parse_args(int argc, char const *argv[], int start) const {
   auto parse_result = std::make_unique<ParseResult>();
+  parse_args_into(parse_result.get(), argc, argv, start);
+  return parse_result;
+}
+
+void ArgParser::parse_args_into(ParseResult *parse_result, int argc, char const *argv[], int start) const {
   for (int i = start; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
     if (auto const sub = find_sub(whole_arg); sub != subs.end()) {
       parse_result->sub_name = whole_arg;
-      parse_result->sub = std::move((*sub)->parse_args(argc, argv, i + 1));
+      parse_result->sub = (*sub)->parse_args(argc, argv, i + 1);
       break;
     }
     if (is_two_dashes(whole_arg)) {
@@ -178,7 +203,6 @@ std::unique_ptr<ParseResult> ArgParser::parse_args(int argc, char const *argv[],
       }
     }
   }
-  return parse_result;
 }
 
 } // namespace opz
