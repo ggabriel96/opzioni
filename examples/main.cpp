@@ -38,7 +38,7 @@ int main(int argc, char const *argv[]) {
 
   if (args.command != nullptr) {
     auto command = args.command.get();
-    fmt::print("\nParsed command: {}\n", command->command_name);
+    fmt::print("\nParsed command: {}\n", args.command_name);
     fmt::print("Number of arguments to command: {}\n", command->size());
     fmt::print("subname: {}\n", (*command)["subname"].as<std::string>());
     fmt::print("x: {}\n", command->args["x"].as<bool>());
