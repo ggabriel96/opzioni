@@ -47,6 +47,8 @@ private:
   std::map<std::string, ArgInfo> options;
 
   [[no_discard]] decltype(auto) find_cmd(std::string_view const) const noexcept;
+  bool is_flag(std::string const &) const noexcept;
+  bool is_multiple_short_flags(std::string const &) const noexcept;
 
   ParseResult parse_args(int, char const *[]) const;
   void parse_args_into(ParseResult *, int, char const *[], int = 0) const;

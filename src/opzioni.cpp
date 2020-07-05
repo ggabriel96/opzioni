@@ -3,7 +3,6 @@
 #include <fmt/format.h>
 
 #include <algorithm>
-#include <cctype>
 #include <memory>
 #include <ranges>
 
@@ -44,10 +43,6 @@ SplitArg split_arg(std::string const &whole_arg) {
   return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = value};
 }
 
-bool all_chars(std::string const &s) {
-  return std::all_of(s.begin(), s.end(), [](char const &c) { return std::isalpha(c) != 0; });
-}
-
 bool is_two_dashes(std::string const &whole_arg) {
   auto const all_dashes = whole_arg.find_first_not_of('-') == std::string::npos;
   return whole_arg.length() == 2 && all_dashes;
@@ -58,16 +53,18 @@ bool is_positional(std::string const &whole_arg) {
   return idx_first_not_dash == 0;
 }
 
-bool is_multiple_short_flags(std::string const &whole_arg) {
-  auto const flags = whole_arg.substr(1);
-  auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
-  return idx_first_not_dash == 1 && flags.length() >= 1 && all_chars(flags);
-}
-
-bool is_flag(std::string const &whole_arg) {
+bool Program::is_flag(std::string const &whole_arg) const noexcept {
   auto const flag = whole_arg.substr(2);
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
-  return idx_first_not_dash == 2 && flag.length() >= 1 && all_chars(flag);
+  return idx_first_not_dash == 2 && flag.length() >= 1 && this->options.contains(flag);
+}
+
+bool Program::is_multiple_short_flags(std::string const &whole_arg) const noexcept {
+  auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
+  auto const flags = whole_arg.substr(1);
+  auto const all_short_flags = std::all_of(flags.begin(), flags.end(),
+                                           [this](char const &c) { return this->options.contains(std::string(1, c)); });
+  return idx_first_not_dash == 1 && flags.length() >= 1 && all_short_flags;
 }
 
 void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
