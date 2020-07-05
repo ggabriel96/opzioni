@@ -49,7 +49,7 @@ private:
   [[no_discard]] decltype(auto) find_command(std::string_view const) const noexcept;
 
   ParseResult parse_args(int, char const *[]) const;
-  void parse_args_into(ParseResult *, int, char const *[], int = 1) const;
+  void parse_args_into(ParseResult *, int, char const *[], int = 0) const;
   std::unique_ptr<ParseResult> parse_args(int, char const *[], int) const;
 
   ArgMap convert_args(ParseResult &&) const;

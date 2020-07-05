@@ -139,10 +139,10 @@ std::unique_ptr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
 }
 
 void Program::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
-  if (parse_result->command != nullptr) {
-    auto const command = find_command(parse_result->command_name);
-    map->command = (*command)->convert_args(parse_result->command.get());
-    map->command_name = (*command)->name;
+  map->command_name = parse_result->command_name;
+  if (parse_result->subcommand != nullptr) {
+    auto const subcommand = find_command(parse_result->subcommand->command_name);
+    map->subcommand = (*subcommand)->convert_args(parse_result->subcommand.get());
   }
   assign_positional_args(map, parse_result->positional);
   assign_flags(map, parse_result->flags);
@@ -166,11 +166,11 @@ std::unique_ptr<ParseResult> Program::parse_args(int argc, char const *argv[], i
 }
 
 void Program::parse_args_into(ParseResult *parse_result, int argc, char const *argv[], int start) const {
-  for (int i = start; i < argc; ++i) {
+  parse_result->command_name = std::string(argv[start]);
+  for (int i = start + 1; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
-    if (auto const command = find_command(whole_arg); command != commands.end()) {
-      parse_result->command_name = whole_arg;
-      parse_result->command = (*command)->parse_args(argc, argv, i + 1);
+    if (auto const subcommand = find_command(whole_arg); subcommand != commands.end()) {
+      parse_result->subcommand = (*subcommand)->parse_args(argc, argv, i);
       break;
     }
     if (is_two_dashes(whole_arg)) {
