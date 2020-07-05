@@ -34,19 +34,19 @@ public:
       this->options[spec.name] = ArgInfo(spec);
   }
 
-  [[no_discard]] Program *command(Command const &spec) {
-    auto command = commands.insert(commands.end(), std::make_unique<Program>(spec.name, spec.epilog, spec.description));
-    return command->get();
+  [[no_discard]] Program *cmd(Command const &spec) {
+    auto cmd = cmds.insert(cmds.end(), std::make_unique<Program>(spec.name, spec.epilog, spec.description));
+    return cmd->get();
   }
 
   ArgMap parse(int, char const *[]) const;
 
 private:
-  std::vector<std::unique_ptr<Program>> commands;
+  std::vector<std::unique_ptr<Program>> cmds;
   std::vector<ArgInfo> positional_args;
   std::map<std::string, ArgInfo> options;
 
-  [[no_discard]] decltype(auto) find_command(std::string_view const) const noexcept;
+  [[no_discard]] decltype(auto) find_cmd(std::string_view const) const noexcept;
 
   ParseResult parse_args(int, char const *[]) const;
   void parse_args_into(ParseResult *, int, char const *[], int = 0) const;

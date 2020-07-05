@@ -128,8 +128,8 @@ struct ArgInfo {
 };
 
 struct ParseResult {
-  std::string command_name;
-  std::unique_ptr<ParseResult> subcommand;
+  std::string cmd_name;
+  std::unique_ptr<ParseResult> subcmd;
   std::vector<std::string> positional;
   std::map<std::string, std::string> options;
   std::set<std::string> flags;
@@ -158,8 +158,8 @@ struct ArgMap {
 
   auto size() const noexcept { return this->args.size(); }
 
-  std::string command_name;
-  std::unique_ptr<ArgMap> subcommand;
+  std::string cmd_name;
+  std::unique_ptr<ArgMap> subcmd;
   std::map<std::string, ArgValue> args;
 };
 
