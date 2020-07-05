@@ -11,21 +11,21 @@ int main(int argc, char const *argv[]) {
 
   fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  opzioni::ArgParser ap;
-  ap.add(Arg<std::string>("name").help("Your name"));
-  ap.add(Arg<std::string>("--last-name").help("Your last name"));
-  ap.add(Arg<int>("-v").help("Level of verbosity").among({0, 1, 2, 3, 4}).with_default(0));
-  ap.add(Arg<double>("-d").help("A double"));
-  ap.add(Arg<int>("--flag").help("Long flag").with_default(7).as_flag(11));
-  ap.add(Arg<bool>("-a").help("Short flag a").with_default(false).as_flag(true));
-  ap.add(Arg<bool>("-b").help("Short flag b").as_flag());
-  ap.add(Arg<std::vector<int>>("--numbers").help("A list of numbers"));
+  opzioni::Program program;
+  program.add(Arg<std::string>("name").help("Your name"));
+  program.add(Arg<std::string>("--last-name").help("Your last name"));
+  program.add(Arg<int>("-v").help("Level of verbosity").among({0, 1, 2, 3, 4}).with_default(0));
+  program.add(Arg<double>("-d").help("A double"));
+  program.add(Arg<int>("--flag").help("Long flag").with_default(7).as_flag(11));
+  program.add(Arg<bool>("-a").help("Short flag a").with_default(false).as_flag(true));
+  program.add(Arg<bool>("-b").help("Short flag b").as_flag());
+  program.add(Arg<std::vector<int>>("--numbers").help("A list of numbers"));
 
-  auto subcmd = ap.sub({.name = "subcmd"});
+  auto subcmd = program.sub({.name = "subcmd"});
   subcmd->add(Arg<std::string>("subname").help("Your name again, please"));
   subcmd->add(Arg<bool>("-x").help("A nested flag").as_flag());
 
-  auto const args = ap.parse(argc, argv);
+  auto const args = program.parse(argc, argv);
   fmt::print("\nNumber of arguments: {}\n", args.size());
   fmt::print("name: {}\n", args["name"].as<std::string>());
   fmt::print("last name: {}\n", args["last-name"].as<std::string>());

@@ -15,14 +15,14 @@
 
 namespace opzioni {
 
-class ArgParser {
+class Program {
 public:
   std::string name;
   std::string epilog;
   std::string description;
 
-  ArgParser() = default;
-  ArgParser(std::string name, std::string epilog, std::string description)
+  Program() = default;
+  Program(std::string name, std::string epilog, std::string description)
       : name(name), epilog(epilog), description(description) {}
 
   template <typename T> void add(Arg<T> spec) {
@@ -34,15 +34,15 @@ public:
       this->options[spec.name] = ArgInfo(spec);
   }
 
-  [[no_discard]] ArgParser *sub(Command const &command) {
-    auto subp = subs.insert(subs.end(), make_unique<ArgParser>(command.name, command.epilog, command.description));
+  [[no_discard]] Program *sub(Command const &command) {
+    auto subp = subs.insert(subs.end(), make_unique<Program>(command.name, command.epilog, command.description));
     return subp->get();
   }
 
   ArgMap parse(int, char const *[]) const;
 
 private:
-  std::vector<std::unique_ptr<ArgParser>> subs;
+  std::vector<std::unique_ptr<Program>> subs;
   std::vector<ArgInfo> positional_args;
   std::map<std::string, ArgInfo> options;
 

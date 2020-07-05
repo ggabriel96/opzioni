@@ -70,7 +70,7 @@ bool is_flag(std::string const &whole_arg) {
   return idx_first_not_dash == 2 && flag.length() >= 1 && all_chars(flag);
 }
 
-void ArgParser::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
+void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
   if (parsed_positional.size() < positional_args.size()) {
     auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; });
     throw ArgumentNotFound(fmt::format("Missing {} positional argument{:s<{}}: `{}`", names.size(), "",
@@ -87,7 +87,7 @@ void ArgParser::assign_positional_args(ArgMap *map, std::vector<std::string> con
   }
 }
 
-void ArgParser::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
+void Program::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
   auto spec_flags = std::ranges::transform_view(options, [](auto const &item) { return item.second; }) |
                     std::views::filter([](auto const &option) { return option.flag_value.has_value(); });
   for (auto const &flag : spec_flags) {
@@ -98,7 +98,7 @@ void ArgParser::assign_flags(ArgMap *map, std::set<std::string> const &parsed_fl
   }
 }
 
-void ArgParser::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
+void Program::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
   auto parsed_flags_with_value = std::ranges::filter_view(parsed_options,
                                                           [&](auto const &item) {
                                                             auto const &option = options.find(item.first);
@@ -120,25 +120,25 @@ void ArgParser::assign_options(ArgMap *map, std::map<std::string, std::string> c
   }
 }
 
-[[no_discard]] decltype(auto) ArgParser::find_sub(std::string_view const arg) const noexcept {
+[[no_discard]] decltype(auto) Program::find_sub(std::string_view const arg) const noexcept {
   return std::find_if(subs.begin(), subs.end(), [&arg](auto const &ptr) { return ptr->name == arg; });
 }
 
-ArgMap ArgParser::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
+ArgMap Program::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
 
-ArgMap ArgParser::convert_args(ParseResult &&parse_result) const {
+ArgMap Program::convert_args(ParseResult &&parse_result) const {
   ArgMap map;
   convert_args_into(&map, &parse_result);
   return map;
 }
 
-std::unique_ptr<ArgMap> ArgParser::convert_args(ParseResult *parse_result) const {
+std::unique_ptr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
   auto map = std::make_unique<ArgMap>();
   convert_args_into(map.get(), parse_result);
   return map;
 }
 
-void ArgParser::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
+void Program::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
   if (parse_result->sub != nullptr) {
     auto const sub = find_sub(parse_result->sub_name);
     map->sub = (*sub)->convert_args(parse_result->sub.get());
@@ -153,19 +153,19 @@ void ArgParser::convert_args_into(ArgMap *map, ParseResult *parse_result) const 
 // | parse_args |
 // +------------+
 
-ParseResult ArgParser::parse_args(int argc, char const *argv[]) const {
+ParseResult Program::parse_args(int argc, char const *argv[]) const {
   ParseResult parse_result;
   parse_args_into(&parse_result, argc, argv);
   return parse_result;
 }
 
-std::unique_ptr<ParseResult> ArgParser::parse_args(int argc, char const *argv[], int start) const {
+std::unique_ptr<ParseResult> Program::parse_args(int argc, char const *argv[], int start) const {
   auto parse_result = std::make_unique<ParseResult>();
   parse_args_into(parse_result.get(), argc, argv, start);
   return parse_result;
 }
 
-void ArgParser::parse_args_into(ParseResult *parse_result, int argc, char const *argv[], int start) const {
+void Program::parse_args_into(ParseResult *parse_result, int argc, char const *argv[], int start) const {
   for (int i = start; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
     if (auto const sub = find_sub(whole_arg); sub != subs.end()) {
