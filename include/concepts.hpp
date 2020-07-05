@@ -3,10 +3,10 @@
 
 #include <concepts>
 
-namespace opz {
+namespace opzioni {
 
 template <typename T> concept Integer = std::integral<T> && !std::same_as<T, bool>;
 
-} // namespace opz
+} // namespace opzioni
 
 #endif // OPZIONI_CONCEPTS_H

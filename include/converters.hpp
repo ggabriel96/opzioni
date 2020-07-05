@@ -14,7 +14,7 @@
 #include "concepts.hpp"
 #include "exceptions.hpp"
 
-namespace opz {
+namespace opzioni {
 
 using AnyConverter = std::function<std::any(std::optional<std::string>)>;
 
@@ -54,6 +54,6 @@ template <std::floating_point Float> auto convert(std::optional<std::string> arg
   throw ConversionError("Cannot convert an empty string to floating point");
 }
 
-} // namespace opz
+} // namespace opzioni
 
 #endif // OPZIONI_CONVERTERS_H

@@ -7,7 +7,7 @@
 
 #include "converters.hpp"
 
-namespace opz {
+namespace opzioni {
 
 TEST(Converters, VectorOfInt) {
   auto const input = std::optional(std::string("1,2"));
@@ -27,4 +27,4 @@ TEST(Converters, VectorOfIntWithTrailingComma) {
   ASSERT_EQ(result, expected);
 }
 
-} // namespace opz
+} // namespace opzioni

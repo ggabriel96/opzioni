@@ -14,7 +14,7 @@
 
 #include "converters.hpp"
 
-namespace opz {
+namespace opzioni {
 
 struct Command {
   std::string name;
@@ -29,7 +29,7 @@ template <typename T> struct Arg {
   std::set<T> choices;
   std::optional<T> default_value = T{};
   std::optional<T> flag_value = std::nullopt;
-  AnyConverter converter = opz::convert<T>;
+  AnyConverter converter = opzioni::convert<T>;
   decltype(std::string::npos) num_of_dashes;
 
   Arg(std::string name) noexcept : num_of_dashes{name.find_first_not_of('-')} {
@@ -163,6 +163,6 @@ struct ArgMap {
   std::map<std::string, ArgValue> args;
 };
 
-} // namespace opz
+} // namespace opzioni
 
 #endif // OPZIONI_TYPES_H

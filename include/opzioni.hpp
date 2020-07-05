@@ -13,7 +13,7 @@
 #include "exceptions.hpp"
 #include "types.hpp"
 
-namespace opz {
+namespace opzioni {
 
 class ArgParser {
 public:
@@ -72,6 +72,6 @@ private:
   }
 };
 
-} // namespace opz
+} // namespace opzioni
 
 #endif // OPZIONI_H

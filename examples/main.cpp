@@ -7,11 +7,11 @@
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
-  using opz::Arg;
+  using opzioni::Arg;
 
   fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  opz::ArgParser ap;
+  opzioni::ArgParser ap;
   ap.add(Arg<std::string>("name").help("Your name"));
   ap.add(Arg<std::string>("--last-name").help("Your last name"));
   ap.add(Arg<int>("-v").help("Level of verbosity").among({0, 1, 2, 3, 4}).with_default(0));

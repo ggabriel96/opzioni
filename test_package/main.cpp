@@ -4,8 +4,8 @@
 #include <opzioni.hpp>
 
 int main(int argc, char const *argv[]) {
-  opz::ArgParser ap;
-  ap.add(opz::Arg<std::string>("name").help("Your name"));
+  opzioni::ArgParser ap;
+  ap.add(opzioni::Arg<std::string>("name").help("Your name"));
 
   auto const args = ap.parse(argc, argv);
   std::cout << "Number of arguments: " << args.size() << '\n';

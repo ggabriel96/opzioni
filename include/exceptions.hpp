@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-namespace opz {
+namespace opzioni {
 
 class ArgumentNotFound : public std::out_of_range {
   using std::out_of_range::out_of_range;
@@ -37,6 +37,6 @@ class UnknownArgument : public std::out_of_range {
   using std::out_of_range::out_of_range;
 };
 
-} // namespace opz
+} // namespace opzioni
 
 #endif // OPZIONI_EXCEPTIONS_H

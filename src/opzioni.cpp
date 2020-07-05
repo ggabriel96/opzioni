@@ -7,7 +7,7 @@
 #include <memory>
 #include <ranges>
 
-namespace opz {
+namespace opzioni {
 
 template <> Arg<bool> &Arg<bool>::as_flag(bool flag_value) {
   this->flag_value = flag_value;
@@ -205,4 +205,4 @@ void ArgParser::parse_args_into(ParseResult *parse_result, int argc, char const 
   }
 }
 
-} // namespace opz
+} // namespace opzioni

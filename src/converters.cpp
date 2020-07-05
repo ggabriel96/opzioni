@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-namespace opz {
+namespace opzioni {
 
 template <> auto convert<bool>(std::optional<std::string> value) -> bool {
   if (value) {
@@ -30,4 +30,4 @@ template <> auto convert<std::vector<int>>(std::optional<std::string> value) -> 
   return v;
 }
 
-} // namespace opz
+} // namespace opzioni
