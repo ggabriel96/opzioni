@@ -120,8 +120,8 @@ void Program::assign_options(ArgMap *map, std::map<std::string, std::string> con
   }
 }
 
-[[no_discard]] decltype(auto) Program::find_sub(std::string_view const arg) const noexcept {
-  return std::find_if(subs.begin(), subs.end(), [&arg](auto const &ptr) { return ptr->name == arg; });
+[[no_discard]] decltype(auto) Program::find_command(std::string_view const arg) const noexcept {
+  return std::find_if(commands.begin(), commands.end(), [&arg](auto const &ptr) { return ptr->name == arg; });
 }
 
 ArgMap Program::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
@@ -139,10 +139,10 @@ std::unique_ptr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
 }
 
 void Program::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
-  if (parse_result->sub != nullptr) {
-    auto const sub = find_sub(parse_result->sub_name);
-    map->sub = (*sub)->convert_args(parse_result->sub.get());
-    map->sub_name = (*sub)->name;
+  if (parse_result->command != nullptr) {
+    auto const command = find_command(parse_result->command_name);
+    map->command = (*command)->convert_args(parse_result->command.get());
+    map->command_name = (*command)->name;
   }
   assign_positional_args(map, parse_result->positional);
   assign_flags(map, parse_result->flags);
@@ -168,9 +168,9 @@ std::unique_ptr<ParseResult> Program::parse_args(int argc, char const *argv[], i
 void Program::parse_args_into(ParseResult *parse_result, int argc, char const *argv[], int start) const {
   for (int i = start; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
-    if (auto const sub = find_sub(whole_arg); sub != subs.end()) {
-      parse_result->sub_name = whole_arg;
-      parse_result->sub = (*sub)->parse_args(argc, argv, i + 1);
+    if (auto const command = find_command(whole_arg); command != commands.end()) {
+      parse_result->command_name = whole_arg;
+      parse_result->command = (*command)->parse_args(argc, argv, i + 1);
       break;
     }
     if (is_two_dashes(whole_arg)) {

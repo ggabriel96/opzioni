@@ -21,7 +21,7 @@ int main(int argc, char const *argv[]) {
   program.add(Arg<bool>("-b").help("Short flag b").as_flag());
   program.add(Arg<std::vector<int>>("--numbers").help("A list of numbers"));
 
-  auto subcmd = program.sub({.name = "subcmd"});
+  auto subcmd = program.command({.name = "subcmd"});
   subcmd->add(Arg<std::string>("subname").help("Your name again, please"));
   subcmd->add(Arg<bool>("-x").help("A nested flag").as_flag());
 
@@ -36,11 +36,11 @@ int main(int argc, char const *argv[]) {
   fmt::print("b: {}\n", args["b"].as<bool>());
   fmt::print("numbers: [{}]\n", fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
 
-  if (args.sub != nullptr) {
-    auto sub = args.sub.get();
-    fmt::print("\nSub-argument parsed: {}\n", sub->sub_name);
-    fmt::print("Number of sub-arguments: {}\n", sub->size());
-    fmt::print("subname: {}\n", (*sub)["subname"].as<std::string>());
-    fmt::print("x: {}\n", sub->args["x"].as<bool>());
+  if (args.command != nullptr) {
+    auto command = args.command.get();
+    fmt::print("\nParsed command: {}\n", command->command_name);
+    fmt::print("Number of arguments to command: {}\n", command->size());
+    fmt::print("subname: {}\n", (*command)["subname"].as<std::string>());
+    fmt::print("x: {}\n", command->args["x"].as<bool>());
   }
 }
