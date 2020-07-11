@@ -64,7 +64,7 @@ bool Program::is_multiple_short_flags(std::string const &whole_arg) const noexce
   auto const flags = whole_arg.substr(1);
   auto const all_short_flags = std::all_of(flags.begin(), flags.end(),
                                            [this](char const &c) { return this->options.contains(std::string(1, c)); });
-  return idx_first_not_dash == 1 && flags.length() >= 1 && all_short_flags;
+  return idx_first_not_dash == 1 && flags.length() >= 2 && all_short_flags;
 }
 
 void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
