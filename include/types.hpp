@@ -16,6 +16,10 @@
 
 namespace opzioni {
 
+// +-------------------+
+// | User-facing types |
+// +-------------------+
+
 struct Command {
   std::string name;
   std::string epilog;
@@ -105,6 +109,32 @@ template <typename T> struct Arg {
   }
 };
 
+struct ArgValue {
+  std::any value;
+
+  template <typename TargetType> TargetType as() const { return std::any_cast<TargetType>(this->value); }
+};
+
+struct ArgMap {
+  ArgValue const &operator[](std::string name) const {
+    try {
+      return args.at(name);
+    } catch (std::out_of_range const &) {
+      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", name));
+    }
+  }
+
+  auto size() const noexcept { return this->args.size(); }
+
+  std::string cmd_name;
+  std::unique_ptr<ArgMap> subcmd;
+  std::map<std::string, ArgValue> args;
+};
+
+// +-----------------+
+// | "Utility" types |
+// +-----------------+
+
 struct ArgInfo {
   std::string name;
   std::string help;
@@ -139,28 +169,6 @@ struct SplitArg {
   size_t num_of_dashes;
   std::string name;
   std::optional<std::string> value;
-};
-
-struct ArgValue {
-  std::any value;
-
-  template <typename TargetType> TargetType as() const { return std::any_cast<TargetType>(this->value); }
-};
-
-struct ArgMap {
-  ArgValue const &operator[](std::string name) const {
-    try {
-      return args.at(name);
-    } catch (std::out_of_range const &) {
-      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", name));
-    }
-  }
-
-  auto size() const noexcept { return this->args.size(); }
-
-  std::string cmd_name;
-  std::unique_ptr<ArgMap> subcmd;
-  std::map<std::string, ArgValue> args;
 };
 
 } // namespace opzioni
