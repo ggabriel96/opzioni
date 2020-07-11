@@ -52,11 +52,11 @@ private:
 
   ParseResult parse_args(int, char const *[]) const;
   void parse_args_into(ParseResult *, int, char const *[], int = 0) const;
-  std::unique_ptr<ParseResult> parse_args(int, char const *[], int) const;
+  ValuePtr<ParseResult> parse_args(int, char const *[], int) const;
 
   ArgMap convert_args(ParseResult &&) const;
   void convert_args_into(ArgMap *, ParseResult *) const;
-  std::unique_ptr<ArgMap> convert_args(ParseResult *) const;
+  ValuePtr<ArgMap> convert_args(ParseResult *) const;
 
   void assign_positional_args(ArgMap *, std::vector<std::string> const &) const;
   void assign_flags(ArgMap *, std::set<std::string> const &) const;

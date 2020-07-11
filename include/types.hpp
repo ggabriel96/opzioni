@@ -16,6 +16,40 @@
 
 namespace opzioni {
 
+// +-----------------------+
+// | General utility types |
+// +-----------------------+
+
+template <typename T> class ValuePtr {
+public:
+  ValuePtr() = default;
+  ValuePtr(ValuePtr &&) = default;
+  ValuePtr(const ValuePtr &other) : ptr(other.ptr ? new T(*other.ptr) : nullptr) {}
+
+  ValuePtr(std::unique_ptr<T> &&other) : ptr(std::move(other)) {}
+
+  ValuePtr &operator=(ValuePtr &&) = default;
+  ValuePtr &operator=(ValuePtr const &other) {
+    *this = ValuePtr(other);
+    return *this;
+  }
+
+  T &operator*() const { return *ptr; }
+  T *operator->() const { return ptr.get(); }
+  T *get() const { return ptr.get(); }
+
+private:
+  std::unique_ptr<T> ptr;
+};
+
+template <typename T>[[no_discard]] bool operator==(ValuePtr<T> const &lhs, std::nullptr_t) noexcept {
+  return lhs.get() == nullptr;
+}
+
+template <typename T>[[no_discard]] bool operator!=(std::nullptr_t, ValuePtr<T> const &rhs) noexcept {
+  return !(rhs == nullptr);
+}
+
 // +-------------------+
 // | User-facing types |
 // +-------------------+
@@ -127,13 +161,13 @@ struct ArgMap {
   auto size() const noexcept { return this->args.size(); }
 
   std::string cmd_name;
-  std::unique_ptr<ArgMap> subcmd;
+  ValuePtr<ArgMap> subcmd;
   std::map<std::string, ArgValue> args;
 };
 
-// +-----------------+
-// | "Utility" types |
-// +-----------------+
+// +------------------------+
+// | Specific utility types |
+// +------------------------+
 
 struct ArgInfo {
   std::string name;
@@ -159,7 +193,7 @@ struct ArgInfo {
 
 struct ParseResult {
   std::string cmd_name;
-  std::unique_ptr<ParseResult> subcmd;
+  ValuePtr<ParseResult> subcmd;
   std::vector<std::string> positional;
   std::map<std::string, std::string> options;
   std::set<std::string> flags;

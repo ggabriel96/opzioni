@@ -129,8 +129,8 @@ ArgMap Program::convert_args(ParseResult &&parse_result) const {
   return map;
 }
 
-std::unique_ptr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
-  auto map = std::make_unique<ArgMap>();
+ValuePtr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
+  auto map = ValuePtr(std::make_unique<ArgMap>());
   convert_args_into(map.get(), parse_result);
   return map;
 }
@@ -156,8 +156,8 @@ ParseResult Program::parse_args(int argc, char const *argv[]) const {
   return parse_result;
 }
 
-std::unique_ptr<ParseResult> Program::parse_args(int argc, char const *argv[], int start) const {
-  auto parse_result = std::make_unique<ParseResult>();
+ValuePtr<ParseResult> Program::parse_args(int argc, char const *argv[], int start) const {
+  auto parse_result = ValuePtr(std::make_unique<ParseResult>());
   parse_args_into(parse_result.get(), argc, argv, start);
   return parse_result;
 }

@@ -38,10 +38,10 @@ int main(int argc, char const *argv[]) {
   fmt::print("numbers: [{}]\n", fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
 
   if (args.subcmd != nullptr) {
-    auto subargs = args.subcmd.get();
-    fmt::print("\nCommand name: {}\n", subargs->cmd_name);
-    fmt::print("Number of arguments: {}\n", subargs->size());
-    fmt::print("subname: {}\n", (*subargs)["subname"].as<std::string>());
-    fmt::print("x: {}\n", subargs->args["x"].as<bool>());
+    auto subargs = *args.subcmd;
+    fmt::print("\nCommand name: {}\n", subargs.cmd_name);
+    fmt::print("Number of arguments: {}\n", subargs.size());
+    fmt::print("subname: {}\n", subargs["subname"].as<std::string>());
+    fmt::print("x: {}\n", subargs["x"].as<bool>());
   }
 }
