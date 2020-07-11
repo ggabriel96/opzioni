@@ -146,7 +146,9 @@ template <typename T> struct Arg {
 struct ArgValue {
   std::any value;
 
-  template <typename TargetType> TargetType as() const { return std::any_cast<TargetType>(this->value); }
+  template <typename T> T as() const { return std::any_cast<T>(this->value); }
+
+  template <typename T> operator T() const { return as<T>(); }
 };
 
 struct ArgMap {

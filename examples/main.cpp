@@ -41,7 +41,11 @@ int main(int argc, char const *argv[]) {
     auto subargs = *args.subcmd;
     fmt::print("\nCommand name: {}\n", subargs.cmd_name);
     fmt::print("Number of arguments: {}\n", subargs.size());
-    fmt::print("subname: {}\n", subargs["subname"].as<std::string>());
-    fmt::print("x: {}\n", subargs["x"].as<bool>());
+
+    // alternative way to extract argument values using `operator T`
+    std::string subname = subargs["subname"];
+    bool x = subargs["x"];
+    fmt::print("subname: {}\n", subname);
+    fmt::print("x: {}\n", x);
   }
 }
