@@ -1,6 +1,5 @@
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -19,7 +18,7 @@ SCENARIO("provided converter for vector<int>", "[vector]") {
     }
   }
 
-  AND_GIVEN("a comma-separated list of integers with a trailing comma") {
+  GIVEN("a comma-separated list of integers with a trailing comma") {
     auto const input = std::optional(std::string("1,2,3,"));
 
     WHEN("converting the list") {
