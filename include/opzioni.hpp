@@ -50,7 +50,8 @@ private:
   std::map<std::string, ArgInfo> options;
 
   bool is_flag(std::string const &) const noexcept;
-  bool is_multiple_short_flags(std::string const &) const noexcept;
+  bool arg_is_long_flag(std::string const &) const noexcept;
+  bool arg_is_short_flags(std::string const &) const noexcept;
 
   ParseResult parse_args(int, char const *[]) const;
   void parse_args_into(ParseResult *, int, char const *[], int = 0) const;

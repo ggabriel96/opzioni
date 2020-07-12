@@ -53,18 +53,23 @@ bool is_positional(std::string const &whole_arg) {
   return idx_first_not_dash == 0;
 }
 
-bool Program::is_flag(std::string const &whole_arg) const noexcept {
-  auto const flag = whole_arg.substr(2);
-  auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
-  return idx_first_not_dash == 2 && flag.length() >= 1 && this->options.contains(flag);
+bool Program::is_flag(std::string const &name) const noexcept {
+  auto const opt = options.find(name);
+  return opt != options.end() && opt->second.flag_value.has_value();
 }
 
-bool Program::is_multiple_short_flags(std::string const &whole_arg) const noexcept {
+bool Program::arg_is_long_flag(std::string const &whole_arg) const noexcept {
+  auto const name = whole_arg.substr(2);
+  auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
+  return idx_first_not_dash == 2 && name.length() >= 2 && is_flag(name);
+}
+
+bool Program::arg_is_short_flags(std::string const &whole_arg) const noexcept {
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
   auto const flags = whole_arg.substr(1);
-  auto const all_short_flags = std::all_of(flags.begin(), flags.end(),
-                                           [this](char const &c) { return this->options.contains(std::string(1, c)); });
-  return idx_first_not_dash == 1 && flags.length() >= 2 && all_short_flags;
+  auto const all_short_flags =
+      std::all_of(flags.begin(), flags.end(), [this](char const &c) { return this->is_flag(std::string(1, c)); });
+  return idx_first_not_dash == 1 && flags.length() >= 1 && all_short_flags;
 }
 
 void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
@@ -175,12 +180,12 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
     }
     if (is_positional(whole_arg)) {
       parse_result->positional.push_back(whole_arg);
-    } else if (is_multiple_short_flags(whole_arg)) {
+    } else if (arg_is_short_flags(whole_arg)) {
       auto const flags = whole_arg.substr(1);
       for (char const &flag : flags) {
         parse_result->flags.insert(std::string(1, flag));
       }
-    } else if (is_flag(whole_arg)) {
+    } else if (arg_is_long_flag(whole_arg)) {
       parse_result->flags.insert(whole_arg.substr(2));
     } else {
       auto const split = split_arg(whole_arg);
