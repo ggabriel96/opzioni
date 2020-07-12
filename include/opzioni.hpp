@@ -35,18 +35,20 @@ public:
   }
 
   [[no_discard]] Program *cmd(Command const &spec) {
-    auto cmd = cmds.insert(cmds.end(), std::make_unique<Program>(spec.name, spec.epilog, spec.description));
-    return cmd->get();
+    if (cmds.contains(spec.name)) {
+      throw ArgumentAlreadyExists(fmt::format("Argument `{}` already exists.", spec.name));
+    }
+    auto result = cmds.insert({spec.name, std::make_unique<Program>(spec.name, spec.epilog, spec.description)});
+    return result.first->second.get();
   }
 
   ArgMap parse(int, char const *[]) const;
 
 private:
-  std::vector<std::unique_ptr<Program>> cmds;
+  std::map<std::string, std::unique_ptr<Program>> cmds;
   std::vector<ArgInfo> positional_args;
   std::map<std::string, ArgInfo> options;
 
-  [[no_discard]] decltype(auto) find_cmd(std::string_view const) const noexcept;
   bool is_flag(std::string const &) const noexcept;
   bool is_multiple_short_flags(std::string const &) const noexcept;
 

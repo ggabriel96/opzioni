@@ -117,10 +117,6 @@ void Program::assign_options(ArgMap *map, std::map<std::string, std::string> con
   }
 }
 
-[[no_discard]] decltype(auto) Program::find_cmd(std::string_view const arg) const noexcept {
-  return std::find_if(cmds.begin(), cmds.end(), [&arg](auto const &ptr) { return ptr->name == arg; });
-}
-
 ArgMap Program::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
 
 ArgMap Program::convert_args(ParseResult &&parse_result) const {
@@ -138,8 +134,8 @@ ValuePtr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
 void Program::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
   map->cmd_name = parse_result->cmd_name;
   if (parse_result->subcmd != nullptr) {
-    auto const subcmd = find_cmd(parse_result->subcmd->cmd_name);
-    map->subcmd = (*subcmd)->convert_args(parse_result->subcmd.get());
+    auto const &subcmd = cmds.at(parse_result->subcmd->cmd_name);
+    map->subcmd = subcmd->convert_args(parse_result->subcmd.get());
   }
   assign_positional_args(map, parse_result->positional);
   assign_flags(map, parse_result->flags);
@@ -166,8 +162,8 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
   parse_result->cmd_name = std::string(argv[start]);
   for (int i = start + 1; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
-    if (auto const subcmd = find_cmd(whole_arg); subcmd != cmds.end()) {
-      parse_result->subcmd = (*subcmd)->parse_args(argc, argv, i);
+    if (auto const subcmd = cmds.find(whole_arg); subcmd != cmds.end()) {
+      parse_result->subcmd = subcmd->second->parse_args(argc, argv, i);
       break;
     }
     if (is_two_dashes(whole_arg)) {
