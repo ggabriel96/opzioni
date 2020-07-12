@@ -3,28 +3,28 @@
 #include <type_traits>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include <catch2/catch.hpp>
 
 #include "converters.hpp"
 
-namespace opzioni {
+SCENARIO("provided converter for vector<int>", "[vector]") {
+  using vec = std::vector<int>;
 
-TEST(Converters, VectorOfInt) {
-  auto const input = std::optional(std::string("1,2"));
-  auto const expected = std::vector({1, 2});
+  GIVEN("a proper comma-separated list of integers") {
+    auto const input = std::optional(std::string("1,2,3"));
 
-  auto const result = convert<std::remove_cv_t<decltype(expected)>>(input);
+    WHEN("converting the list") {
+      auto const result = opzioni::convert<vec>(input);
+      REQUIRE(result == vec{1, 2, 3});
+    }
+  }
 
-  ASSERT_EQ(result, expected);
+  AND_GIVEN("a comma-separated list of integers with a trailing comma") {
+    auto const input = std::optional(std::string("1,2,3,"));
+
+    WHEN("converting the list") {
+      auto const result = opzioni::convert<vec>(input);
+      REQUIRE(result == vec{1, 2, 3});
+    }
+  }
 }
-
-TEST(Converters, VectorOfIntWithTrailingComma) {
-  auto const input = std::optional(std::string("1,"));
-  auto const expected = std::vector({1});
-
-  auto const result = convert<std::remove_cv_t<decltype(expected)>>(input);
-
-  ASSERT_EQ(result, expected);
-}
-
-} // namespace opzioni

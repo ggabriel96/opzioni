@@ -11,7 +11,7 @@ include_dir = include_directories('include/')
 # | Dependencies |
 # +--------------+
 fmt_dep = dependency('fmt', version: '^6.2.1')
-gtest_dep = dependency('gtest', version: '^1.10.0')
+catch2_dep = dependency('catch2', version: '^2.12.4')
 
 # +--------------------+
 # | Library definition |
@@ -33,10 +33,10 @@ opzioni_dep = declare_dependency(
 # +-------+
 # | Tests |
 # +-------+
-test_deps = [opzioni_dep, gtest_dep]
+test_deps = [opzioni_dep, catch2_dep]
 converters_test = executable(
     'converters',
-    'src/converters.test.cpp',
+    ['src/catch2_main.cpp', 'src/converters.test.cpp'],
     dependencies: test_deps
 )
 test('converters', converters_test)
