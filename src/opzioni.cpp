@@ -8,39 +8,55 @@
 
 namespace opzioni {
 
-template <> Arg<bool> &Arg<bool>::as_flag(bool flag_value) {
-  this->flag_value = flag_value;
-  this->default_value = !flag_value;
-  return *this;
+void Program::pos(Arg &&arg) { this->positional_args.emplace_back(arg); }
+
+void Program::opt(Arg &&arg) {
+  this->options[arg.name] = arg;
+  if (arg.terse)
+    this->options[*arg.terse] = arg;
 }
 
-SplitArg split_arg(std::string const &whole_arg) {
+void Program::flag(Arg &&arg) {
+  this->flags[arg.name] = arg;
+  if (arg.terse)
+    this->flags[*arg.terse] = arg;
+}
+
+[[no_discard]] Program *Program::cmd(Command const &spec) {
+  if (cmds.contains(spec.name)) {
+    throw ArgumentAlreadyExists(fmt::format("Argument `{}` already exists.", spec.name));
+  }
+  auto result = cmds.insert({spec.name, std::make_unique<Program>(spec.name, spec.epilog, spec.description)});
+  return result.first->second.get();
+}
+
+SplitArg parse_option(std::string const &whole_arg) {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == std::string::npos) {
-    // all dashes?
-    return SplitArg{.num_of_dashes = whole_arg.length(), .name = "", .value = std::nullopt};
-  }
   auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  if (num_of_dashes == 1 && whole_arg.length() > 2 && eq_idx == std::string::npos) {
-    // has one dash, hence flag
-    // but is longer than 2 characters
-    // has no equals
-    // hence short option with value (e.g. `-O2`)
-    // (possibility of many short flags has already been tested for)
-    auto const name = whole_arg.substr(1, 1);
-    auto const value = whole_arg.substr(2);
+  bool const has_equals = eq_idx != std::string::npos;
+  if (has_equals) {
+    // option with value
+    auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
+    auto const value = whole_arg.substr(eq_idx + 1);
     return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = value};
+  } else {
+    if (num_of_dashes == 1 && whole_arg.length() > 2) {
+      // has one dash, hence short option
+      // but is longer than 2 characters and has no equals
+      // hence short option with value (e.g. `-O2`)
+      // (possibility of many short flags has already been tested for)
+      auto const name = whole_arg.substr(1, 1);
+      auto const value = whole_arg.substr(2);
+      return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = value};
+    } else if (num_of_dashes <= 2) {
+      // has dashes prefix, but no equals,
+      // hence option with next CLI argument as value
+      auto const name = whole_arg.substr(num_of_dashes);
+      return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = std::nullopt};
+    } else {
+      throw ParseError(fmt::format("Could not parse argument `{}`", whole_arg));
+    }
   }
-  if (eq_idx == std::string::npos) {
-    // has dashes prefix, but no equals,
-    // hence either flag or option with next CLI argument as value
-    auto const name = whole_arg.substr(num_of_dashes);
-    return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = std::nullopt};
-  }
-  // has dashes prefix and equals, hence option with value
-  auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
-  auto const value = whole_arg.substr(eq_idx + 1);
-  return SplitArg{.num_of_dashes = num_of_dashes, .name = name, .value = value};
 }
 
 bool is_two_dashes(std::string const &whole_arg) {
@@ -53,10 +69,7 @@ bool is_positional(std::string const &whole_arg) {
   return idx_first_not_dash == 0;
 }
 
-bool Program::is_flag(std::string const &name) const noexcept {
-  auto const opt = options.find(name);
-  return opt != options.end() && opt->second.flag_value.has_value();
-}
+bool Program::is_flag(std::string const &name) const noexcept { return flags.contains(name); }
 
 bool Program::arg_is_long_flag(std::string const &whole_arg) const noexcept {
   auto const name = whole_arg.substr(2);
@@ -84,41 +97,25 @@ void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const
                                       static_cast<int>(args.size() != 1), fmt::join(args, "`, `")));
   }
   for (size_t i = 0; i < positional_args.size(); ++i) {
-    auto const &arg = positional_args[i];
-    map->args[arg.name] = ArgValue{arg.converter(parsed_positional[i])};
+    map->args[positional_args[i].name] = ArgValue{parsed_positional[i]};
   }
 }
 
 void Program::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
-  auto spec_flags = std::ranges::transform_view(options, [](auto const &item) { return item.second; }) |
-                    std::views::filter([](auto const &option) { return option.flag_value.has_value(); });
-  for (auto const &flag : spec_flags) {
-    if (parsed_flags.contains(flag.name))
-      map->args[flag.name] = ArgValue{flag.flag_value};
+  for (auto const &flag : flags) {
+    if (parsed_flags.contains(flag.second.name))
+      map->args[flag.second.name] = ArgValue{flag.second.name};
     else
-      map->args[flag.name] = ArgValue{flag.default_value};
+      map->args[flag.second.name] = ArgValue{};
   }
 }
 
 void Program::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
-  auto parsed_flags_with_value = std::ranges::filter_view(parsed_options,
-                                                          [&](auto const &item) {
-                                                            auto const &option = options.find(item.first);
-                                                            return option != options.end() && option->second.is_flag();
-                                                          }) |
-                                 std::views::transform([](auto const &item) { return item.first; });
-  if (!std::ranges::empty(parsed_flags_with_value))
-    throw FlagHasValue(fmt::format("Arguments `{}` are flags, thus cannot "
-                                   "take values. Simply set them with `-{}`",
-                                   fmt::join(parsed_flags_with_value.begin(), parsed_flags_with_value.end(), "`, `"),
-                                   fmt::join(parsed_flags_with_value.begin(), parsed_flags_with_value.end(), " -")));
-  auto spec_options = std::ranges::filter_view(options, [](auto const item) { return !item.second.is_flag(); }) |
-                      std::views::transform([](auto const &item) { return item.second; });
-  for (auto const &option : spec_options) {
-    if (auto const parsed_value = parsed_options.find(option.name); parsed_value != parsed_options.end())
-      map->args[option.name] = ArgValue{option.converter(parsed_value->second)};
+  for (auto const &option : options) {
+    if (auto const parsed_value = parsed_options.find(option.second.name); parsed_value != parsed_options.end())
+      map->args[option.second.name] = ArgValue{parsed_value->second};
     else
-      map->args[option.name] = ArgValue{option.default_value};
+      map->args[option.second.name] = ArgValue{};
   }
 }
 
@@ -188,16 +185,34 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
     } else if (arg_is_long_flag(whole_arg)) {
       parse_result->flags.insert(whole_arg.substr(2));
     } else {
-      auto const split = split_arg(whole_arg);
+      // only possibility left is an option
+      auto const split = parse_option(whole_arg);
+      if (auto const flag = this->flags.find(split.name); flag != this->flags.end()) {
+        auto const terse_message = flag->second.terse ? fmt::format(" or `-{}`", *flag->second.terse) : std::string{};
+        auto const message =
+            fmt::format("Argument `{}` is a flag, thus cannot take a value. Simply set it with `--{}`{}", split.name,
+                        flag->second.name, terse_message);
+        throw FlagHasValue(message);
+      }
+      auto const option = options.find(split.name);
+      if (option == options.end()) {
+        throw UnknownArgument(fmt::format("Unknown option `{}` in `{}`", split.name, whole_arg));
+      }
       if (split.value) {
-        parse_result->options[split.name] = *split.value;
+        parse_result->options[option->second.name] = *split.value;
+        if (option->second.terse)
+          parse_result->options[*option->second.terse] = *split.value;
       } else if (i + 1 < argc) {
         // if we have not yet exhausted argv,
         // interpret next element as value
         ++i;
-        parse_result->options[split.name] = std::string(argv[i]);
+        auto const value = std::string(argv[i]);
+        parse_result->options[option->second.name] = value;
+        if (option->second.terse)
+          parse_result->options[*option->second.terse] = value;
       } else {
-        throw ParseError(fmt::format("Could not parse option `{}`. Perhaps you forgot to provide a value?", whole_arg));
+        throw ParseError(
+            fmt::format("Could not parse argument `{}`. Perhaps you forgot to provide a value?", whole_arg));
       }
     }
   }

@@ -8,12 +8,12 @@
 SCENARIO("ArgValue implicitly converts to T", "[user]") {
 
   GIVEN("an int") {
-    opzioni::ArgValue const av{1};
+    opzioni::ArgValue const av{std::string("1")};
 
     WHEN("assigning to an int") {
       int i = av;
 
-      REQUIRE(i == std::any_cast<int>(av.value));
+      REQUIRE(i == std::stoi(*av.value));
     }
   }
 
@@ -23,7 +23,7 @@ SCENARIO("ArgValue implicitly converts to T", "[user]") {
     WHEN("assigning to a std::string") {
       std::string s = av;
 
-      REQUIRE(s == std::any_cast<std::string>(av.value));
+      REQUIRE(s == *av.value);
     }
   }
 }

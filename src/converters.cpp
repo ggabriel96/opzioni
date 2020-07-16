@@ -15,7 +15,10 @@ template <> auto convert<bool>(std::optional<std::string> value) -> bool {
   throw ConversionError("Cannot convert an empty string to bool");
 }
 
-template <> auto convert<std::string>(std::optional<std::string> value) -> std::string { return value.value_or(""); }
+template <> auto convert<std::string>(std::optional<std::string> value) -> std::string {
+  if (!value) throw ConversionError("Cannot convert nothing into a string");
+  return *value;
+}
 
 // https://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/
 template <> auto convert<std::vector<int>>(std::optional<std::string> value) -> std::vector<int> {
