@@ -103,7 +103,7 @@ struct ParseResult {
   std::set<std::string> flags;
 };
 
-struct SplitArg {
+struct ParsedOption {
   size_t num_of_dashes;
   std::string name;
   std::optional<std::string> value;
