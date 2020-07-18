@@ -55,9 +55,7 @@ ParsedOption parse_option(std::string const &cli_arg) {
   }
 }
 
-auto count_dashes(std::string const &cli_arg) {
-  return cli_arg.find_first_not_of('-');
-}
+auto count_dashes(std::string const &cli_arg) { return cli_arg.find_first_not_of('-'); }
 
 bool is_positional(std::string const &whole_arg) {
   auto const idx_first_not_dash = whole_arg.find_first_not_of('-');
@@ -159,10 +157,6 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
   parse_result->cmd_name = std::string(argv[start]);
   for (int i = start + 1; i < argc; ++i) {
     auto const whole_arg = std::string(argv[i]);
-    if (auto const subcmd = cmds.find(whole_arg); subcmd != cmds.end()) {
-      parse_result->subcmd = subcmd->second->parse_args(argc, argv, i);
-      break;
-    }
     if (auto const num_of_dashes = count_dashes(whole_arg); num_of_dashes > 2) {
       throw TooManyDashes(fmt::format("Invalid argument `{}`. Did you mean `--`?", whole_arg));
     } else if (num_of_dashes == 2 && whole_arg.length() == 2) {
@@ -172,7 +166,11 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
       std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(parse_result->positional));
       break;
     }
-    if (is_positional(whole_arg)) {
+
+    if (auto const subcmd = cmds.find(whole_arg); subcmd != cmds.end()) {
+      parse_result->subcmd = subcmd->second->parse_args(argc, argv, i);
+      break;
+    } else if (is_positional(whole_arg)) {
       parse_result->positional.push_back(whole_arg);
     } else if (arg_is_short_flags(whole_arg)) {
       auto const flags = whole_arg.substr(1);
@@ -181,8 +179,7 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
       }
     } else if (arg_is_long_flag(whole_arg)) {
       parse_result->flags.insert(whole_arg.substr(2));
-    } else {
-      // only possibility left is an option
+    } else { // only possibility left is an option
       auto const split = parse_option(whole_arg);
       if (auto const flag = this->flags.find(split.name); flag != this->flags.end()) {
         auto const terse_message = flag->second.terse ? fmt::format(" or `-{}`", *flag->second.terse) : std::string{};
