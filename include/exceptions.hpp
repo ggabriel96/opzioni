@@ -41,6 +41,10 @@ class ArgumentAlreadyExists : public std::logic_error {
   using std::logic_error::logic_error;
 };
 
+class TooManyDashes : public std::invalid_argument {
+  using std::invalid_argument::invalid_argument;
+};
+
 } // namespace opzioni
 
 #endif // OPZIONI_EXCEPTIONS_H

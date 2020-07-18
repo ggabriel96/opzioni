@@ -59,9 +59,8 @@ SplitArg parse_option(std::string const &whole_arg) {
   }
 }
 
-bool is_two_dashes(std::string const &whole_arg) {
-  auto const all_dashes = whole_arg.find_first_not_of('-') == std::string::npos;
-  return whole_arg.length() == 2 && all_dashes;
+auto count_dashes(std::string const &cli_arg) {
+  return cli_arg.find_first_not_of('-');
 }
 
 bool is_positional(std::string const &whole_arg) {
@@ -168,7 +167,9 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
       parse_result->subcmd = subcmd->second->parse_args(argc, argv, i);
       break;
     }
-    if (is_two_dashes(whole_arg)) {
+    if (auto const num_of_dashes = count_dashes(whole_arg); num_of_dashes > 2) {
+      throw TooManyDashes(fmt::format("Invalid argument `{}`. Did you mean `--`?", whole_arg));
+    } else if (num_of_dashes == 2 && whole_arg.length() == 2) {
       int const start_idx = i + 1;
       int const remaining_args_count = argc - start_idx;
       parse_result->positional.reserve(parse_result->positional.size() + remaining_args_count);
