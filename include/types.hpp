@@ -71,8 +71,6 @@ struct ArgValue {
   std::optional<std::string> value = std::nullopt;
 
   template <typename T> T as() const { return convert<T>(value); }
-
-  template <typename T> operator T() const { return as<T>(); }
 };
 
 struct ArgMap {
