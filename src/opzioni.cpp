@@ -96,7 +96,7 @@ void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const
 
 void Program::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
   for (auto const &flag : parsed_flags)
-    map->args[flag] = ArgValue{};
+    map->args[flag] = ArgValue{"1"};
 }
 
 void Program::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
