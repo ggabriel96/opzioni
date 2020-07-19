@@ -8,9 +8,10 @@
 
 SCENARIO("provided converter for vector<int>", "[vector]") {
   using vec = std::vector<int>;
+  using namespace std::string_literals;
 
   GIVEN("a proper comma-separated list of integers") {
-    auto const input = std::optional(std::string("1,2,3"));
+    auto const input = "1,2,3"s;
 
     WHEN("converting the list") {
       auto const result = opzioni::convert<vec>(input);
@@ -19,7 +20,7 @@ SCENARIO("provided converter for vector<int>", "[vector]") {
   }
 
   GIVEN("a comma-separated list of integers with a trailing comma") {
-    auto const input = std::optional(std::string("1,2,3,"));
+    auto const input = "1,2,3,"s;
 
     WHEN("converting the list") {
       auto const result = opzioni::convert<vec>(input);

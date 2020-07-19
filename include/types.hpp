@@ -68,7 +68,7 @@ struct Arg {
 };
 
 struct ArgValue {
-  std::optional<std::string> value = std::nullopt;
+  std::string value{};
 
   template <typename T> T as() const { return convert<T>(value); }
 };
