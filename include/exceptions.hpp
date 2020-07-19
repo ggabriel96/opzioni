@@ -5,7 +5,7 @@
 
 namespace opzioni {
 
-class ArgumentNotFound : public std::out_of_range {
+class MissingRequiredArgument : public std::out_of_range {
   using std::out_of_range::out_of_range;
 };
 
