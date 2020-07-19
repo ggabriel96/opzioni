@@ -45,9 +45,9 @@ private:
   void parse_args_into(ParseResult *, int, char const *[], int = 0) const;
   ValuePtr<ParseResult> parse_args(int, char const *[], int) const;
 
-  ArgMap convert_args(ParseResult &&) const;
-  void convert_args_into(ArgMap *, ParseResult *) const;
-  ValuePtr<ArgMap> convert_args(ParseResult *) const;
+  ArgMap assign_args(ParseResult &&) const;
+  void assign_args_into(ArgMap *, ParseResult *) const;
+  ValuePtr<ArgMap> assign_args(ParseResult *) const;
 
   void assign_positional_args(ArgMap *, std::vector<std::string> const &) const;
   void assign_flags(ArgMap *, std::set<std::string> const &) const;

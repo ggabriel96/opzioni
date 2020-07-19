@@ -104,25 +104,25 @@ void Program::assign_options(ArgMap *map, std::map<std::string, std::string> con
     map->args[option.first] = ArgValue{option.second};
 }
 
-ArgMap Program::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }
+ArgMap Program::parse(int argc, char const *argv[]) const { return assign_args(parse_args(argc, argv)); }
 
-ArgMap Program::convert_args(ParseResult &&parse_result) const {
+ArgMap Program::assign_args(ParseResult &&parse_result) const {
   ArgMap map;
-  convert_args_into(&map, &parse_result);
+  assign_args_into(&map, &parse_result);
   return map;
 }
 
-ValuePtr<ArgMap> Program::convert_args(ParseResult *parse_result) const {
+ValuePtr<ArgMap> Program::assign_args(ParseResult *parse_result) const {
   auto map = ValuePtr(std::make_unique<ArgMap>());
-  convert_args_into(map.get(), parse_result);
+  assign_args_into(map.get(), parse_result);
   return map;
 }
 
-void Program::convert_args_into(ArgMap *map, ParseResult *parse_result) const {
+void Program::assign_args_into(ArgMap *map, ParseResult *parse_result) const {
   map->cmd_name = parse_result->cmd_name;
   if (parse_result->subcmd != nullptr) {
     auto const &subcmd = cmds.at(parse_result->subcmd->cmd_name);
-    map->subcmd = subcmd->convert_args(parse_result->subcmd.get());
+    map->subcmd = subcmd->assign_args(parse_result->subcmd.get());
   }
   assign_positional_args(map, parse_result->positional);
   assign_flags(map, parse_result->flags);
