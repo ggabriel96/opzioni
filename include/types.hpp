@@ -74,12 +74,25 @@ struct ArgValue {
 };
 
 struct ArgMap {
-  ArgValue const &operator[](std::string name) const {
-    try {
-      return args.at(name);
-    } catch (std::out_of_range const &) {
-      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", name));
-    }
+  ArgValue operator[](std::string name) const {
+    if (!args.contains(name)) throw UnknownArgument(fmt::format("Could not find argument `{}`", name));
+    return args.at(name);
+  }
+
+  template <typename T> T get_if_else(T &&desired, std::string name, T&& otherwise) const {
+    // mainly intended for flags which are not only true or false
+    if (args.contains(name)) return desired;
+    else return otherwise;
+  }
+
+  template <typename T> T value_or(std::string name, T&& otherwise) const {
+    if (auto const arg = args.find(name); arg != args.end()) return arg->second.as<T>();
+    else return otherwise;
+  }
+
+  template <typename T> T as(std::string name) const {
+    auto const arg = (*this)[name];
+    return arg.as<T>();
   }
 
   auto size() const noexcept { return this->args.size(); }

@@ -95,21 +95,13 @@ void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const
 }
 
 void Program::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
-  for (auto const &flag : flags) {
-    if (parsed_flags.contains(flag.second.name))
-      map->args[flag.second.name] = ArgValue{flag.second.name};
-    else
-      map->args[flag.second.name] = ArgValue{};
-  }
+  for (auto const &flag : parsed_flags)
+    map->args[flag] = ArgValue{};
 }
 
 void Program::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
-  for (auto const &option : options) {
-    if (auto const parsed_value = parsed_options.find(option.second.name); parsed_value != parsed_options.end())
-      map->args[option.second.name] = ArgValue{parsed_value->second};
-    else
-      map->args[option.second.name] = ArgValue{};
-  }
+  for (auto const &option : parsed_options)
+    map->args[option.first] = ArgValue{option.second};
 }
 
 ArgMap Program::parse(int argc, char const *argv[]) const { return convert_args(parse_args(argc, argv)); }

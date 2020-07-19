@@ -7,7 +7,7 @@
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
-  using opzioni::Arg;
+  using namespace std::string_literals;
 
   fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
@@ -29,23 +29,19 @@ int main(int argc, char const *argv[]) {
   fmt::print("\nCommand name: {}\n", args.cmd_name);
   fmt::print("Number of arguments: {}\n", args.size());
   fmt::print("name: {}\n", args["name"].as<std::string>());
-  fmt::print("last name: {}\n", args["last-name"].as<std::string>());
-  fmt::print("v: {}\n", args["v"].as<std::string>());
-  fmt::print("d: {}\n", args["d"].as<std::string>());
-  fmt::print("flag: {}\n", args["flag"].as<std::string>());
-  fmt::print("a: {}\n", args["a"].as<std::string>());
-  fmt::print("b: {}\n", args["b"].as<std::string>());
-  fmt::print("numbers: [{}]\n", fmt::join(args["numbers"].as<std::vector<int>>(), ", "));
+  fmt::print("last name: {}\n", args.value_or("last-name", ""s));
+  fmt::print("v: {}\n", args.value_or("v", 0));
+  fmt::print("d: {}\n", args.value_or("d", 0.0));
+  fmt::print("flag: {}\n", args.get_if_else("do something!"s, "flag", "nope"s));
+  fmt::print("a: {}\n", args.value_or("a", false));
+  fmt::print("b: {}\n", args.value_or("b", false));
+  fmt::print("numbers: [{}]\n", fmt::join(args.value_or("numbers", std::vector<int>{}), ", "));
 
   if (args.subcmd != nullptr) {
     auto subargs = *args.subcmd;
     fmt::print("\nCommand name: {}\n", subargs.cmd_name);
     fmt::print("Number of arguments: {}\n", subargs.size());
-
-    // alternative way to extract argument values using `operator T`
-    std::string subname = subargs["subname"];
-    bool x = subargs["x"];
-    fmt::print("subname: {}\n", subname);
-    fmt::print("x: {}\n", x);
+    fmt::print("subname: {}\n", subargs["subname"].as<std::string>());
+    fmt::print("x: {}\n", subargs.value_or("x", false));
   }
 }
