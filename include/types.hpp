@@ -62,7 +62,6 @@ struct Command {
 
 struct Arg {
   std::string name{};
-  std::optional<std::string> terse = std::nullopt;
   std::string help{};
   bool required = false;
 };

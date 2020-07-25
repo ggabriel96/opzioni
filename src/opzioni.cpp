@@ -10,17 +10,9 @@ namespace opzioni {
 
 void Program::pos(Arg &&arg) { this->positional_args.emplace_back(arg); }
 
-void Program::opt(Arg &&arg) {
-  this->options[arg.name] = arg;
-  if (arg.terse)
-    this->options[*arg.terse] = arg;
-}
+void Program::opt(Arg &&arg) { this->options[arg.name] = arg; }
 
-void Program::flag(Arg &&arg) {
-  this->flags[arg.name] = arg;
-  if (arg.terse)
-    this->flags[*arg.terse] = arg;
-}
+void Program::flag(Arg &&arg) { this->flags[arg.name] = arg; }
 
 [[no_discard]] Program *Program::cmd(Command const &spec) {
   if (cmds.contains(spec.name)) {
@@ -174,10 +166,8 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
     } else { // only possibility left is an option
       auto const split = parse_option(whole_arg);
       if (auto const flag = this->flags.find(split.name); flag != this->flags.end()) {
-        auto const terse_message = flag->second.terse ? fmt::format(" or `-{}`", *flag->second.terse) : std::string{};
-        auto const message =
-            fmt::format("Argument `{}` is a flag, thus cannot take a value. Simply set it with `--{}`{}", split.name,
-                        flag->second.name, terse_message);
+        auto const message = fmt::format("Argument `{}` is a flag, thus cannot take a value. Simply set it with `--{}`",
+                                         split.name, flag->second.name);
         throw FlagHasValue(message);
       }
       auto const option = options.find(split.name);
@@ -186,16 +176,12 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
       }
       if (split.value) {
         parse_result->options[option->second.name] = *split.value;
-        if (option->second.terse)
-          parse_result->options[*option->second.terse] = *split.value;
       } else if (i + 1 < argc) {
         // if we have not yet exhausted argv,
         // interpret next element as value
         ++i;
         auto const value = std::string(argv[i]);
         parse_result->options[option->second.name] = value;
-        if (option->second.terse)
-          parse_result->options[*option->second.terse] = value;
       } else {
         throw ParseError(
             fmt::format("Could not parse argument `{}`. Perhaps you forgot to provide a value?", whole_arg));

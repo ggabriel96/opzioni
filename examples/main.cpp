@@ -16,7 +16,7 @@ int main(int argc, char const *argv[]) {
   program.opt({.name = "last-name", .help = "Your last name"});
   program.opt({.name = "v", .help = "Level of verbosity"});
   program.opt({.name = "d", .help = "A double"});
-  program.flag({.name = "flag", .terse = "f", .help = "Long flag"});
+  program.flag({.name = "flag", .help = "Long flag"});
   program.flag({.name = "a", .help = "Short flag a"});
   program.flag({.name = "b", .help = "Short flag b"});
   program.opt({.name = "numbers", .help = "A list of numbers"});
