@@ -25,29 +25,17 @@ public:
   Program(std::string name, std::string epilog, std::string description)
       : name(name), epilog(epilog), description(description) {}
 
-  template <typename T> void add(Arg<T> spec) {
-    if (!spec.choices.empty())
-      add_choice_checking_to_conversion(spec);
-    if (spec.is_positional())
-      this->positional_args.emplace_back(spec);
-    else
-      this->options[spec.name] = ArgInfo(spec);
-  }
-
-  [[no_discard]] Program *cmd(Command const &spec) {
-    if (cmds.contains(spec.name)) {
-      throw ArgumentAlreadyExists(fmt::format("Argument `{}` already exists.", spec.name));
-    }
-    auto result = cmds.insert({spec.name, std::make_unique<Program>(spec.name, spec.epilog, spec.description)});
-    return result.first->second.get();
-  }
-
-  ArgMap parse(int, char const *[]) const;
+  void pos(Arg &&);
+  void opt(Arg &&);
+  void flag(Arg &&);
+  [[no_discard]] Program *cmd(Command const &);
+  [[no_discard]] ArgMap parse(int, char const *[]) const;
 
 private:
   std::map<std::string, std::unique_ptr<Program>> cmds;
-  std::vector<ArgInfo> positional_args;
-  std::map<std::string, ArgInfo> options;
+  std::vector<Arg> positional_args;
+  std::map<std::string, Arg> flags;
+  std::map<std::string, Arg> options;
 
   bool is_flag(std::string const &) const noexcept;
   bool arg_is_long_flag(std::string const &) const noexcept;
@@ -57,24 +45,13 @@ private:
   void parse_args_into(ParseResult *, int, char const *[], int = 0) const;
   ValuePtr<ParseResult> parse_args(int, char const *[], int) const;
 
-  ArgMap convert_args(ParseResult &&) const;
-  void convert_args_into(ArgMap *, ParseResult *) const;
-  ValuePtr<ArgMap> convert_args(ParseResult *) const;
+  ArgMap assign_args(ParseResult &&) const;
+  void assign_args_into(ArgMap *, ParseResult *) const;
+  ValuePtr<ArgMap> assign_args(ParseResult *) const;
 
   void assign_positional_args(ArgMap *, std::vector<std::string> const &) const;
   void assign_flags(ArgMap *, std::set<std::string> const &) const;
   void assign_options(ArgMap *, std::map<std::string, std::string> const &) const;
-
-  template <typename T> void add_choice_checking_to_conversion(Arg<T> &spec) const noexcept {
-    spec.converter = [arg_name = spec.name, choices = spec.choices,
-                      converter = spec.converter](std::optional<std::string> value) -> std::any {
-      auto const result = std::any_cast<T>(converter(value));
-      if (!choices.contains(result))
-        throw InvalidChoice(fmt::format("Argument `{}` cannot be set to `{}`. Allowed values are: [{}]", arg_name,
-                                        result, fmt::join(choices, ", ")));
-      return result;
-    };
-  }
 };
 
 } // namespace opzioni
