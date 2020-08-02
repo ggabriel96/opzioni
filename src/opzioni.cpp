@@ -72,7 +72,8 @@ bool Program::arg_is_short_flags(std::string const &whole_arg) const noexcept {
 
 void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
   if (parsed_positional.size() < positional_args.size()) {
-    auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; });
+    auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; }) |
+                       std::views::drop(parsed_positional.size());
     throw MissingRequiredArgument(fmt::format("Missing {} positional argument{:s<{}}: `{}`", names.size(), "",
                                               static_cast<int>(names.size() != 1), fmt::join(names, "`, `")));
   }
