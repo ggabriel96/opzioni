@@ -1,9 +1,9 @@
 #ifndef OPZIONI_H
 #define OPZIONI_H
 
-#include <any>
 #include <memory>
 #include <set>
+#include <span>
 #include <utility>
 
 #include <fmt/format.h>
@@ -41,17 +41,15 @@ private:
   bool arg_is_long_flag(std::string const &) const noexcept;
   bool arg_is_short_flags(std::string const &) const noexcept;
 
-  ParseResult parse_args(int, char const *[]) const;
-  void parse_args_into(ParseResult *, int, char const *[], int = 0) const;
-  ValuePtr<ParseResult> parse_args(int, char const *[], int) const;
+  ParseResult parse_args(std::span<char const *>) const;
+  void parse_args_into(ParseResult &, std::span<char const *>) const;
 
-  ArgMap assign_args(ParseResult &&) const;
-  void assign_args_into(ArgMap *, ParseResult *) const;
-  ValuePtr<ArgMap> assign_args(ParseResult *) const;
+  ArgMap assign_args(ParseResult const &) const;
+  void assign_args_into(ArgMap &, ParseResult const &) const;
 
-  void assign_positional_args(ArgMap *, std::vector<std::string> const &) const;
-  void assign_flags(ArgMap *, std::set<std::string> const &) const;
-  void assign_options(ArgMap *, std::map<std::string, std::string> const &) const;
+  void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
+  void assign_flags(ArgMap &, std::set<std::string> const &) const;
+  void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
 };
 
 } // namespace opzioni

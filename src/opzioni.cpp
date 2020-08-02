@@ -70,7 +70,7 @@ bool Program::arg_is_short_flags(std::string const &whole_arg) const noexcept {
   return idx_first_not_dash == 1 && flags.length() >= 1 && all_short_flags;
 }
 
-void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const &parsed_positional) const {
+void Program::assign_positional_args(ArgMap &map, std::vector<std::string> const &parsed_positional) const {
   if (parsed_positional.size() < positional_args.size()) {
     auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; });
     throw MissingRequiredArgument(fmt::format("Missing {} positional argument{:s<{}}: `{}`", names.size(), "",
@@ -82,87 +82,76 @@ void Program::assign_positional_args(ArgMap *map, std::vector<std::string> const
                                       static_cast<int>(args.size() != 1), fmt::join(args, "`, `")));
   }
   for (size_t i = 0; i < positional_args.size(); ++i) {
-    map->args[positional_args[i].name] = ArgValue{parsed_positional[i]};
+    map.args[positional_args[i].name] = ArgValue{parsed_positional[i]};
   }
 }
 
-void Program::assign_flags(ArgMap *map, std::set<std::string> const &parsed_flags) const {
+void Program::assign_flags(ArgMap &map, std::set<std::string> const &parsed_flags) const {
   for (auto const &flag : parsed_flags)
-    map->args[flag] = ArgValue{"1"};
+    map.args[flag] = ArgValue{"1"};
 }
 
-void Program::assign_options(ArgMap *map, std::map<std::string, std::string> const &parsed_options) const {
+void Program::assign_options(ArgMap &map, std::map<std::string, std::string> const &parsed_options) const {
   for (auto const &option : parsed_options)
-    map->args[option.first] = ArgValue{option.second};
+    map.args[option.first] = ArgValue{option.second};
 }
 
-ArgMap Program::parse(int argc, char const *argv[]) const { return assign_args(parse_args(argc, argv)); }
-
-ArgMap Program::assign_args(ParseResult &&parse_result) const {
-  ArgMap map;
-  assign_args_into(&map, &parse_result);
-  return map;
+ArgMap Program::parse(int argc, char const *argv[]) const {
+  std::span<char const *> args{argv, static_cast<std::size_t>(argc)};
+  return assign_args(parse_args(args));
 }
 
-ValuePtr<ArgMap> Program::assign_args(ParseResult *parse_result) const {
-  auto map = ValuePtr(std::make_unique<ArgMap>());
-  assign_args_into(map.get(), parse_result);
-  return map;
-}
-
-void Program::assign_args_into(ArgMap *map, ParseResult *parse_result) const {
-  map->cmd_name = parse_result->cmd_name;
-  if (parse_result->subcmd != nullptr) {
-    auto const &subcmd = cmds.at(parse_result->subcmd->cmd_name);
-    map->subcmd = subcmd->assign_args(parse_result->subcmd.get());
-  }
-  assign_positional_args(map, parse_result->positional);
-  assign_flags(map, parse_result->flags);
-  assign_options(map, parse_result->options);
-}
-
-// +------------+
-// | parse_args |
-// +------------+
-
-ParseResult Program::parse_args(int argc, char const *argv[]) const {
+ParseResult Program::parse_args(std::span<char const *> args) const {
   ParseResult parse_result;
-  parse_args_into(&parse_result, argc, argv);
+  parse_args_into(parse_result, args);
   return parse_result;
 }
 
-ValuePtr<ParseResult> Program::parse_args(int argc, char const *argv[], int start) const {
-  auto parse_result = ValuePtr(std::make_unique<ParseResult>());
-  parse_args_into(parse_result.get(), argc, argv, start);
-  return parse_result;
+ArgMap Program::assign_args(ParseResult const &parse_result) const {
+  ArgMap map;
+  assign_args_into(map, parse_result);
+  return map;
 }
 
-void Program::parse_args_into(ParseResult *parse_result, int argc, char const *argv[], int start) const {
-  parse_result->cmd_name = std::string(argv[start]);
-  for (int i = start + 1; i < argc; ++i) {
-    auto const whole_arg = std::string(argv[i]);
+void Program::assign_args_into(ArgMap &map, ParseResult const &parse_result) const {
+  map.cmd_name = parse_result.cmd_name;
+  if (parse_result.subcmd != nullptr) {
+    auto const &subcmd = cmds.at(parse_result.subcmd->cmd_name);
+    map.subcmd = ValuePtr(std::make_unique<ArgMap>());
+    subcmd->assign_args_into(*map.subcmd, *parse_result.subcmd);
+  }
+  assign_positional_args(map, parse_result.positional);
+  assign_flags(map, parse_result.flags);
+  assign_options(map, parse_result.options);
+}
+
+void Program::parse_args_into(ParseResult &parse_result, std::span<char const *> args) const {
+  parse_result.cmd_name = std::string(args[0]);
+  for (std::size_t i = 1; i < args.size(); ++i) {
+    auto const whole_arg = std::string(args[i]);
     if (auto const num_of_dashes = count_dashes(whole_arg); num_of_dashes > 2) {
       throw TooManyDashes(fmt::format("Invalid argument `{}`. Did you mean `--`?", whole_arg));
     } else if (num_of_dashes == 2 && whole_arg.length() == 2) {
-      int const start_idx = i + 1;
-      int const remaining_args_count = argc - start_idx;
-      parse_result->positional.reserve(parse_result->positional.size() + remaining_args_count);
-      std::copy_n(argv + start_idx, remaining_args_count, std::back_inserter(parse_result->positional));
+      std::size_t const remaining_args_count = args.size() - (i + 1);
+      parse_result.positional.reserve(parse_result.positional.size() + remaining_args_count);
+      std::copy_n(args.last(remaining_args_count).begin(), remaining_args_count,
+                  std::back_inserter(parse_result.positional));
       break;
     }
 
     if (auto const subcmd = cmds.find(whole_arg); subcmd != cmds.end()) {
-      parse_result->subcmd = subcmd->second->parse_args(argc, argv, i);
+      parse_result.subcmd = ValuePtr(std::make_unique<ParseResult>());
+      subcmd->second->parse_args_into(*parse_result.subcmd, args.last(args.size() - i));
       break;
     } else if (is_positional(whole_arg)) {
-      parse_result->positional.push_back(whole_arg);
+      parse_result.positional.push_back(whole_arg);
     } else if (arg_is_short_flags(whole_arg)) {
       auto const flags = whole_arg.substr(1);
       for (char const &flag : flags) {
-        parse_result->flags.insert(std::string(1, flag));
+        parse_result.flags.insert(std::string(1, flag));
       }
     } else if (arg_is_long_flag(whole_arg)) {
-      parse_result->flags.insert(whole_arg.substr(2));
+      parse_result.flags.insert(whole_arg.substr(2));
     } else { // only possibility left is an option
       auto const split = parse_option(whole_arg);
       if (auto const flag = this->flags.find(split.name); flag != this->flags.end()) {
@@ -175,13 +164,13 @@ void Program::parse_args_into(ParseResult *parse_result, int argc, char const *a
         throw UnknownArgument(fmt::format("Unknown option `{}` in `{}`", split.name, whole_arg));
       }
       if (split.value) {
-        parse_result->options[option->second.name] = *split.value;
-      } else if (i + 1 < argc) {
-        // if we have not yet exhausted argv,
+        parse_result.options[option->second.name] = *split.value;
+      } else if (i + 1 < args.size()) {
+        // if we have not yet exhausted args,
         // interpret next element as value
         ++i;
-        auto const value = std::string(argv[i]);
-        parse_result->options[option->second.name] = value;
+        auto const value = std::string(args[i]);
+        parse_result.options[option->second.name] = value;
       } else {
         throw ParseError(
             fmt::format("Could not parse argument `{}`. Perhaps you forgot to provide a value?", whole_arg));
