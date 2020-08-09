@@ -25,7 +25,7 @@ int main(int argc, char const *argv[]) {
   subcmd->pos({.name = "subname", .help = "Your name again, please"});
   subcmd->flag({.name = "x", .help = "A nested flag"});
 
-  auto const args = program.parse(argc, argv);
+  auto const args = program(argc, argv);
   fmt::print("\nCommand name: {}\n", args.cmd_name);
   fmt::print("Number of arguments: {}\n", args.size());
   fmt::print("name: {}\n", args["name"].as<std::string>());

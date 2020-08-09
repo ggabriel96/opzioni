@@ -1,58 +1,19 @@
 #ifndef OPZIONI_TYPES_H
 #define OPZIONI_TYPES_H
 
-#include <any>
-#include <functional>
+#include "converters.hpp"
+#include "memory.hpp"
+
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <vector>
 
 #include <fmt/format.h>
 
-#include "converters.hpp"
-
 namespace opzioni {
-
-// +-----------------------+
-// | General utility types |
-// +-----------------------+
-
-template <typename T> class ValuePtr {
-public:
-  ValuePtr() = default;
-  ValuePtr(ValuePtr &&) = default;
-  ValuePtr(const ValuePtr &other) : ptr(other.ptr ? new T(*other.ptr) : nullptr) {}
-
-  ValuePtr(std::unique_ptr<T> &&other) : ptr(std::move(other)) {}
-
-  ValuePtr &operator=(ValuePtr &&) = default;
-  ValuePtr &operator=(ValuePtr const &other) {
-    *this = ValuePtr(other);
-    return *this;
-  }
-
-  T &operator*() const { return *ptr; }
-  T *operator->() const { return ptr.get(); }
-  T *get() const { return ptr.get(); }
-
-private:
-  std::unique_ptr<T> ptr;
-};
-
-template <typename T>[[no_discard]] bool operator==(ValuePtr<T> const &lhs, std::nullptr_t) noexcept {
-  return lhs.get() == nullptr;
-}
-
-template <typename T>[[no_discard]] bool operator!=(std::nullptr_t, ValuePtr<T> const &rhs) noexcept {
-  return !(rhs == nullptr);
-}
-
-// +-------------------+
-// | User-facing types |
-// +-------------------+
 
 struct Command {
   std::string name;
@@ -74,19 +35,24 @@ struct ArgValue {
 
 struct ArgMap {
   ArgValue operator[](std::string name) const {
-    if (!args.contains(name)) throw UnknownArgument(fmt::format("Could not find argument `{}`", name));
+    if (!args.contains(name))
+      throw UnknownArgument(fmt::format("Could not find argument `{}`", name));
     return args.at(name);
   }
 
-  template <typename T> T get_if_else(T &&desired, std::string name, T&& otherwise) const {
+  template <typename T> T get_if_else(T &&desired, std::string name, T &&otherwise) const {
     // mainly intended for flags which are not only true or false
-    if (args.contains(name)) return desired;
-    else return otherwise;
+    if (args.contains(name))
+      return desired;
+    else
+      return otherwise;
   }
 
-  template <typename T> T value_or(std::string name, T&& otherwise) const {
-    if (auto const arg = args.find(name); arg != args.end()) return arg->second.as<T>();
-    else return otherwise;
+  template <typename T> T value_or(std::string name, T &&otherwise) const {
+    if (auto const arg = args.find(name); arg != args.end())
+      return arg->second.as<T>();
+    else
+      return otherwise;
   }
 
   template <typename T> T as(std::string name) const {
@@ -97,26 +63,60 @@ struct ArgMap {
   auto size() const noexcept { return this->args.size(); }
 
   std::string cmd_name;
-  ValuePtr<ArgMap> subcmd;
+  memory::ValuePtr<ArgMap> subcmd;
   std::map<std::string, ArgValue> args;
 };
 
-// +------------------------+
-// | Specific utility types |
-// +------------------------+
-
 struct ParseResult {
   std::string cmd_name;
-  ValuePtr<ParseResult> subcmd;
+  memory::ValuePtr<ParseResult> subcmd;
   std::vector<std::string> positional;
   std::map<std::string, std::string> options;
   std::set<std::string> flags;
 };
 
 struct ParsedOption {
-  size_t num_of_dashes;
   std::string name;
   std::optional<std::string> value;
+};
+
+class Program {
+public:
+  std::string name;
+  std::string epilog;
+  std::string description;
+
+  Program() = default;
+  Program(std::string name, std::string epilog, std::string description)
+      : name(name), epilog(epilog), description(description) {}
+
+  void pos(Arg &&);
+  void opt(Arg &&);
+  void flag(Arg &&);
+  [[no_discard]] Program *cmd(Command const &);
+  [[no_discard]] ArgMap operator()(int, char const *[]) const;
+
+  bool is_flag(std::string const &) const noexcept;
+  std::optional<std::string> is_subcmd(std::string const &) const noexcept;
+  std::optional<std::string> is_positional(std::string const &) const noexcept;
+  std::optional<std::string> is_long_flag(std::string const &) const noexcept;
+  std::optional<std::string> is_short_flags(std::string const &) const noexcept;
+  std::optional<ParsedOption> is_option(std::string const &) const noexcept;
+
+  Program const &get_cmd(std::string) const; // this is weird
+
+private:
+  std::map<std::string, std::unique_ptr<Program>> cmds;
+  std::vector<Arg> positional_args;
+  std::map<std::string, Arg> flags;
+  std::map<std::string, Arg> options;
+
+  ArgMap assign_args(ParseResult const &) const;
+  void assign_args_into(ArgMap &, ParseResult const &) const;
+
+  void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
+  void assign_flags(ArgMap &, std::set<std::string> const &) const;
+  void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
 };
 
 } // namespace opzioni
