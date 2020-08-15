@@ -107,8 +107,8 @@ public:
   Arg &pos(std::string);
   Arg &opt(std::string);
   Arg &flag(std::string);
-  [[no_discard]] Program &cmd(std::string);
-  [[no_discard]] ArgMap operator()(int, char const *[]) const;
+  Program &cmd(std::string);
+  ArgMap operator()(int, char const *[]) const;
 
   bool is_flag(std::string const &) const noexcept;
   std::optional<std::string> is_positional(std::string const &) const noexcept;

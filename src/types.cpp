@@ -44,7 +44,7 @@ Arg &Program::flag(std::string name) {
   return flags[arg.name] = arg;
 }
 
-[[no_discard]] Program &Program::cmd(std::string name) {
+Program &Program::cmd(std::string name) {
   if (cmds.contains(name)) {
     throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
