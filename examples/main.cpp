@@ -12,18 +12,18 @@ int main(int argc, char const *argv[]) {
   fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
   opzioni::Program program;
-  program.pos({.name = "name", .help = "Your name"});
-  program.opt({.name = "last-name", .help = "Your last name"});
-  program.opt({.name = "v", .help = "Level of verbosity"});
-  program.opt({.name = "d", .help = "A double"});
-  program.flag({.name = "flag", .help = "Long flag"});
-  program.flag({.name = "a", .help = "Short flag a"});
-  program.flag({.name = "b", .help = "Short flag b"});
-  program.opt({.name = "numbers", .help = "A list of numbers"});
+  program.pos("name").help("Your name");
+  program.opt("last-name").help("Your last name");
+  program.opt("v").help("Level of verbosity");
+  program.opt("d").help("A double");
+  program.flag("flag").help("Long flag");
+  program.flag("a").help("Short flag a");
+  program.flag("b").help("Short flag b");
+  program.opt("numbers").help("A list of numbers");
 
-  auto subcmd = program.cmd({.name = "subcmd"});
-  subcmd->pos({.name = "subname", .help = "Your name again, please"});
-  subcmd->flag({.name = "x", .help = "A nested flag"});
+  auto subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
+  subcmd.pos("subname").help("Your name again, please");
+  subcmd.flag("x").help("A nested flag");
 
   auto const args = program(argc, argv);
   fmt::print("\nCommand name: {}\n", args.cmd_name);

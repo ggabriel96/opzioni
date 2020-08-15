@@ -15,16 +15,13 @@
 
 namespace opzioni {
 
-struct Command {
-  std::string name;
-  std::string epilog;
-  std::string description;
-};
-
 struct Arg {
   std::string name{};
-  std::string help{};
-  bool required = false;
+  std::string description{};
+  bool is_required = false;
+
+  Arg &help(std::string) noexcept;
+  Arg &required() noexcept;
 };
 
 struct ArgValue {
@@ -95,18 +92,22 @@ private:
   void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
 
 public:
-  std::string name;
-  std::string epilog;
-  std::string description;
+  std::string name{};
+  std::string description{};
+  std::string epilog{};
 
   Program() = default;
-  Program(std::string name, std::string epilog, std::string description)
-      : name(name), epilog(epilog), description(description) {}
+  Program(std::string name) : name(name) {}
+  Program(std::string name, std::string description, std::string epilog)
+      : name(name), description(description), epilog(epilog) {}
 
-  void pos(Arg &&);
-  void opt(Arg &&);
-  void flag(Arg &&);
-  [[no_discard]] Program *cmd(Command const &);
+  Program &help(std::string) noexcept;
+  Program &with_epilog(std::string) noexcept;
+
+  Arg &pos(std::string);
+  Arg &opt(std::string);
+  Arg &flag(std::string);
+  [[no_discard]] Program &cmd(std::string);
   [[no_discard]] ArgMap operator()(int, char const *[]) const;
 
   bool is_flag(std::string const &) const noexcept;
