@@ -34,18 +34,24 @@ opzioni_dep = declare_dependency(
 # | Tests |
 # +-------+
 test_deps = [opzioni_dep, catch2_dep]
-types_test = executable(
-    'types',
-    ['src/catch2_main.cpp', 'src/types.test.cpp'],
-    dependencies: test_deps
-)
 converters_test = executable(
     'converters',
     ['src/catch2_main.cpp', 'src/converters.test.cpp'],
     dependencies: test_deps
 )
-test('types', types_test)
+parsing_test = executable(
+    'parsing',
+    ['src/catch2_main.cpp', 'src/parsing.test.cpp'],
+    dependencies: test_deps
+)
+types_test = executable(
+    'types',
+    ['src/catch2_main.cpp', 'src/types.test.cpp'],
+    dependencies: test_deps
+)
 test('converters', converters_test)
+test('parsing', parsing_test)
+test('types', types_test)
 
 # +----------+
 # | Examples |
