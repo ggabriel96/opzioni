@@ -43,8 +43,8 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
   if (arg.length() == 2 && arg[0] == '-' && arg[1] == '-')
     return parsing::DashDash{index};
 
-  if (auto const cmd_name = spec.is_subcmd(arg); cmd_name)
-    return parsing::Subcommand{*cmd_name, index};
+  if (auto const cmd = spec.is_subcmd(arg); cmd)
+    return parsing::Subcommand{*cmd, index};
 
   if (auto const positional = spec.is_positional(arg); positional)
     return parsing::Positional{*positional};
@@ -102,9 +102,8 @@ std::size_t ArgumentParser::operator()(Positional positional) {
 
 std::size_t ArgumentParser::operator()(Subcommand subcmd) {
   auto const remaining_args_count = args.size() - subcmd.index;
-  auto const &subprogram = spec.get_cmd(subcmd.name);
   auto subargs = args.last(remaining_args_count);
-  ArgumentParser subparser{subprogram, subargs};
+  ArgumentParser subparser{*subcmd.cmd->second, subargs};
   result.subcmd = memory::ValuePtr(std::make_unique<ParseResult>(std::move(subparser())));
   return remaining_args_count;
 }

@@ -81,6 +81,19 @@ struct ParsedOption {
 };
 
 class Program {
+private:
+  std::map<std::string, memory::ValuePtr<Program>> cmds;
+  std::vector<Arg> positional_args;
+  std::map<std::string, Arg> flags;
+  std::map<std::string, Arg> options;
+
+  ArgMap assign_args(ParseResult const &) const;
+  void assign_args_into(ArgMap &, ParseResult const &) const;
+
+  void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
+  void assign_flags(ArgMap &, std::set<std::string> const &) const;
+  void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
+
 public:
   std::string name;
   std::string epilog;
@@ -97,26 +110,11 @@ public:
   [[no_discard]] ArgMap operator()(int, char const *[]) const;
 
   bool is_flag(std::string const &) const noexcept;
-  std::optional<std::string> is_subcmd(std::string const &) const noexcept;
   std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<ParsedOption> is_option(std::string const &) const noexcept;
-
-  Program const &get_cmd(std::string) const; // this is weird
-
-private:
-  std::map<std::string, std::unique_ptr<Program>> cmds;
-  std::vector<Arg> positional_args;
-  std::map<std::string, Arg> flags;
-  std::map<std::string, Arg> options;
-
-  ArgMap assign_args(ParseResult const &) const;
-  void assign_args_into(ArgMap &, ParseResult const &) const;
-
-  void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
-  void assign_flags(ArgMap &, std::set<std::string> const &) const;
-  void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
+  std::optional<decltype(cmds)::const_iterator> is_subcmd(std::string const &) const noexcept;
 };
 
 } // namespace opzioni

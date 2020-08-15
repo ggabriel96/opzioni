@@ -40,7 +40,7 @@ struct Positional {
 };
 
 struct Subcommand {
-  std::string name;
+  std::map<std::string, memory::ValuePtr<Program>>::const_iterator cmd;
   std::size_t index;
 };
 

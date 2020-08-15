@@ -19,15 +19,16 @@ void Program::flag(Arg &&arg) { this->flags[arg.name] = arg; }
   if (cmds.contains(spec.name)) {
     throw ArgumentAlreadyExists(fmt::format("Argument `{}` already exists.", spec.name));
   }
-  auto result = cmds.insert({spec.name, std::make_unique<Program>(spec.name, spec.epilog, spec.description)});
+  auto result =
+      cmds.insert({spec.name, memory::ValuePtr(std::make_unique<Program>(spec.name, spec.epilog, spec.description))});
   return result.first->second.get();
 }
 
 auto count_dashes(std::string_view cli_arg) { return cli_arg.find_first_not_of('-'); }
 
-std::optional<std::string> Program::is_subcmd(std::string const &name) const noexcept {
-  if (cmds.contains(name))
-    return name;
+std::optional<decltype(Program::cmds)::const_iterator> Program::is_subcmd(std::string const &name) const noexcept {
+  if (auto const cmd = cmds.find(name); cmd != cmds.end())
+    return cmd;
   return std::nullopt;
 }
 
@@ -63,11 +64,6 @@ std::optional<ParsedOption> Program::is_option(std::string const &whole_arg) con
   if (options.contains(parsed_option.name))
     return parsed_option;
   return std::nullopt;
-}
-
-Program const &Program::get_cmd(std::string name) const {
-  auto const &subprogram = cmds.at(name);
-  return *subprogram;
 }
 
 void Program::assign_positional_args(ArgMap &map, std::vector<std::string> const &parsed_positional) const {
