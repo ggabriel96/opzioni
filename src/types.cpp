@@ -9,19 +9,47 @@
 
 namespace opzioni {
 
-void Program::pos(Arg &&arg) { this->positional_args.emplace_back(arg); }
+Arg &Arg::help(std::string description) noexcept {
+  this->description = description;
+  return *this;
+}
 
-void Program::opt(Arg &&arg) { this->options[arg.name] = arg; }
+Arg &Arg::required() noexcept {
+  this->is_required = true;
+  return *this;
+}
 
-void Program::flag(Arg &&arg) { this->flags[arg.name] = arg; }
+Program &Program::help(std::string description) noexcept {
+  this->description = description;
+  return *this;
+}
 
-[[no_discard]] Program *Program::cmd(Command const &spec) {
-  if (cmds.contains(spec.name)) {
-    throw ArgumentAlreadyExists(fmt::format("Argument `{}` already exists.", spec.name));
+Program &Program::with_epilog(std::string epilog) noexcept {
+  this->epilog = epilog;
+  return *this;
+}
+
+Arg &Program::pos(std::string name) {
+  Arg arg{name};
+  return *positional_args.insert(positional_args.end(), arg);
+}
+
+Arg &Program::opt(std::string name) {
+  Arg arg{name};
+  return options[arg.name] = arg;
+}
+
+Arg &Program::flag(std::string name) {
+  Arg arg{name};
+  return flags[arg.name] = arg;
+}
+
+[[no_discard]] Program &Program::cmd(std::string name) {
+  if (cmds.contains(name)) {
+    throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
-  auto result =
-      cmds.insert({spec.name, memory::ValuePtr(std::make_unique<Program>(spec.name, spec.epilog, spec.description))});
-  return result.first->second.get();
+  auto &cmd = cmds[name] = memory::ValuePtr(std::make_unique<Program>(name));
+  return *cmd;
 }
 
 auto count_dashes(std::string_view cli_arg) { return cli_arg.find_first_not_of('-'); }

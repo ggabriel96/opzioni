@@ -10,7 +10,7 @@ SCENARIO("positional arguments") {
   opzioni::Program program;
 
   GIVEN("only 1 positional argument") {
-    program.pos({.name = "name"});
+    program.pos("name");
 
     WHEN("the expected argument is not given in CLI") {
       std::array argv{"./test"};
@@ -65,8 +65,8 @@ SCENARIO("positional arguments") {
   }
 
   GIVEN("1 positional argument and 1 subcommand") {
-    program.pos({.name = "name"});
-    program.cmd({.name = "cmd"});
+    program.pos("name");
+    program.cmd("cmd");
 
     WHEN("only the positional is in CLI") {
       std::array argv{"./test", "someone"};
