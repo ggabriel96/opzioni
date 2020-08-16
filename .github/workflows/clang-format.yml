@@ -1,0 +1,19 @@
+name: ClangFormat
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ggabriel96/clang-format:latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check header files
+        run: clang-format --dry-run --verbose -Werror $(find . -name '*.hpp')
+
+      - name: Check source files
+        run: clang-format --dry-run --verbose -Werror $(find . -name '*.cpp')
