@@ -52,8 +52,6 @@ Program &Program::cmd(std::string name) {
   return *cmd;
 }
 
-auto count_dashes(std::string_view cli_arg) { return cli_arg.find_first_not_of('-'); }
-
 std::optional<decltype(Program::cmds)::const_iterator> Program::is_subcmd(std::string const &name) const noexcept {
   if (auto const cmd = cmds.find(name); cmd != cmds.end())
     return cmd;
