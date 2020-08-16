@@ -115,11 +115,10 @@ SCENARIO("positional arguments") {
     }
   }
 
-  GIVEN("1 positional argument and 1 subcommand") {
-    program.pos("name");
+  GIVEN("1 command is specified for the program") {
     program.cmd("cmd");
 
-    WHEN("only the positional is in CLI") {
+    WHEN("one positional argument is given in CLI") {
       std::array argv{"./test", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
@@ -136,11 +135,11 @@ SCENARIO("positional arguments") {
       }
     }
 
-    WHEN("only the subcommand is in CLI") {
+    WHEN("the command is given in CLI") {
       std::array argv{"./test", "cmd"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("it is parsed as subcommand") {
+      THEN("it is parsed as command") {
         auto const result = parser();
 
         REQUIRE(result.subcmd != nullptr);
@@ -157,15 +156,32 @@ SCENARIO("positional arguments") {
       }
     }
 
-    WHEN("both are in CLI, but positional comes first") {
-      std::array argv{"./test", "name", "cmd"};
+    WHEN("dash-dash followed by the command are given the in CLI") {
+      std::array argv{"./test", "--", "cmd"};
+      opzioni::parsing::ArgumentParser parser(program, argv);
+
+      THEN("it is parsed as positional") {
+        auto const result = parser();
+
+        REQUIRE(result.positional.size() == 1);
+        REQUIRE(result.positional[0] == "cmd"s);
+
+        REQUIRE(result.cmd_name == "./test");
+        REQUIRE(result.flags.empty());
+        REQUIRE(result.options.empty());
+        REQUIRE(result.subcmd == nullptr);
+      }
+    }
+
+    WHEN("one positional argument is given before the command in CLI") {
+      std::array argv{"./test", "someone", "cmd"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
       THEN("both are parsed as arguments to the program") {
         auto const result = parser();
 
         REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "name"s);
+        REQUIRE(result.positional[0] == "someone"s);
 
         REQUIRE(result.subcmd != nullptr);
         REQUIRE(result.subcmd->cmd_name == "cmd"s);
@@ -180,11 +196,11 @@ SCENARIO("positional arguments") {
       }
     }
 
-    WHEN("both are in CLI, but subcommand comes first") {
-      std::array argv{"./test", "cmd", "name"};
+    WHEN("one positional argument is given after the command in CLI") {
+      std::array argv{"./test", "cmd", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("the subcommand is parsed as argument to the program and the positional as argument of the subcommand") {
+      THEN("the command is parsed as argument to the program and the positional as argument of the command") {
         auto const result = parser();
 
         REQUIRE(result.positional.empty());
@@ -195,7 +211,7 @@ SCENARIO("positional arguments") {
         REQUIRE(result.subcmd->options.empty());
         REQUIRE(result.subcmd->subcmd == nullptr);
         REQUIRE(result.subcmd->positional.size() == 1);
-        REQUIRE(result.subcmd->positional[0] == "name"s);
+        REQUIRE(result.subcmd->positional[0] == "someone"s);
 
         REQUIRE(result.cmd_name == "./test");
         REQUIRE(result.flags.empty());
