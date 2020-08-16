@@ -84,6 +84,8 @@ private:
   std::map<std::string, Arg> flags;
   std::map<std::string, Arg> options;
 
+  bool is_flag(std::string const &) const noexcept;
+
   ArgMap assign_args(ParseResult const &) const;
   void assign_args_into(ArgMap &, ParseResult const &) const;
 
@@ -109,8 +111,7 @@ public:
   Arg &flag(std::string);
   Program &cmd(std::string);
   ArgMap operator()(int, char const *[]) const;
-
-  bool is_flag(std::string const &) const noexcept;
+  
   std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
