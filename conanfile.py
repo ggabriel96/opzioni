@@ -29,8 +29,8 @@ class OpzioniConan(ConanFile):
 
     generators = "pkg_config"
     exports_sources = ["meson.build", "meson_options.txt", "include/*", "src/*"]
-    requires = "fmt/6.2.1"
-    build_requires = "catch2/2.12.4"
+    requires = "fmt/[>=7.0.3 <8.0.0]"
+    build_requires = "catch2/[>=2.13.0 <3.0.0]"
 
     def set_version(self):
         content = load(os.path.join(self.recipe_folder, "meson.build"))
