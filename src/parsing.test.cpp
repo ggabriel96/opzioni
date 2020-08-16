@@ -9,7 +9,7 @@ SCENARIO("positional arguments") {
   using namespace std::string_literals;
   opzioni::Program program;
 
-  GIVEN("no positional arguments are specified for the program") {
+  GIVEN("no arguments are specified for the program") {
 
     WHEN("no arguments are given in CLI") {
       std::array argv{"./test"};
