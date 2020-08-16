@@ -9,10 +9,9 @@ SCENARIO("positional arguments") {
   using namespace std::string_literals;
   opzioni::Program program;
 
-  GIVEN("only 1 positional argument") {
-    program.pos("name");
+  GIVEN("no positional arguments are specified for the program") {
 
-    WHEN("the expected argument is not given in CLI") {
+    WHEN("no arguments are given in CLI") {
       std::array argv{"./test"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
@@ -28,7 +27,7 @@ SCENARIO("positional arguments") {
       }
     }
 
-    WHEN("the expected argument is given in CLI") {
+    WHEN("one positional argument is given in CLI") {
       std::array argv{"./test", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
@@ -45,8 +44,8 @@ SCENARIO("positional arguments") {
       }
     }
 
-    WHEN("extra arguments are given in CLI") {
-      std::array argv{"./test", "someone", "somewhere"};
+    WHEN("many positional arguments are given in CLI") {
+      std::array argv{"./test", "someone", "sometime", "somewhere"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
       THEN("they are all parsed as positional") {
@@ -54,7 +53,59 @@ SCENARIO("positional arguments") {
 
         REQUIRE(result.positional.size() == 2);
         REQUIRE(result.positional[0] == "someone"s);
-        REQUIRE(result.positional[1] == "somewhere"s);
+        REQUIRE(result.positional[1] == "sometime"s);
+        REQUIRE(result.positional[2] == "somewhere"s);
+
+        REQUIRE(result.cmd_name == "./test");
+        REQUIRE(result.flags.empty());
+        REQUIRE(result.options.empty());
+        REQUIRE(result.subcmd == nullptr);
+      }
+    }
+
+    WHEN("dash-dash followed by a positional argument are given the in CLI") {
+      std::array argv{"./test", "--", "someone"};
+      opzioni::parsing::ArgumentParser parser(program, argv);
+
+      THEN("the argument is parsed as positional") {
+        auto const result = parser();
+
+        REQUIRE(result.positional.size() == 1);
+        REQUIRE(result.positional[0] == "someone"s);
+
+        REQUIRE(result.cmd_name == "./test");
+        REQUIRE(result.flags.empty());
+        REQUIRE(result.options.empty());
+        REQUIRE(result.subcmd == nullptr);
+      }
+    }
+
+    WHEN("dash-dash followed by what would be a flag are given the in CLI") {
+      std::array argv{"./test", "--", "--flag"};
+      opzioni::parsing::ArgumentParser parser(program, argv);
+
+      THEN("the supposed flag is parsed as a positional argument") {
+        auto const result = parser();
+
+        REQUIRE(result.positional.size() == 1);
+        REQUIRE(result.positional[0] == "--flag"s);
+
+        REQUIRE(result.cmd_name == "./test");
+        REQUIRE(result.flags.empty());
+        REQUIRE(result.options.empty());
+        REQUIRE(result.subcmd == nullptr);
+      }
+    }
+
+    WHEN("dash-dash followed by what would be a short flag are given the in CLI") {
+      std::array argv{"./test", "--", "-f"};
+      opzioni::parsing::ArgumentParser parser(program, argv);
+
+      THEN("the supposed flag is parsed as a positional argument") {
+        auto const result = parser();
+
+        REQUIRE(result.positional.size() == 1);
+        REQUIRE(result.positional[0] == "-f"s);
 
         REQUIRE(result.cmd_name == "./test");
         REQUIRE(result.flags.empty());
