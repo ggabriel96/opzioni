@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: conanio/gcc10:latest
-      options: -u conan -w /home/conan/
+      options: -u root
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
