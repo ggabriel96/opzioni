@@ -1,0 +1,32 @@
+name: Test and build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  gcc:
+    runs-on: ubuntu-latest
+    container:
+      image: conanio/gcc10:latest
+      options: -u root
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Meson and its dependencies
+        run: pip install meson ninja
+
+      - run: conan install . -if build -b missing -s build_type=Debug -o build_examples=True
+
+      - name: Configure
+        run: conan build -bf build --configure .
+
+      - name: Build
+        run: conan build -bf build --build .
+
+      - name: Test
+        run: conan build -bf build --test .
