@@ -91,7 +91,8 @@ std::size_t ArgumentParser::operator()(Option option) {
     result.options[option.arg.name] = value;
     return 2;
   } else {
-    throw ParseError(fmt::format("Could not parse argument `{}`. Perhaps you forgot to provide a value?", option.arg.name));
+    throw ParseError(
+        fmt::format("Could not parse argument `{}`. Perhaps you forgot to provide a value?", option.arg.name));
   }
 }
 
@@ -108,9 +109,7 @@ std::size_t ArgumentParser::operator()(Subcommand subcmd) {
   return remaining_args_count;
 }
 
-std::size_t ArgumentParser::operator()(Unknown unknown) {
-  throw UnknownArgument(unknown.arg);
-}
+std::size_t ArgumentParser::operator()(Unknown unknown) { throw UnknownArgument(unknown.arg); }
 
 } // namespace parsing
 } // namespace opzioni

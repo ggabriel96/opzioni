@@ -111,7 +111,7 @@ public:
   Arg &flag(std::string);
   Program &cmd(std::string);
   ArgMap operator()(int, char const *[]) const;
-  
+
   std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;

@@ -5,7 +5,8 @@
 namespace opzioni {
 
 template <> auto convert<bool>(std::string value) -> bool {
-  if (value.empty()) throw ConversionError("Cannot convert an empty string to bool");
+  if (value.empty())
+    throw ConversionError("Cannot convert an empty string to bool");
   if (value == "1" || value == "true")
     return true;
   if (value == "0" || value == "false")
@@ -13,9 +14,7 @@ template <> auto convert<bool>(std::string value) -> bool {
   throw ConversionError(fmt::format("Cannot convert `{}` to bool", value));
 }
 
-template <> auto convert<std::string>(std::string value) -> std::string {
-  return value;
-}
+template <> auto convert<std::string>(std::string value) -> std::string { return value; }
 
 // https://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/
 template <> auto convert<std::vector<int>>(std::string value) -> std::vector<int> {

@@ -3,8 +3,6 @@
 
 #include "types.hpp"
 
-namespace opzioni {
-
-} // namespace opzioni
+namespace opzioni {} // namespace opzioni
 
 #endif // OPZIONI_H
