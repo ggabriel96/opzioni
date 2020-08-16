@@ -10,8 +10,8 @@ include_dir = include_directories('include/')
 # +--------------+
 # | Dependencies |
 # +--------------+
-fmt_dep = dependency('fmt', version: '^7.0.3')
-catch2_dep = dependency('catch2', version: '^2.13.0')
+fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
+catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 
 # +--------------------+
 # | Library definition |
