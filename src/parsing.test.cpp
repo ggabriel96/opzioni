@@ -44,6 +44,23 @@ SCENARIO("positional arguments") {
       }
     }
 
+    WHEN("one dash is given in CLI") {
+      std::array argv{"./test", "-"};
+      opzioni::parsing::ArgumentParser parser(program, argv);
+
+      THEN("it is parsed as positional") {
+        auto const result = parser();
+
+        REQUIRE(result.positional.size() == 1);
+        REQUIRE(result.positional[0] == "-"s);
+
+        REQUIRE(result.cmd_name == "./test");
+        REQUIRE(result.flags.empty());
+        REQUIRE(result.options.empty());
+        REQUIRE(result.subcmd == nullptr);
+      }
+    }
+
     WHEN("many positional arguments are given in CLI") {
       std::array argv{"./test", "someone", "sometime", "somewhere"};
       opzioni::parsing::ArgumentParser parser(program, argv);
