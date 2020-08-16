@@ -51,7 +51,7 @@ SCENARIO("positional arguments") {
       THEN("they are all parsed as positional") {
         auto const result = parser();
 
-        REQUIRE(result.positional.size() == 2);
+        REQUIRE(result.positional.size() == 3);
         REQUIRE(result.positional[0] == "someone"s);
         REQUIRE(result.positional[1] == "sometime"s);
         REQUIRE(result.positional[2] == "somewhere"s);
