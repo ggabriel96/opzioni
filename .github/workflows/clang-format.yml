@@ -8,8 +8,8 @@ on:
 
 jobs:
   check:
-    runs-on: ggabriel96/clang-format:latest
-
+    runs-on: ubuntu-latest
+    container: ggabriel96/clang-format:latest
     steps:
       - uses: actions/checkout@v2
 
