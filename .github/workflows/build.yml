@@ -8,7 +8,9 @@ on:
 jobs:
   gcc:
     runs-on: ubuntu-latest
-    container: conanio/gcc10:latest
+    container:
+      image: conanio/gcc10:latest
+      options: -u conan -w /home/conan/
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
