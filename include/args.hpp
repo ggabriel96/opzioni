@@ -5,6 +5,7 @@
 #include "memory.hpp"
 
 #include <map>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -35,16 +36,11 @@ template <typename T> void assign(ArgMap &, Arg const &, std::optional<std::stri
 
 template <typename...> struct TypeList;
 
-template <typename...> struct Prepend;
-template <typename T, typename... Ts> struct Prepend<T, TypeList<Ts...>> { using type = TypeList<T, Ts...>; };
-
 template <typename...> struct VariantOf;
 template <typename... Ts> struct VariantOf<TypeList<Ts...>> { using type = std::variant<Ts...>; };
 
 using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>>;
-using OptionalBuiltinTypes = Prepend<std::monostate, BuiltinTypes>::type;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
-using OptionalBuiltinType = VariantOf<OptionalBuiltinTypes>::type;
 
 // ------------+
 // | arguments |
@@ -94,7 +90,7 @@ struct Arg {
   std::string name{};
   std::string description{};
   bool is_required = false;
-  OptionalBuiltinType default_value{};
+  std::optional<BuiltinType> default_value{};
   actions::signature action_fn = actions::assign<std::string>;
 
   Arg &help(std::string) noexcept;
@@ -117,7 +113,7 @@ struct Arg {
 namespace actions {
 
 template <typename T> void assign(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
-  T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(arg.default_value);
+  T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(*arg.default_value);
   map.args[arg.name] = ArgValue{value};
 }
 
