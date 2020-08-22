@@ -6,6 +6,7 @@
 #include <catch2/catch.hpp>
 
 SCENARIO("positional arguments") {
+  using Catch::Matchers::Message;
   using namespace std::string_literals;
   opzioni::Program program;
 
@@ -29,42 +30,44 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
     }
 
     WHEN("one dash is given in CLI") {
       std::array argv{"./test", "-"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `-`. This program expects 0 positional arguments"));
+      }
     }
 
     WHEN("many positional arguments are given in CLI") {
       std::array argv{"./test", "someone", "sometime", "somewhere"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
     }
 
     WHEN("dash-dash followed by a positional argument are given the in CLI") {
       std::array argv{"./test", "--", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
-    }
-
-    WHEN("dash-dash followed by what would be a flag are given the in CLI") {
-      std::array argv{"./test", "--", "--flag"};
-      opzioni::parsing::ArgumentParser parser(program, argv);
-
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
-    }
-
-    WHEN("dash-dash followed by what would be a short flag are given the in CLI") {
-      std::array argv{"./test", "--", "-f"};
-      opzioni::parsing::ArgumentParser parser(program, argv);
-
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
     }
   }
 
@@ -76,18 +79,22 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
     }
 
     WHEN("the command is given in CLI") {
-      std::array argv{"./test", "cmd"};
+      std::array argv{"./test", cmd.c_str()};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
       THEN("it is parsed as command") {
         auto const result = parser();
 
         REQUIRE(result.subcmd != nullptr);
-        REQUIRE(result.subcmd->cmd_name == "cmd"s);
+        REQUIRE(result.subcmd->cmd_name == cmd);
         REQUIRE(result.subcmd->args.empty());
         REQUIRE(result.subcmd->subcmd == nullptr);
 
@@ -97,24 +104,36 @@ SCENARIO("positional arguments") {
     }
 
     WHEN("dash-dash followed by the command are given the in CLI") {
-      std::array argv{"./test", "--", "cmd"};
+      std::array argv{"./test", "--", cmd.c_str()};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `cmd`. This program expects 0 positional arguments"));
+      }
     }
 
     WHEN("one positional argument is given before the command in CLI") {
       std::array argv{"./test", "someone", "cmd"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
     }
 
     WHEN("one positional argument is given after the command in CLI") {
       std::array argv{"./test", "cmd", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("we throw an error") { REQUIRE_THROWS_AS(parser(), opzioni::UnknownArgument); }
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
     }
   }
 }
