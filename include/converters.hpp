@@ -8,15 +8,12 @@
 #include <cerrno>
 #include <charconv>
 #include <concepts>
-#include <functional>
 #include <optional>
 #include <string>
 
 #include <fmt/format.h>
 
 namespace opzioni {
-
-template <typename TargetType> using TypedConverter = std::function<TargetType(std::string)>;
 
 template <typename TargetType> auto convert(std::string) -> TargetType;
 
