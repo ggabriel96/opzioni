@@ -67,13 +67,6 @@ struct ArgMap {
       return otherwise;
   }
 
-  template <typename T> T value_or(std::string name, T &&otherwise) const {
-    if (auto const arg = args.find(name); arg != args.end())
-      return arg->second.as<T>();
-    else
-      return otherwise;
-  }
-
   template <typename T> T as(std::string name) const {
     auto const arg = (*this)[name];
     return arg.as<T>();

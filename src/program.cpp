@@ -43,12 +43,25 @@ Program &Program::cmd(std::string name) {
 ArgMap Program::operator()(int argc, char const *argv[]) const {
   std::span<char const *> args{argv, static_cast<std::size_t>(argc)};
   parsing::ArgumentParser parser(*this, args);
-  return parser();
+  auto map = parser();
+  set_default_values(map);
+  return map;
 }
 
 // +-------------------+
 // | "parsing helpers" |
 // +-------------------+
+
+void Program::set_default_values(ArgMap &map) const noexcept {
+  using std::ranges::for_each;
+  using std::views::filter;
+  auto set_value = [&map](auto const &pair) mutable {
+    map.args[pair.second.name] = ArgValue{*pair.second.default_value};
+  };
+  auto has_default = [](auto const &pair) { return pair.second.default_value.has_value(); };
+  for_each(flags | filter(has_default), set_value);
+  for_each(options | filter(has_default), set_value);
+}
 
 std::optional<decltype(Program::cmds)::const_iterator> Program::is_subcmd(std::string const &name) const noexcept {
   if (auto const cmd = cmds.find(name); cmd != cmds.end())

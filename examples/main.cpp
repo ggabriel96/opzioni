@@ -18,8 +18,8 @@ int main(int argc, char const *argv[]) {
   program.opt("v").help("Level of verbosity").otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
   program.flag("flag").help("Long flag");
-  program.flag("a").help("Short flag a");
-  program.flag("b").help("Short flag b");
+  program.flag("a").help("Short flag a").otherwise(false);
+  program.flag("b").help("Short flag b").otherwise(false);
   program.opt("n").help("A list of numbers").action(append<int>);
 
   auto subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
@@ -34,8 +34,8 @@ int main(int argc, char const *argv[]) {
   fmt::print("v: {}\n", args.as<int>("v"));
   fmt::print("d: {}\n", args.as<double>("d"));
   fmt::print("flag: {}\n", args.get_if_else("do something!"s, "flag", "nope"s));
-  fmt::print("a: {}\n", args.value_or("a", false));
-  fmt::print("b: {}\n", args.value_or("b", false));
+  fmt::print("a: {}\n", args.as<bool>("a"));
+  fmt::print("b: {}\n", args.as<bool>("b"));
   fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
 
   if (args.subcmd != nullptr) {
@@ -43,6 +43,6 @@ int main(int argc, char const *argv[]) {
     fmt::print("\nCommand name: {}\n", subargs.cmd_name);
     fmt::print("Number of arguments: {}\n", subargs.size());
     fmt::print("subname: {}\n", subargs["subname"].as<std::string>());
-    fmt::print("x: {}\n", subargs.value_or("x", false));
+    fmt::print("x: {}\n", subargs.as<bool>("x"));
   }
 }
