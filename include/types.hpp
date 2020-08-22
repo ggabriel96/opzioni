@@ -80,7 +80,7 @@ template <typename T> void assign(ArgMap &, Arg const &, std::optional<std::stri
 struct Arg {
   std::string name{};
   std::string description{};
-  bool is_required = true;
+  bool is_required = false;
   OptionalBuiltinType default_value{};
   actions::signature action_fn = actions::assign<std::string>;
 
