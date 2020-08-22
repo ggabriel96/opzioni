@@ -6,31 +6,6 @@ namespace opzioni {
 
 namespace parsing {
 
-ParsedOption parse_option(std::string const &whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string::npos;
-  if (has_equals) {
-    // long or short option with value
-    auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
-    auto const value = whole_arg.substr(eq_idx + 1);
-    return {name, value};
-  } else if (num_of_dashes == 1 && whole_arg.length() > 2) {
-    // has one dash, hence short option
-    // but is longer than 2 characters and has no equals
-    // hence short option with value (e.g. `-O2`)
-    // (possibility of many short flags has already been tested for)
-    auto const name = whole_arg.substr(1, 1);
-    auto const value = whole_arg.substr(2);
-    return {name, value};
-  } else {
-    // no equals and has 1 or 2 prefix dashes
-    // hence option with next CLI argument as value
-    auto const name = whole_arg.substr(num_of_dashes);
-    return {.name = name, .value = std::nullopt};
-  }
-}
-
 ArgMap ArgumentParser::operator()() {
   current_positional_idx = 0;
   map.cmd_name = std::string(args[0]);

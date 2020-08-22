@@ -5,9 +5,6 @@
 #include "memory.hpp"
 
 #include <map>
-#include <memory>
-#include <set>
-#include <span>
 #include <string>
 #include <variant>
 #include <vector>
@@ -15,6 +12,25 @@
 #include <fmt/format.h>
 
 namespace opzioni {
+
+// +----------------------+
+// | forward declarations |
+// +----------------------+
+
+struct Arg;
+struct ArgMap;
+
+namespace actions {
+
+using signature = void (*)(ArgMap &, Arg const &, std::optional<std::string> const &);
+
+template <typename T> void assign(ArgMap &, Arg const &, std::optional<std::string> const &);
+
+} // namespace actions
+
+// +----------------------------------------+
+// | related to type list and builtin types |
+// +----------------------------------------+
 
 template <typename...> struct TypeList;
 
@@ -28,6 +44,10 @@ using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>>;
 using OptionalBuiltinTypes = Prepend<std::monostate, BuiltinTypes>::type;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
 using OptionalBuiltinType = VariantOf<OptionalBuiltinTypes>::type;
+
+// ------------+
+// | arguments |
+// +-----------+
 
 struct ArgValue {
   BuiltinType value{};
@@ -69,14 +89,6 @@ struct ArgMap {
   std::map<std::string, ArgValue> args;
 };
 
-struct Arg;
-
-namespace actions {
-using signature = void (*)(ArgMap &, Arg const &, std::optional<std::string> const &);
-
-template <typename T> void assign(ArgMap &, Arg const &, std::optional<std::string> const &);
-} // namespace actions
-
 struct Arg {
   std::string name{};
   std::string description{};
@@ -97,7 +109,12 @@ struct Arg {
   }
 };
 
+// +---------------------------+
+// | implementation of actions |
+// +---------------------------+
+
 namespace actions {
+
 template <typename T> void assign(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
   T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(arg.default_value);
   map.args[arg.name] = ArgValue{value};
@@ -112,46 +129,8 @@ template <typename T> void append(ArgMap &map, Arg const &arg, std::optional<std
     map.args[arg.name] = ArgValue{std::vector{value}};
   }
 }
+
 } // namespace actions
-
-struct ParsedOption {
-  std::string name;
-  std::optional<std::string> value;
-};
-
-struct Program {
-  std::string name{};
-  std::string description{};
-  std::string epilog{};
-
-  std::map<std::string, memory::ValuePtr<Program>> cmds;
-  std::vector<Arg> positional_args;
-  std::map<std::string, Arg> flags;
-  std::map<std::string, Arg> options;
-
-  Program() = default;
-  Program(std::string name) : name(name) {}
-  Program(std::string name, std::string description, std::string epilog)
-      : name(name), description(description), epilog(epilog) {}
-
-  Program &help(std::string) noexcept;
-  Program &with_epilog(std::string) noexcept;
-
-  ArgMap operator()(int, char const *[]) const;
-
-  Arg &pos(std::string);
-  Arg &opt(std::string);
-  Arg &flag(std::string);
-  Program &cmd(std::string);
-
-  bool is_flag(std::string const &) const noexcept;
-
-  std::optional<std::string> is_positional(std::string const &) const noexcept;
-  std::optional<std::string> is_long_flag(std::string const &) const noexcept;
-  std::optional<std::string> is_short_flags(std::string const &) const noexcept;
-  std::optional<ParsedOption> is_option(std::string const &) const noexcept;
-  std::optional<decltype(cmds)::const_iterator> is_subcmd(std::string const &) const noexcept;
-};
 
 } // namespace opzioni
 

@@ -1,28 +1,11 @@
-#include "types.hpp"
+#include "program.hpp"
 #include "parsing.hpp"
-
-#include <algorithm>
-#include <memory>
-#include <ranges>
-
-#include <fmt/format.h>
 
 namespace opzioni {
 
-Arg &Arg::help(std::string description) noexcept {
-  this->description = description;
-  return *this;
-}
-
-Arg &Arg::required() noexcept {
-  this->is_required = true;
-  return *this;
-}
-
-Arg &Arg::action(actions::signature action_fn) noexcept {
-  this->action_fn = action_fn;
-  return *this;
-}
+// +-------------------------------+
+// | directly related to user spec |
+// +-------------------------------+
 
 Program &Program::help(std::string description) noexcept {
   this->description = description;
@@ -56,6 +39,16 @@ Program &Program::cmd(std::string name) {
   auto &cmd = cmds[name] = memory::ValuePtr(std::make_unique<Program>(name));
   return *cmd;
 }
+
+ArgMap Program::operator()(int argc, char const *argv[]) const {
+  std::span<char const *> args{argv, static_cast<std::size_t>(argc)};
+  parsing::ArgumentParser parser(*this, args);
+  return parser();
+}
+
+// +-------------------+
+// | "parsing helpers" |
+// +-------------------+
 
 std::optional<decltype(Program::cmds)::const_iterator> Program::is_subcmd(std::string const &name) const noexcept {
   if (auto const cmd = cmds.find(name); cmd != cmds.end())
@@ -91,16 +84,35 @@ std::optional<std::string> Program::is_short_flags(std::string const &whole_arg)
 }
 
 std::optional<ParsedOption> Program::is_option(std::string const &whole_arg) const noexcept {
-  auto const parsed_option = parsing::parse_option(whole_arg);
+  auto const parsed_option = parse_option(whole_arg);
   if (options.contains(parsed_option.name))
     return parsed_option;
   return std::nullopt;
 }
 
-ArgMap Program::operator()(int argc, char const *argv[]) const {
-  std::span<char const *> args{argv, static_cast<std::size_t>(argc)};
-  parsing::ArgumentParser parser(*this, args);
-  return parser();
+ParsedOption parse_option(std::string const &whole_arg) noexcept {
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  auto const eq_idx = whole_arg.find('=', num_of_dashes);
+  bool const has_equals = eq_idx != std::string::npos;
+  if (has_equals) {
+    // long or short option with value
+    auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
+    auto const value = whole_arg.substr(eq_idx + 1);
+    return {name, value};
+  } else if (num_of_dashes == 1 && whole_arg.length() > 2) {
+    // has one dash, hence short option
+    // but is longer than 2 characters and has no equals
+    // hence short option with value (e.g. `-O2`)
+    // (possibility of many short flags has already been tested for)
+    auto const name = whole_arg.substr(1, 1);
+    auto const value = whole_arg.substr(2);
+    return {name, value};
+  } else {
+    // no equals and has 1 or 2 prefix dashes
+    // hence option with next CLI argument as value
+    auto const name = whole_arg.substr(num_of_dashes);
+    return {.name = name, .value = std::nullopt};
+  }
 }
 
 } // namespace opzioni

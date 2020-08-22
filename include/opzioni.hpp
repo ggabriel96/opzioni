@@ -1,8 +1,7 @@
 #ifndef OPZIONI_H
 #define OPZIONI_H
 
-#include "types.hpp"
-
-namespace opzioni {} // namespace opzioni
+#include "args.hpp"
+#include "program.hpp"
 
 #endif // OPZIONI_H

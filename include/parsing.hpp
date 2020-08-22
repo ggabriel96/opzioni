@@ -1,22 +1,18 @@
 #ifndef OPZIONI_PARSING_H
 #define OPZIONI_PARSING_H
 
+#include "args.hpp"
 #include "memory.hpp"
-#include "types.hpp"
+#include "program.hpp"
 
 #include <map>
-#include <optional>
-#include <set>
 #include <span>
 #include <string>
 #include <variant>
-#include <vector>
 
 namespace opzioni {
 
 namespace parsing {
-
-ParsedOption parse_option(std::string const &) noexcept;
 
 struct DashDash {
   std::size_t index;
