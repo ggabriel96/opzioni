@@ -8,6 +8,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <utility>
 
 #include <fmt/format.h>
 
@@ -120,13 +121,13 @@ template <typename T> void assign(ArgMap &map, Arg const &arg, std::optional<std
   map.args[arg.name] = ArgValue{value};
 }
 
-template <typename T> void append(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
-  T value = convert<T>(*parsed_value);
-  auto list = map.args.find(arg.name);
-  if (list != map.args.end()) {
-    std::get<std::vector<T>>(list->second.value).push_back(value);
+template <typename Elem, typename Container = std::vector<Elem>>
+void append(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
+  Elem value = convert<Elem>(*parsed_value);
+  if (auto list = map.args.find(arg.name); list != map.args.end()) {
+    std::get<Container>(list->second.value).push_back(std::move(value));
   } else {
-    map.args[arg.name] = ArgValue{std::vector{value}};
+    map.args.emplace(std::make_pair(arg.name, Container{std::move(value)}));
   }
 }
 
