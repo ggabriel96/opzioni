@@ -35,7 +35,7 @@ Program &Program::with_epilog(std::string epilog) noexcept {
 }
 
 Arg &Program::pos(std::string name) {
-  Arg arg{name};
+  Arg arg{.name = name, .is_required = true};
   return *positional_args.insert(positional_args.end(), arg);
 }
 
