@@ -7,12 +7,12 @@
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
-  using namespace opzioni;
+  using opzioni::actions::append;
   using namespace std::string_literals;
 
   fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  Program program;
+  opzioni::Program program;
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name").otherwise("default value"s);
   program.opt("v").help("Level of verbosity").otherwise(0);
@@ -20,7 +20,7 @@ int main(int argc, char const *argv[]) {
   program.flag("flag").help("Long flag");
   program.flag("a").help("Short flag a");
   program.flag("b").help("Short flag b");
-  program.opt("n").help("A list of numbers").action(actions::append<int>);
+  program.opt("n").help("A list of numbers").action(append<int>);
 
   auto subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
