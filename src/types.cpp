@@ -19,6 +19,11 @@ Arg &Arg::required() noexcept {
   return *this;
 }
 
+Arg &Arg::action(actions::signature action_fn) noexcept {
+  this->action_fn = action_fn;
+  return *this;
+}
+
 Program &Program::help(std::string description) noexcept {
   this->description = description;
   return *this;
@@ -92,55 +97,10 @@ std::optional<ParsedOption> Program::is_option(std::string const &whole_arg) con
   return std::nullopt;
 }
 
-void Program::assign_positional_args(ArgMap &map, std::vector<std::string> const &parsed_positional) const {
-  if (parsed_positional.size() < positional_args.size()) {
-    auto const names = std::ranges::transform_view(positional_args, [](auto const &arg) { return arg.name; }) |
-                       std::views::drop(parsed_positional.size());
-    throw MissingRequiredArgument(fmt::format("Missing {} positional argument{:s<{}}: `{}`", names.size(), "",
-                                              static_cast<int>(names.size() != 1), fmt::join(names, "`, `")));
-  }
-  if (parsed_positional.size() > positional_args.size()) {
-    auto const args = std::ranges::drop_view(parsed_positional, positional_args.size());
-    throw UnknownArgument(fmt::format("Got {} unexpected positional argument{:s<{}}: `{}`", args.size(), "",
-                                      static_cast<int>(args.size() != 1), fmt::join(args, "`, `")));
-  }
-  for (size_t i = 0; i < positional_args.size(); ++i) {
-    map.args[positional_args[i].name] = ArgValue{parsed_positional[i]};
-  }
-}
-
-void Program::assign_flags(ArgMap &map, std::set<std::string> const &parsed_flags) const {
-  for (auto const &flag : parsed_flags)
-    map.args[flag] = ArgValue{"1"};
-}
-
-void Program::assign_options(ArgMap &map, std::map<std::string, std::string> const &parsed_options) const {
-  for (auto const &option : parsed_options)
-    map.args[option.first] = ArgValue{option.second};
-}
-
 ArgMap Program::operator()(int argc, char const *argv[]) const {
   std::span<char const *> args{argv, static_cast<std::size_t>(argc)};
   parsing::ArgumentParser parser(*this, args);
-  return assign_args(parser());
-}
-
-ArgMap Program::assign_args(ParseResult const &parse_result) const {
-  ArgMap map;
-  assign_args_into(map, parse_result);
-  return map;
-}
-
-void Program::assign_args_into(ArgMap &map, ParseResult const &parse_result) const {
-  map.cmd_name = parse_result.cmd_name;
-  if (parse_result.subcmd != nullptr) {
-    auto const &subcmd = cmds.at(parse_result.subcmd->cmd_name);
-    map.subcmd = memory::ValuePtr(std::make_unique<ArgMap>());
-    subcmd->assign_args_into(*map.subcmd, *parse_result.subcmd);
-  }
-  assign_positional_args(map, parse_result.positional);
-  assign_flags(map, parse_result.flags);
-  assign_options(map, parse_result.options);
+  return parser();
 }
 
 } // namespace opzioni

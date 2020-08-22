@@ -54,7 +54,7 @@ class ArgumentParser {
 public:
   ArgumentParser(Program const &program, std::span<char const *> args) : spec(program), args(args) {}
 
-  ParseResult operator()();
+  ArgMap operator()();
   std::size_t operator()(DashDash);
   std::size_t operator()(Flag);
   std::size_t operator()(ManyFlags);
@@ -64,9 +64,10 @@ public:
   std::size_t operator()(Unknown);
 
 private:
+  ArgMap map;
   Program const &spec;
   std::span<char const *> args;
-  ParseResult result;
+  std::size_t current_positional_idx{};
 
   alternatives decide_type(std::size_t) const noexcept;
 };

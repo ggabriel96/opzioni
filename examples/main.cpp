@@ -7,19 +7,20 @@
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
+  using namespace opzioni;
   using namespace std::string_literals;
 
   fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  opzioni::Program program;
+  Program program;
   program.pos("name").help("Your name");
-  program.opt("last-name").help("Your last name");
-  program.opt("v").help("Level of verbosity");
-  program.opt("d").help("A double");
+  program.opt("last-name").help("Your last name").otherwise("default value"s);
+  program.opt("v").help("Level of verbosity").otherwise(0);
+  program.opt("d").help("A double").otherwise(7.11);
   program.flag("flag").help("Long flag");
   program.flag("a").help("Short flag a");
   program.flag("b").help("Short flag b");
-  program.opt("numbers").help("A list of numbers");
+  program.opt("n").help("A list of numbers").action(actions::append<int>);
 
   auto subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
@@ -28,14 +29,14 @@ int main(int argc, char const *argv[]) {
   auto const args = program(argc, argv);
   fmt::print("\nCommand name: {}\n", args.cmd_name);
   fmt::print("Number of arguments: {}\n", args.size());
-  fmt::print("name: {}\n", args["name"].as<std::string>());
-  fmt::print("last name: {}\n", args.value_or("last-name", ""s));
-  fmt::print("v: {}\n", args.value_or("v", 0));
-  fmt::print("d: {}\n", args.value_or("d", 0.0));
+  fmt::print("name: {}\n", args.as<std::string>("name"));
+  fmt::print("last name: {}\n", args.as<std::string>("last-name"));
+  fmt::print("v: {}\n", args.as<int>("v"));
+  fmt::print("d: {}\n", args.as<double>("d"));
   fmt::print("flag: {}\n", args.get_if_else("do something!"s, "flag", "nope"s));
   fmt::print("a: {}\n", args.value_or("a", false));
   fmt::print("b: {}\n", args.value_or("b", false));
-  fmt::print("numbers: [{}]\n", fmt::join(args.value_or("numbers", std::vector<int>{}), ", "));
+  fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
 
   if (args.subcmd != nullptr) {
     auto subargs = *args.subcmd;

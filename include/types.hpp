@@ -9,25 +9,30 @@
 #include <set>
 #include <span>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <fmt/format.h>
 
 namespace opzioni {
 
-struct Arg {
-  std::string name{};
-  std::string description{};
-  bool is_required = false;
+template <typename...> struct TypeList;
 
-  Arg &help(std::string) noexcept;
-  Arg &required() noexcept;
-};
+template <typename...> struct Prepend;
+template <typename T, typename... Ts> struct Prepend<T, TypeList<Ts...>> { using type = TypeList<T, Ts...>; };
+
+template <typename...> struct VariantOf;
+template <typename... Ts> struct VariantOf<TypeList<Ts...>> { using type = std::variant<Ts...>; };
+
+using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>>;
+using OptionalBuiltinTypes = Prepend<std::monostate, BuiltinTypes>::type;
+using BuiltinType = VariantOf<BuiltinTypes>::type;
+using OptionalBuiltinType = VariantOf<OptionalBuiltinTypes>::type;
 
 struct ArgValue {
-  std::string value{};
+  BuiltinType value{};
 
-  template <typename T> T as() const { return convert<T>(value); }
+  template <typename T> T as() const { return std::get<T>(value); }
 };
 
 struct ArgMap {
@@ -64,39 +69,64 @@ struct ArgMap {
   std::map<std::string, ArgValue> args;
 };
 
-struct ParseResult {
-  std::string cmd_name;
-  memory::ValuePtr<ParseResult> subcmd;
-  std::vector<std::string> positional;
-  std::map<std::string, std::string> options;
-  std::set<std::string> flags;
+struct Arg;
+
+namespace actions {
+using signature = void (*)(ArgMap &, Arg const &, std::optional<std::string> const &);
+
+template <typename T> void assign(ArgMap &, Arg const &, std::optional<std::string> const &);
+} // namespace actions
+
+struct Arg {
+  std::string name{};
+  std::string description{};
+  bool is_required = true;
+  OptionalBuiltinType default_value{};
+  actions::signature action_fn = &actions::assign<std::string>;
+
+  Arg &help(std::string) noexcept;
+  Arg &required() noexcept;
+  Arg &action(actions::signature) noexcept;
+
+  template <typename T> Arg &otherwise(T value) {
+    default_value = std::move(value);
+    action_fn = &actions::assign<T>;
+    is_required = false;
+    return *this;
+  }
 };
+
+namespace actions {
+template <typename T> void assign(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
+  T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(arg.default_value);
+  map.args[arg.name] = ArgValue{value};
+}
+
+template <typename T> void append(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
+  T value = convert<T>(*parsed_value);
+  auto list = map.args.find(arg.name);
+  if (list != map.args.end()) {
+    std::get<std::vector<T>>(list->second.value).push_back(value);
+  } else {
+    map.args[arg.name] = ArgValue{std::vector{value}};
+  }
+}
+} // namespace actions
 
 struct ParsedOption {
   std::string name;
   std::optional<std::string> value;
 };
 
-class Program {
-private:
+struct Program {
+  std::string name{};
+  std::string description{};
+  std::string epilog{};
+
   std::map<std::string, memory::ValuePtr<Program>> cmds;
   std::vector<Arg> positional_args;
   std::map<std::string, Arg> flags;
   std::map<std::string, Arg> options;
-
-  bool is_flag(std::string const &) const noexcept;
-
-  ArgMap assign_args(ParseResult const &) const;
-  void assign_args_into(ArgMap &, ParseResult const &) const;
-
-  void assign_positional_args(ArgMap &, std::vector<std::string> const &) const;
-  void assign_flags(ArgMap &, std::set<std::string> const &) const;
-  void assign_options(ArgMap &, std::map<std::string, std::string> const &) const;
-
-public:
-  std::string name{};
-  std::string description{};
-  std::string epilog{};
 
   Program() = default;
   Program(std::string name) : name(name) {}
@@ -106,11 +136,14 @@ public:
   Program &help(std::string) noexcept;
   Program &with_epilog(std::string) noexcept;
 
+  ArgMap operator()(int, char const *[]) const;
+
   Arg &pos(std::string);
   Arg &opt(std::string);
   Arg &flag(std::string);
   Program &cmd(std::string);
-  ArgMap operator()(int, char const *[]) const;
+
+  bool is_flag(std::string const &) const noexcept;
 
   std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
