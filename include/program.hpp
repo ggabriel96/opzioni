@@ -1,8 +1,8 @@
 #ifndef OPZIONI_PROGRAM_H
 #define OPZIONI_PROGRAM_H
 
-#include "memory.hpp"
 #include "args.hpp"
+#include "memory.hpp"
 
 #include <map>
 #include <optional>

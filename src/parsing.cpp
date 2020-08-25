@@ -58,7 +58,7 @@ std::size_t ArgumentParser::operator()(Flag flag) {
 std::size_t ArgumentParser::operator()(ManyFlags flags) {
   using std::views::transform;
   auto char_to_flag = [](char c) { return Flag{std::string(1, c)}; };
-  for (auto const &flag: flags.chars | transform(char_to_flag)) {
+  for (auto const &flag : flags.chars | transform(char_to_flag)) {
     (*this)(flag);
   }
   return 1;
