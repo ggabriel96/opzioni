@@ -73,7 +73,7 @@ SCENARIO("positional arguments") {
 
   GIVEN("1 command is specified for the program") {
     auto const cmd = "cmd"s;
-    program.cmd(cmd);
+    auto &subcmd = program.cmd(cmd);
 
     WHEN("one positional argument is given in CLI") {
       std::array argv{"./test", "someone"};
@@ -133,6 +133,30 @@ SCENARIO("positional arguments") {
         REQUIRE_THROWS_MATCHES(
             parser(), opzioni::UnknownArgument,
             Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
+    }
+
+    GIVEN("1 positional argument is specified for the command") {
+      auto const pos = "pos"s;
+      subcmd.pos(pos);
+
+      WHEN("one positional argument is given after the command in CLI") {
+        auto const pos_input = "someone"s;
+        std::array argv{"./test", cmd.c_str(), pos_input.c_str()};
+        opzioni::parsing::ArgumentParser parser(program, argv);
+
+        THEN("we parse the positional as an argument to the command") {
+          auto const result = parser();
+
+          REQUIRE(result.subcmd != nullptr);
+          REQUIRE(result.subcmd->cmd_name == cmd);
+          REQUIRE(result.subcmd->subcmd == nullptr);
+          REQUIRE(result.subcmd->args.size() == 1);
+          REQUIRE(result.subcmd->as<std::string>(pos) == pos_input);
+
+          REQUIRE(result.cmd_name == "./test");
+          REQUIRE(result.args.empty());
+        }
       }
     }
   }
