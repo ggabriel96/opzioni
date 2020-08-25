@@ -22,9 +22,9 @@ int main(int argc, char const *argv[]) {
   program.flag("b").help("Short flag b").otherwise(false);
   program.opt("n").help("A list of numbers").action(append<int>);
 
-  auto subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
+  auto &subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
-  subcmd.flag("x").help("A nested flag");
+  subcmd.flag("x").help("A nested flag").otherwise(false);
 
   auto const args = program(argc, argv);
   fmt::print("\nCommand name: {}\n", args.cmd_name);
