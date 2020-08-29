@@ -1,5 +1,6 @@
 #include "parsing.hpp"
 
+#include <optional>
 #include <ranges>
 
 namespace opzioni {
@@ -51,7 +52,7 @@ std::size_t ArgumentParser::operator()(DashDash dd) {
 
 std::size_t ArgumentParser::operator()(Flag flag) {
   auto const arg = spec.flags.at(flag.name);
-  arg.act(map, arg, "1");
+  arg.act(map, arg, std::nullopt);
   return 1;
 }
 
