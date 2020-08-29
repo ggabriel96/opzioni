@@ -1,5 +1,5 @@
-#ifndef OPZIONI_TYPES_H
-#define OPZIONI_TYPES_H
+#ifndef OPZIONI_ARGS_H
+#define OPZIONI_ARGS_H
 
 #include "converters.hpp"
 #include "memory.hpp"
@@ -124,4 +124,4 @@ void append(ArgMap &map, Arg const &arg, std::optional<std::string> const &parse
 
 } // namespace opzioni
 
-#endif // OPZIONI_TYPES_H
+#endif // OPZIONI_ARGS_H
