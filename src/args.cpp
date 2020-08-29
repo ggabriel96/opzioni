@@ -19,8 +19,8 @@ Arg &Arg::required() noexcept {
   return *this;
 }
 
-Arg &Arg::action(actions::signature action_fn) noexcept {
-  this->action_fn = action_fn;
+Arg &Arg::action(actions::signature act) noexcept {
+  this->act = act;
   return *this;
 }
 

@@ -84,7 +84,7 @@ struct Arg {
   std::string description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
-  actions::signature action_fn = actions::assign<std::string>;
+  actions::signature act = actions::assign<std::string>;
 
   Arg &help(std::string) noexcept;
   Arg &required() noexcept;
@@ -93,8 +93,8 @@ struct Arg {
   template <typename T> Arg &otherwise(T value) {
     default_value = std::move(value);
     is_required = false;
-    if (action_fn == actions::assign<std::string>)
-      action_fn = actions::assign<T>;
+    if (act == actions::assign<std::string>)
+      act = actions::assign<T>;
     return *this;
   }
 };

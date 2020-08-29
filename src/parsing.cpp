@@ -51,7 +51,7 @@ std::size_t ArgumentParser::operator()(DashDash dd) {
 
 std::size_t ArgumentParser::operator()(Flag flag) {
   auto const arg = spec.flags.at(flag.name);
-  arg.action_fn(map, arg, "1");
+  arg.act(map, arg, "1");
   return 1;
 }
 
@@ -67,13 +67,13 @@ std::size_t ArgumentParser::operator()(ManyFlags flags) {
 std::size_t ArgumentParser::operator()(Option option) {
   auto const arg = spec.options.at(option.arg.name);
   if (option.arg.value) {
-    arg.action_fn(map, arg, *option.arg.value);
+    arg.act(map, arg, *option.arg.value);
     return 1;
   } else if (option.index + 1 < args.size()) {
     // if we have not yet exhausted args,
     // interpret next element as value
     auto const value = std::string(args[option.index + 1]);
-    arg.action_fn(map, arg, value);
+    arg.act(map, arg, value);
     return 2;
   } else {
     throw ParseError(
@@ -88,7 +88,7 @@ std::size_t ArgumentParser::operator()(Positional positional) {
                     positional.value, spec.positional_args.size()));
   }
   auto const arg = spec.positional_args[current_positional_idx];
-  arg.action_fn(map, arg, positional.value);
+  arg.act(map, arg, positional.value);
   ++current_positional_idx;
   return 1;
 }
