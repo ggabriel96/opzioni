@@ -55,12 +55,13 @@ ArgMap Program::operator()(int argc, char const *argv[]) const {
 void Program::set_default_values(ArgMap &map) const noexcept {
   using std::ranges::for_each;
   using std::views::filter;
-  auto set_value = [&map](auto const &pair) mutable {
+  auto set_default = [&map](auto const &pair) mutable {
     map.args[pair.second.name] = ArgValue{*pair.second.default_value};
   };
+  auto wasnt_parsed = [&map](auto const &pair) { return !map.args.contains(pair.second.name); };
   auto has_default = [](auto const &pair) { return pair.second.default_value.has_value(); };
-  for_each(flags | filter(has_default), set_value);
-  for_each(options | filter(has_default), set_value);
+  for_each(flags | filter(wasnt_parsed) | filter(has_default), set_default);
+  for_each(options | filter(wasnt_parsed) | filter(has_default), set_default);
 }
 
 std::optional<decltype(Program::cmds)::const_iterator> Program::is_subcmd(std::string const &name) const noexcept {
