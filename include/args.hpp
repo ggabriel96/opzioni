@@ -42,7 +42,7 @@ template <typename... Ts> struct VariantOf<TypeList<Ts...>> { using type = std::
 using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
 
-// ------------+
+// +-----------+
 // | arguments |
 // +-----------+
 
