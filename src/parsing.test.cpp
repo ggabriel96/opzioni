@@ -6,6 +6,7 @@
 #include <catch2/catch.hpp>
 
 SCENARIO("positional arguments") {
+  using Catch::Matchers::Message;
   using namespace std::string_literals;
   opzioni::Program program;
 
@@ -18,11 +19,9 @@ SCENARIO("positional arguments") {
       THEN("we parse nothing") {
         auto const result = parser();
 
-        REQUIRE(result.positional.empty());
+        REQUIRE(result.args.empty());
 
         REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
         REQUIRE(result.subcmd == nullptr);
       }
     }
@@ -31,16 +30,10 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("it is parsed as positional") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "someone"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
       }
     }
 
@@ -48,16 +41,10 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "-"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("it is parsed as positional") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "-"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `-`. This program expects 0 positional arguments"));
       }
     }
 
@@ -65,18 +52,10 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "someone", "sometime", "somewhere"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("they are all parsed as positional") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 3);
-        REQUIRE(result.positional[0] == "someone"s);
-        REQUIRE(result.positional[1] == "sometime"s);
-        REQUIRE(result.positional[2] == "somewhere"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
       }
     }
 
@@ -84,109 +63,54 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "--", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("the argument is parsed as positional") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "someone"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
-      }
-    }
-
-    WHEN("dash-dash followed by what would be a flag are given the in CLI") {
-      std::array argv{"./test", "--", "--flag"};
-      opzioni::parsing::ArgumentParser parser(program, argv);
-
-      THEN("the supposed flag is parsed as a positional argument") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "--flag"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
-      }
-    }
-
-    WHEN("dash-dash followed by what would be a short flag are given the in CLI") {
-      std::array argv{"./test", "--", "-f"};
-      opzioni::parsing::ArgumentParser parser(program, argv);
-
-      THEN("the supposed flag is parsed as a positional argument") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "-f"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
       }
     }
   }
 
   GIVEN("1 command is specified for the program") {
-    program.cmd("cmd");
+    auto const cmd = "cmd"s;
+    auto &subcmd = program.cmd(cmd);
 
     WHEN("one positional argument is given in CLI") {
       std::array argv{"./test", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("it is parsed as positional") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "someone"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
       }
     }
 
     WHEN("the command is given in CLI") {
-      std::array argv{"./test", "cmd"};
+      std::array argv{"./test", cmd.c_str()};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
       THEN("it is parsed as command") {
         auto const result = parser();
 
         REQUIRE(result.subcmd != nullptr);
-        REQUIRE(result.subcmd->cmd_name == "cmd"s);
-        REQUIRE(result.subcmd->flags.empty());
-        REQUIRE(result.subcmd->options.empty());
-        REQUIRE(result.subcmd->positional.empty());
+        REQUIRE(result.subcmd->cmd_name == cmd);
+        REQUIRE(result.subcmd->args.empty());
         REQUIRE(result.subcmd->subcmd == nullptr);
 
         REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.positional.empty());
+        REQUIRE(result.args.empty());
       }
     }
 
     WHEN("dash-dash followed by the command are given the in CLI") {
-      std::array argv{"./test", "--", "cmd"};
+      std::array argv{"./test", "--", cmd.c_str()};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("it is parsed as positional") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "cmd"s);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
-        REQUIRE(result.subcmd == nullptr);
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `cmd`. This program expects 0 positional arguments"));
       }
     }
 
@@ -194,22 +118,10 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "someone", "cmd"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("both are parsed as arguments to the program") {
-        auto const result = parser();
-
-        REQUIRE(result.positional.size() == 1);
-        REQUIRE(result.positional[0] == "someone"s);
-
-        REQUIRE(result.subcmd != nullptr);
-        REQUIRE(result.subcmd->cmd_name == "cmd"s);
-        REQUIRE(result.subcmd->flags.empty());
-        REQUIRE(result.subcmd->options.empty());
-        REQUIRE(result.subcmd->positional.empty());
-        REQUIRE(result.subcmd->subcmd == nullptr);
-
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
       }
     }
 
@@ -217,22 +129,34 @@ SCENARIO("positional arguments") {
       std::array argv{"./test", "cmd", "someone"};
       opzioni::parsing::ArgumentParser parser(program, argv);
 
-      THEN("the command is parsed as argument to the program and the positional as argument of the command") {
-        auto const result = parser();
+      THEN("we throw an error") {
+        REQUIRE_THROWS_MATCHES(
+            parser(), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+      }
+    }
 
-        REQUIRE(result.positional.empty());
+    GIVEN("1 positional argument is specified for the command") {
+      auto const pos = "pos"s;
+      subcmd.pos(pos);
 
-        REQUIRE(result.subcmd != nullptr);
-        REQUIRE(result.subcmd->cmd_name == "cmd"s);
-        REQUIRE(result.subcmd->flags.empty());
-        REQUIRE(result.subcmd->options.empty());
-        REQUIRE(result.subcmd->subcmd == nullptr);
-        REQUIRE(result.subcmd->positional.size() == 1);
-        REQUIRE(result.subcmd->positional[0] == "someone"s);
+      WHEN("one positional argument is given after the command in CLI") {
+        auto const pos_input = "someone"s;
+        std::array argv{"./test", cmd.c_str(), pos_input.c_str()};
+        opzioni::parsing::ArgumentParser parser(program, argv);
 
-        REQUIRE(result.cmd_name == "./test");
-        REQUIRE(result.flags.empty());
-        REQUIRE(result.options.empty());
+        THEN("we parse the positional as an argument to the command") {
+          auto const result = parser();
+
+          REQUIRE(result.subcmd != nullptr);
+          REQUIRE(result.subcmd->cmd_name == cmd);
+          REQUIRE(result.subcmd->subcmd == nullptr);
+          REQUIRE(result.subcmd->args.size() == 1);
+          REQUIRE(result.subcmd->as<std::string>(pos) == pos_input);
+
+          REQUIRE(result.cmd_name == "./test");
+          REQUIRE(result.args.empty());
+        }
       }
     }
   }

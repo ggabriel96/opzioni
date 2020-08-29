@@ -1,40 +1,18 @@
 #include "parsing.hpp"
 
+#include <ranges>
+
 namespace opzioni {
 
 namespace parsing {
 
-ParsedOption parse_option(std::string const &whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string::npos;
-  if (has_equals) {
-    // long or short option with value
-    auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
-    auto const value = whole_arg.substr(eq_idx + 1);
-    return {name, value};
-  } else if (num_of_dashes == 1 && whole_arg.length() > 2) {
-    // has one dash, hence short option
-    // but is longer than 2 characters and has no equals
-    // hence short option with value (e.g. `-O2`)
-    // (possibility of many short flags has already been tested for)
-    auto const name = whole_arg.substr(1, 1);
-    auto const value = whole_arg.substr(2);
-    return {name, value};
-  } else {
-    // no equals and has 1 or 2 prefix dashes
-    // hence option with next CLI argument as value
-    auto const name = whole_arg.substr(num_of_dashes);
-    return {.name = name, .value = std::nullopt};
-  }
-}
-
-ParseResult ArgumentParser::operator()() {
-  result.cmd_name = std::string(args[0]);
+ArgMap ArgumentParser::operator()() {
+  current_positional_idx = 0;
+  map.cmd_name = std::string(args[0]);
   for (std::size_t index = 1; index < args.size();) {
     index += std::visit(*this, decide_type(index));
   }
-  return result;
+  return map;
 }
 
 alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
@@ -62,33 +40,40 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
 }
 
 std::size_t ArgumentParser::operator()(DashDash dd) {
+  using std::views::transform;
   std::size_t const next_args_count = args.size() - (dd.index + 1);
-  result.positional.reserve(result.positional.size() + next_args_count);
-  std::copy_n(args.last(next_args_count).begin(), next_args_count, std::back_inserter(result.positional));
+  auto str_to_positional = [](std::string s) { return Positional{s}; };
+  for (auto const &positional : args.last(next_args_count) | transform(str_to_positional)) {
+    (*this)(positional);
+  }
   return 1 + next_args_count; // +1 because we also count the dash-dash
 }
 
 std::size_t ArgumentParser::operator()(Flag flag) {
-  result.flags.insert(flag.name);
+  auto const arg = spec.flags.at(flag.name);
+  arg.action_fn(map, arg, "1");
   return 1;
 }
 
 std::size_t ArgumentParser::operator()(ManyFlags flags) {
-  for (char const &flag : flags.chars) {
-    result.flags.insert(std::string(1, flag));
+  using std::views::transform;
+  auto char_to_flag = [](char c) { return Flag{std::string(1, c)}; };
+  for (auto const &flag : flags.chars | transform(char_to_flag)) {
+    (*this)(flag);
   }
   return 1;
 }
 
 std::size_t ArgumentParser::operator()(Option option) {
+  auto const arg = spec.options.at(option.arg.name);
   if (option.arg.value) {
-    result.options[option.arg.name] = *option.arg.value;
+    arg.action_fn(map, arg, *option.arg.value);
     return 1;
   } else if (option.index + 1 < args.size()) {
     // if we have not yet exhausted args,
     // interpret next element as value
     auto const value = std::string(args[option.index + 1]);
-    result.options[option.arg.name] = value;
+    arg.action_fn(map, arg, value);
     return 2;
   } else {
     throw ParseError(
@@ -97,7 +82,14 @@ std::size_t ArgumentParser::operator()(Option option) {
 }
 
 std::size_t ArgumentParser::operator()(Positional positional) {
-  result.positional.push_back(positional.value);
+  if (current_positional_idx >= spec.positional_args.size()) {
+    throw UnknownArgument(
+        fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
+                    positional.value, spec.positional_args.size()));
+  }
+  auto const arg = spec.positional_args[current_positional_idx];
+  arg.action_fn(map, arg, positional.value);
+  ++current_positional_idx;
   return 1;
 }
 
@@ -105,7 +97,7 @@ std::size_t ArgumentParser::operator()(Subcommand subcmd) {
   auto const remaining_args_count = args.size() - subcmd.index;
   auto subargs = args.last(remaining_args_count);
   ArgumentParser subparser{*subcmd.cmd->second, subargs};
-  result.subcmd = memory::ValuePtr(std::make_unique<ParseResult>(std::move(subparser())));
+  map.subcmd = memory::ValuePtr(std::make_unique<ArgMap>(std::move(subparser())));
   return remaining_args_count;
 }
 
