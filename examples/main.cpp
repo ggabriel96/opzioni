@@ -14,6 +14,7 @@ int main(int argc, char const *argv[]) {
 
   opzioni::Program program;
   program.pos("name").help("Your name");
+  program.pos("test").help("gather test").gather().action(append<int>);
   program.opt("last-name").help("Your last name");
   program.opt("v").help("Level of verbosity").otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
@@ -50,6 +51,9 @@ int main(int argc, char const *argv[]) {
   fmt::print("b: {}\n", args.as<bool>("b"));
   fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
   fmt::print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
+  if (args.has("test"s)) {
+    fmt::print("test: [{}]\n", fmt::join(args.as<std::vector<int>>("test"), ", "));
+  }
 
   if (args.subcmd != nullptr) {
     auto subargs = *args.subcmd;
