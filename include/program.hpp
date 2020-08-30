@@ -24,9 +24,9 @@ struct Program {
   std::string epilog{};
 
   std::map<std::string, memory::ValuePtr<Program>> cmds;
-  std::vector<Arg> positional_args;
-  std::map<std::string, Arg> flags;
-  std::map<std::string, Arg> options;
+  std::vector<Positional> positional_args;
+  std::map<std::string, Flag> flags;
+  std::map<std::string, Option> options;
 
   Program() = default;
   Program(std::string name) : name(name) {}
@@ -38,9 +38,9 @@ struct Program {
 
   ArgMap operator()(int, char const *[]) const;
 
-  Arg &pos(std::string);
-  Arg &opt(std::string);
-  Arg &flag(std::string);
+  Positional &pos(std::string);
+  Option &opt(std::string);
+  Flag &flag(std::string);
   Program &cmd(std::string);
 
   bool is_flag(std::string const &) const noexcept;
