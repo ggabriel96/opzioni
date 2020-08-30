@@ -17,7 +17,15 @@ int main(int argc, char const *argv[]) {
   program.opt("last-name").help("Your last name").otherwise("default value"s);
   program.opt("v").help("Level of verbosity").otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
-  program.flag("flag").help("Long flag");
+  program.flag("flag")
+      .set("do something!"s)
+      .otherwise("nope"s)
+      .help("The equivalent of Python's argparse `store_const`");
+  program.flag("f")
+      .set(1)
+      .otherwise(std::vector{-1})
+      .help("The equivalent of Python's argparse `append_const`")
+      .action(append<int>);
   program.flag("a").help("Short flag a").otherwise(false);
   program.flag("b").help("Short flag b").otherwise(false);
   program.opt("n").help("A list of numbers").action(append<int>);
@@ -33,7 +41,8 @@ int main(int argc, char const *argv[]) {
   fmt::print("last name: {}\n", args.as<std::string>("last-name"));
   fmt::print("v: {}\n", args.as<int>("v"));
   fmt::print("d: {}\n", args.as<double>("d"));
-  fmt::print("flag: {}\n", args.get_if_else("do something!"s, "flag", "nope"s));
+  fmt::print("flag: {}\n", args.as<std::string>("flag"));
+  fmt::print("f: {}\n", args.as<std::vector<int>>("f"));
   fmt::print("a: {}\n", args.as<bool>("a"));
   fmt::print("b: {}\n", args.as<bool>("b"));
   fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
