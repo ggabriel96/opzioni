@@ -59,14 +59,6 @@ struct ArgMap {
     return args.at(name);
   }
 
-  template <typename T> T get_if_else(T &&desired, std::string name, T &&otherwise) const {
-    // mainly intended for flags which are not only true or false
-    if (args.contains(name))
-      return desired;
-    else
-      return otherwise;
-  }
-
   template <typename T> T as(std::string name) const {
     auto const arg = (*this)[name];
     return arg.as<T>();
