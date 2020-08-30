@@ -26,7 +26,7 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
     return parsing::Subcommand{*cmd, index};
 
   if (auto const positional = spec.is_positional(arg); positional)
-    return parsing::Positional{*positional};
+    return parsing::Positional{index};
 
   if (auto const flags = spec.is_short_flags(arg); flags)
     return parsing::ManyFlags{*flags};
@@ -41,11 +41,9 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
 }
 
 std::size_t ArgumentParser::operator()(DashDash dd) {
-  using std::views::transform;
   std::size_t const next_args_count = args.size() - (dd.index + 1);
-  auto str_to_positional = [](std::string s) { return Positional{s}; };
-  for (auto const &positional : args.last(next_args_count) | transform(str_to_positional)) {
-    (*this)(positional);
+  for (std::size_t i = dd.index + 1; i < args.size(); ++i) {
+    (*this)(Positional{i});
   }
   return 1 + next_args_count; // +1 because we also count the dash-dash
 }
@@ -86,12 +84,15 @@ std::size_t ArgumentParser::operator()(Positional positional) {
   if (current_positional_idx >= spec.positional_args.size()) {
     throw UnknownArgument(
         fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
-                    positional.value, spec.positional_args.size()));
+                    args[positional.index], spec.positional_args.size()));
   }
   auto const arg = spec.positional_args[current_positional_idx];
-  arg.act(map, arg, positional.value);
+  auto const gather_n = arg.gather_n == 0 ? args.size() - positional.index : arg.gather_n;
+  for (std::size_t n = 0; n < gather_n; ++n) {
+    arg.act(map, arg, args[positional.index + n]);
+  }
   ++current_positional_idx;
-  return 1;
+  return gather_n;
 }
 
 std::size_t ArgumentParser::operator()(Subcommand subcmd) {
