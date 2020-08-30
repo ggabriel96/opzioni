@@ -15,6 +15,8 @@
 
 namespace opzioni {
 
+enum struct ArgumentType { FLAG, OPTION, POSITIONAL };
+
 // +----------------------+
 // | forward declarations |
 // +----------------------+
