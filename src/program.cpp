@@ -17,18 +17,18 @@ Program &Program::with_epilog(std::string epilog) noexcept {
   return *this;
 }
 
-Arg<ArgumentType::POSITIONAL> &Program::pos(std::string name) {
-  Arg<ArgumentType::POSITIONAL> arg{.name = name, .is_required = true};
+Positional &Program::pos(std::string name) {
+  Positional arg{.name = name, .is_required = true};
   return *positional_args.insert(positional_args.end(), arg);
 }
 
-Arg<ArgumentType::OPTION> &Program::opt(std::string name) {
-  Arg<ArgumentType::OPTION> arg{name};
+Option &Program::opt(std::string name) {
+  Option arg{name};
   return options[arg.name] = arg;
 }
 
-Arg<ArgumentType::FLAG> &Program::flag(std::string name) {
-  Arg<ArgumentType::FLAG> arg{.name = name, .set_value = true, .act = actions::assign<bool>};
+Flag &Program::flag(std::string name) {
+  Flag arg{.name = name, .set_value = true, .act = actions::assign<bool>};
   return flags[arg.name] = arg;
 }
 

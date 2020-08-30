@@ -25,21 +25,25 @@ enum struct ArgumentType { FLAG, OPTION, POSITIONAL };
 struct ArgMap;
 template <ArgumentType> struct Arg;
 
+using Flag = Arg<ArgumentType::FLAG>;
+using Option = Arg<ArgumentType::OPTION>;
+using Positional = Arg<ArgumentType::POSITIONAL>;
+
 namespace actions {
 
 template <ArgumentType type>
 using signature = void (*)(ArgMap &, Arg<type> const &, std::optional<std::string> const &);
 
-template <typename T> void assign(ArgMap &, Arg<ArgumentType::FLAG> const &, std::optional<std::string> const &);
-template <typename T> void assign(ArgMap &, Arg<ArgumentType::OPTION> const &, std::optional<std::string> const &);
-template <typename T> void assign(ArgMap &, Arg<ArgumentType::POSITIONAL> const &, std::optional<std::string> const &);
+template <typename T> void assign(ArgMap &, Flag const &, std::optional<std::string> const &);
+template <typename T> void assign(ArgMap &, Option const &, std::optional<std::string> const &);
+template <typename T> void assign(ArgMap &, Positional const &, std::optional<std::string> const &);
 
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(ArgMap &, Arg<ArgumentType::FLAG> const &, std::optional<std::string> const &);
+void append(ArgMap &, Flag const &, std::optional<std::string> const &);
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(ArgMap &, Arg<ArgumentType::OPTION> const &, std::optional<std::string> const &);
+void append(ArgMap &, Option const &, std::optional<std::string> const &);
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(ArgMap &, Arg<ArgumentType::POSITIONAL> const &, std::optional<std::string> const &);
+void append(ArgMap &, Positional const &, std::optional<std::string> const &);
 
 } // namespace actions
 
@@ -152,18 +156,15 @@ template <typename Elem, typename Container> void append_to(ArgMap &map, std::st
 // | assign |
 // +--------+
 
-template <typename T>
-void assign(ArgMap &map, Arg<ArgumentType::FLAG> const &arg, std::optional<std::string> const &parsed_value) {
+template <typename T> void assign(ArgMap &map, Flag const &arg, std::optional<std::string> const &parsed_value) {
   assign_to(map, arg.name, std::get<T>(*arg.set_value));
 }
 
-template <typename T>
-void assign(ArgMap &map, Arg<ArgumentType::OPTION> const &arg, std::optional<std::string> const &parsed_value) {
+template <typename T> void assign(ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
   assign_to(map, arg.name, convert<T>(*parsed_value));
 }
 
-template <typename T>
-void assign(ArgMap &map, Arg<ArgumentType::POSITIONAL> const &arg, std::optional<std::string> const &parsed_value) {
+template <typename T> void assign(ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
   assign_to(map, arg.name, convert<T>(*parsed_value));
 }
 
@@ -172,19 +173,19 @@ void assign(ArgMap &map, Arg<ArgumentType::POSITIONAL> const &arg, std::optional
 // +--------+
 
 template <typename Elem, typename Container>
-void append(ArgMap &map, Arg<ArgumentType::FLAG> const &arg, std::optional<std::string> const &parsed_value) {
+void append(ArgMap &map, Flag const &arg, std::optional<std::string> const &parsed_value) {
   Elem value = std::get<Elem>(*arg.set_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
 
 template <typename Elem, typename Container>
-void append(ArgMap &map, Arg<ArgumentType::OPTION> const &arg, std::optional<std::string> const &parsed_value) {
+void append(ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
   Elem value = convert<Elem>(*parsed_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
 
 template <typename Elem, typename Container>
-void append(ArgMap &map, Arg<ArgumentType::POSITIONAL> const &arg, std::optional<std::string> const &parsed_value) {
+void append(ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
   Elem value = convert<Elem>(*parsed_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
