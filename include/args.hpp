@@ -84,6 +84,7 @@ struct Arg {
   std::string description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
+  std::optional<BuiltinType> set_value{};
   actions::signature act = actions::assign<std::string>;
 
   Arg &help(std::string) noexcept;
@@ -97,6 +98,13 @@ struct Arg {
       act = actions::assign<T>;
     return *this;
   }
+
+  template <typename T> Arg &set(T value) {
+    set_value = std::move(value);
+    if (act == actions::assign<bool>)
+      act = actions::assign<T>;
+    return *this;
+  }
 };
 
 // +---------------------------+
@@ -106,13 +114,13 @@ struct Arg {
 namespace actions {
 
 template <typename T> void assign(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
-  T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(*arg.default_value);
+  T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(*arg.set_value);
   map.args[arg.name] = ArgValue{value};
 }
 
 template <typename Elem, typename Container = std::vector<Elem>>
 void append(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
-  Elem value = convert<Elem>(*parsed_value);
+  Elem value = parsed_value.has_value() ? convert<Elem>(*parsed_value) : std::get<Elem>(*arg.set_value);
   if (auto list = map.args.find(arg.name); list != map.args.end()) {
     std::get<Container>(list->second.value).push_back(std::move(value));
   } else {

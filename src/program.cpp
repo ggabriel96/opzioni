@@ -28,7 +28,7 @@ Arg &Program::opt(std::string name) {
 }
 
 Arg &Program::flag(std::string name) {
-  Arg arg{name};
+  Arg arg{.name = name, .set_value = true, .act = actions::assign<bool>};
   return flags[arg.name] = arg;
 }
 
