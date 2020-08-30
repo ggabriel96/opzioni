@@ -39,7 +39,7 @@ template <typename...> struct TypeList;
 template <typename...> struct VariantOf;
 template <typename... Ts> struct VariantOf<TypeList<Ts...>> { using type = std::variant<Ts...>; };
 
-using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>>;
+using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>, std::vector<std::string>>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
 
 // +-----------+
@@ -86,6 +86,8 @@ struct Arg {
   template <typename T> Arg &otherwise(T value) {
     default_value = std::move(value);
     is_required = false;
+    // checking if act is the default because we cannot unconditionally
+    // set it as the user might have set it before calling this function
     if (act == actions::assign<std::string>)
       act = actions::assign<T>;
     return *this;
