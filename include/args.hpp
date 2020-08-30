@@ -7,6 +7,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -21,14 +22,24 @@ enum struct ArgumentType { FLAG, OPTION, POSITIONAL };
 // | forward declarations |
 // +----------------------+
 
-struct Arg;
 struct ArgMap;
+template <ArgumentType> struct Arg;
 
 namespace actions {
 
-using signature = void (*)(ArgMap &, Arg const &, std::optional<std::string> const &);
+template <ArgumentType type>
+using signature = void (*)(ArgMap &, Arg<type> const &, std::optional<std::string> const &);
 
-template <typename T> void assign(ArgMap &, Arg const &, std::optional<std::string> const &);
+template <typename T> void assign(ArgMap &, Arg<ArgumentType::FLAG> const &, std::optional<std::string> const &);
+template <typename T> void assign(ArgMap &, Arg<ArgumentType::OPTION> const &, std::optional<std::string> const &);
+template <typename T> void assign(ArgMap &, Arg<ArgumentType::POSITIONAL> const &, std::optional<std::string> const &);
+
+template <typename Elem, typename Container = std::vector<Elem>>
+void append(ArgMap &, Arg<ArgumentType::FLAG> const &, std::optional<std::string> const &);
+template <typename Elem, typename Container = std::vector<Elem>>
+void append(ArgMap &, Arg<ArgumentType::OPTION> const &, std::optional<std::string> const &);
+template <typename Elem, typename Container = std::vector<Elem>>
+void append(ArgMap &, Arg<ArgumentType::POSITIONAL> const &, std::optional<std::string> const &);
 
 } // namespace actions
 
@@ -75,31 +86,42 @@ struct ArgMap {
   std::map<std::string, ArgValue> args;
 };
 
-struct Arg {
+template <ArgumentType type> struct Arg {
   std::string name{};
   std::string description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
-  std::optional<BuiltinType> set_value{};
-  actions::signature act = actions::assign<std::string>;
+  std::conditional_t<type == ArgumentType::FLAG, std::optional<BuiltinType>, std::monostate> set_value{};
+  actions::signature<type> act = actions::assign<std::string>;
 
-  Arg &help(std::string) noexcept;
-  Arg &required() noexcept;
-  Arg &action(actions::signature) noexcept;
+  Arg<type> &help(std::string description) noexcept {
+    this->description = description;
+    return *this;
+  }
 
-  template <typename T> Arg &otherwise(T value) {
+  Arg<type> &required() noexcept {
+    this->is_required = true;
+    return *this;
+  }
+
+  Arg<type> &action(actions::signature<type> act) noexcept {
+    this->act = act;
+    return *this;
+  }
+
+  template <typename T> Arg<type> &otherwise(T value) {
     default_value = std::move(value);
     is_required = false;
     // checking if act is the default because we cannot unconditionally
     // set it as the user might have set it before calling this function
-    if (act == actions::assign<std::string>)
+    if (act == static_cast<actions::signature<type>>(actions::assign<std::string>))
       act = actions::assign<T>;
     return *this;
   }
 
-  template <typename T> Arg &set(T value) {
+  template <typename T> Arg<type> &set(T value) requires(type == ArgumentType::FLAG) {
     set_value = std::move(value);
-    if (act == actions::assign<bool>)
+    if (act == static_cast<actions::signature<type>>(actions::assign<bool>))
       act = actions::assign<T>;
     return *this;
   }
@@ -111,19 +133,60 @@ struct Arg {
 
 namespace actions {
 
-template <typename T> void assign(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
-  T value = parsed_value.has_value() ? convert<T>(*parsed_value) : std::get<T>(*arg.set_value);
-  map.args[arg.name] = ArgValue{value};
+template <typename T> void assign_to(ArgMap &map, std::string const &name, T value) {
+  auto [it, inserted] = map.args.try_emplace(name, value);
+  if (!inserted)
+    throw DuplicateAssignment(fmt::format(
+        "Attempted to assign argument `{}` but it was already set. Did you specify it more than once?", name));
 }
 
-template <typename Elem, typename Container = std::vector<Elem>>
-void append(ArgMap &map, Arg const &arg, std::optional<std::string> const &parsed_value) {
-  Elem value = parsed_value.has_value() ? convert<Elem>(*parsed_value) : std::get<Elem>(*arg.set_value);
-  if (auto list = map.args.find(arg.name); list != map.args.end()) {
-    std::get<Container>(list->second.value).push_back(std::move(value));
+template <typename Elem, typename Container> void append_to(ArgMap &map, std::string const &name, Elem value) {
+  if (auto list = map.args.find(name); list != map.args.end()) {
+    std::get<Container>(list->second.value).emplace_back(std::move(value));
   } else {
-    map.args.emplace(std::make_pair(arg.name, Container{std::move(value)}));
+    assign_to(map, name, Container{std::move(value)});
   }
+}
+
+// +--------+
+// | assign |
+// +--------+
+
+template <typename T>
+void assign(ArgMap &map, Arg<ArgumentType::FLAG> const &arg, std::optional<std::string> const &parsed_value) {
+  assign_to(map, arg.name, std::get<T>(*arg.set_value));
+}
+
+template <typename T>
+void assign(ArgMap &map, Arg<ArgumentType::OPTION> const &arg, std::optional<std::string> const &parsed_value) {
+  assign_to(map, arg.name, convert<T>(*parsed_value));
+}
+
+template <typename T>
+void assign(ArgMap &map, Arg<ArgumentType::POSITIONAL> const &arg, std::optional<std::string> const &parsed_value) {
+  assign_to(map, arg.name, convert<T>(*parsed_value));
+}
+
+// +--------+
+// | append |
+// +--------+
+
+template <typename Elem, typename Container>
+void append(ArgMap &map, Arg<ArgumentType::FLAG> const &arg, std::optional<std::string> const &parsed_value) {
+  Elem value = std::get<Elem>(*arg.set_value);
+  append_to<Elem, Container>(map, arg.name, value);
+}
+
+template <typename Elem, typename Container>
+void append(ArgMap &map, Arg<ArgumentType::OPTION> const &arg, std::optional<std::string> const &parsed_value) {
+  Elem value = convert<Elem>(*parsed_value);
+  append_to<Elem, Container>(map, arg.name, value);
+}
+
+template <typename Elem, typename Container>
+void append(ArgMap &map, Arg<ArgumentType::POSITIONAL> const &arg, std::optional<std::string> const &parsed_value) {
+  Elem value = convert<Elem>(*parsed_value);
+  append_to<Elem, Container>(map, arg.name, value);
 }
 
 } // namespace actions
