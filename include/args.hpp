@@ -64,6 +64,8 @@ struct ArgMap {
     return arg.as<T>();
   }
 
+  bool has(std::string name) const noexcept { return args.contains(name); }
+
   auto size() const noexcept { return this->args.size(); }
 
   std::string cmd_name;

@@ -14,7 +14,7 @@ int main(int argc, char const *argv[]) {
 
   opzioni::Program program;
   program.pos("name").help("Your name");
-  program.opt("last-name").help("Your last name").otherwise("default value"s);
+  program.opt("last-name").help("Your last name");
   program.opt("v").help("Level of verbosity").otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
   program.flag("flag")
@@ -41,7 +41,7 @@ int main(int argc, char const *argv[]) {
   fmt::print("\nCommand name: {}\n", args.cmd_name);
   fmt::print("Number of arguments: {}\n", args.size());
   fmt::print("name: {}\n", args.as<std::string>("name"));
-  fmt::print("last name: {}\n", args.as<std::string>("last-name"));
+  fmt::print("last name: {}\n", args.has("last-name"s) ? args.as<std::string>("last-name") : "no last name");
   fmt::print("v: {}\n", args.as<int>("v"));
   fmt::print("d: {}\n", args.as<double>("d"));
   fmt::print("flag: {}\n", args.as<std::string>("flag"));
