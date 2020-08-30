@@ -29,6 +29,9 @@ int main(int argc, char const *argv[]) {
   program.flag("a").help("Short flag a").otherwise(false);
   program.flag("b").help("Short flag b").otherwise(false);
   program.opt("n").help("A list of numbers").action(append<int>);
+  program.opt("vec")
+      .otherwise(std::vector<int>{})
+      .help("Illustrating the difference between appending and assigning to a vector");
 
   auto &subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
@@ -46,6 +49,7 @@ int main(int argc, char const *argv[]) {
   fmt::print("a: {}\n", args.as<bool>("a"));
   fmt::print("b: {}\n", args.as<bool>("b"));
   fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
+  fmt::print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
 
   if (args.subcmd != nullptr) {
     auto subargs = *args.subcmd;
