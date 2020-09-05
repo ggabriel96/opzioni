@@ -89,8 +89,8 @@ std::size_t ArgumentParser::operator()(Positional positional) {
   auto const arg = spec.positional_args[current_positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - positional.index : arg.gather_n.amount;
-  for (std::size_t n = 0; n < gather_amount; ++n) {
-    arg.act(map, arg, args[positional.index + n]);
+  for (std::size_t count = 0; count < gather_amount; ++count) {
+    arg.act(map, arg, args[positional.index + count]);
   }
   ++current_positional_idx;
   return gather_amount;
