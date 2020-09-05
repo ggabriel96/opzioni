@@ -90,6 +90,10 @@ struct ArgMap {
   std::map<std::string, ArgValue> args;
 };
 
+struct GatherAmount {
+  std::size_t amount = 1;
+};
+
 template <ArgumentType type> struct Arg {
   std::string name{};
   std::string description{};
@@ -97,7 +101,7 @@ template <ArgumentType type> struct Arg {
   std::optional<BuiltinType> default_value{};
   std::conditional_t<type == ArgumentType::FLAG, std::optional<BuiltinType>, std::monostate> set_value{};
   actions::signature<type> act = actions::assign<std::string>;
-  std::size_t gather_n = 1;
+  std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
   Arg<type> &help(std::string description) noexcept {
     this->description = description;
@@ -114,17 +118,14 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  Arg<type> &gather() noexcept {
-    this->gather_n = 0;
-    if (act == static_cast<actions::signature<type>>(actions::assign<std::string>))
-      act = actions::append<std::string>;
-    return *this;
+  template <typename T = std::string> Arg<type> &gather() noexcept requires(type != ArgumentType::FLAG) {
+    return gather<T>(0);
   }
 
-  Arg<type> &gather(std::size_t gather_n) noexcept {
-    this->gather_n = gather_n;
-    if (gather_n > 1 && act == static_cast<actions::signature<type>>(actions::assign<std::string>))
-      act = actions::append<std::string>;
+  template <typename T = std::string>
+  Arg<type> &gather(std::size_t gather_n) noexcept requires(type != ArgumentType::FLAG) {
+    this->gather_n = {gather_n};
+    act = actions::append<T>;
     return *this;
   }
 
