@@ -32,7 +32,7 @@ struct Option {
 };
 
 struct Positional {
-  std::string value;
+  std::size_t index;
 };
 
 struct Subcommand {
