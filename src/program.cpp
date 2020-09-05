@@ -19,7 +19,7 @@ Program &Program::with_epilog(std::string epilog) noexcept {
 
 Positional &Program::pos(std::string name) {
   Positional arg{.name = name, .is_required = true};
-  return *positional_args.insert(positional_args.end(), arg);
+  return *positionals.insert(positionals.end(), arg);
 }
 
 Option &Program::opt(std::string name) {
@@ -58,7 +58,7 @@ void Program::set_defaults(ArgMap &map) const noexcept {
   auto pair_to_arg = [](auto const &pair) { return pair.second; };
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
   auto has_default = [](auto const &arg) { return arg.default_value.has_value(); };
-  for (auto const &positional : positional_args | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &positional : positionals | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::POSITIONAL>(map, positional);
   for (auto const &flag : flags | transform(pair_to_arg) | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::FLAG>(map, flag);

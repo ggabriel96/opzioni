@@ -81,12 +81,12 @@ std::size_t ArgumentParser::operator()(Option option) {
 }
 
 std::size_t ArgumentParser::operator()(Positional positional) {
-  if (current_positional_idx >= spec.positional_args.size()) {
+  if (current_positional_idx >= spec.positionals.size()) {
     throw UnknownArgument(
         fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
-                    args[positional.index], spec.positional_args.size()));
+                    args[positional.index], spec.positionals.size()));
   }
-  auto const arg = spec.positional_args[current_positional_idx];
+  auto const arg = spec.positionals[current_positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - positional.index : arg.gather_n.amount;
   for (std::size_t count = 0; count < gather_amount; ++count) {

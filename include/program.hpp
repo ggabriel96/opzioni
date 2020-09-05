@@ -24,7 +24,7 @@ struct Program {
   std::string epilog{};
 
   std::map<std::string, memory::ValuePtr<Program>> cmds;
-  std::vector<Positional> positional_args;
+  std::vector<Positional> positionals;
   std::map<std::string, Flag> flags;
   std::map<std::string, Option> options;
 
