@@ -44,7 +44,7 @@ struct Program {
   Program &cmd(std::string);
 
   bool is_flag(std::string const &) const noexcept;
-  void set_default_values(ArgMap &) const noexcept;
+  void set_defaults(ArgMap &) const noexcept;
 
   std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;

@@ -14,7 +14,7 @@ int main(int argc, char const *argv[]) {
 
   opzioni::Program program;
   program.pos("name").help("Your name");
-  program.opt("test").help("gather test").gather<int>().otherwise(std::vector{-1});
+  program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.opt("last-name").help("Your last name");
   program.opt("v").help("Level of verbosity").otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
