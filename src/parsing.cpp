@@ -22,7 +22,7 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
   if (arg.length() == 2 && arg[0] == '-' && arg[1] == '-')
     return parsing::DashDash{index};
 
-  if (auto const cmd = spec.is_subcmd(arg); cmd)
+  if (auto const cmd = spec.is_command(arg); cmd)
     return parsing::Command{*cmd, index};
 
   if (auto const positional = spec.is_positional(arg); positional)

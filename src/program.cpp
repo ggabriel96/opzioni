@@ -66,7 +66,7 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
-std::optional<decltype(Program::cmds)::const_iterator> Program::is_subcmd(std::string const &name) const noexcept {
+std::optional<decltype(Program::cmds)::const_iterator> Program::is_command(std::string const &name) const noexcept {
   if (auto const cmd = cmds.find(name); cmd != cmds.end())
     return cmd;
   return std::nullopt;

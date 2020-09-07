@@ -50,7 +50,7 @@ struct Program {
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<ParsedOption> is_option(std::string const &) const noexcept;
-  std::optional<decltype(cmds)::const_iterator> is_subcmd(std::string const &) const noexcept;
+  std::optional<decltype(cmds)::const_iterator> is_command(std::string const &) const noexcept;
 };
 
 } // namespace opzioni
