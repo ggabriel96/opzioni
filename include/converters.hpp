@@ -49,8 +49,7 @@ template <std::floating_point Float> auto convert(std::string arg_val) -> Float 
 }
 
 // https://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/
-template <concepts::Container Container>
-auto convert(std::string value) -> Container {
+template <concepts::Container Container> auto convert(std::string value) -> Container {
   Container container;
   if (value.empty())
     return container;
