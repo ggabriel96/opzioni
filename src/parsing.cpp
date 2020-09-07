@@ -23,7 +23,7 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
     return parsing::DashDash{index};
 
   if (auto const cmd = spec.is_subcmd(arg); cmd)
-    return parsing::Subcommand{*cmd, index};
+    return parsing::Command{*cmd, index};
 
   if (auto const positional = spec.is_positional(arg); positional)
     return parsing::Positional{index};
@@ -96,7 +96,7 @@ std::size_t ArgumentParser::operator()(Positional positional) {
   return gather_amount;
 }
 
-std::size_t ArgumentParser::operator()(Subcommand subcmd) {
+std::size_t ArgumentParser::operator()(Command subcmd) {
   auto const remaining_args_count = args.size() - subcmd.index;
   auto subargs = args.last(remaining_args_count);
   ArgumentParser subparser{*subcmd.cmd->second, subargs};

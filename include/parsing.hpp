@@ -35,7 +35,7 @@ struct Positional {
   std::size_t index;
 };
 
-struct Subcommand {
+struct Command {
   std::map<std::string, memory::ValuePtr<Program>>::const_iterator cmd;
   std::size_t index;
 };
@@ -44,7 +44,7 @@ struct Unknown {
   std::string arg;
 };
 
-using alternatives = std::variant<DashDash, Flag, ManyFlags, Option, Positional, Subcommand, Unknown>;
+using alternatives = std::variant<DashDash, Flag, ManyFlags, Option, Positional, Command, Unknown>;
 
 class ArgumentParser {
 public:
@@ -56,7 +56,7 @@ public:
   std::size_t operator()(ManyFlags);
   std::size_t operator()(Option);
   std::size_t operator()(Positional);
-  std::size_t operator()(Subcommand);
+  std::size_t operator()(Command);
   std::size_t operator()(Unknown);
 
 private:
