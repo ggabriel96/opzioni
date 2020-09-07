@@ -18,7 +18,7 @@ namespace opzioni {
 
 template <typename TargetType> auto convert(std::string) -> TargetType;
 
-template <Integer Int> auto convert(std::string arg_val) -> Int {
+template <concepts::Integer Int> auto convert(std::string arg_val) -> Int {
   if (arg_val.empty())
     throw ConversionError("Cannot convert an empty string to an integer type");
   Int integer;
