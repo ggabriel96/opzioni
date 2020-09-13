@@ -14,7 +14,6 @@ int main(int argc, char const *argv[]) {
 
   opzioni::Program program;
   program.pos("name").help("Your name");
-  program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.opt("last-name").help("Your last name");
   program.opt("v").help("Level of verbosity").otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
@@ -33,6 +32,8 @@ int main(int argc, char const *argv[]) {
   program.opt("vec")
       .otherwise(std::vector<int>{})
       .help("Illustrating the difference between appending and assigning to a vector");
+  program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
+  program.opt("str").action(append<std::string>).otherwise(std::vector{""s});
 
   auto &subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
@@ -52,6 +53,7 @@ int main(int argc, char const *argv[]) {
   fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
   fmt::print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
   fmt::print("test: [{}]\n", fmt::join(args.as<std::vector<int>>("test"), ", "));
+  fmt::print("str: [{}]\n", fmt::join(args.as<std::vector<std::string>>("str"), ", "));
 
   if (args.subcmd != nullptr) {
     auto subargs = *args.subcmd;

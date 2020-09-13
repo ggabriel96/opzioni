@@ -147,8 +147,7 @@ template <ArgumentType type> struct Arg {
   }
 };
 
-template <ArgumentType type>
-void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
+template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
   map.args[arg.name] = ArgValue{*arg.default_value};
 }
 

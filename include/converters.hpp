@@ -9,6 +9,7 @@
 #include <charconv>
 #include <concepts>
 #include <optional>
+#include <sstream>
 #include <string>
 
 #include <fmt/format.h>
@@ -17,7 +18,7 @@ namespace opzioni {
 
 template <typename TargetType> auto convert(std::string) -> TargetType;
 
-template <Integer Int> auto convert(std::string arg_val) -> Int {
+template <concepts::Integer Int> auto convert(std::string arg_val) -> Int {
   if (arg_val.empty())
     throw ConversionError("Cannot convert an empty string to an integer type");
   Int integer;
@@ -45,6 +46,19 @@ template <std::floating_point Float> auto convert(std::string arg_val) -> Float 
   if (errno == ERANGE || end == arg_val.data())
     throw ConversionError(fmt::format("Could not convert `{}` to a floating point type", arg_val));
   return floatnum;
+}
+
+// https://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/
+template <concepts::Container Container> auto convert(std::string value) -> Container {
+  Container container;
+  if (value.empty())
+    return container;
+  std::string token;
+  std::istringstream token_stream(value);
+  while (std::getline(token_stream, token, ',')) {
+    container.emplace_back(convert<typename Container::value_type>(token));
+  }
+  return container;
 }
 
 } // namespace opzioni
