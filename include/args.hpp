@@ -204,8 +204,10 @@ void append(ArgMap &map, Flag const &arg, std::optional<std::string> const &pars
 
 template <typename Elem, typename Container>
 void append(ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
-  Elem value = convert<Elem>(*parsed_value);
-  append_to<Elem, Container>(map, arg.name, value);
+  if (parsed_value)
+    append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
+  else
+    append_to<Elem, Container>(map, arg.name, std::get<Elem>(*arg.set_value));
 }
 
 template <typename Elem, typename Container>
