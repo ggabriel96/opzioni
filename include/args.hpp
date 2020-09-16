@@ -182,7 +182,10 @@ template <typename T> void assign(ArgMap &map, Flag const &arg, std::optional<st
 }
 
 template <typename T> void assign(ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
-  assign_to(map, arg.name, convert<T>(*parsed_value));
+  if (parsed_value)
+    assign_to(map, arg.name, convert<T>(*parsed_value));
+  else
+    assign_to(map, arg.name, std::get<T>(*arg.set_value));
 }
 
 template <typename T> void assign(ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
