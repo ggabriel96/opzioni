@@ -15,7 +15,7 @@ int main(int argc, char const *argv[]) {
   opzioni::Program program;
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name");
-  program.opt("v").help("Level of verbosity").otherwise(0);
+  program.opt("v").help("Level of verbosity").set(1).otherwise(0);
   program.opt("d").help("A double").otherwise(7.11);
   program.flag("flag")
       .set("do something!"s)
