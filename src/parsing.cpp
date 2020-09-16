@@ -72,14 +72,17 @@ std::size_t ArgumentParser::operator()(Option option) {
     }
     arg.act(map, arg, *option.arg.value);
     return 1;
-  } else if (option.index + 1 + gather_amount <= args.size()) {
+  } else if (option.index + 1 + gather_amount <= args.size() &&
+             std::holds_alternative<Positional>(decide_type(option.index + 1))) {
     // + 1 everywhere because `option.index` is the index in `args` that the option is.
     // From that index + 1 is where we start to parse values up to gather amount
-    for (std::size_t count = 0; count < gather_amount; ++count) {
+    std::size_t count = 0;
+    do {
       auto const value = std::string(args[option.index + 1 + count]);
       arg.act(map, arg, value);
-    }
-    return 1 + gather_amount;
+      ++count;
+    } while (count < gather_amount && std::holds_alternative<Positional>(decide_type(option.index + 1 + count)));
+    return 1 + count;
   } else {
     throw MissingValue(fmt::format("Expected {} values for option `{}`, got {}", gather_amount, arg.name,
                                    args.size() - (option.index + 1)));
