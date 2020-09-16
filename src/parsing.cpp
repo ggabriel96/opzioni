@@ -83,6 +83,9 @@ std::size_t ArgumentParser::operator()(Option option) {
       ++count;
     } while (count < gather_amount && std::holds_alternative<Positional>(decide_type(option.index + 1 + count)));
     return 1 + count;
+  } else if (arg.set_value) {
+    arg.act(map, arg, std::nullopt);
+    return 1;
   } else {
     throw MissingValue(fmt::format("Expected {} values for option `{}`, got {}", gather_amount, arg.name,
                                    args.size() - (option.index + 1)));
