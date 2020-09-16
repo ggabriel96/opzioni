@@ -42,8 +42,8 @@ alternatives ArgumentParser::decide_type(std::size_t index) const noexcept {
 
 std::size_t ArgumentParser::operator()(DashDash dd) {
   std::size_t const next_args_count = args.size() - (dd.index + 1);
-  for (std::size_t i = dd.index + 1; i < args.size(); ++i) {
-    (*this)(Positional{i});
+  for (std::size_t i = dd.index + 1; i < args.size();) {
+    i += (*this)(Positional{i});
   }
   return 1 + next_args_count; // +1 because we also count the dash-dash
 }
