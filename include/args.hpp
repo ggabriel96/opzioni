@@ -85,6 +85,12 @@ struct ArgMap {
 
   auto size() const noexcept { return this->args.size(); }
 
+  void reset() noexcept {
+    args.clear();
+    subcmd = nullptr;
+    cmd_name = std::string();
+  }
+
   std::string cmd_name;
   memory::ValuePtr<ArgMap> subcmd;
   std::map<std::string, ArgValue> args;
