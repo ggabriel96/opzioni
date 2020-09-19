@@ -12,7 +12,7 @@ template <typename T> class ValuePtr {
 public:
   ValuePtr() = default;
   ValuePtr(ValuePtr &&) = default;
-  ValuePtr(std::nullptr_t) : ptr(nullptr) {};
+  ValuePtr(std::nullptr_t) : ptr(nullptr){};
   ValuePtr(const ValuePtr &other) : ptr(other.ptr ? new T(*other.ptr) : nullptr) {}
 
   ValuePtr(std::unique_ptr<T> &&other) : ptr(std::move(other)) {}
