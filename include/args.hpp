@@ -99,7 +99,7 @@ template <ArgumentType type> struct Arg {
   std::string description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
-  std::conditional_t<type == ArgumentType::FLAG, std::optional<BuiltinType>, std::monostate> set_value{};
+  std::conditional_t<type != ArgumentType::POSITIONAL, std::optional<BuiltinType>, std::monostate> set_value{};
   actions::signature<type> act = actions::assign<std::string>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
@@ -139,9 +139,10 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  template <typename T> Arg<type> &set(T value) requires(type == ArgumentType::FLAG) {
+  template <typename T> Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
     set_value = std::move(value);
-    if (act == static_cast<actions::signature<type>>(actions::assign<bool>))
+    if (act == static_cast<actions::signature<type>>(actions::assign<bool>) ||
+        act == static_cast<actions::signature<type>>(actions::assign<std::string>))
       act = actions::assign<T>;
     return *this;
   }
@@ -181,7 +182,10 @@ template <typename T> void assign(ArgMap &map, Flag const &arg, std::optional<st
 }
 
 template <typename T> void assign(ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
-  assign_to(map, arg.name, convert<T>(*parsed_value));
+  if (parsed_value)
+    assign_to(map, arg.name, convert<T>(*parsed_value));
+  else
+    assign_to(map, arg.name, std::get<T>(*arg.set_value));
 }
 
 template <typename T> void assign(ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
@@ -200,8 +204,10 @@ void append(ArgMap &map, Flag const &arg, std::optional<std::string> const &pars
 
 template <typename Elem, typename Container>
 void append(ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
-  Elem value = convert<Elem>(*parsed_value);
-  append_to<Elem, Container>(map, arg.name, value);
+  if (parsed_value)
+    append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
+  else
+    append_to<Elem, Container>(map, arg.name, std::get<Elem>(*arg.set_value));
 }
 
 template <typename Elem, typename Container>
