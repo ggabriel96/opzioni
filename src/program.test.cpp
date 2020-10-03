@@ -20,19 +20,18 @@ SCENARIO("positional arguments") {
         auto const result = program(argv);
 
         REQUIRE(result.args.empty());
-
         REQUIRE(result.cmd_name == "./test");
         REQUIRE(result.subcmd == nullptr);
       }
     }
 
     WHEN("one positional argument is given in CLI") {
-      std::array argv{"./test", "someone"};
+      std::array argv{"./test", "positional"};
 
       THEN("we throw an error") {
         REQUIRE_THROWS_MATCHES(
             program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
 
@@ -47,22 +46,22 @@ SCENARIO("positional arguments") {
     }
 
     WHEN("many positional arguments are given in CLI") {
-      std::array argv{"./test", "someone", "sometime", "somewhere"};
+      std::array argv{"./test", "positional", "sometime", "somewhere"};
 
       THEN("we throw an error") {
         REQUIRE_THROWS_MATCHES(
             program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
 
     WHEN("dash-dash followed by a positional argument are given the in CLI") {
-      std::array argv{"./test", "--", "someone"};
+      std::array argv{"./test", "--", "positional"};
 
       THEN("we throw an error") {
         REQUIRE_THROWS_MATCHES(
             program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
   }
@@ -72,12 +71,12 @@ SCENARIO("positional arguments") {
     auto &subcmd = program.cmd(cmd);
 
     WHEN("one positional argument is given in CLI") {
-      std::array argv{"./test", "someone"};
+      std::array argv{"./test", "positional"};
 
       THEN("we throw an error") {
         REQUIRE_THROWS_MATCHES(
             program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
 
@@ -108,22 +107,22 @@ SCENARIO("positional arguments") {
     }
 
     WHEN("one positional argument is given before the command in CLI") {
-      std::array argv{"./test", "someone", "cmd"};
+      std::array argv{"./test", "positional", "cmd"};
 
       THEN("we throw an error") {
         REQUIRE_THROWS_MATCHES(
             program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
 
     WHEN("one positional argument is given after the command in CLI") {
-      std::array argv{"./test", "cmd", "someone"};
+      std::array argv{"./test", "cmd", "positional"};
 
       THEN("we throw an error") {
         REQUIRE_THROWS_MATCHES(
             program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `someone`. This program expects 0 positional arguments"));
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
 
@@ -132,7 +131,7 @@ SCENARIO("positional arguments") {
       subcmd.pos(pos);
 
       WHEN("one positional argument is given after the command in CLI") {
-        auto const pos_input = "someone"s;
+        auto const pos_input = "positional"s;
         std::array argv{"./test", cmd.c_str(), pos_input.c_str()};
 
         THEN("we parse the positional as an argument to the command") {
