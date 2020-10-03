@@ -72,16 +72,6 @@ SCENARIO("positional arguments") {
     auto const subcmd_name = "cmd"s;
     auto &subcmd = program.cmd(subcmd_name);
 
-    WHEN("one positional argument is given in CLI") {
-      std::array argv{cmd_name, "positional"};
-
-      THEN("we throw an error about that positional") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
-      }
-    }
-
     WHEN("the command is given in CLI") {
       std::array argv{cmd_name, subcmd_name.c_str()};
 
@@ -95,6 +85,16 @@ SCENARIO("positional arguments") {
 
         REQUIRE(result.cmd_name == cmd_name);
         REQUIRE(result.args.empty());
+      }
+    }
+
+    WHEN("one positional argument is given in CLI") {
+      std::array argv{cmd_name, "positional"};
+
+      THEN("we throw an error about that positional") {
+        REQUIRE_THROWS_MATCHES(
+            program(argv), opzioni::UnknownArgument,
+            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
 
