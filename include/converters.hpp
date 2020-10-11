@@ -21,7 +21,7 @@ template <typename TargetType> auto convert(std::string) -> TargetType;
 template <concepts::Integer Int> auto convert(std::string arg_val) -> Int {
   if (arg_val.empty())
     throw ConversionError("Cannot convert an empty string to an integer type");
-  Int integer;
+  Int integer = 0;
   auto const conv_result = std::from_chars(arg_val.data(), arg_val.data() + arg_val.size(), integer);
   if (conv_result.ec == std::errc::invalid_argument)
     throw ConversionError(fmt::format("Could not convert `{}` to an integer type", arg_val));
