@@ -8,12 +8,14 @@
 	"mounts": ["type=bind,source=${localEnv:HOME}/.ssh/,target=/home/conan/.ssh/"],
 
 	"settings": { 
-		"terminal.integrated.shell.linux": "/bin/bash"
+		"terminal.integrated.shell.linux": "/usr/bin/zsh"
 	},
 
 	"extensions": [
-		"ms-vscode.cpptools",
 		"asabil.meson",
-		"eamodio.gitlens"
+		"eamodio.gitlens",
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"ms-vscode.cpptools"
 	]
 }
