@@ -103,7 +103,6 @@ private:
   parsing::alternatives decide_type(std::size_t) const noexcept;
   bool would_be_positional(std::size_t) const noexcept;
 
-
   bool is_dash_dash(std::string const &) const noexcept;
   Program *is_command(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
