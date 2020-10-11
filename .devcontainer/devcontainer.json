@@ -8,7 +8,7 @@
 	"mounts": ["type=bind,source=${localEnv:HOME}/.ssh/,target=/home/conan/.ssh/"],
 
 	"settings": { 
-		"terminal.integrated.shell.linux": "/bin/bash"
+		"terminal.integrated.shell.linux": "/usr/bin/zsh"
 	},
 
 	"extensions": [
