@@ -12,8 +12,10 @@
 	},
 
 	"extensions": [
-		"ms-vscode.cpptools",
 		"asabil.meson",
-		"eamodio.gitlens"
+		"eamodio.gitlens",
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"ms-vscode.cpptools"
 	]
 }
