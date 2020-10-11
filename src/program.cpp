@@ -109,8 +109,7 @@ std::size_t Program::operator()(parsing::Option option) {
     }
     arg.act(map, arg, *option.arg.value);
     return 1;
-  } else if (option.index + 1 + gather_amount <= args.size() &&
-             std::holds_alternative<parsing::Positional>(decide_type(option.index + 1))) {
+  } else if (option.index + 1 + gather_amount <= args.size() && would_be_positional(option.index + 1)) {
     // + 1 everywhere because `option.index` is the index in `args` that the option is.
     // From that index + 1 is where we start to parse values up to gather amount
     std::size_t count = 0;
@@ -118,8 +117,7 @@ std::size_t Program::operator()(parsing::Option option) {
       auto const value = std::string(args[option.index + 1 + count]);
       arg.act(map, arg, value);
       ++count;
-    } while (count < gather_amount &&
-             std::holds_alternative<parsing::Positional>(decide_type(option.index + 1 + count)));
+    } while (count < gather_amount && would_be_positional(option.index + 1 + count));
     return 1 + count;
   } else if (arg.set_value) {
     arg.act(map, arg, std::nullopt);
@@ -186,6 +184,10 @@ parsing::alternatives Program::decide_type(std::size_t index) const noexcept {
 // +-----------+
 // | "helpers" |
 // +-----------+
+
+bool Program::would_be_positional(std::size_t idx) const noexcept {
+  return std::holds_alternative<parsing::Positional>(decide_type(idx));
+}
 
 bool Program::is_dash_dash(std::string const &whole_arg) const noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
