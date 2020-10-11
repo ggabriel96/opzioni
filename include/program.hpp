@@ -95,12 +95,12 @@ public:
   std::size_t operator()(parsing::Positional);
   std::size_t operator()(parsing::Unknown);
 
-  parsing::alternatives decide_type(std::size_t) const noexcept;
-
 private:
   ArgMap map;
   std::span<char const *> args;
   std::size_t current_positional_idx{};
+
+  parsing::alternatives decide_type(std::size_t) const noexcept;
 
   bool is_dash_dash(std::string const &) const noexcept;
   Program *is_command(std::string const &) const noexcept;
