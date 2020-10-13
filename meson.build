@@ -10,8 +10,18 @@ include_dir = include_directories('include/')
 # +--------------+
 # | Dependencies |
 # +--------------+
-fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
-catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
+vcpkg_root = get_option('vcpkg_root')
+cmake_toolchain_file = vcpkg_root + '/scripts/buildsystems/vcpkg.cmake'
+fmt_dep = dependency(
+    'fmt',
+    version: ['>=7.0.3', '<8.0.0'],
+    cmake_args: ['-DCMAKE_TOOLCHAIN_FILE=' + cmake_toolchain_file]
+)
+catch2_dep = dependency(
+    'Catch2',
+    version: ['>=2.12.1', '<=3.0.0'],
+    cmake_args: ['-DCMAKE_TOOLCHAIN_FILE=' + cmake_toolchain_file]
+)
 
 # +--------------------+
 # | Library definition |
