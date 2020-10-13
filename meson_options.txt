@@ -1,2 +1,4 @@
 option('examples', type: 'boolean', value: false,
        description: 'Whether to also build all files in examples/')
+option('vcpkg_root', type: 'string', value: '~/vcpkg/',
+       description: 'Path to the root of vcpkg (VCPKG_ROOT of the docs)')
