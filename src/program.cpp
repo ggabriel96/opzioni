@@ -54,6 +54,7 @@ ArgMap Program::operator()(std::span<char const *> args) {
   for (std::size_t index = 1; index < args.size();) {
     index += std::visit(*this, decide_type(index));
   }
+  set_defaults(map);
   return map;
 }
 
