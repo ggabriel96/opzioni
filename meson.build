@@ -18,7 +18,7 @@ catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 # +--------------------+
 opzioni_lib = library(
     'opzioni',
-    ['src/converters.cpp', 'src/program.cpp'],
+    ['src/args.cpp', 'src/converters.cpp', 'src/program.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true

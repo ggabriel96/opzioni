@@ -152,6 +152,8 @@ template <ArgumentType type> struct Arg {
       act = actions::assign<T>;
     return *this;
   }
+
+  std::string format_usage() const noexcept;
 };
 
 template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
