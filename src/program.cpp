@@ -90,14 +90,12 @@ void Program::print_short_usage(std::size_t depth) const noexcept {
   auto const options = this->options | transform(pair_to_arg) | transform(std::mem_fn(&Option::format_usage));
   auto const flags = this->flags | transform(pair_to_arg) | transform(std::mem_fn(&Flag::format_usage));
 
-  auto const print_variant = [](auto const &var) {
-    return print("{}", var);
-  };
+  auto const print_variant = [](auto const &var) { return print("{}", var); };
 
   print("\n{:\t>{}}:\n", "Usage", 5 + depth);
   print("\t{:\t>{}} {} {} {}\n", name, name.length() + depth, join(positionals, " "), join(options, " "),
         join(flags, " "));
-  
+
   print("\n{:\t>{}}:\n", "Options & flags", 15 + depth);
   for (auto const &[ignore, opt] : this->options) {
     auto const fmt_opt = opt.format_usage();
