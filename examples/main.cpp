@@ -10,9 +10,10 @@ int main(int argc, char const *argv[]) {
   using opzioni::actions::append;
   using namespace std::string_literals;
 
-  fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
+  // fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  opzioni::Program program;
+  opzioni::Program program("main");
+  program.with_epilog("A short example file to show what can be done with opzioni");
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name");
   program.opt("v").help("Level of verbosity").set(1).otherwise(0);
@@ -39,27 +40,29 @@ int main(int argc, char const *argv[]) {
   subcmd.pos("subname").help("Your name again, please");
   subcmd.flag("x").help("A nested flag").otherwise(false);
 
-  auto const args = program(argc, argv);
-  fmt::print("\nCommand name: {}\n", args.cmd_name);
-  fmt::print("Number of arguments: {}\n", args.size());
-  fmt::print("name: {}\n", args.as<std::string>("name"));
-  fmt::print("last name: {}\n", args.has("last-name"s) ? args.as<std::string>("last-name") : "no last name");
-  fmt::print("v: {}\n", args.as<int>("v"));
-  fmt::print("d: {}\n", args.as<double>("d"));
-  fmt::print("flag: {}\n", args.as<std::string>("flag"));
-  fmt::print("f: {}\n", args.as<std::vector<int>>("f"));
-  fmt::print("a: {}\n", args.as<bool>("a"));
-  fmt::print("b: {}\n", args.as<bool>("b"));
-  fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
-  fmt::print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
-  fmt::print("test: [{}]\n", fmt::join(args.as<std::vector<int>>("test"), ", "));
-  fmt::print("str: [{}]\n", fmt::join(args.as<std::vector<std::string>>("str"), ", "));
+  program.print_usage();
 
-  if (args.subcmd != nullptr) {
-    auto subargs = *args.subcmd;
-    fmt::print("\nCommand name: {}\n", subargs.cmd_name);
-    fmt::print("Number of arguments: {}\n", subargs.size());
-    fmt::print("subname: {}\n", subargs["subname"].as<std::string>());
-    fmt::print("x: {}\n", subargs.as<bool>("x"));
-  }
+  auto const args = program(argc, argv);
+  // fmt::print("\nCommand name: {}\n", args.cmd_name);
+  // fmt::print("Number of arguments: {}\n", args.size());
+  // fmt::print("name: {}\n", args.as<std::string>("name"));
+  // fmt::print("last name: {}\n", args.has("last-name"s) ? args.as<std::string>("last-name") : "no last name");
+  // fmt::print("v: {}\n", args.as<int>("v"));
+  // fmt::print("d: {}\n", args.as<double>("d"));
+  // fmt::print("flag: {}\n", args.as<std::string>("flag"));
+  // fmt::print("f: {}\n", args.as<std::vector<int>>("f"));
+  // fmt::print("a: {}\n", args.as<bool>("a"));
+  // fmt::print("b: {}\n", args.as<bool>("b"));
+  // fmt::print("n: [{}]\n", fmt::join(args.as<std::vector<int>>("n"), ", "));
+  // fmt::print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
+  // fmt::print("test: [{}]\n", fmt::join(args.as<std::vector<int>>("test"), ", "));
+  // fmt::print("str: [{}]\n", fmt::join(args.as<std::vector<std::string>>("str"), ", "));
+
+  // if (args.subcmd != nullptr) {
+  //   auto subargs = *args.subcmd;
+  //   fmt::print("\nCommand name: {}\n", subargs.cmd_name);
+  //   fmt::print("Number of arguments: {}\n", subargs.size());
+  //   fmt::print("subname: {}\n", subargs["subname"].as<std::string>());
+  //   fmt::print("x: {}\n", subargs.as<bool>("x"));
+  // }
 }

@@ -84,6 +84,9 @@ public:
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
+  void print_usage() const noexcept;
+  void print_short_usage(std::size_t = 0) const noexcept;
+
   void set_defaults(ArgMap &) const noexcept;
   bool is_flag(std::string const &) const noexcept;
 

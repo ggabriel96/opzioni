@@ -1,7 +1,13 @@
 #include "program.hpp"
 
+#include <functional>
 #include <optional>
 #include <ranges>
+#include <tuple>
+#include <variant>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace opzioni {
 
@@ -56,6 +62,65 @@ ArgMap Program::operator()(std::span<char const *> args) {
   }
   set_defaults(map);
   return map;
+}
+
+void Program::print_usage() const noexcept {
+  using fmt::print;
+  using std::ignore;
+
+  if (!epilog.empty()) {
+    print("{} -- {}.\n", name, epilog);
+  }
+
+  print_short_usage();
+
+  if (!description.empty()) {
+    print("\n{}.\n", description);
+  }
+}
+
+void Program::print_short_usage(std::size_t depth) const noexcept {
+  using fmt::print, fmt::format, fmt::join;
+  using std::ignore;
+  using std::views::filter, std::views::transform;
+
+  auto pair_to_arg = [](auto const &pair) { return pair.second; };
+
+  auto const positionals = this->positionals | transform(std::mem_fn(&Positional::format_usage));
+  auto const options = this->options | transform(pair_to_arg) | transform(std::mem_fn(&Option::format_usage));
+  auto const flags = this->flags | transform(pair_to_arg) | transform(std::mem_fn(&Flag::format_usage));
+
+  auto const print_variant = [](auto const &var) {
+    return print("{}", var);
+  };
+
+  print("\n{:\t>{}}:\n", "Usage", 5 + depth);
+  print("\t{:\t>{}} {} {} {}\n", name, name.length() + depth, join(positionals, " "), join(options, " "),
+        join(flags, " "));
+  
+  print("\n{:\t>{}}:\n", "Options & flags", 15 + depth);
+  for (auto const &[ignore, opt] : this->options) {
+    auto const fmt_opt = opt.format_usage();
+    print("\t{:\t>{}} ~~ {}", fmt_opt, fmt_opt.length() + depth, opt.description);
+    if (opt.default_value) {
+      print(" (default: ");
+      std::visit(print_variant, *opt.default_value);
+      print(")\n");
+    } else {
+      print("\n");
+    }
+  }
+  for (auto const &[ignore, flag] : this->flags) {
+    auto const fmt_flag = flag.format_usage();
+    print("\t{:\t>{}} ~~ {}", fmt_flag, fmt_flag.length() + depth, flag.description);
+    if (flag.default_value) {
+      print(" (default: ");
+      std::visit(print_variant, *flag.default_value);
+      print(")\n");
+    } else {
+      print("\n");
+    }
+  }
 }
 
 // +---------+
