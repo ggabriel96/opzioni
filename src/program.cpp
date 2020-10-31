@@ -1,5 +1,6 @@
 #include "program.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <ranges>
@@ -92,14 +93,18 @@ void Program::print_short_usage() const noexcept {
 
   auto const print_variant = [](auto const &var) { return print("{}", var); };
 
-  print("\n{:\t>{}}:\n", "Usage", 5);
-  print("\t{:\t>{}} {} {} {}\n", name, name.length(), join(positionals, " "), join(options, " "),
+  print("\nUsage: {} {} {} {}\n", name, join(positionals, " "), join(options, " "),
         join(flags, " "));
 
-  print("\n{:\t>{}}:\n", "Options & flags", 15);
+  auto const &longest_flag = std::ranges::max(flags, {}, &std::string::length);
+  auto const &longest_option = std::ranges::max(options, {}, &std::string::length);
+  auto const min_width = std::max(longest_flag.length(), longest_option.length());
+
+  print("\nOptions & flags:\n");
+
   for (auto const &[ignore, opt] : this->options) {
     auto const fmt_opt = opt.format_usage();
-    print("\t{:\t>{}} ~~ {}", fmt_opt, fmt_opt.length(), opt.description);
+    print("  {:<{}}  {}", fmt_opt, min_width, opt.description);
     if (opt.default_value) {
       print(" (default: ");
       std::visit(print_variant, *opt.default_value);
@@ -110,7 +115,7 @@ void Program::print_short_usage() const noexcept {
   }
   for (auto const &[ignore, flag] : this->flags) {
     auto const fmt_flag = flag.format_usage();
-    print("\t{:\t>{}} ~~ {}", fmt_flag, fmt_flag.length(), flag.description);
+    print("  {:<{}}  {}", fmt_flag, min_width, flag.description);
     if (flag.default_value) {
       print(" (default: ");
       std::visit(print_variant, *flag.default_value);
