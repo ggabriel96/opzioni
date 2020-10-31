@@ -87,6 +87,8 @@ public:
   void print_usage() const noexcept;
   void print_short_usage() const noexcept;
 
+  std::string format_title() const noexcept;
+
   void set_defaults(ArgMap &) const noexcept;
   bool is_flag(std::string const &) const noexcept;
 

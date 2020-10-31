@@ -69,14 +69,20 @@ void Program::print_usage() const noexcept {
   using fmt::print;
   using std::ignore;
 
-  if (!epilog.empty()) {
-    print("{} -- {}.\n", name, epilog);
-  }
+  print(format_title());
 
   print_short_usage();
 
   if (!description.empty()) {
     print("\n{}.\n", description);
+  }
+}
+
+std::string Program::format_title() const noexcept {
+  if (epilog.empty()) {
+    return fmt::format("{}.\n", name);
+  } else {
+    return fmt::format("{} -- {}.\n", name, epilog);
   }
 }
 
