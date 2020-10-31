@@ -79,7 +79,7 @@ void Program::print_usage() const noexcept {
   }
 }
 
-void Program::print_short_usage(std::size_t depth) const noexcept {
+void Program::print_short_usage() const noexcept {
   using fmt::print, fmt::format, fmt::join;
   using std::ignore;
   using std::views::filter, std::views::transform;
@@ -92,14 +92,14 @@ void Program::print_short_usage(std::size_t depth) const noexcept {
 
   auto const print_variant = [](auto const &var) { return print("{}", var); };
 
-  print("\n{:\t>{}}:\n", "Usage", 5 + depth);
-  print("\t{:\t>{}} {} {} {}\n", name, name.length() + depth, join(positionals, " "), join(options, " "),
+  print("\n{:\t>{}}:\n", "Usage", 5);
+  print("\t{:\t>{}} {} {} {}\n", name, name.length(), join(positionals, " "), join(options, " "),
         join(flags, " "));
 
-  print("\n{:\t>{}}:\n", "Options & flags", 15 + depth);
+  print("\n{:\t>{}}:\n", "Options & flags", 15);
   for (auto const &[ignore, opt] : this->options) {
     auto const fmt_opt = opt.format_usage();
-    print("\t{:\t>{}} ~~ {}", fmt_opt, fmt_opt.length() + depth, opt.description);
+    print("\t{:\t>{}} ~~ {}", fmt_opt, fmt_opt.length(), opt.description);
     if (opt.default_value) {
       print(" (default: ");
       std::visit(print_variant, *opt.default_value);
@@ -110,7 +110,7 @@ void Program::print_short_usage(std::size_t depth) const noexcept {
   }
   for (auto const &[ignore, flag] : this->flags) {
     auto const fmt_flag = flag.format_usage();
-    print("\t{:\t>{}} ~~ {}", fmt_flag, fmt_flag.length() + depth, flag.description);
+    print("\t{:\t>{}} ~~ {}", fmt_flag, fmt_flag.length(), flag.description);
     if (flag.default_value) {
       print(" (default: ");
       std::visit(print_variant, *flag.default_value);
