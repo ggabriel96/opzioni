@@ -153,6 +153,7 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
+  std::string format_description() const noexcept;
   std::string format_usage() const noexcept;
 };
 
