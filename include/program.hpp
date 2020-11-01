@@ -115,6 +115,8 @@ private:
   std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
+
+  std::string format_flags() const;
 };
 
 } // namespace opzioni

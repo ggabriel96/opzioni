@@ -70,9 +70,12 @@ void Program::print_usage() const noexcept {
   using std::ignore;
 
   print(format_title());
+
   print(format_usage());
 
-  print_short_usage();
+  print(format_flags());
+
+  // print_short_usage();
 
   if (!description.empty()) {
     print("\n{}.\n", description);
@@ -110,6 +113,21 @@ std::string Program::format_usage() const noexcept {
                 join(options, " "));
 }
 
+std::string Program::format_flags() const {
+  using fmt::format, fmt::join;
+  using std::views::filter, std::views::transform, std::views::values;
+
+  auto const &longest_flag =
+      std::ranges::max(values(this->flags), {}, [](auto const &flag) { return flag.name.length(); });
+  auto const margin_size = longest_flag.name.length() + 2; // +2 for "--" prefix
+
+  return format("\nFlags:\n{}\n", join(values(this->flags) | transform([margin_size](auto const &flag) {
+                                         return format("  {:>{}}: {}", flag.format_usage(), margin_size,
+                                                       flag.format_description());
+                                       }),
+                                       "\n"));
+}
+
 void Program::print_short_usage() const noexcept {
   using fmt::print, fmt::format, fmt::join;
   using std::ignore;
@@ -123,8 +141,7 @@ void Program::print_short_usage() const noexcept {
 
   auto const print_variant = [](auto const &var) { return print("{}", var); };
 
-  print("\nUsage: {} {} {} {}\n", name, join(positionals, " "), join(options, " "),
-        join(flags, " "));
+  print("\nUsage: {} {} {} {}\n", name, join(positionals, " "), join(options, " "), join(flags, " "));
 
   auto const &longest_flag = std::ranges::max(flags, {}, &std::string::length);
   auto const &longest_option = std::ranges::max(options, {}, &std::string::length);
