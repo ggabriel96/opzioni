@@ -108,30 +108,30 @@ ArgMap Parser::operator()() {
   return map;
 }
 
-std::size_t Parser::operator()(parsing::DashDash dd) {
+std::size_t Parser::operator()(DashDash dd) {
   std::size_t const next_args_count = args.size() - (dd.index + 1);
   for (std::size_t i = dd.index + 1; i < args.size();) {
-    i += (*this)(parsing::Positional{i});
+    i += (*this)(Positional{i});
   }
   return 1 + next_args_count; // +1 because we also count the dash-dash
 }
 
-std::size_t Parser::operator()(parsing::Flag flag) {
+std::size_t Parser::operator()(Flag flag) {
   auto const arg = spec.flags.at(flag.name);
   arg.act(map, arg, std::nullopt);
   return 1;
 }
 
-std::size_t Parser::operator()(parsing::ManyFlags flags) {
+std::size_t Parser::operator()(ManyFlags flags) {
   using std::views::transform;
-  auto char_to_flag = [](char c) { return parsing::Flag{std::string(1, c)}; };
+  auto char_to_flag = [](char c) { return Flag{std::string(1, c)}; };
   for (auto const &flag : flags.chars | transform(char_to_flag)) {
     (*this)(flag);
   }
   return 1;
 }
 
-std::size_t Parser::operator()(parsing::Option option) {
+std::size_t Parser::operator()(Option option) {
   auto const arg = spec.options.at(option.arg.name);
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - option.index : arg.gather_n.amount;
   if (option.arg.value) {
@@ -159,7 +159,7 @@ std::size_t Parser::operator()(parsing::Option option) {
   }
 }
 
-std::size_t Parser::operator()(parsing::Positional positional) {
+std::size_t Parser::operator()(Positional positional) {
   if (current_positional_idx >= spec.positionals.size()) {
     throw UnknownArgument(
         fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
@@ -179,37 +179,37 @@ std::size_t Parser::operator()(parsing::Positional positional) {
   return gather_amount;
 }
 
-std::size_t Parser::operator()(parsing::Command cmd) {
+std::size_t Parser::operator()(Command cmd) {
   auto const remaining_args_count = args.size() - cmd.index;
   auto subargs = args.last(remaining_args_count);
   map.subcmd = memory::ValuePtr(std::make_unique<ArgMap>(std::move(cmd.program(subargs))));
   return remaining_args_count;
 }
 
-std::size_t Parser::operator()(parsing::Unknown unknown) { throw UnknownArgument(std::string(args[unknown.index])); }
+std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(std::string(args[unknown.index])); }
 
-parsing::alternatives Parser::decide_type(std::size_t index) const noexcept {
+alternatives Parser::decide_type(std::size_t index) const noexcept {
   auto const arg = std::string(args[index]);
 
   if (is_dash_dash(arg))
-    return parsing::DashDash{index};
+    return DashDash{index};
 
   if (auto cmd = spec.is_command(arg); cmd != nullptr)
-    return parsing::Command{*cmd, index};
+    return Command{*cmd, index};
 
   if (auto const positional = looks_positional(arg); positional)
-    return parsing::Positional{index};
+    return Positional{index};
 
   if (auto const flags = spec.is_short_flags(arg); flags)
-    return parsing::ManyFlags{*flags};
+    return ManyFlags{*flags};
 
   if (auto const flag = spec.is_long_flag(arg); flag)
-    return parsing::Flag{*flag};
+    return Flag{*flag};
 
   if (auto const option = spec.is_option(arg); option)
-    return parsing::Option{*option, index};
+    return Option{*option, index};
 
-  return parsing::Unknown{index};
+  return Unknown{index};
 }
 
 // +-----------+
@@ -228,7 +228,7 @@ std::optional<std::string> Parser::looks_positional(std::string const &whole_arg
 }
 
 bool Parser::would_be_positional(std::size_t idx) const noexcept {
-  return std::holds_alternative<parsing::Positional>(decide_type(idx));
+  return std::holds_alternative<Positional>(decide_type(idx));
 }
 
 ParsedOption parse_option(std::string whole_arg) noexcept {
