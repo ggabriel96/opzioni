@@ -70,6 +70,7 @@ void Program::print_usage() const noexcept {
   using std::ignore;
 
   print(format_title());
+  print(format_usage());
 
   print_short_usage();
 
@@ -84,6 +85,29 @@ std::string Program::format_title() const noexcept {
   } else {
     return fmt::format("{} -- {}.\n", name, epilog);
   }
+}
+
+std::string Program::format_usage() const noexcept {
+  using fmt::format, fmt::join;
+  using std::ranges::sort, std::ranges::transform;
+  using std::views::values;
+
+  std::vector<std::string> positionals(this->positionals.size());
+  transform(this->positionals, positionals.begin(), std::mem_fn(&Positional::format_usage));
+  sort(positionals);
+
+  std::vector<std::string> flags(this->flags.size());
+  transform(values(this->flags), flags.begin(), std::mem_fn(&Flag::format_usage));
+  sort(flags);
+
+  std::vector<std::string> options(this->options.size());
+  transform(values(this->options), options.begin(), std::mem_fn(&Option::format_usage));
+  sort(options);
+
+  auto const margin_size = 7 + name.length() + 1; // 7 == "Usage: ".length() + 1 space
+  std::string const margin(margin_size, ' ');
+  return format("\nUsage: {} {}\n{}{}\n{}{}\n", name, join(positionals, " "), margin, join(flags, " "), margin,
+                join(options, " "));
 }
 
 void Program::print_short_usage() const noexcept {
