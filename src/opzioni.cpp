@@ -1,6 +1,7 @@
 #include "opzioni.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <functional>
 #include <optional>
 #include <ranges>
@@ -264,7 +265,7 @@ std::size_t Parser::operator()(DashDash dd) {
 
 std::size_t Parser::operator()(Flag flag) {
   auto const arg = spec.flags.at(flag.name);
-  arg.act(map, arg, std::nullopt);
+  arg.act(spec, map, arg, std::nullopt);
   return 1;
 }
 
@@ -284,7 +285,7 @@ std::size_t Parser::operator()(Option option) {
     if (gather_amount != 1) {
       throw MissingValue(fmt::format("Expected {} values for option `{}`, got 1", gather_amount, arg.name));
     }
-    arg.act(map, arg, *option.arg.value);
+    arg.act(spec, map, arg, *option.arg.value);
     return 1;
   } else if (option.index + 1 + gather_amount <= args.size() && would_be_positional(option.index + 1)) {
     // + 1 everywhere because `option.index` is the index in `args` that the option is.
@@ -292,12 +293,12 @@ std::size_t Parser::operator()(Option option) {
     std::size_t count = 0;
     do {
       auto const value = std::string(args[option.index + 1 + count]);
-      arg.act(map, arg, value);
+      arg.act(spec, map, arg, value);
       ++count;
     } while (count < gather_amount && would_be_positional(option.index + 1 + count));
     return 1 + count;
   } else if (arg.set_value) {
-    arg.act(map, arg, std::nullopt);
+    arg.act(spec, map, arg, std::nullopt);
     return 1;
   } else {
     throw MissingValue(fmt::format("Expected {} values for option `{}`, got {}", gather_amount, arg.name,
@@ -319,7 +320,7 @@ std::size_t Parser::operator()(Positional positional) {
                                    args.size() - positional.index));
   }
   for (std::size_t count = 0; count < gather_amount; ++count) {
-    arg.act(map, arg, args[positional.index + count]);
+    arg.act(spec, map, arg, args[positional.index + count]);
   }
   ++current_positional_idx;
   return gather_amount;
@@ -403,5 +404,14 @@ ParsedOption parse_option(std::string whole_arg) noexcept {
 }
 
 } // namespace parsing
+
+namespace actions {
+
+void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string> const &) {
+  program.print_usage();
+  std::exit(0);
+}
+
+} // namespace actions
 
 } // namespace opzioni
