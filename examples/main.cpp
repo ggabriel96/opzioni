@@ -40,8 +40,6 @@ int main(int argc, char const *argv[]) {
   subcmd.pos("subname").help("Your name again, please");
   subcmd.flag("x").help("A nested flag").otherwise(false);
 
-  program.print_usage();
-
   auto const args = program(argc, argv);
   // fmt::print("\nCommand name: {}\n", args.cmd_name);
   // fmt::print("Number of arguments: {}\n", args.size());

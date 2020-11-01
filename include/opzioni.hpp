@@ -245,10 +245,14 @@ struct Program {
   std::map<std::string, Option> options;
   std::map<std::string, memory::ValuePtr<Program>> cmds;
 
-  Program() = default;
-  Program(std::string name) : name(name) {}
+  Program() : Program({}, {}, {}) {}
+
+  Program(std::string name) : Program(name, {}, {}) {}
+
   Program(std::string name, std::string description, std::string epilog)
-      : name(name), description(description), epilog(epilog) {}
+      : name(name), description(description), epilog(epilog) {
+    flag("help").help("Display this information").action(actions::print_help);
+  }
 
   Program &help(std::string) noexcept;
   Program &with_epilog(std::string) noexcept;
