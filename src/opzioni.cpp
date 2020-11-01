@@ -18,10 +18,16 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noex
 }
 
 template <> std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
-  return fmt::format("--{0} <{0}>", name);
+  if (this->is_required)
+    return fmt::format("--{0} <{0}>", name);
+  return fmt::format("[--{0} <{0}>]", name);
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept { return fmt::format("--{}", name); }
+template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
+  if (this->is_required)
+    return fmt::format("--{}", name);
+  return fmt::format("[--{}]", name);
+}
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_description() const noexcept {
   return fmt::format("{}", description);
