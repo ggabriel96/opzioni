@@ -55,10 +55,36 @@ struct Unknown {
 
 using alternatives = std::variant<Command, DashDash, Flag, ManyFlags, Option, Positional, Unknown>;
 
+class Parser {
+public:
+  Parser(Program const &spec, std::span<char const *> args) : spec(spec), args(args) {}
+
+  ArgMap operator()();
+  std::size_t operator()(parsing::Flag);
+  std::size_t operator()(parsing::Option);
+  std::size_t operator()(parsing::Command);
+  std::size_t operator()(parsing::DashDash);
+  std::size_t operator()(parsing::ManyFlags);
+  std::size_t operator()(parsing::Positional);
+  std::size_t operator()(parsing::Unknown);
+
+private:
+  ArgMap map;
+  Program const &spec;
+  std::span<char const *> args;
+  std::size_t current_positional_idx{};
+
+  parsing::alternatives decide_type(std::size_t) const noexcept;
+
+  bool is_dash_dash(std::string const &) const noexcept;
+  std::optional<std::string> looks_positional(std::string const &) const noexcept;
+
+  bool would_be_positional(std::size_t) const noexcept;
+};
+
 } // namespace parsing
 
-class Program {
-public:
+struct Program {
   std::string name{};
   std::string description{};
   std::string epilog{};
@@ -85,28 +111,10 @@ public:
   ArgMap operator()(std::span<char const *>);
 
   void set_defaults(ArgMap &) const noexcept;
-  bool is_flag(std::string const &) const noexcept;
 
-  std::size_t operator()(parsing::Flag);
-  std::size_t operator()(parsing::Option);
-  std::size_t operator()(parsing::Command);
-  std::size_t operator()(parsing::DashDash);
-  std::size_t operator()(parsing::ManyFlags);
-  std::size_t operator()(parsing::Positional);
-  std::size_t operator()(parsing::Unknown);
-
-private:
-  ArgMap map;
-  std::span<char const *> args;
-  std::size_t current_positional_idx{};
-
-  parsing::alternatives decide_type(std::size_t) const noexcept;
-  bool would_be_positional(std::size_t) const noexcept;
-
-  bool is_dash_dash(std::string const &) const noexcept;
   Program *is_command(std::string const &) const noexcept;
+  bool is_flag(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
-  std::optional<std::string> is_positional(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
 };
