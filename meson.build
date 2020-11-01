@@ -1,6 +1,6 @@
 project(
     'opzioni', 'cpp',
-    version: '0.27.0',
+    version: '0.28.0',
     license: 'BSL-1.0',
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
@@ -18,7 +18,7 @@ catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 # +--------------------+
 opzioni_lib = library(
     'opzioni',
-    ['src/args.cpp', 'src/converters.cpp', 'src/program.cpp'],
+    ['src/converters.cpp', 'src/opzioni.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true
@@ -41,7 +41,7 @@ converters_test = executable(
 )
 program_test = executable(
     'program',
-    ['src/catch2_main.cpp', 'src/program.test.cpp'],
+    ['src/catch2_main.cpp', 'src/opzioni.program.test.cpp'],
     dependencies: test_deps
 )
 test('converters', converters_test)
