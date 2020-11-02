@@ -128,8 +128,11 @@ ArgMap Program::operator()(std::span<char const *> args) {
 void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this);
   ostream << formatter.title();
+  ostream << nl;
   ostream << formatter.usage();
+  ostream << nl;
   ostream << formatter.help();
+  ostream << nl;
   ostream << formatter.description();
 }
 
@@ -213,25 +216,37 @@ std::string HelpFormatter::title() const noexcept {
 }
 
 std::string HelpFormatter::usage() const noexcept {
-  using fmt::join;
   using std::views::transform;
 
-  auto const pos_usage = positionals | transform(&Positional::format_usage);
-  auto const opt_usage = options | transform(&Option::format_usage);
-  auto const flag_usage = flags | transform(&Flag::format_usage);
+  std::vector<std::string> usage_parts;
+  usage_parts.reserve(4);
 
+  usage_parts.emplace_back(fmt::format("Usage: {}", program_name));
   auto const margin_size = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
   std::string const margin(margin_size, ' ');
-  return fmt::format("\nUsage: {} {}\n"
-                     "{}{}\n"
-                     "{}{}\n",
-                     program_name, join(pos_usage, " "), margin, join(opt_usage, " "), margin, join(flag_usage, " "));
+
+  if (!positionals.empty()) {
+    auto const pos_usage = positionals | transform(&Positional::format_usage);
+    usage_parts.emplace_back(fmt::format(" {}", fmt::join(pos_usage, " ")));
+  }
+
+  if (!options.empty()) {
+    auto const opt_usage = options | transform(&Option::format_usage);
+    usage_parts.emplace_back(fmt::format("\n{}{}", margin, fmt::join(opt_usage, " ")));
+  }
+
+  if (!flags.empty()) {
+    auto const flag_usage = flags | transform(&Flag::format_usage);
+    usage_parts.emplace_back(fmt::format("\n{}{}", margin, fmt::join(flag_usage, " ")));
+  }
+
+  return fmt::format("{}\n", fmt::join(usage_parts, ""));
 }
 
 std::string HelpFormatter::help() const noexcept {
   auto const margin = get_help_margin();
 
-  return fmt::format("\nPositionals:\n"
+  return fmt::format("Positionals:\n"
                      "{}\n"
                      "\nOptions:\n"
                      "{}\n"
@@ -243,7 +258,7 @@ std::string HelpFormatter::help() const noexcept {
 std::string HelpFormatter::description() const noexcept {
   if (program_description.empty())
     return "";
-  return fmt::format("\n{}.\n", program_description);
+  return fmt::format("{}.\n", program_description);
 }
 
 // +---------+
