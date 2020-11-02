@@ -111,15 +111,15 @@ auto sorted_indices(auto const &range) {
   return indices;
 }
 
-std::string format_usage(auto const &range, std::size_t const margin) {
+std::string format_help(auto const &range, std::size_t const margin) {
   using std::views::transform;
+  auto const idx_to_elem = [&range](auto idx) { return range[idx]; };
+  auto const format_elem = [margin](auto const &arg) {
+    return fmt::format("{:>{}}: {}", arg.format_long_usage(), margin, arg.format_description());
+  };
   auto const sorted_idx = sorted_indices(range);
-  return fmt::format("{}", fmt::join(sorted_idx | transform([&range](auto idx) { return range[idx]; }) |
-                                         transform([margin](auto const &arg) {
-                                           return fmt::format("{:>{}}: {}", arg.format_long_usage(), margin,
-                                                              arg.format_description());
-                                         }),
-                                     "\n"));
+  auto const formatted_range = sorted_idx | transform(idx_to_elem) | transform(format_elem);
+  return fmt::format("{}", fmt::join(formatted_range, "\n"));
 }
 
 void Program::print_usage() const noexcept {
@@ -136,13 +136,13 @@ void Program::print_usage() const noexcept {
       3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
 
   print("\nPositionals:\n");
-  print("{}\n", opzioni::format_usage(positionals, margin));
+  print("{}\n", opzioni::format_help(positionals, margin));
 
   print("\nFlags:\n");
-  print("{}\n", opzioni::format_usage(flags, margin));
+  print("{}\n", opzioni::format_help(flags, margin));
 
   print("\nOptions:\n");
-  print("{}\n", opzioni::format_usage(options, margin));
+  print("{}\n", opzioni::format_help(options, margin));
 
   if (!description.empty()) {
     print("\n{}.\n", description);
