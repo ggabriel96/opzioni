@@ -129,26 +129,24 @@ std::size_t Program::get_help_margin() const noexcept {
   return 3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
 }
 
-void Program::print_usage() const noexcept {
-  using fmt::print;
+void Program::print_usage(std::ostream &ostream) const noexcept {
+  ostream << format_title();
 
-  print(format_title());
-
-  print(format_usage());
+  ostream << format_usage();
 
   auto const margin = get_help_margin();
 
-  print("\nPositionals:\n");
-  print("{}\n", opzioni::format_help(positionals, margin));
+  ostream << "\nPositionals:\n";
+  ostream << opzioni::format_help(positionals, margin) << nl;
 
-  print("\nFlags:\n");
-  print("{}\n", opzioni::format_help(flags, margin));
+  ostream << "\nFlags:\n";
+  ostream << opzioni::format_help(flags, margin) << nl;
 
-  print("\nOptions:\n");
-  print("{}\n", opzioni::format_help(options, margin));
+  ostream << "\nOptions:\n";
+  ostream << opzioni::format_help(options, margin) << nl;
 
   if (!description.empty()) {
-    print("\n{}.\n", description);
+    ostream << nl << description << ".\n";
   }
 }
 

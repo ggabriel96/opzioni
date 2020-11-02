@@ -5,8 +5,10 @@
 #include "exceptions.hpp"
 #include "memory.hpp"
 
+#include <iostream>
 #include <map>
 #include <optional>
+#include <ostream>
 #include <span>
 #include <string>
 #include <type_traits>
@@ -17,6 +19,8 @@
 #include <fmt/format.h>
 
 namespace opzioni {
+
+constexpr char nl = '\n';
 
 // +----------------------------------------+
 // | related to type list and builtin types |
@@ -276,7 +280,7 @@ struct Program {
 
   void set_defaults(ArgMap &) const noexcept;
 
-  void print_usage() const noexcept;
+  void print_usage(std::ostream & = std::cout) const noexcept;
   std::size_t get_help_margin() const noexcept;
 
   std::string format_title() const noexcept;
