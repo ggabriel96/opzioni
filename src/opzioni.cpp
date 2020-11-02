@@ -222,7 +222,7 @@ std::string HelpFormatter::usage() const noexcept {
   using std::views::transform;
 
   std::vector<std::string> usage_parts;
-  usage_parts.reserve(4);
+  usage_parts.reserve(5);
 
   usage_parts.emplace_back(fmt::format("Usage: {}", program_name));
   auto const margin_size = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
@@ -241,6 +241,11 @@ std::string HelpFormatter::usage() const noexcept {
   if (!flags.empty()) {
     auto const flag_usage = flags | transform(&Flag::format_usage);
     usage_parts.emplace_back(fmt::format("\n{}{}", margin, fmt::join(flag_usage, " ")));
+  }
+
+  if (!cmds.empty()) {
+    auto const cmd_usage = cmds | transform([](auto const &cmd) { return cmd->name; });
+    usage_parts.emplace_back(fmt::format("\n{}{{{}}}", margin, fmt::join(cmd_usage, " ")));
   }
 
   return fmt::format("{}\n", fmt::join(usage_parts, ""));
