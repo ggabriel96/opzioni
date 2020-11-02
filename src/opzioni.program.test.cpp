@@ -10,7 +10,7 @@ SCENARIO("argument specification") {
   using Catch::Matchers::Message;
 
   GIVEN("an empty program specification") {
-    Program program;
+    Program program("test");
 
     WHEN("user specifies a positional argument") {
       auto const positional_name = "positional"s;
@@ -83,7 +83,7 @@ SCENARIO("positional arguments") {
   using Catch::Matchers::Message;
   using namespace std::string_literals;
 
-  opzioni::Program program;
+  opzioni::Program program("test");
 
   GIVEN("no arguments are specified for the program") {
     auto const cmd_name = "./test";

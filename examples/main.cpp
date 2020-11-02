@@ -12,8 +12,7 @@ int main(int argc, char const *argv[]) {
 
   // fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  opzioni::Program program("main");
-  program.with_epilog("A short example file to show what can be done with opzioni");
+  auto program = opzioni::Program("main").with_epilog("A short example file to show what can be done with opzioni");
   program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name");

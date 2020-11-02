@@ -270,8 +270,6 @@ struct Program {
   std::map<std::string, std::size_t> flags_idx;
   std::map<std::string, std::size_t> options_idx;
 
-  Program() : Program({}, {}, {}) {}
-
   Program(std::string name) : Program(name, {}, {}) {}
 
   Program(std::string name, std::string description, std::string epilog)
