@@ -14,6 +14,7 @@ int main(int argc, char const *argv[]) {
 
   opzioni::Program program("main");
   program.with_epilog("A short example file to show what can be done with opzioni");
+  program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name");
   program.opt("v").help("Level of verbosity").set(1).otherwise(0);
@@ -33,7 +34,6 @@ int main(int argc, char const *argv[]) {
   program.opt("vec")
       .otherwise(std::vector<int>{})
       .help("Illustrating the difference between appending and assigning to a vector");
-  program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.opt("str").action(append<std::string>).otherwise(std::vector{""s});
 
   auto &subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
