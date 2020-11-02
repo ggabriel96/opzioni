@@ -29,6 +29,12 @@ template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
   return fmt::format("[--{}]", name);
 }
 
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return format_usage(); }
+
+template <> std::string Arg<ArgumentType::OPTION>::format_long_usage() const noexcept { return format_usage(); }
+
+template <> std::string Arg<ArgumentType::FLAG>::format_long_usage() const noexcept { return format_usage(); }
+
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_description() const noexcept {
   return fmt::format("{}", description);
 }

@@ -159,6 +159,7 @@ template <ArgumentType type> struct Arg {
 
   std::string format_description() const noexcept;
   std::string format_usage() const noexcept;
+  std::string format_long_usage() const noexcept;
 };
 
 template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
