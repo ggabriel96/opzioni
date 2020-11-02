@@ -7,12 +7,17 @@
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
+  using opzioni::Program;
   using opzioni::actions::append;
   using namespace std::string_literals;
 
   // fmt::print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  auto program = opzioni::Program("main").with_epilog("A short example file to show what can be done with opzioni");
+  auto program =
+      Program("main")
+          .help("A short example file to show what can be done with opzioni")
+          .details(
+              "This is a more detailed description or additional information that goes at the end of the help info");
   program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name");
