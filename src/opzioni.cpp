@@ -29,7 +29,7 @@ std::string format_help(auto const &range, std::size_t const margin) {
   using std::views::transform;
   auto const idx_to_elem = [&range](auto idx) { return range[idx]; };
   auto const format_elem = [margin](auto const &arg) {
-    return fmt::format("{:>{}}: {}", arg.format_long_usage(), margin, arg.format_description());
+    return fmt::format("    {:<{}}: {}", arg.format_long_usage(), margin, arg.format_description());
   };
   auto const sorted_idx = sorted_indices(range);
   auto const formatted_range = sorted_idx | transform(idx_to_elem) | transform(format_elem);
