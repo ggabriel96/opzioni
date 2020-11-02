@@ -265,8 +265,9 @@ struct Program {
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
-  std::map<std::string, memory::ValuePtr<Program>> cmds;
+  std::vector<memory::ValuePtr<Program>> cmds;
 
+  std::map<std::string, std::size_t> cmds_idx;
   std::map<std::string, std::size_t> flags_idx;
   std::map<std::string, std::size_t> options_idx;
 

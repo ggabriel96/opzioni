@@ -107,11 +107,13 @@ Flag &Program::flag(std::string name, char abbrev) {
 }
 
 Program &Program::cmd(std::string name) {
-  if (cmds.contains(name)) {
+  if (cmds_idx.contains(name)) {
     throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
-  auto &cmd = cmds[name] = memory::ValuePtr(std::make_unique<Program>(name));
-  return *cmd;
+  auto const idx = cmds.size();
+  auto &command = cmds.emplace_back(std::make_unique<Program>(name));
+  cmds_idx[command->name] = idx;
+  return *command;
 }
 
 ArgMap Program::operator()(int argc, char const *argv[]) {
@@ -150,8 +152,8 @@ void Program::set_defaults(ArgMap &map) const noexcept {
 }
 
 Program *Program::is_command(std::string const &whole_arg) const noexcept {
-  if (auto const cmd = cmds.find(whole_arg); cmd != cmds.end())
-    return cmd->second.get();
+  if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
+    return cmds[cmd_idx->second].get();
   return nullptr;
 }
 
