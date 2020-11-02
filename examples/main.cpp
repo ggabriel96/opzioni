@@ -31,6 +31,8 @@ int main(int argc, char const *argv[]) {
       .set("do something!"s)
       .otherwise("nope"s)
       .help("The equivalent of Python's argparse `store_const`");
+  program.opt("o").help("Testing an option with only a short name").otherwise("oh"s);
+  program.flag("t").help("Testing a flag with only a short name").otherwise(false);
   program.flag("append", 'a')
       .set(1)
       .otherwise(std::vector{-1})
@@ -53,6 +55,8 @@ int main(int argc, char const *argv[]) {
   print("gather-ints: [{}]\n", fmt::join(args.as<std::vector<int>>("gather-ints"), ", "));
   print("last-name: {}\n", args.has("last-name"s) ? args.as<std::string>("last-name") : "no last name");
   print("verbosity: {}\n", args.as<int>("verbosity"));
+  print("t: {}\n", args.as<bool>("t"));
+  print("o: {}\n", args.as<std::string>("o"));
   print("double: {}\n", args.as<double>("double"));
   print("flag: {}\n", args.as<std::string>("flag"));
   print("append: {}\n", args.as<std::vector<int>>("append"));
