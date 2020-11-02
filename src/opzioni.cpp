@@ -14,6 +14,32 @@
 
 namespace opzioni {
 
+// +---------+
+// | utility |
+// +---------+
+
+auto sorted_indices(auto const &range) {
+  std::vector<std::size_t> indices(range.size());
+  std::iota(indices.begin(), indices.end(), 0);
+  std::ranges::sort(indices, [&range](auto lhs, auto rhs) { return range[lhs] < range[rhs]; });
+  return indices;
+}
+
+std::string format_help(auto const &range, std::size_t const margin) {
+  using std::views::transform;
+  auto const idx_to_elem = [&range](auto idx) { return range[idx]; };
+  auto const format_elem = [margin](auto const &arg) {
+    return fmt::format("{:>{}}: {}", arg.format_long_usage(), margin, arg.format_description());
+  };
+  auto const sorted_idx = sorted_indices(range);
+  auto const formatted_range = sorted_idx | transform(idx_to_elem) | transform(format_elem);
+  return fmt::format("{}", fmt::join(formatted_range, "\n"));
+}
+
+// +-----+
+// | Arg |
+// +-----+
+
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
   return fmt::format("<{}>", name);
 }
@@ -56,6 +82,10 @@ template <> std::string Arg<ArgumentType::FLAG>::format_description() const noex
   // }
   // return format;
 }
+
+// +---------+
+// | Program |
+// +---------+
 
 Program &Program::help(std::string description) noexcept {
   this->description = description;
@@ -102,24 +132,6 @@ ArgMap Program::operator()(std::span<char const *> args) {
   auto map = parser();
   set_defaults(map);
   return map;
-}
-
-auto sorted_indices(auto const &range) {
-  std::vector<std::size_t> indices(range.size());
-  std::iota(indices.begin(), indices.end(), 0);
-  std::ranges::sort(indices, [&range](auto lhs, auto rhs) { return range[lhs] < range[rhs]; });
-  return indices;
-}
-
-std::string format_help(auto const &range, std::size_t const margin) {
-  using std::views::transform;
-  auto const idx_to_elem = [&range](auto idx) { return range[idx]; };
-  auto const format_elem = [margin](auto const &arg) {
-    return fmt::format("{:>{}}: {}", arg.format_long_usage(), margin, arg.format_description());
-  };
-  auto const sorted_idx = sorted_indices(range);
-  auto const formatted_range = sorted_idx | transform(idx_to_elem) | transform(format_elem);
-  return fmt::format("{}", fmt::join(formatted_range, "\n"));
 }
 
 std::size_t Program::get_help_margin() const noexcept {
