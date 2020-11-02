@@ -116,9 +116,7 @@ void Program::print_usage(std::ostream &ostream) const noexcept {
   ostream << formatter.title();
   ostream << formatter.usage();
   ostream << formatter.help();
-  if (!description.empty()) {
-    ostream << nl << description << ".\n";
-  }
+  ostream << formatter.description();
 }
 
 void Program::set_defaults(ArgMap &map) const noexcept {
@@ -172,8 +170,8 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 // +------------+
 
 HelpFormatter::HelpFormatter(Program const &program)
-    : name(program.name), description(program.description), epilog(program.epilog), flags(program.flags),
-      options(program.options), positionals(program.positionals) {
+    : program_name(program.name), program_description(program.description), program_epilog(program.epilog),
+      flags(program.flags), options(program.options), positionals(program.positionals) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
@@ -182,16 +180,15 @@ HelpFormatter::HelpFormatter(Program const &program)
 std::size_t HelpFormatter::get_help_margin() const noexcept {
   auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
   auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_positional =
-      std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_positional = std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
   return 3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
 }
 
 std::string HelpFormatter::title() const noexcept {
-  if (epilog.empty()) {
-    return fmt::format("{}.\n", name);
+  if (program_epilog.empty()) {
+    return fmt::format("{}.\n", program_name);
   } else {
-    return fmt::format("{} -- {}.\n", name, epilog);
+    return fmt::format("{} -- {}.\n", program_name, program_epilog);
   }
 }
 
@@ -203,24 +200,30 @@ std::string HelpFormatter::usage() const noexcept {
   auto const opt_usage = options | transform(std::mem_fn(&Option::format_usage));
   auto const flag_usage = flags | transform(std::mem_fn(&Flag::format_usage));
 
-  auto const margin_size = 7 + name.length() + 1; // 7 == "Usage: ".length() + 1 space
+  auto const margin_size = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
   std::string const margin(margin_size, ' ');
   return fmt::format("\nUsage: {} {}\n"
-                      "{}{}\n"
-                      "{}{}\n",
-                      name, join(pos_usage, " "), margin, join(opt_usage, " "), margin, join(flag_usage, " "));
+                     "{}{}\n"
+                     "{}{}\n",
+                     program_name, join(pos_usage, " "), margin, join(opt_usage, " "), margin, join(flag_usage, " "));
 }
 
 std::string HelpFormatter::help() const noexcept {
   auto const margin = get_help_margin();
 
   return fmt::format("\nPositionals:\n"
-                      "{}\n"
-                      "\nOptions:\n"
-                      "{}\n"
-                      "\nFlags:\n"
-                      "{}\n",
-                      format_help(positionals, margin), format_help(options, margin), format_help(flags, margin));
+                     "{}\n"
+                     "\nOptions:\n"
+                     "{}\n"
+                     "\nFlags:\n"
+                     "{}\n",
+                     format_help(positionals, margin), format_help(options, margin), format_help(flags, margin));
+}
+
+std::string HelpFormatter::description() const noexcept {
+  if (program_description.empty())
+    return "";
+  return fmt::format("\n{}.\n", program_description);
 }
 
 // +---------+

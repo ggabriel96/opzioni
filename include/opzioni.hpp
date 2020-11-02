@@ -304,11 +304,12 @@ public:
   std::string title() const noexcept;
   std::string usage() const noexcept;
   std::string help() const noexcept;
+  std::string description() const noexcept;
 
 private:
-  std::string name;
-  std::string description;
-  std::string epilog;
+  std::string program_name;
+  std::string program_description;
+  std::string program_epilog;
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
