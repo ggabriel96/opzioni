@@ -148,66 +148,6 @@ std::string Program::format_usage() const noexcept {
                 join(options, " "));
 }
 
-std::string Program::format_flags() const {
-  using fmt::format, fmt::join;
-  using std::views::filter, std::views::transform, std::views::values;
-
-  auto const &longest_flag =
-      std::ranges::max(values(this->flags), {}, [](auto const &flag) { return flag.name.length(); });
-  auto const margin_size = longest_flag.name.length() + 2; // +2 for "--" prefix
-
-  return format("\nFlags:\n{}\n", join(values(this->flags) | transform([margin_size](auto const &flag) {
-                                         return format("  {:>{}}: {}", flag.format_usage(), margin_size,
-                                                       flag.format_description());
-                                       }),
-                                       "\n"));
-}
-
-void Program::print_short_usage() const noexcept {
-  using fmt::print, fmt::format, fmt::join;
-  using std::ignore;
-  using std::views::filter, std::views::transform;
-
-  auto pair_to_arg = [](auto const &pair) { return pair.second; };
-
-  auto const positionals = this->positionals | transform(std::mem_fn(&Positional::format_usage));
-  auto const options = this->options | transform(pair_to_arg) | transform(std::mem_fn(&Option::format_usage));
-  auto const flags = this->flags | transform(pair_to_arg) | transform(std::mem_fn(&Flag::format_usage));
-
-  auto const print_variant = [](auto const &var) { return print("{}", var); };
-
-  print("\nUsage: {} {} {} {}\n", name, join(positionals, " "), join(options, " "), join(flags, " "));
-
-  auto const &longest_flag = std::ranges::max(flags, {}, &std::string::length);
-  auto const &longest_option = std::ranges::max(options, {}, &std::string::length);
-  auto const min_width = std::max(longest_flag.length(), longest_option.length());
-
-  print("\nOptions & flags:\n");
-
-  for (auto const &[ignore, opt] : this->options) {
-    auto const fmt_opt = opt.format_usage();
-    print("  {:<{}}  {}", fmt_opt, min_width, opt.description);
-    if (opt.default_value) {
-      print(" (default: ");
-      std::visit(print_variant, *opt.default_value);
-      print(")\n");
-    } else {
-      print("\n");
-    }
-  }
-  for (auto const &[ignore, flag] : this->flags) {
-    auto const fmt_flag = flag.format_usage();
-    print("  {:<{}}  {}", fmt_flag, min_width, flag.description);
-    if (flag.default_value) {
-      print(" (default: ");
-      std::visit(print_variant, *flag.default_value);
-      print(")\n");
-    } else {
-      print("\n");
-    }
-  }
-}
-
 void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   using std::views::transform;
