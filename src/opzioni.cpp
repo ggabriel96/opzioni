@@ -192,10 +192,16 @@ HelpFormatter::HelpFormatter(Program const &program)
 }
 
 std::size_t HelpFormatter::get_help_margin() const noexcept {
-  auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_positional = std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
-  return 3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
+  using std::views::transform;
+  std::array<std::size_t, 3> lengths{0, 0, 0};
+  auto const get_name = [](auto const &arg) -> std::string_view { return arg.name; };
+  if (!flags.empty())
+    lengths[0] = std::ranges::max(flags | transform(get_name) | transform(&std::string_view::length));
+  if (!options.empty())
+    lengths[1] = std::ranges::max(options | transform(get_name) | transform(&std::string_view::length));
+  if (!positionals.empty())
+    lengths[2] = std::ranges::max(positionals | transform(get_name) | transform(&std::string_view::length));
+  return 3 * std::ranges::max(lengths);
 }
 
 std::string HelpFormatter::title() const noexcept {
