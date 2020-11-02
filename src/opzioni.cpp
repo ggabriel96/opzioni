@@ -245,7 +245,7 @@ std::string HelpFormatter::usage() const noexcept {
 
   if (!cmds.empty()) {
     auto const cmd_usage = cmds | transform([](auto const &cmd) { return cmd->name; });
-    usage_parts.emplace_back(fmt::format("\n{}{{{}}}", margin, fmt::join(cmd_usage, " ")));
+    usage_parts.emplace_back(fmt::format("\n{}{{{}}}", margin, fmt::join(cmd_usage, ", ")));
   }
 
   return fmt::format("{}\n", fmt::join(usage_parts, ""));
