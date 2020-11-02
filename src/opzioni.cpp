@@ -3,38 +3,11 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
-#include <numeric>
 #include <optional>
-#include <ranges>
 #include <tuple>
 #include <variant>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-
 namespace opzioni {
-
-// +---------+
-// | utility |
-// +---------+
-
-auto sorted_indices(auto const &range) {
-  std::vector<std::size_t> indices(range.size());
-  std::iota(indices.begin(), indices.end(), 0);
-  std::ranges::sort(indices, [&range](auto lhs, auto rhs) { return range[lhs] < range[rhs]; });
-  return indices;
-}
-
-std::string format_help(auto const &range, std::size_t const margin) {
-  using std::views::transform;
-  auto const idx_to_elem = [&range](auto idx) { return range[idx]; };
-  auto const format_elem = [margin](auto const &arg) {
-    return fmt::format("    {:<{}}: {}", arg.format_long_usage(), margin, arg.format_description());
-  };
-  auto const sorted_idx = sorted_indices(range);
-  auto const formatted_range = sorted_idx | transform(idx_to_elem) | transform(format_elem);
-  return fmt::format("{}", fmt::join(formatted_range, "\n"));
-}
 
 // +-----+
 // | Arg |
@@ -56,9 +29,7 @@ template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
   return fmt::format("[--{}]", name);
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept {
-  return name;
-}
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return name; }
 
 template <> std::string Arg<ArgumentType::OPTION>::format_long_usage() const noexcept {
   return fmt::format("--{0} <{0}>", name);
@@ -140,63 +111,14 @@ ArgMap Program::operator()(std::span<char const *> args) {
   return map;
 }
 
-std::size_t Program::get_help_margin() const noexcept {
-  auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_positional = std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
-  return 3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
-}
-
 void Program::print_usage(std::ostream &ostream) const noexcept {
-  ostream << format_title();
-
-  ostream << format_usage();
-
-  auto const margin = get_help_margin();
-
-  ostream << "\nPositionals:\n";
-  ostream << opzioni::format_help(positionals, margin) << nl;
-
-  ostream << "\nFlags:\n";
-  ostream << opzioni::format_help(flags, margin) << nl;
-
-  ostream << "\nOptions:\n";
-  ostream << opzioni::format_help(options, margin) << nl;
-
+  HelpFormatter formatter(*this);
+  ostream << formatter.title();
+  ostream << formatter.usage();
+  ostream << formatter.help();
   if (!description.empty()) {
     ostream << nl << description << ".\n";
   }
-}
-
-std::string Program::format_title() const noexcept {
-  if (epilog.empty()) {
-    return fmt::format("{}.\n", name);
-  } else {
-    return fmt::format("{} -- {}.\n", name, epilog);
-  }
-}
-
-std::string Program::format_usage() const noexcept {
-  using fmt::format, fmt::join;
-  using std::ranges::sort, std::ranges::transform;
-  using std::views::values;
-
-  std::vector<std::string> positionals(this->positionals.size());
-  transform(this->positionals, positionals.begin(), std::mem_fn(&Positional::format_usage));
-  sort(positionals);
-
-  std::vector<std::string> flags(this->flags.size());
-  transform(this->flags, flags.begin(), std::mem_fn(&Flag::format_usage));
-  sort(flags);
-
-  std::vector<std::string> options(this->options.size());
-  transform(this->options, options.begin(), std::mem_fn(&Option::format_usage));
-  sort(options);
-
-  auto const margin_size = 7 + name.length() + 1; // 7 == "Usage: ".length() + 1 space
-  std::string const margin(margin_size, ' ');
-  return format("\nUsage: {} {}\n{}{}\n{}{}\n", name, join(positionals, " "), margin, join(flags, " "), margin,
-                join(options, " "));
 }
 
 void Program::set_defaults(ArgMap &map) const noexcept {
@@ -244,6 +166,66 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
     return parsed_option;
   return std::nullopt;
 }
+
+// +------------+
+// | formatting |
+// +------------+
+
+HelpFormatter::HelpFormatter(Program const &program)
+    : name(program.name), description(program.description), epilog(program.epilog), flags(program.flags),
+      options(program.options), positionals(program.positionals) {
+  std::sort(flags.begin(), flags.end());
+  std::sort(options.begin(), options.end());
+  std::sort(positionals.begin(), positionals.end());
+}
+
+std::size_t HelpFormatter::get_help_margin() const noexcept {
+  auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_positional =
+      std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
+  return 3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
+}
+
+std::string HelpFormatter::title() const noexcept {
+  if (epilog.empty()) {
+    return fmt::format("{}.\n", name);
+  } else {
+    return fmt::format("{} -- {}.\n", name, epilog);
+  }
+}
+
+std::string HelpFormatter::usage() const noexcept {
+  using fmt::join;
+  using std::views::transform;
+
+  auto const pos_usage = positionals | transform(std::mem_fn(&Positional::format_usage));
+  auto const opt_usage = options | transform(std::mem_fn(&Option::format_usage));
+  auto const flag_usage = flags | transform(std::mem_fn(&Flag::format_usage));
+
+  auto const margin_size = 7 + name.length() + 1; // 7 == "Usage: ".length() + 1 space
+  std::string const margin(margin_size, ' ');
+  return fmt::format("\nUsage: {} {}\n"
+                      "{}{}\n"
+                      "{}{}\n",
+                      name, join(pos_usage, " "), margin, join(opt_usage, " "), margin, join(flag_usage, " "));
+}
+
+std::string HelpFormatter::help() const noexcept {
+  auto const margin = get_help_margin();
+
+  return fmt::format("\nPositionals:\n"
+                      "{}\n"
+                      "\nOptions:\n"
+                      "{}\n"
+                      "\nFlags:\n"
+                      "{}\n",
+                      format_help(positionals, margin), format_help(options, margin), format_help(flags, margin));
+}
+
+// +---------+
+// | parsing |
+// +---------+
 
 namespace parsing {
 

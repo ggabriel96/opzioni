@@ -9,6 +9,7 @@
 #include <map>
 #include <optional>
 #include <ostream>
+#include <ranges>
 #include <span>
 #include <string>
 #include <type_traits>
@@ -17,6 +18,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace opzioni {
 
@@ -281,16 +283,43 @@ struct Program {
   void set_defaults(ArgMap &) const noexcept;
 
   void print_usage(std::ostream & = std::cout) const noexcept;
-  std::size_t get_help_margin() const noexcept;
-
-  std::string format_title() const noexcept;
-  std::string format_usage() const noexcept;
 
   Program *is_command(std::string const &) const noexcept;
   bool is_flag(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
+};
+
+// +------------+
+// | formatting |
+// +------------+
+
+class HelpFormatter {
+public:
+  HelpFormatter(Program const &);
+
+  std::size_t get_help_margin() const noexcept;
+
+  std::string title() const noexcept;
+  std::string usage() const noexcept;
+  std::string help() const noexcept;
+
+private:
+  std::string name;
+  std::string description;
+  std::string epilog;
+  std::vector<Flag> flags;
+  std::vector<Option> options;
+  std::vector<Positional> positionals;
+
+  std::string format_help(auto const &range, std::size_t const margin) const noexcept {
+    using std::views::transform;
+    auto const format = [margin](auto const &arg) {
+      return fmt::format("    {:<{}}: {}", arg.format_long_usage(), margin, arg.format_description());
+    };
+    return fmt::format("{}", fmt::join(range | transform(format), "\n"));
+  }
 };
 
 // +---------------------------+
