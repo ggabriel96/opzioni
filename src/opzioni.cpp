@@ -216,9 +216,9 @@ std::string HelpFormatter::usage() const noexcept {
   using fmt::join;
   using std::views::transform;
 
-  auto const pos_usage = positionals | transform(std::mem_fn(&Positional::format_usage));
-  auto const opt_usage = options | transform(std::mem_fn(&Option::format_usage));
-  auto const flag_usage = flags | transform(std::mem_fn(&Flag::format_usage));
+  auto const pos_usage = positionals | transform(&Positional::format_usage);
+  auto const opt_usage = options | transform(&Option::format_usage);
+  auto const flag_usage = flags | transform(&Flag::format_usage);
 
   auto const margin_size = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
   std::string const margin(margin_size, ' ');
