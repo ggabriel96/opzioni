@@ -32,10 +32,14 @@ template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return name; }
 
 template <> std::string Arg<ArgumentType::OPTION>::format_long_usage() const noexcept {
+  if (has_abbrev())
+    return fmt::format("-{0}, --{1} <{0}>", abbrev, name);
   return fmt::format("--{0} <{0}>", name);
 }
 
 template <> std::string Arg<ArgumentType::FLAG>::format_long_usage() const noexcept {
+  if (has_abbrev())
+    return fmt::format("-{}, --{}", abbrev, name);
   return fmt::format("--{}", name);
 }
 
@@ -80,15 +84,27 @@ Positional &Program::pos(std::string name) {
 }
 
 Option &Program::opt(std::string name) {
-  auto &opt = options.emplace_back(name);
-  options_idx[opt.name] = options.size() - 1;
+  return opt(name, '\0');
+}
+
+Option &Program::opt(std::string name, char abbrev) {
+  auto const idx = options.size();
+  auto &opt = options.emplace_back(name, abbrev);
+  options_idx[opt.name] = idx;
+  if (opt.has_abbrev()) options_idx[{1, opt.abbrev}] = idx;
   return opt;
 }
 
 Flag &Program::flag(std::string name) {
-  Flag arg{.name = name, .set_value = true, .act = actions::assign<bool>};
+  return flag(name, '\0');
+}
+
+Flag &Program::flag(std::string name, char abbrev) {
+  auto const idx = flags.size();
+  Flag arg{.name = name, .abbrev = abbrev, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
-  flags_idx[flag.name] = flags.size() - 1;
+  flags_idx[flag.name] = idx;
+  if (flag.has_abbrev()) flags_idx[{1, flag.abbrev}] = idx;
   return flag;
 }
 

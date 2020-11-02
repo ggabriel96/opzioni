@@ -17,9 +17,9 @@ int main(int argc, char const *argv[]) {
   program.pos("test").help("The equivalent of Python's argparse `nargs`").gather<int>().otherwise(std::vector{-1});
   program.pos("name").help("Your name");
   program.opt("last-name").help("Your last name");
-  program.opt("v").help("Level of verbosity").set(1).otherwise(0);
-  program.opt("d").help("A double").otherwise(7.11);
-  program.flag("flag")
+  program.opt("verbosity", 'v').help("Level of verbosity").set(1).otherwise(0);
+  program.opt("double", 'd').help("A double").otherwise(7.11);
+  program.flag("flag", 'f')
       .set("do something!"s)
       .otherwise("nope"s)
       .help("The equivalent of Python's argparse `store_const`");

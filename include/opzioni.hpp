@@ -112,12 +112,18 @@ struct ArgMap {
 
 template <ArgumentType type> struct Arg {
   std::string name{};
+  std::conditional_t<type != ArgumentType::POSITIONAL, char, std::monostate> abbrev{};
   std::string description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
   std::conditional_t<type != ArgumentType::POSITIONAL, std::optional<BuiltinType>, std::monostate> set_value{};
   actions::signature<type> act = actions::assign<std::string>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
+
+  Arg<type> &aka(char abbrev) noexcept requires(type != ArgumentType::POSITIONAL) {
+    this->abbrev = abbrev;
+    return *this;
+  }
 
   Arg<type> &help(std::string description) noexcept {
     this->description = description;
@@ -161,6 +167,10 @@ template <ArgumentType type> struct Arg {
         act == static_cast<actions::signature<type>>(actions::assign<std::string>))
       act = actions::assign<T>;
     return *this;
+  }
+
+  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) {
+    return abbrev != '\0';
   }
 
   std::string format_description() const noexcept;
@@ -266,14 +276,18 @@ struct Program {
 
   Program(std::string name, std::string description, std::string epilog)
       : name(name), description(description), epilog(epilog) {
-    flag("help").help("Display this information").action(actions::print_help);
+    flag("help", 'h').help("Display this information").action(actions::print_help);
   }
 
   Program &help(std::string) noexcept;
   Program &with_epilog(std::string) noexcept;
 
   Flag &flag(std::string);
+  Flag &flag(std::string, char);
+
   Option &opt(std::string);
+  Option &opt(std::string, char);
+  
   Program &cmd(std::string);
   Positional &pos(std::string);
 
