@@ -68,13 +68,13 @@ template <> std::string Arg<ArgumentType::FLAG>::format_description() const noex
 // | Program |
 // +---------+
 
-Program &Program::help(std::string description) noexcept {
-  this->description = description;
+Program &Program::help(std::string epilog) noexcept {
+  this->epilog = epilog;
   return *this;
 }
 
-Program &Program::with_epilog(std::string epilog) noexcept {
-  this->epilog = epilog;
+Program &Program::details(std::string description) noexcept {
+  this->description = description;
   return *this;
 }
 
