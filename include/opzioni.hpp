@@ -331,7 +331,7 @@ private:
   std::string format_help(auto const &range, std::size_t const margin) const noexcept {
     using std::views::transform;
     auto const format = [margin](auto const &arg) {
-      return fmt::format("    {:<{}}: {}", arg.format_long_usage(), margin, arg.format_description());
+      return fmt::format("    {:<{}} {}", arg.format_long_usage(), margin, arg.format_description());
     };
     return fmt::format("{}", fmt::join(range | transform(format), "\n"));
   }
