@@ -225,30 +225,39 @@ std::string HelpFormatter::usage() const noexcept {
   usage_parts.reserve(5);
 
   usage_parts.emplace_back(fmt::format("Usage: {}", program_name));
-  auto const margin_size = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
-  std::string const margin(margin_size, ' ');
+  auto const margin = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
 
+  bool should_add_margin = false;
   if (!positionals.empty()) {
     auto const pos_usage = positionals | transform(&Positional::format_usage);
-    usage_parts.emplace_back(fmt::format(" {}", fmt::join(pos_usage, " ")));
+    usage_parts.emplace_back(fmt::format(" {}\n", fmt::join(pos_usage, " ")));
+    should_add_margin = true;
   }
 
   if (!options.empty()) {
+    auto const margin_size = margin * int(should_add_margin);
     auto const opt_usage = options | transform(&Option::format_usage);
-    usage_parts.emplace_back(fmt::format("\n{}{}", margin, fmt::join(opt_usage, " ")));
+    usage_parts.emplace_back(
+        fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(opt_usage, " ")));
+    should_add_margin = true;
   }
 
   if (!flags.empty()) {
+    auto const margin_size = margin * int(should_add_margin);
     auto const flag_usage = flags | transform(&Flag::format_usage);
-    usage_parts.emplace_back(fmt::format("\n{}{}", margin, fmt::join(flag_usage, " ")));
+    usage_parts.emplace_back(
+        fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(flag_usage, " ")));
+    should_add_margin = true;
   }
 
   if (!cmds.empty()) {
+    auto const margin_size = margin * int(should_add_margin);
     auto const cmd_usage = cmds | transform([](auto const &cmd) { return cmd->name; });
-    usage_parts.emplace_back(fmt::format("\n{}{{{}}}", margin, fmt::join(cmd_usage, ", ")));
+    usage_parts.emplace_back(
+        fmt::format("{: >{}}{{{}}}\n", ' ', margin_size, fmt::join(cmd_usage, ", ")));
   }
 
-  return fmt::format("{}\n", fmt::join(usage_parts, ""));
+  return fmt::format("{}", fmt::join(usage_parts, ""));
 }
 
 std::string HelpFormatter::help() const noexcept {
