@@ -48,6 +48,8 @@ int main(int argc, char const *argv[]) {
   subcmd.pos("subname").help("Your name again, please");
   subcmd.flag("ex").help("A nested flag").otherwise(false);
 
+  program.cmd("other").help("An empty subcommand");
+
   auto const args = program(argc, argv);
   print("\nCommand name: {}\n", args.cmd_name);
   print("Number of arguments: {}\n", args.size());
