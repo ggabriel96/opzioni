@@ -252,10 +252,6 @@ std::string HelpFormatter::help() const noexcept {
   std::vector<std::string> help_parts;
   help_parts.reserve(4);
 
-  if (!cmds.empty()) {
-    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_cmds_help(margin)));
-  }
-
   if (!positionals.empty()) {
     help_parts.emplace_back(fmt::format("Positionals:\n{}\n", format_help(positionals, margin)));
   }
@@ -266,6 +262,10 @@ std::string HelpFormatter::help() const noexcept {
 
   if (!flags.empty()) {
     help_parts.emplace_back(fmt::format("Flags:\n{}\n", format_help(flags, margin)));
+  }
+
+  if (!cmds.empty()) {
+    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_cmds_help(margin)));
   }
 
   return fmt::format("{}", fmt::join(help_parts, "\n"));
