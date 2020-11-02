@@ -83,28 +83,26 @@ Positional &Program::pos(std::string name) {
   return *positionals.insert(positionals.end(), arg);
 }
 
-Option &Program::opt(std::string name) {
-  return opt(name, '\0');
-}
+Option &Program::opt(std::string name) { return opt(name, '\0'); }
 
 Option &Program::opt(std::string name, char abbrev) {
   auto const idx = options.size();
   auto &opt = options.emplace_back(name, abbrev);
   options_idx[opt.name] = idx;
-  if (opt.has_abbrev()) options_idx[{1, opt.abbrev}] = idx;
+  if (opt.has_abbrev())
+    options_idx[std::string(1, opt.abbrev)] = idx;
   return opt;
 }
 
-Flag &Program::flag(std::string name) {
-  return flag(name, '\0');
-}
+Flag &Program::flag(std::string name) { return flag(name, '\0'); }
 
 Flag &Program::flag(std::string name, char abbrev) {
   auto const idx = flags.size();
   Flag arg{.name = name, .abbrev = abbrev, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
   flags_idx[flag.name] = idx;
-  if (flag.has_abbrev()) flags_idx[{1, flag.abbrev}] = idx;
+  if (flag.has_abbrev())
+    flags_idx[std::string(1, flag.abbrev)] = idx;
   return flag;
 }
 
