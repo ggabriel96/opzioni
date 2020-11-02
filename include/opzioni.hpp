@@ -165,6 +165,11 @@ template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg)
   map.args[arg.name] = ArgValue{*arg.default_value};
 }
 
+template <ArgumentType type> bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
+  if (lhs.is_required == rhs.is_required) return lhs.name < rhs.name;
+  return lhs.is_required && !rhs.is_required;
+}
+
 namespace parsing {
 
 struct ParsedOption {
