@@ -277,6 +277,7 @@ struct Program {
   void set_defaults(ArgMap &) const noexcept;
 
   void print_usage() const noexcept;
+  std::size_t get_help_margin() const noexcept;
 
   std::string format_title() const noexcept;
   std::string format_usage() const noexcept;

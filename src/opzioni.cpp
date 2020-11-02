@@ -122,6 +122,13 @@ std::string format_help(auto const &range, std::size_t const margin) {
   return fmt::format("{}", fmt::join(formatted_range, "\n"));
 }
 
+std::size_t Program::get_help_margin() const noexcept {
+  auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_positional = std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
+  return 3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
+}
+
 void Program::print_usage() const noexcept {
   using fmt::print;
 
@@ -129,11 +136,7 @@ void Program::print_usage() const noexcept {
 
   print(format_usage());
 
-  auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const &longest_positional = std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
-  auto const margin =
-      3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
+  auto const margin = get_help_margin();
 
   print("\nPositionals:\n");
   print("{}\n", opzioni::format_help(positionals, margin));
