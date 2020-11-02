@@ -190,10 +190,11 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 
 HelpFormatter::HelpFormatter(Program const &program)
     : program_name(program.name), program_description(program.description), program_epilog(program.epilog),
-      flags(program.flags), options(program.options), positionals(program.positionals) {
+      flags(program.flags), options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
+  std::sort(cmds.begin(), cmds.end(), [](auto const &lhs, auto const &rhs) { return *lhs < *rhs; });
 }
 
 std::size_t HelpFormatter::get_help_margin() const noexcept {
@@ -248,19 +249,40 @@ std::string HelpFormatter::usage() const noexcept {
 std::string HelpFormatter::help() const noexcept {
   auto const margin = get_help_margin();
 
-  return fmt::format("Positionals:\n"
-                     "{}\n"
-                     "\nOptions:\n"
-                     "{}\n"
-                     "\nFlags:\n"
-                     "{}\n",
-                     format_help(positionals, margin), format_help(options, margin), format_help(flags, margin));
+  std::vector<std::string> help_parts;
+  help_parts.reserve(4);
+
+  if (!cmds.empty()) {
+    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_cmds_help(margin)));
+  }
+
+  if (!positionals.empty()) {
+    help_parts.emplace_back(fmt::format("Positionals:\n{}\n", format_help(positionals, margin)));
+  }
+
+  if (!options.empty()) {
+    help_parts.emplace_back(fmt::format("Options:\n{}\n", format_help(options, margin)));
+  }
+
+  if (!flags.empty()) {
+    help_parts.emplace_back(fmt::format("Flags:\n{}\n", format_help(flags, margin)));
+  }
+
+  return fmt::format("{}", fmt::join(help_parts, "\n"));
 }
 
 std::string HelpFormatter::description() const noexcept {
   if (program_description.empty())
     return "";
   return fmt::format("{}.\n", program_description);
+}
+
+std::string HelpFormatter::format_cmds_help(std::size_t const margin) const noexcept {
+  using std::views::transform;
+  auto const format = [margin](auto const &cmd) {
+    return fmt::format("    {:<{}} {}", cmd->name, margin, cmd->epilog);
+  };
+  return fmt::format("{}", fmt::join(cmds | transform(format), "\n"));
 }
 
 // +---------+

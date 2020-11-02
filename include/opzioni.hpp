@@ -302,6 +302,10 @@ struct Program {
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
+
+  auto operator<=>(Program const &other) const noexcept {
+    return name <=> other.name;
+  }
 };
 
 // +------------+
@@ -326,6 +330,9 @@ private:
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
+  std::vector<memory::ValuePtr<Program>> cmds;
+
+  std::string format_cmds_help(std::size_t const) const noexcept;
 
   std::string format_help(auto const &range, std::size_t const margin) const noexcept {
     using std::views::transform;
