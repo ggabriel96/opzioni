@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
+#include <numeric>
 #include <optional>
 #include <ranges>
 #include <tuple>
@@ -103,17 +104,45 @@ ArgMap Program::operator()(std::span<char const *> args) {
   return map;
 }
 
+auto sorted_indices(auto const &range) {
+  std::vector<std::size_t> indices(range.size());
+  std::iota(indices.begin(), indices.end(), 0);
+  std::ranges::sort(indices, [&range](auto lhs, auto rhs) { return range[lhs] < range[rhs]; });
+  return indices;
+}
+
+std::string format_usage(auto const &range, std::size_t const margin) {
+  using std::views::transform;
+  auto const sorted_idx = sorted_indices(range);
+  return fmt::format("{}", fmt::join(sorted_idx | transform([&range](auto idx) { return range[idx]; }) |
+                                         transform([margin](auto const &arg) {
+                                           return fmt::format("{:>{}}: {}", arg.format_long_usage(), margin,
+                                                              arg.format_description());
+                                         }),
+                                     "\n"));
+}
+
 void Program::print_usage() const noexcept {
   using fmt::print;
-  using std::ignore;
 
   print(format_title());
 
   print(format_usage());
 
-  print(format_flags());
+  auto const &longest_flag = std::ranges::max(flags, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_option = std::ranges::max(options, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const &longest_positional = std::ranges::max(positionals, {}, [](auto const &arg) { return arg.name.length(); });
+  auto const margin =
+      3 * std::max({longest_flag.name.length(), longest_option.name.length(), longest_positional.name.length()});
 
-  // print_short_usage();
+  print("\nPositionals:\n");
+  print("{}\n", opzioni::format_usage(positionals, margin));
+
+  print("\nFlags:\n");
+  print("{}\n", opzioni::format_usage(flags, margin));
+
+  print("\nOptions:\n");
+  print("{}\n", opzioni::format_usage(options, margin));
 
   if (!description.empty()) {
     print("\n{}.\n", description);
