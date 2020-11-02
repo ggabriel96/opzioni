@@ -246,10 +246,13 @@ struct Program {
   std::string description{};
   std::string epilog{};
 
-  std::map<std::string, Flag> flags;
+  std::vector<Flag> flags;
+  std::vector<Option> options;
   std::vector<Positional> positionals;
-  std::map<std::string, Option> options;
   std::map<std::string, memory::ValuePtr<Program>> cmds;
+
+  std::map<std::string, std::size_t> flags_idx;
+  std::map<std::string, std::size_t> options_idx;
 
   Program() : Program({}, {}, {}) {}
 

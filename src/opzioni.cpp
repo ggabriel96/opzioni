@@ -72,13 +72,16 @@ Positional &Program::pos(std::string name) {
 }
 
 Option &Program::opt(std::string name) {
-  Option arg{name};
-  return options[arg.name] = arg;
+  auto &opt = options.emplace_back(name);
+  options_idx[opt.name] = options.size() - 1;
+  return opt;
 }
 
 Flag &Program::flag(std::string name) {
   Flag arg{.name = name, .set_value = true, .act = actions::assign<bool>};
-  return flags[arg.name] = arg;
+  auto &flag = *flags.insert(flags.end(), arg);
+  flags_idx[flag.name] = flags.size() - 1;
+  return flag;
 }
 
 Program &Program::cmd(std::string name) {
@@ -135,11 +138,11 @@ std::string Program::format_usage() const noexcept {
   sort(positionals);
 
   std::vector<std::string> flags(this->flags.size());
-  transform(values(this->flags), flags.begin(), std::mem_fn(&Flag::format_usage));
+  transform(this->flags, flags.begin(), std::mem_fn(&Flag::format_usage));
   sort(flags);
 
   std::vector<std::string> options(this->options.size());
-  transform(values(this->options), options.begin(), std::mem_fn(&Option::format_usage));
+  transform(this->options, options.begin(), std::mem_fn(&Option::format_usage));
   sort(options);
 
   auto const margin_size = 7 + name.length() + 1; // 7 == "Usage: ".length() + 1 space
@@ -151,14 +154,13 @@ std::string Program::format_usage() const noexcept {
 void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   using std::views::transform;
-  auto pair_to_arg = [](auto const &pair) { return pair.second; };
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
   auto has_default = [](auto const &arg) { return arg.default_value.has_value(); };
   for (auto const &positional : positionals | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::POSITIONAL>(map, positional);
-  for (auto const &flag : flags | transform(pair_to_arg) | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &flag : flags | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::FLAG>(map, flag);
-  for (auto const &option : options | transform(pair_to_arg) | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &option : options | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::OPTION>(map, option);
 }
 
@@ -168,7 +170,7 @@ Program *Program::is_command(std::string const &whole_arg) const noexcept {
   return nullptr;
 }
 
-bool Program::is_flag(std::string const &name) const noexcept { return flags.contains(name); }
+bool Program::is_flag(std::string const &name) const noexcept { return flags_idx.contains(name); }
 
 std::optional<std::string> Program::is_long_flag(std::string const &whole_arg) const noexcept {
   auto const name = whole_arg.substr(2);
@@ -190,7 +192,7 @@ std::optional<std::string> Program::is_short_flags(std::string const &whole_arg)
 
 std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole_arg) const noexcept {
   auto const parsed_option = parsing::parse_option(whole_arg);
-  if (options.contains(parsed_option.name))
+  if (options_idx.contains(parsed_option.name))
     return parsed_option;
   return std::nullopt;
 }
@@ -216,7 +218,8 @@ std::size_t Parser::operator()(DashDash dd) {
 }
 
 std::size_t Parser::operator()(Flag flag) {
-  auto const arg = spec.flags.at(flag.name);
+  auto const arg_idx = spec.flags_idx.at(flag.name);
+  auto const arg = spec.flags[arg_idx];
   arg.act(spec, map, arg, std::nullopt);
   return 1;
 }
@@ -231,7 +234,8 @@ std::size_t Parser::operator()(ManyFlags flags) {
 }
 
 std::size_t Parser::operator()(Option option) {
-  auto const arg = spec.options.at(option.arg.name);
+  auto const arg_idx = spec.options_idx.at(option.arg.name);
+  auto const arg = spec.options[arg_idx];
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - option.index : arg.gather_n.amount;
   if (option.arg.value) {
     if (gather_amount != 1) {

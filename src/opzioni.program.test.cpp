@@ -41,7 +41,7 @@ SCENARIO("argument specification") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 1);
         REQUIRE(program.flags.size() == 0);
-        REQUIRE(&inserted_option == &program.options[option_name]);
+        // REQUIRE(&inserted_option == &program.options[option_name]);
 
         REQUIRE(inserted_option.name == option_name);
         REQUIRE(inserted_option.description == ""s);
@@ -63,7 +63,7 @@ SCENARIO("argument specification") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 0);
         REQUIRE(program.flags.size() == 1);
-        REQUIRE(&inserted_flag == &program.flags[flag_name]);
+        // REQUIRE(&inserted_flag == &program.flags[flag_name]);
 
         REQUIRE(inserted_flag.name == flag_name);
         REQUIRE(inserted_flag.description == ""s);
