@@ -441,25 +441,36 @@ ParsedOption parse_option(std::string whole_arg) noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const eq_idx = whole_arg.find('=', num_of_dashes);
   bool const has_equals = eq_idx != std::string::npos;
-  if (has_equals) {
-    // long or short option with value
-    auto const name = whole_arg.substr(num_of_dashes, eq_idx - num_of_dashes);
-    auto const value = whole_arg.substr(eq_idx + 1);
-    return {name, value};
-  } else if (num_of_dashes == 1 && whole_arg.length() > 2) {
-    // has one dash, hence short option
-    // but is longer than 2 characters and has no equals
-    // hence short option with value (e.g. `-O2`)
-    // (possibility of many short flags has already been tested for)
+  if (num_of_dashes == 1) {
+    // short option, e.g. `-O`
     auto const name = whole_arg.substr(1, 1);
-    auto const value = whole_arg.substr(2);
-    return {name, value};
-  } else {
-    // no equals and has 1 or 2 prefix dashes
-    // hence option with next CLI argument as value
-    auto const name = whole_arg.substr(num_of_dashes);
-    return {.name = name, .value = std::nullopt};
+    if (has_equals) {
+      if (whole_arg.length() > 3) {
+        // has equals followed by some value, e.g. `-O=2`
+        return {name, whole_arg.substr(3)};
+      }
+      // should this `-O=` be handled like this?
+      return {name, ""};
+    }
+    if (whole_arg.length() > 2) {
+      // only followed by some value, e.g. `-O2`
+      return {name, whole_arg.substr(2)};
+    }
+    // case left: has no value (next CLI argument could be it)
+    return {name, std::nullopt};
   }
+  if (num_of_dashes == 2 && whole_arg.length() > 3) {
+    // long option, e.g. `--name`
+    if (has_equals) {
+      auto const name = whole_arg.substr(2, eq_idx - 2);
+      auto const value = whole_arg.substr(eq_idx + 1);
+      return {name, value};
+    }
+    // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
+    return {whole_arg.substr(2), std::nullopt};
+  }
+  // not an option
+  return {"", std::nullopt};
 }
 
 } // namespace parsing
