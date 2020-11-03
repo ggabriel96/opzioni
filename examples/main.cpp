@@ -27,9 +27,7 @@ int main(int argc, char const *argv[]) {
 
   program.opt("double", 'd').help("A double").otherwise(7.11);
   program.opt("last-name").help("Your last name");
-  program.opt("o")
-      .help("Showing how bad is an option with only a short name. The `--` is intentionally kept")
-      .otherwise("oh"s);
+  program.opt("o").help("Options with only short names are also supported").otherwise("oh"s);
   program.opt("num", 'n').help("A list of numbers").action(append<int>);
   program.opt("str").help("Appends to a list of strings").action(append<std::string>).otherwise(std::vector{""s});
   program.opt("vec")
@@ -46,9 +44,7 @@ int main(int argc, char const *argv[]) {
       .set("do something!"s)
       .otherwise("nope"s)
       .help("The equivalent of Python's argparse `store_const`");
-  program.flag("t")
-      .help("Showing how bad is a flag with only a short name. The `--` is intentionally kept")
-      .otherwise(false);
+  program.flag("t").help("Flags with only short names are also supported").otherwise(false);
 
   auto &subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
