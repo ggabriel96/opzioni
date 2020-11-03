@@ -237,24 +237,21 @@ std::string HelpFormatter::usage() const noexcept {
   if (!options.empty()) {
     auto const margin_size = margin * int(should_add_margin);
     auto const opt_usage = options | transform(&Option::format_usage);
-    usage_parts.emplace_back(
-        fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(opt_usage, " ")));
+    usage_parts.emplace_back(fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(opt_usage, " ")));
     should_add_margin = true;
   }
 
   if (!flags.empty()) {
     auto const margin_size = margin * int(should_add_margin);
     auto const flag_usage = flags | transform(&Flag::format_usage);
-    usage_parts.emplace_back(
-        fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(flag_usage, " ")));
+    usage_parts.emplace_back(fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(flag_usage, " ")));
     should_add_margin = true;
   }
 
   if (!cmds.empty()) {
     auto const margin_size = margin * int(should_add_margin);
     auto const cmd_usage = cmds | transform([](auto const &cmd) { return cmd->name; });
-    usage_parts.emplace_back(
-        fmt::format("{: >{}}{{{}}}\n", ' ', margin_size, fmt::join(cmd_usage, ", ")));
+    usage_parts.emplace_back(fmt::format("{: >{}}{{{}}}\n", ' ', margin_size, fmt::join(cmd_usage, ", ")));
   }
 
   return fmt::format("{}", fmt::join(usage_parts, ""));
