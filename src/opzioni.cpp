@@ -17,30 +17,38 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noex
   return fmt::format("<{}>", name);
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
-  if (this->is_required)
-    return fmt::format("--{0} <{0}>", name);
-  return fmt::format("[--{0} <{0}>]", name);
-}
-
-template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
-  if (this->is_required)
-    return fmt::format("--{}", name);
-  return fmt::format("[--{}]", name);
-}
-
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return name; }
+
+template <> std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
+  // width of: at least one dash + another dash if not single letter + name length
+  int const width = 1 + int(name.length() > 1) + name.length();
+  if (this->is_required)
+    return fmt::format("{0:->{1}} <{0}>", name, width);
+  return fmt::format("[{0:->{1}} <{0}>]", name, width);
+}
 
 template <> std::string Arg<ArgumentType::OPTION>::format_long_usage() const noexcept {
   if (has_abbrev())
     return fmt::format("-{0}, --{1} <{0}>", abbrev, name);
-  return fmt::format("--{0} <{0}>", name);
+  // width of: at least one dash + another dash if not single letter + name length
+  int const width = 1 + int(name.length() > 1) + name.length();
+  return fmt::format("{0:->{1}} <{0}>", name, width);
+}
+
+template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
+  // width of: at least one dash + another dash if not single letter + name length
+  int const width = 1 + int(name.length() > 1) + name.length();
+  if (this->is_required)
+    return fmt::format("{0:->{1}}", name, width);
+  return fmt::format("[{0:->{1}}]", name, width);
 }
 
 template <> std::string Arg<ArgumentType::FLAG>::format_long_usage() const noexcept {
   if (has_abbrev())
     return fmt::format("-{}, --{}", abbrev, name);
-  return fmt::format("--{}", name);
+  // width of: at least one dash + another dash if not single letter + name length
+  int const width = 1 + int(name.length() > 1) + name.length();
+  return fmt::format("{0:->{1}}", name, width);
 }
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_description() const noexcept {
