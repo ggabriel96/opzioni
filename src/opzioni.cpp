@@ -205,6 +205,28 @@ HelpFormatter::HelpFormatter(Program const &program)
   std::sort(cmds.begin(), cmds.end(), [](auto const &lhs, auto const &rhs) { return *lhs < *rhs; });
 }
 
+std::vector<std::vector<std::string_view>> HelpFormatter::limit_within(std::vector<std::string> const &words,
+                                                                       std::size_t const max_width) const noexcept {
+  return limit_within(words, max_width, 0);
+}
+
+std::vector<std::vector<std::string_view>> HelpFormatter::limit_within(std::vector<std::string> const &words,
+                                                                       std::size_t const max_width,
+                                                                       std::size_t const margin_left) const noexcept {
+  std::size_t cur_max = max_width - margin_left;
+  std::vector<std::vector<std::string_view>> lines(1);
+  for (auto const &word : words) {
+    if (word.length() <= cur_max) {
+      lines.back().push_back(word);
+      cur_max -= (word.length() + 1); // +1 for space in between
+    } else {
+      lines.push_back({word});
+      cur_max = max_width - margin_left - word.length();
+    }
+  }
+  return lines;
+}
+
 std::size_t HelpFormatter::get_help_margin() const noexcept {
   using std::views::transform;
   std::array<std::size_t, 3> lengths{0, 0, 0};

@@ -12,6 +12,7 @@
 #include <ranges>
 #include <span>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -315,6 +316,10 @@ class HelpFormatter {
 public:
   HelpFormatter(Program const &);
 
+  std::vector<std::vector<std::string_view>> limit_within(std::vector<std::string> const &,
+                                                          std::size_t const) const noexcept;
+  std::vector<std::vector<std::string_view>> limit_within(std::vector<std::string> const &, std::size_t const,
+                                                          std::size_t const) const noexcept;
   std::size_t get_help_margin() const noexcept;
 
   std::string title() const noexcept;
