@@ -249,42 +249,36 @@ std::string HelpFormatter::title() const noexcept {
 }
 
 std::string HelpFormatter::usage() const noexcept {
-  using std::views::transform;
+  using std::views::drop;
+  using std::views::take;
 
-  std::vector<std::string> usage_parts;
-  usage_parts.reserve(5);
+  std::vector<std::string> words;
+  words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
 
-  usage_parts.emplace_back(fmt::format("Usage: {}", program_name));
-  auto const margin = 7 + program_name.length() + 1; // 7 == "Usage: ".length() + 1 space
+  auto insert = std::back_inserter(words);
+  words.push_back(program_name);
+  std::ranges::transform(positionals, insert, &Positional::format_usage);
+  std::ranges::transform(options, insert, &Option::format_usage);
+  std::ranges::transform(flags, insert, &Flag::format_usage);
 
-  bool should_add_margin = false;
-  if (!positionals.empty()) {
-    auto const pos_usage = positionals | transform(&Positional::format_usage);
-    usage_parts.emplace_back(fmt::format(" {}\n", fmt::join(pos_usage, " ")));
-    should_add_margin = true;
+  if (cmds.size() == 1) {
+    words.push_back(fmt::format("{{{}}}", cmds.front()->name));
+  } else {
+    // don't need space after commas because we'll join words with spaces afterwards
+    words.push_back(fmt::format("{{{},", cmds.front()->name));
+    std::ranges::transform(cmds | drop(1) | take(cmds.size() - 2), insert,
+                           [](auto const &cmd) { return fmt::format("{},", cmd->name); });
+    words.push_back(fmt::format("{}}}", cmds.back()->name));
   }
 
-  if (!options.empty()) {
-    auto const margin_size = margin * int(should_add_margin);
-    auto const opt_usage = options | transform(&Option::format_usage);
-    usage_parts.emplace_back(fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(opt_usage, " ")));
-    should_add_margin = true;
-  }
+  auto const margin_width = 4;
+  auto const margin = std::string(margin_width, ' ');
+  auto const lines = limit_within(words, 80, margin_width);
 
-  if (!flags.empty()) {
-    auto const margin_size = margin * int(should_add_margin);
-    auto const flag_usage = flags | transform(&Flag::format_usage);
-    usage_parts.emplace_back(fmt::format("{: >{}}{}\n", ' ', margin_size, fmt::join(flag_usage, " ")));
-    should_add_margin = true;
-  }
-
-  if (!cmds.empty()) {
-    auto const margin_size = margin * int(should_add_margin);
-    auto const cmd_usage = cmds | transform([](auto const &cmd) { return cmd->name; });
-    usage_parts.emplace_back(fmt::format("{: >{}}{{{}}}\n", ' ', margin_size, fmt::join(cmd_usage, ", ")));
-  }
-
-  return fmt::format("{}", fmt::join(usage_parts, ""));
+  return fmt::format("Usage:\n{}\n", fmt::join(lines | std::views::transform([&margin](auto const &line) {
+                                                 return fmt::format("{}{}", margin, fmt::join(line, " "));
+                                               }),
+                                               "\n"));
 }
 
 std::string HelpFormatter::help() const noexcept {
