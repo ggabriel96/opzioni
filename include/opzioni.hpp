@@ -169,9 +169,7 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) {
-    return abbrev != '\0';
-  }
+  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return abbrev != '\0'; }
 
   std::string format_description() const noexcept;
   std::string format_usage() const noexcept;
@@ -183,7 +181,8 @@ template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg)
 }
 
 template <ArgumentType type> bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
-  if (lhs.is_required == rhs.is_required) return lhs.name < rhs.name;
+  if (lhs.is_required == rhs.is_required)
+    return lhs.name < rhs.name;
   return lhs.is_required && !rhs.is_required;
 }
 
@@ -288,7 +287,7 @@ struct Program {
 
   Option &opt(std::string);
   Option &opt(std::string, char);
-  
+
   Program &cmd(std::string);
   Positional &pos(std::string);
 
@@ -305,9 +304,7 @@ struct Program {
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
 
-  auto operator<=>(Program const &other) const noexcept {
-    return name <=> other.name;
-  }
+  auto operator<=>(Program const &other) const noexcept { return name <=> other.name; }
 };
 
 // +------------+
