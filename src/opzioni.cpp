@@ -243,8 +243,8 @@ std::string HelpFormatter::title() const noexcept {
 }
 
 std::string HelpFormatter::usage() const noexcept {
-  using std::views::drop;
-  using std::views::take;
+  using fmt::format, fmt::join;
+  using std::views::drop, std::views::take, std::views::transform;
 
   std::vector<std::string> words;
   words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
@@ -256,20 +256,18 @@ std::string HelpFormatter::usage() const noexcept {
   std::ranges::transform(flags, insert, &Flag::format_usage);
 
   if (cmds.size() == 1) {
-    words.push_back(fmt::format("{{{}}}", cmds.front()->name));
+    words.push_back(format("{{{}}}", cmds.front()->name));
   } else {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(fmt::format("{{{},", cmds.front()->name));
+    words.push_back(format("{{{},", cmds.front()->name));
     std::ranges::transform(cmds | drop(1) | take(cmds.size() - 2), insert,
-                           [](auto const &cmd) { return fmt::format("{},", cmd->name); });
-    words.push_back(fmt::format("{}}}", cmds.back()->name));
+                           [](auto const &cmd) { return format("{},", cmd->name); });
+    words.push_back(format("{}}}", cmds.back()->name));
   }
 
-  auto const lines = limit_within(words, this->max_width, 4);
-  return fmt::format("Usage:\n{}\n", fmt::join(lines | std::views::transform([](auto const &line) {
-                                                 return fmt::format("    {}", fmt::join(line, " "));
-                                               }),
-                                               "\n"));
+  auto const split_lines = limit_within(words, this->max_width, 4);
+  auto const lines = split_lines | transform([](auto const &line) { return format("    {}", join(line, " ")); });
+  return format("Usage:\n{}\n", join(lines, "\n"));
 }
 
 std::string HelpFormatter::help() const noexcept {
