@@ -316,17 +316,13 @@ class HelpFormatter {
 public:
   HelpFormatter(Program const &);
 
-  std::size_t help_padding_size() const noexcept;
-
   std::string title() const noexcept;
   std::string usage() const noexcept;
   std::string help() const noexcept;
   std::string description() const noexcept;
 
-  std::vector<std::vector<std::string_view>> limit_within(auto const &words,
-                                                          std::size_t const max_width) const noexcept {
-    return limit_within(words, max_width, 0);
-  }
+  std::size_t help_padding_size() const noexcept;
+  auto limit_within(std::string const &, std::size_t const, std::size_t const) const noexcept;
 
   std::vector<std::vector<std::string_view>> limit_within(auto const &words, std::size_t const max_width,
                                                           std::size_t const margin_left) const noexcept {
@@ -356,12 +352,9 @@ private:
   std::string format_cmds_help(std::size_t const) const noexcept;
 
   std::string format_arg_help(auto const &arg, std::string_view const padding) const noexcept {
-    using std::views::drop, std::views::split;
-    auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
-
+    using std::views::drop;
     auto const description = arg.format_description();
-    auto const words = description | split(' ') | std::views::transform(range2str_view);
-    auto const lines = limit_within(words, 80, padding.size());
+    auto const lines = limit_within(description, 80, padding.size());
 
     std::vector<std::string> help_lines;
     help_lines.reserve(lines.size());
