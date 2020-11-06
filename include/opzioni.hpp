@@ -355,12 +355,32 @@ private:
 
   std::string format_cmds_help(std::size_t const) const noexcept;
 
-  std::string format_help(auto const &range, std::size_t const margin) const noexcept {
+  std::string format_arg_help(auto const &arg, std::string_view const padding) const noexcept {
+    using std::views::drop, std::views::split;
+    auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
+
+    auto const description = arg.format_description();
+    auto const words = description | split(' ') | std::views::transform(range2str_view);
+    auto const lines = limit_within(words, 80, padding.size());
+
+    std::vector<std::string> help_lines;
+    help_lines.reserve(lines.size());
+    help_lines.push_back(
+        fmt::format("    {:<{}} {}", arg.format_long_usage(), padding.size(), fmt::join(lines.front(), " ")));
+    // rest of the lines, if they exist
+    std::ranges::transform(lines | drop(1), std::back_inserter(help_lines), [&padding](auto const &line) {
+      return fmt::format("     {}{}", padding, fmt::join(line, " "));
+    });
+
+    return fmt::format("{}", fmt::join(help_lines, "\n"));
+  }
+
+  std::string format_help(auto const &range, std::size_t const margin_width) const noexcept {
     using std::views::transform;
-    auto const format = [margin](auto const &arg) {
-      return fmt::format("    {:<{}} {}", arg.format_long_usage(), margin, arg.format_description());
-    };
-    return fmt::format("{}", fmt::join(range | transform(format), "\n"));
+    auto const padding = std::string(margin_width, ' ');
+    return fmt::format(
+        "{}", fmt::join(range | transform([this, padding](auto const &arg) { return format_arg_help(arg, padding); }),
+                        "\n\n"));
   }
 };
 
