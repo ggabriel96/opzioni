@@ -316,7 +316,7 @@ struct Program {
 
 class HelpFormatter {
 public:
-  HelpFormatter(Program const &);
+  HelpFormatter(Program const &, std::size_t const);
 
   std::string title() const noexcept;
   std::string usage() const noexcept;
@@ -344,9 +344,10 @@ public:
   }
 
 private:
-  std::string program_name;
-  std::string program_description;
-  std::string program_epilog;
+  std::size_t const max_width;
+  std::string const program_name;
+  std::string const program_description;
+  std::string const program_epilog;
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
@@ -355,7 +356,7 @@ private:
   std::string format_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
     auto const description = arg.format_description();
-    auto const lines = limit_within(description, 80, padding.size());
+    auto const lines = limit_within(description, this->max_width - 4, padding.size());
 
     std::vector<std::string> help_lines;
     help_lines.reserve(lines.size());

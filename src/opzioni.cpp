@@ -140,7 +140,7 @@ std::string Program::format_long_usage() const noexcept { return name; }
 std::string Program::format_description() const noexcept { return epilog; }
 
 void Program::print_usage(std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this);
+  HelpFormatter formatter(*this, 80);
   ostream << formatter.title();
   ostream << nl;
   ostream << formatter.usage();
@@ -200,9 +200,10 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 // | formatting |
 // +------------+
 
-HelpFormatter::HelpFormatter(Program const &program)
-    : program_name(program.name), program_description(program.description), program_epilog(program.epilog),
-      flags(program.flags), options(program.options), positionals(program.positionals), cmds(program.cmds) {
+HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width)
+    : max_width(max_width), program_name(program.name), program_description(program.description),
+      program_epilog(program.epilog), flags(program.flags), options(program.options), positionals(program.positionals),
+      cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
@@ -266,7 +267,7 @@ std::string HelpFormatter::usage() const noexcept {
 
   auto const margin_width = 4;
   auto const margin = std::string(margin_width, ' ');
-  auto const lines = limit_within(words, 80, margin_width);
+  auto const lines = limit_within(words, this->max_width, margin_width);
 
   return fmt::format("Usage:\n{}\n", fmt::join(lines | std::views::transform([&margin](auto const &line) {
                                                  return fmt::format("{}{}", margin, fmt::join(line, " "));
@@ -305,7 +306,7 @@ std::string HelpFormatter::description() const noexcept {
     return "";
   using fmt::join;
   using std::views::transform;
-  auto const lines = limit_within(program_description, 80);
+  auto const lines = limit_within(program_description, this->max_width);
   return fmt::format("{}.\n", join(lines | transform([](auto const &words) { return join(words, " "); }), "\n"));
 }
 
