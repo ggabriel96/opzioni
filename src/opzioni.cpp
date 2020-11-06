@@ -265,12 +265,9 @@ std::string HelpFormatter::usage() const noexcept {
     words.push_back(fmt::format("{}}}", cmds.back()->name));
   }
 
-  auto const margin_width = 4;
-  auto const margin = std::string(margin_width, ' ');
-  auto const lines = limit_within(words, this->max_width, margin_width);
-
-  return fmt::format("Usage:\n{}\n", fmt::join(lines | std::views::transform([&margin](auto const &line) {
-                                                 return fmt::format("{}{}", margin, fmt::join(line, " "));
+  auto const lines = limit_within(words, this->max_width, 4);
+  return fmt::format("Usage:\n{}\n", fmt::join(lines | std::views::transform([](auto const &line) {
+                                                 return fmt::format("    {}", fmt::join(line, " "));
                                                }),
                                                "\n"));
 }
