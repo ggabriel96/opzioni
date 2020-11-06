@@ -223,13 +223,18 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
   return 3 * std::ranges::max(lengths);
 }
 
-
-
 std::string HelpFormatter::title() const noexcept {
   if (program_epilog.empty()) {
     return fmt::format("{}.\n", program_name);
   } else {
-    return fmt::format("{} -- {}.\n", program_name, program_epilog);
+    auto const max_width = this->max_width - program_name.length() - 5; // 5 for extra characters below
+    if (program_epilog.length() > max_width) {
+      auto const rest = limit_string_within(program_epilog.substr(max_width), this->max_width);
+      return fmt::format("{} -- {}\n{}.\n", program_name, program_epilog.substr(0, max_width), rest);
+    } else {
+      return fmt::format("{} -- {}.\n", program_name, program_epilog);
+    }
+    
   }
 }
 
@@ -290,10 +295,7 @@ std::string HelpFormatter::help() const noexcept {
 std::string HelpFormatter::description() const noexcept {
   if (program_description.empty())
     return "";
-  using fmt::join;
-  using std::views::transform;
-  auto const lines = limit_within(program_description, this->max_width);
-  return fmt::format("{}.\n", join(lines | transform([](auto const &words) { return join(words, " "); }), "\n"));
+  return fmt::format("{}.\n", limit_string_within(program_description, this->max_width));
 }
 
 // +---------+

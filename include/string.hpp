@@ -26,7 +26,10 @@ std::vector<std::vector<std::string_view>> limit_within(auto const &words, std::
 
 std::vector<std::vector<std::string_view>> limit_within(std::string const &, std::size_t const,
                                                         std::size_t const) noexcept;
+
 std::vector<std::vector<std::string_view>> limit_within(std::string const &, std::size_t const) noexcept;
+
+std::string limit_string_within(std::string const &, std::size_t const);
 
 } // namespace opzioni
 
