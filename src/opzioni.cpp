@@ -229,6 +229,10 @@ auto HelpFormatter::limit_within(std::string const &text, std::size_t const max_
   return limit_within(words, max_width, margin_left);
 }
 
+auto HelpFormatter::limit_within(std::string const &text, std::size_t const max_width) const noexcept {
+  return limit_within(text, max_width, 0);
+}
+
 std::string HelpFormatter::title() const noexcept {
   if (program_epilog.empty()) {
     return fmt::format("{}.\n", program_name);
@@ -299,7 +303,10 @@ std::string HelpFormatter::help() const noexcept {
 std::string HelpFormatter::description() const noexcept {
   if (program_description.empty())
     return "";
-  return fmt::format("{}.\n", program_description);
+  using fmt::join;
+  using std::views::transform;
+  auto const lines = limit_within(program_description, 80);
+  return fmt::format("{}.\n", join(lines | transform([](auto const &words) { return join(words, " "); }), "\n"));
 }
 
 // +---------+

@@ -325,6 +325,7 @@ public:
 
   std::size_t help_padding_size() const noexcept;
   auto limit_within(std::string const &, std::size_t const, std::size_t const) const noexcept;
+  auto limit_within(std::string const &, std::size_t const) const noexcept;
 
   std::vector<std::vector<std::string_view>> limit_within(auto const &words, std::size_t const max_width,
                                                           std::size_t const margin_left) const noexcept {
