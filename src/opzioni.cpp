@@ -218,7 +218,7 @@ std::vector<std::vector<std::string_view>> HelpFormatter::limit_within(std::vect
   for (auto const &word : words) {
     if (word.length() <= cur_max) {
       lines.back().push_back(word);
-      cur_max -= (word.length() + 1); // +1 for space in between
+      cur_max -= (word.length() + (word.length() < cur_max)); // +1 for space in between if not last word
     } else {
       lines.push_back({word});
       cur_max = max_width - margin_left - word.length();
