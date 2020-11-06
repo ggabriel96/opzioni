@@ -223,16 +223,7 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
   return 3 * std::ranges::max(lengths);
 }
 
-auto HelpFormatter::limit_within(std::string const &text, std::size_t const max_width,
-                                 std::size_t const margin_left) const noexcept {
-  auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
-  auto const words = text | std::views::split(' ') | std::views::transform(range2str_view);
-  return limit_within(words, max_width, margin_left);
-}
 
-auto HelpFormatter::limit_within(std::string const &text, std::size_t const max_width) const noexcept {
-  return limit_within(text, max_width, 0);
-}
 
 std::string HelpFormatter::title() const noexcept {
   if (program_epilog.empty()) {
