@@ -351,8 +351,6 @@ private:
   std::vector<Positional> positionals;
   std::vector<memory::ValuePtr<Program>> cmds;
 
-  std::string format_cmds_help(std::size_t const) const noexcept;
-
   std::string format_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
     auto const description = arg.format_description();

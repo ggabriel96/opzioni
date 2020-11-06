@@ -289,7 +289,8 @@ std::string HelpFormatter::help() const noexcept {
   }
 
   if (!cmds.empty()) {
-    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_cmds_help(padding_size)));
+    auto const cmd_refs = cmds | std::views::transform([](auto const &cmd) -> Program const & { return *cmd; });
+    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_help(cmd_refs, padding_size)));
   }
 
   return fmt::format("{}", fmt::join(help_parts, "\n"));
@@ -299,14 +300,6 @@ std::string HelpFormatter::description() const noexcept {
   if (program_description.empty())
     return "";
   return fmt::format("{}.\n", program_description);
-}
-
-std::string HelpFormatter::format_cmds_help(std::size_t const padding_size) const noexcept {
-  using std::views::transform;
-  auto const format = [padding_size](auto const &cmd) {
-    return fmt::format("    {:<{}} {}", cmd->name, padding_size, cmd->epilog);
-  };
-  return fmt::format("{}", fmt::join(cmds | transform(format), "\n"));
 }
 
 // +---------+
