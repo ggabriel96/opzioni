@@ -316,7 +316,7 @@ class HelpFormatter {
 public:
   HelpFormatter(Program const &);
 
-  std::size_t get_help_margin() const noexcept;
+  std::size_t help_padding_size() const noexcept;
 
   std::string title() const noexcept;
   std::string usage() const noexcept;
@@ -369,15 +369,15 @@ private:
         fmt::format("    {:<{}} {}", arg.format_long_usage(), padding.size(), fmt::join(lines.front(), " ")));
     // rest of the lines, if they exist
     std::ranges::transform(lines | drop(1), std::back_inserter(help_lines), [&padding](auto const &line) {
-      return fmt::format("     {}{}", padding, fmt::join(line, " "));
+      return fmt::format("    {} {}", padding, fmt::join(line, " "));
     });
 
     return fmt::format("{}", fmt::join(help_lines, "\n"));
   }
 
-  std::string format_help(auto const &range, std::size_t const margin_width) const noexcept {
+  std::string format_help(auto const &range, std::size_t const padding_size) const noexcept {
     using std::views::transform;
-    auto const padding = std::string(margin_width, ' ');
+    auto const padding = std::string(padding_size, ' ');
     return fmt::format(
         "{}", fmt::join(range | transform([this, padding](auto const &arg) { return format_arg_help(arg, padding); }),
                         "\n\n"));

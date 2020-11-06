@@ -205,7 +205,7 @@ HelpFormatter::HelpFormatter(Program const &program)
   std::sort(cmds.begin(), cmds.end(), [](auto const &lhs, auto const &rhs) { return *lhs < *rhs; });
 }
 
-std::size_t HelpFormatter::get_help_margin() const noexcept {
+std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
   std::array<std::size_t, 3> lengths{0, 0, 0};
   auto const get_name = [](auto const &arg) -> std::string_view { return arg.name; };
@@ -260,25 +260,25 @@ std::string HelpFormatter::usage() const noexcept {
 }
 
 std::string HelpFormatter::help() const noexcept {
-  auto const margin = get_help_margin();
+  auto const padding_size = help_padding_size();
 
   std::vector<std::string> help_parts;
   help_parts.reserve(4);
 
   if (!positionals.empty()) {
-    help_parts.emplace_back(fmt::format("Positionals:\n{}\n", format_help(positionals, margin)));
+    help_parts.emplace_back(fmt::format("Positionals:\n{}\n", format_help(positionals, padding_size)));
   }
 
   if (!options.empty()) {
-    help_parts.emplace_back(fmt::format("Options:\n{}\n", format_help(options, margin)));
+    help_parts.emplace_back(fmt::format("Options:\n{}\n", format_help(options, padding_size)));
   }
 
   if (!flags.empty()) {
-    help_parts.emplace_back(fmt::format("Flags:\n{}\n", format_help(flags, margin)));
+    help_parts.emplace_back(fmt::format("Flags:\n{}\n", format_help(flags, padding_size)));
   }
 
   if (!cmds.empty()) {
-    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_cmds_help(margin)));
+    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_cmds_help(padding_size)));
   }
 
   return fmt::format("{}", fmt::join(help_parts, "\n"));
@@ -290,10 +290,10 @@ std::string HelpFormatter::description() const noexcept {
   return fmt::format("{}.\n", program_description);
 }
 
-std::string HelpFormatter::format_cmds_help(std::size_t const margin) const noexcept {
+std::string HelpFormatter::format_cmds_help(std::size_t const padding_size) const noexcept {
   using std::views::transform;
-  auto const format = [margin](auto const &cmd) {
-    return fmt::format("    {:<{}} {}", cmd->name, margin, cmd->epilog);
+  auto const format = [padding_size](auto const &cmd) {
+    return fmt::format("    {:<{}} {}", cmd->name, padding_size, cmd->epilog);
   };
   return fmt::format("{}", fmt::join(cmds | transform(format), "\n"));
 }
