@@ -295,9 +295,11 @@ struct Program {
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
-  void set_defaults(ArgMap &) const noexcept;
-
+  std::string format_long_usage() const noexcept;
+  std::string format_description() const noexcept;
   void print_usage(std::ostream & = std::cout) const noexcept;
+
+  void set_defaults(ArgMap &) const noexcept;
 
   Program *is_command(std::string const &) const noexcept;
   bool is_flag(std::string const &) const noexcept;

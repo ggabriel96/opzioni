@@ -135,6 +135,10 @@ ArgMap Program::operator()(std::span<char const *> args) {
   return map;
 }
 
+std::string Program::format_long_usage() const noexcept { return name; }
+
+std::string Program::format_description() const noexcept { return epilog; }
+
 void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this);
   ostream << formatter.title();
