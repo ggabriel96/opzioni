@@ -316,16 +316,33 @@ class HelpFormatter {
 public:
   HelpFormatter(Program const &);
 
-  std::vector<std::vector<std::string_view>> limit_within(std::vector<std::string> const &,
-                                                          std::size_t const) const noexcept;
-  std::vector<std::vector<std::string_view>> limit_within(std::vector<std::string> const &, std::size_t const,
-                                                          std::size_t const) const noexcept;
   std::size_t get_help_margin() const noexcept;
 
   std::string title() const noexcept;
   std::string usage() const noexcept;
   std::string help() const noexcept;
   std::string description() const noexcept;
+
+  std::vector<std::vector<std::string_view>> limit_within(auto const &words,
+                                                          std::size_t const max_width) const noexcept {
+    return limit_within(words, max_width, 0);
+  }
+
+  std::vector<std::vector<std::string_view>> limit_within(auto const &words, std::size_t const max_width,
+                                                          std::size_t const margin_left) const noexcept {
+    std::size_t cur_max = max_width - margin_left;
+    std::vector<std::vector<std::string_view>> lines(1);
+    for (auto const &word : words) {
+      if (word.length() <= cur_max) {
+        lines.back().push_back(word);
+        cur_max -= (word.length() + (word.length() < cur_max)); // +1 for space in between if not last word
+      } else {
+        lines.push_back({word});
+        cur_max = max_width - margin_left - word.length();
+      }
+    }
+    return lines;
+  }
 
 private:
   std::string program_name;
