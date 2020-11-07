@@ -315,16 +315,17 @@ struct Program {
 
 class HelpFormatter {
 public:
-  HelpFormatter(Program const &, std::size_t const);
+  HelpFormatter(Program const &, std::size_t const, std::ostream &);
 
-  std::string title() const noexcept;
+  void print_title() const noexcept;
   std::string usage() const noexcept;
   std::string help() const noexcept;
-  std::string description() const noexcept;
+  void print_description() const noexcept;
 
   std::size_t help_padding_size() const noexcept;
 
 private:
+  std::ostream &out;
   std::size_t const max_width;
   std::string const program_name;
   std::string const program_description;

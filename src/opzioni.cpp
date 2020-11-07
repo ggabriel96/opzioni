@@ -140,14 +140,14 @@ std::string Program::format_long_usage() const noexcept { return name; }
 std::string Program::format_description() const noexcept { return epilog; }
 
 void Program::print_usage(std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this, 80);
-  ostream << formatter.title();
+  HelpFormatter formatter(*this, 80, ostream);
+  formatter.print_title();
   ostream << nl;
   ostream << formatter.usage();
   ostream << nl;
   ostream << formatter.help();
   ostream << nl;
-  ostream << formatter.description();
+  formatter.print_description();
 }
 
 void Program::set_defaults(ArgMap &map) const noexcept {
@@ -200,8 +200,8 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 // | formatting |
 // +------------+
 
-HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width)
-    : max_width(max_width), program_name(program.name), program_description(program.description),
+HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
+    : out(out), max_width(max_width), program_name(program.name), program_description(program.description),
       program_epilog(program.epilog), flags(program.flags), options(program.options), positionals(program.positionals),
       cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
@@ -223,15 +223,15 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
   return 3 * std::ranges::max(lengths);
 }
 
-std::string HelpFormatter::title() const noexcept {
+void HelpFormatter::print_title() const noexcept {
   if (program_epilog.empty()) {
-    return fmt::format("{}\n", program_name);
+    out << program_name << nl;
   } else {
     auto const epilog = fmt::format("{} -- {}\n", program_name, program_epilog);
     if (epilog.length() <= max_width) {
-      return epilog;
+      out << epilog;
     } else {
-      return fmt::format("{}\n", limit_string_within(epilog, max_width));
+      out << limit_string_within(epilog, max_width) << nl;
     }
   }
 }
@@ -290,10 +290,10 @@ std::string HelpFormatter::help() const noexcept {
   return fmt::format("{}", fmt::join(help_parts, "\n"));
 }
 
-std::string HelpFormatter::description() const noexcept {
-  if (program_description.empty())
-    return "";
-  return fmt::format("{}.\n", limit_string_within(program_description, this->max_width));
+void HelpFormatter::print_description() const noexcept {
+  if (program_description.length() <= max_width)
+    out << program_description << nl;
+  out << limit_string_within(program_description, max_width) << nl;
 }
 
 // +---------+
