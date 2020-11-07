@@ -76,6 +76,6 @@ int main(int argc, char const *argv[]) {
     print("\nCommand name: {}\n", subargs.cmd_name);
     print("Number of arguments: {}\n", subargs.size());
     print("subname: {}\n", subargs["subname"].as<std::string>());
-    print("x: {}\n", subargs.as<bool>("x"));
+    print("ex: {}\n", subargs.as<bool>("ex"));
   }
 }
