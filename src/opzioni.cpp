@@ -119,8 +119,9 @@ Program &Program::cmd(std::string name) {
     throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
   auto const idx = cmds.size();
-  auto &command = cmds.emplace_back(std::make_unique<Program>(name));
-  cmds_idx[command->name] = idx;
+  auto &command = cmds.emplace_back(std::make_unique<Program>());
+  command->name = name;
+  cmds_idx[name] = idx;
   return *command;
 }
 
@@ -129,6 +130,7 @@ ArgMap Program::operator()(int argc, char const *argv[]) {
 }
 
 ArgMap Program::operator()(std::span<char const *> args) {
+  this->name = args[0];
   parsing::Parser parser(*this, args);
   auto map = parser();
   set_defaults(map);
@@ -205,9 +207,9 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 // +------------+
 
 HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
-    : out(out), max_width(max_width), program_name(program.name), program_description(program.description),
-      program_introduction(program.introduction), flags(program.flags), options(program.options),
-      positionals(program.positionals), cmds(program.cmds) {
+    : out(out), max_width(max_width), program_name(program.name), program_title(program.title),
+      program_introduction(program.introduction), program_description(program.description), flags(program.flags),
+      options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
@@ -227,7 +229,12 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
   return 3 * std::ranges::max(lengths);
 }
 
-void HelpFormatter::print_title() const noexcept { out << program_name << nl; }
+void HelpFormatter::print_title() const noexcept {
+  if (!program_title.empty())
+    out << program_title << nl;
+  else
+    out << program_name << nl;
+}
 
 void HelpFormatter::print_intro() const noexcept {
   if (program_introduction.length() <= max_width) {
@@ -404,7 +411,9 @@ std::size_t Parser::operator()(Positional positional) {
 
 std::size_t Parser::operator()(Command cmd) {
   auto const remaining_args_count = args.size() - cmd.index;
+  auto const full_exec_name = fmt::format("{} {}", spec.name, cmd.program.name);
   auto subargs = args.last(remaining_args_count);
+  subargs[0] = full_exec_name.data();
   map.subcmd = memory::ValuePtr(std::make_unique<ArgMap>(std::move(cmd.program(subargs))));
   return remaining_args_count;
 }
