@@ -143,7 +143,7 @@ void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this, 80, ostream);
   formatter.print_title();
   ostream << nl;
-  formatter.print_usage();
+  formatter.print_long_usage();
   ostream << nl;
   formatter.print_help();
   ostream << nl;
@@ -236,7 +236,7 @@ void HelpFormatter::print_title() const noexcept {
   }
 }
 
-void HelpFormatter::print_usage() const noexcept {
+void HelpFormatter::print_long_usage() const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
   using std::views::drop, std::views::take;
