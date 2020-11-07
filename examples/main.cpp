@@ -15,8 +15,8 @@ int main(int argc, char const *argv[]) {
   //   print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
   auto program =
-      Program("main")
-          .intro("A short example file to show what can be done with opzioni because it is so nice!")
+      Program("opzioni's main example")
+          .intro("A short example file to illustrate what can be done with opzioni")
           .details(
               "This is a more detailed description or additional information that goes at the end of the help info");
   program.pos("name").help("Your name");
