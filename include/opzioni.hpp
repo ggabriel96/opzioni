@@ -24,8 +24,6 @@
 
 namespace opzioni {
 
-constexpr char nl = '\n';
-
 // +----------------------------------------+
 // | related to type list and builtin types |
 // +----------------------------------------+

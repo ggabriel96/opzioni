@@ -7,6 +7,14 @@
 
 namespace opzioni {
 
+std::string_view trim(std::string_view sv) noexcept {
+  auto const begin = sv.find_first_not_of(whitespace);
+  auto const end = sv.size() - sv.find_last_not_of(whitespace) - 1;
+  sv.remove_prefix(std::min(begin, sv.size()));
+  sv.remove_suffix(std::min(end, sv.size()));
+  return sv;
+}
+
 std::vector<std::vector<std::string_view>> limit_within(std::string const &text, std::size_t const max_width,
                                                         std::size_t const margin_left) noexcept {
   auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
