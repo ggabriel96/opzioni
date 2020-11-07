@@ -132,7 +132,7 @@ ArgMap Program::operator()(int argc, char const *argv[]) {
 }
 
 ArgMap Program::operator()(std::span<char const *> args) {
-  this->name = args[0];
+  this->path = args[0];
   parsing::Parser parser(*this, args);
   auto map = parser();
   set_defaults(map);
@@ -209,9 +209,9 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 // +------------+
 
 HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
-    : out(out), max_width(max_width), program_name(program.name), program_title(program.title),
-      program_introduction(program.introduction), program_description(program.description), flags(program.flags),
-      options(program.options), positionals(program.positionals), cmds(program.cmds) {
+    : out(out), max_width(max_width), program_title(program.title), program_introduction(program.introduction),
+      program_description(program.description), program_name(program.name), program_path(program.path),
+      flags(program.flags), options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
@@ -234,8 +234,10 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 void HelpFormatter::print_title() const noexcept {
   if (!program_title.empty())
     out << program_title << nl;
-  else
+  else if (!program_name.empty())
     out << program_name << nl;
+  else
+    out << program_path << nl;
 }
 
 void HelpFormatter::print_intro() const noexcept {
@@ -255,7 +257,7 @@ void HelpFormatter::print_long_usage() const noexcept {
   words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
 
   auto insert = std::back_inserter(words);
-  words.push_back(program_name);
+  words.push_back(program_path);
   transform(positionals, insert, &Positional::format_usage);
   transform(options, insert, &Option::format_usage);
   transform(flags, insert, &Flag::format_usage);
@@ -331,7 +333,8 @@ namespace parsing {
 
 ArgMap Parser::operator()() {
   map.reset();
-  map.cmd_name = std::string(args[0]);
+  map.cmd_name = std::string(spec.name);
+  map.cmd_path = std::string(args[0]);
   current_positional_idx = 0;
   for (std::size_t index = 1; index < args.size();) {
     index += std::visit(*this, decide_type(index));
@@ -414,9 +417,9 @@ std::size_t Parser::operator()(Positional positional) {
 
 std::size_t Parser::operator()(Command cmd) {
   auto const remaining_args_count = args.size() - cmd.index;
-  auto const full_exec_name = fmt::format("{} {}", spec.name, cmd.program.name);
+  auto const cmd_path = fmt::format("{} {}", spec.path, cmd.program.name);
   auto subargs = args.last(remaining_args_count);
-  subargs[0] = full_exec_name.data();
+  subargs[0] = cmd_path.data();
   map.subcmd = memory::ValuePtr(std::make_unique<ArgMap>(std::move(cmd.program(subargs))));
   return remaining_args_count;
 }

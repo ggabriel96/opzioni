@@ -106,6 +106,7 @@ struct ArgMap {
   }
 
   std::string cmd_name;
+  std::string cmd_path;
   memory::ValuePtr<ArgMap> subcmd;
   std::map<std::string, ArgValue> args;
 };
@@ -257,10 +258,11 @@ private:
 } // namespace parsing
 
 struct Program {
-  std::string name{};
   std::string title{};
   std::string introduction{};
   std::string description{};
+  std::string name{};
+  std::string path{};
 
   std::vector<Flag> flags;
   std::vector<Option> options;
@@ -331,10 +333,11 @@ public:
 private:
   std::ostream &out;
   std::size_t const max_width;
-  std::string const program_name;
   std::string const program_title;
   std::string const program_introduction;
   std::string const program_description;
+  std::string const program_name;
+  std::string const program_path;
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
