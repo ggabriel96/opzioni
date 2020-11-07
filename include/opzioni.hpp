@@ -258,7 +258,7 @@ private:
 
 struct Program {
   std::string name{};
-  std::string epilog{};
+  std::string introduction{};
   std::string description{};
 
   std::vector<Flag> flags;
@@ -272,14 +272,14 @@ struct Program {
 
   Program(std::string name) : Program(name, {}, {}) {}
 
-  Program(std::string name, std::string epilog) : Program(name, epilog, {}) {}
+  Program(std::string name, std::string introduction) : Program(name, introduction, {}) {}
 
-  Program(std::string name, std::string epilog, std::string description)
-      : name(name), epilog(epilog), description(description) {
+  Program(std::string name, std::string introduction, std::string description)
+      : name(name), introduction(introduction), description(description) {
     flag("help", 'h').help("Display this information").action(actions::print_help);
   }
 
-  Program &help(std::string) noexcept;
+  Program &intro(std::string) noexcept;
   Program &details(std::string) noexcept;
 
   Flag &flag(std::string);
@@ -329,7 +329,7 @@ private:
   std::size_t const max_width;
   std::string const program_name;
   std::string const program_description;
-  std::string const program_epilog;
+  std::string const program_introduction;
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;

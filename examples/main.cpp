@@ -12,11 +12,11 @@ int main(int argc, char const *argv[]) {
   using opzioni::actions::append;
   using namespace std::string_literals;
 
-//   print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
+  //   print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
   auto program =
       Program("main")
-          .help("A short example file to show what can be done with opzioni")
+          .intro("A short example file to show what can be done with opzioni because it is so nice!")
           .details(
               "This is a more detailed description or additional information that goes at the end of the help info");
   program.pos("name").help("Your name");
@@ -46,11 +46,11 @@ int main(int argc, char const *argv[]) {
       .help("The equivalent of Python's argparse `store_const`");
   program.flag("t").help("Flags with only short names are also supported").otherwise(false);
 
-  auto &subcmd = program.cmd("subcmd").help("Just showing how subcommands work");
+  auto &subcmd = program.cmd("subcmd").intro("Just showing how subcommands work");
   subcmd.pos("subname").help("Your name again, please");
   subcmd.flag("ex").help("A nested flag").otherwise(false);
 
-  program.cmd("other").help("An empty subcommand");
+  program.cmd("other").intro("An empty subcommand");
 
   auto const args = program(argc, argv);
   print("\nCommand name: {}\n", args.cmd_name);

@@ -76,8 +76,8 @@ template <> std::string Arg<ArgumentType::FLAG>::format_description() const noex
 // | Program |
 // +---------+
 
-Program &Program::help(std::string epilog) noexcept {
-  this->epilog = epilog;
+Program &Program::intro(std::string introduction) noexcept {
+  this->introduction = introduction;
   return *this;
 }
 
@@ -137,7 +137,7 @@ ArgMap Program::operator()(std::span<char const *> args) {
 
 std::string Program::format_long_usage() const noexcept { return name; }
 
-std::string Program::format_description() const noexcept { return epilog; }
+std::string Program::format_description() const noexcept { return introduction; }
 
 void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this, 80, ostream);
@@ -202,8 +202,8 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 
 HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
     : out(out), max_width(max_width), program_name(program.name), program_description(program.description),
-      program_epilog(program.epilog), flags(program.flags), options(program.options), positionals(program.positionals),
-      cmds(program.cmds) {
+      program_introduction(program.introduction), flags(program.flags), options(program.options),
+      positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
@@ -224,14 +224,14 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 }
 
 void HelpFormatter::print_title() const noexcept {
-  if (program_epilog.empty()) {
+  if (program_introduction.empty()) {
     out << program_name << nl;
   } else {
-    auto const epilog = fmt::format("{} -- {}\n", program_name, program_epilog);
-    if (epilog.length() <= max_width) {
-      out << epilog;
+    auto const introduction = fmt::format("{} -- {}\n", program_name, program_introduction);
+    if (introduction.length() <= max_width) {
+      out << introduction;
     } else {
-      out << limit_string_within(epilog, max_width) << nl;
+      out << limit_string_within(introduction, max_width) << nl;
     }
   }
 }
