@@ -49,6 +49,7 @@ int main(int argc, char const *argv[]) {
 
   auto const args = program(argc, argv);
   print("\nCommand name: {}\n", args.cmd_name);
+  print("Command path: {}\n", args.cmd_path);
   print("Number of arguments: {}\n", args.size());
 
   print("name: {}\n", args.as<std::string>("name"));
