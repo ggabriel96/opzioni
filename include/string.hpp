@@ -13,8 +13,8 @@ constexpr std::string_view whitespace = " \f\n\r\t\v";
 
 std::string_view trim(std::string_view) noexcept;
 
-std::vector<std::vector<std::string_view>> limit_within(auto const &words, std::size_t const max_width,
-                                                        std::size_t const margin_left) noexcept {
+auto limit_within(auto const &words, std::size_t const max_width, std::size_t const margin_left) noexcept
+    -> std::vector<std::vector<std::string_view>> {
   std::size_t cur_max = max_width - margin_left;
   std::vector<std::vector<std::string_view>> lines(1);
   for (auto const &_word : words) {
@@ -30,10 +30,10 @@ std::vector<std::vector<std::string_view>> limit_within(auto const &words, std::
   return lines;
 }
 
-std::vector<std::vector<std::string_view>> limit_within(std::string const &, std::size_t const,
-                                                        std::size_t const) noexcept;
+auto limit_within(std::string const &, std::size_t const, std::size_t const) noexcept
+    -> std::vector<std::vector<std::string_view>>;
 
-std::vector<std::vector<std::string_view>> limit_within(std::string const &, std::size_t const) noexcept;
+auto limit_within(std::string const &, std::size_t const) noexcept -> std::vector<std::vector<std::string_view>>;
 
 std::string limit_string_within(std::string const &, std::size_t const);
 
