@@ -32,7 +32,7 @@ auto limit_within(auto const &words, std::size_t const max_width) noexcept
 
 auto limit_within(std::string const &, std::size_t const) noexcept -> std::vector<std::vector<std::string_view>>;
 
-std::string limit_string_within(std::string const &, std::size_t const);
+std::string limit_string_within(std::string const &, std::size_t const) noexcept;
 
 } // namespace opzioni
 

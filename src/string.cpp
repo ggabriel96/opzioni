@@ -22,7 +22,7 @@ auto limit_within(std::string const &text, std::size_t const max_width) noexcept
   return limit_within(words, max_width);
 }
 
-std::string limit_string_within(std::string const &text, std::size_t const max_width) {
+std::string limit_string_within(std::string const &text, std::size_t const max_width) noexcept {
   auto const split_lines = limit_within(text, max_width);
   auto const lines = split_lines | std::views::transform([](auto const &words) { return fmt::join(words, " "); });
   return fmt::format("{}", fmt::join(lines, "\n"));
