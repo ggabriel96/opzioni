@@ -142,6 +142,10 @@ std::string Program::format_description() const noexcept { return introduction; 
 void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this, 80, ostream);
   formatter.print_title();
+  if (!introduction.empty()) {
+    ostream << nl;
+    formatter.print_intro();
+  }
   ostream << nl;
   formatter.print_long_usage();
   ostream << nl;
@@ -223,16 +227,13 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
   return 3 * std::ranges::max(lengths);
 }
 
-void HelpFormatter::print_title() const noexcept {
-  if (program_introduction.empty()) {
-    out << program_name << nl;
+void HelpFormatter::print_title() const noexcept { out << program_name << nl; }
+
+void HelpFormatter::print_intro() const noexcept {
+  if (program_introduction.length() <= max_width) {
+    out << program_introduction << nl;
   } else {
-    auto const introduction = fmt::format("{} -- {}\n", program_name, program_introduction);
-    if (introduction.length() <= max_width) {
-      out << introduction;
-    } else {
-      out << limit_string_within(introduction, max_width) << nl;
-    }
+    out << limit_string_within(program_introduction, max_width) << nl;
   }
 }
 

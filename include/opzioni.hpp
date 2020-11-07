@@ -318,6 +318,7 @@ public:
   HelpFormatter(Program const &, std::size_t const, std::ostream &);
 
   void print_title() const noexcept;
+  void print_intro() const noexcept;
   void print_long_usage() const noexcept;
   void print_help() const noexcept;
   void print_description() const noexcept;
