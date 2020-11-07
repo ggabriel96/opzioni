@@ -14,7 +14,9 @@ namespace opzioni {
 // +-----+
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
-  return fmt::format("<{}>", name);
+  if (this->is_required)
+    return fmt::format("<{}>", name);
+  return fmt::format("[<{}>]", name);
 }
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return name; }
