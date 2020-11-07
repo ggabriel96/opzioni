@@ -225,16 +225,14 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 
 std::string HelpFormatter::title() const noexcept {
   if (program_epilog.empty()) {
-    return fmt::format("{}.\n", program_name);
+    return fmt::format("{}\n", program_name);
   } else {
-    auto const max_width = this->max_width - program_name.length() - 5; // 5 for extra characters below
-    if (program_epilog.length() > max_width) {
-      auto const rest = limit_string_within(program_epilog.substr(max_width), this->max_width);
-      return fmt::format("{} -- {}\n{}.\n", program_name, program_epilog.substr(0, max_width), rest);
+    auto const epilog = fmt::format("{} -- {}\n", program_name, program_epilog);
+    if (epilog.length() <= max_width) {
+      return epilog;
     } else {
-      return fmt::format("{} -- {}.\n", program_name, program_epilog);
+      return fmt::format("{}\n", limit_string_within(epilog, max_width));
     }
-    
   }
 }
 
