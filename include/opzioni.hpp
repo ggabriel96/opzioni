@@ -319,7 +319,7 @@ public:
 
   void print_title() const noexcept;
   void print_usage() const noexcept;
-  std::string help() const noexcept;
+  void print_help() const noexcept;
   void print_description() const noexcept;
 
   std::size_t help_padding_size() const noexcept;
@@ -335,29 +335,16 @@ private:
   std::vector<Positional> positionals;
   std::vector<memory::ValuePtr<Program>> cmds;
 
-  std::string format_arg_help(auto const &arg, std::string_view const padding) const noexcept {
+  void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
     auto const description = arg.format_description();
-    auto const lines = limit_within(description, this->max_width - 4, padding.size());
-
-    std::vector<std::string> help_lines;
-    help_lines.reserve(lines.size());
-    help_lines.push_back(
-        fmt::format("    {:<{}} {}", arg.format_long_usage(), padding.size(), fmt::join(lines.front(), " ")));
-    // rest of the lines, if they exist
-    std::ranges::transform(lines | drop(1), std::back_inserter(help_lines), [&padding](auto const &line) {
-      return fmt::format("    {} {}", padding, fmt::join(line, " "));
-    });
-
-    return fmt::format("{}", fmt::join(help_lines, "\n"));
-  }
-
-  std::string format_help(auto const &range, std::size_t const padding_size) const noexcept {
-    using std::views::transform;
-    auto const padding = std::string(padding_size, ' ');
-    return fmt::format(
-        "{}", fmt::join(range | transform([this, padding](auto const &arg) { return format_arg_help(arg, padding); }),
-                        "\n\n"));
+    auto const lines = limit_within(description, max_width - 4, padding.size());
+    // print first line
+    out << fmt::format("    {:<{}} {}\n", arg.format_long_usage(), padding.size(), fmt::join(lines.front(), " "));
+    // then print rest of the lines, if they exist
+    for (auto const &line : lines | drop(1)) {
+      out << fmt::format("    {} {}\n", padding, fmt::join(line, " "));
+    };
   }
 };
 

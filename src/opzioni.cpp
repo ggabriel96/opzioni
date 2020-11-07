@@ -145,7 +145,7 @@ void Program::print_usage(std::ostream &ostream) const noexcept {
   ostream << nl;
   formatter.print_usage();
   ostream << nl;
-  ostream << formatter.help();
+  formatter.print_help();
   ostream << nl;
   formatter.print_description();
 }
@@ -266,30 +266,44 @@ void HelpFormatter::print_usage() const noexcept {
   }
 }
 
-std::string HelpFormatter::help() const noexcept {
-  auto const padding_size = help_padding_size();
-
-  std::vector<std::string> help_parts;
-  help_parts.reserve(4);
+void HelpFormatter::print_help() const noexcept {
+  std::string_view pending_nl = "";
+  auto const padding = std::string(help_padding_size(), ' ');
 
   if (!positionals.empty()) {
-    help_parts.emplace_back(fmt::format("Positionals:\n{}\n", format_help(positionals, padding_size)));
+    out << "Positionals:\n";
+    for (auto const &arg : positionals) {
+      print_arg_help(arg, padding);
+    }
+    pending_nl = "\n";
   }
 
   if (!options.empty()) {
-    help_parts.emplace_back(fmt::format("Options:\n{}\n", format_help(options, padding_size)));
+    out << pending_nl << "Options:\n";
+    for (auto const &arg : options) {
+      print_arg_help(arg, padding);
+    }
+    pending_nl = "\n";
+  } else {
+    pending_nl = "";
   }
 
   if (!flags.empty()) {
-    help_parts.emplace_back(fmt::format("Flags:\n{}\n", format_help(flags, padding_size)));
+    out << pending_nl << "Flags:\n";
+    for (auto const &arg : flags) {
+      print_arg_help(arg, padding);
+    }
+    pending_nl = "\n";
+  } else {
+    pending_nl = "";
   }
 
   if (!cmds.empty()) {
-    auto const cmd_refs = cmds | std::views::transform([](auto const &cmd) -> Program const & { return *cmd; });
-    help_parts.emplace_back(fmt::format("Commands:\n{}\n", format_help(cmd_refs, padding_size)));
+    out << pending_nl << "Commands:\n";
+    for (auto const &arg : cmds) {
+      print_arg_help(*arg, padding);
+    }
   }
-
-  return fmt::format("{}", fmt::join(help_parts, "\n"));
 }
 
 void HelpFormatter::print_description() const noexcept {
