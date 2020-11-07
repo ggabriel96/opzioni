@@ -324,7 +324,8 @@ void HelpFormatter::print_description() const noexcept {
     return;
   if (program_description.length() <= max_width)
     out << program_description << nl;
-  out << limit_string_within(program_description, max_width) << nl;
+  else
+    out << limit_string_within(program_description, max_width) << nl;
 }
 
 // +---------+
