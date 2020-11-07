@@ -14,50 +14,44 @@ int main(int argc, char const *argv[]) {
 
   //   print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
-  auto program =
-      Program("opzioni's main example")
-          .intro("A short example file to illustrate what can be done with opzioni")
-          .details(
-              "This is a more detailed description or additional information that goes at the end of the help info");
-  program.pos("name").help("Your name");
-  program.pos("gather-ints")
-      .help("The equivalent of Python's argparse `nargs`, consumes all integers into a vector")
-      .gather<int>()
-      .otherwise(std::vector{-1});
+  auto program = Program("opzioni's main example")
+                     .intro("A short example file illustrating opzioni's simpler features")
+                     .details("This example only covers simple positionals, options, and flags. For examples of more "
+                              "complicated parse actions or subcommands, please take a look at the other examples.");
+
+  program.pos("name").help("Your first name");
 
   program.opt("double", 'd').help("A double").otherwise(7.11);
   program.opt("last-name").help("Your last name");
-  program.opt("o").help("Options with only short names are also supported").otherwise("oh"s);
-  program.opt("num", 'n').help("A list of numbers").action(append<int>);
+  program.opt("o").help("We also support options with only short names").otherwise("oh"s);
+  program.opt("num", 'n').help("Creates a list of numbers with each appearence of this argument").action(append<int>);
   program.opt("str").help("Appends to a list of strings").action(append<std::string>).otherwise(std::vector{""s});
   program.opt("vec")
       .otherwise(std::vector<int>{})
-      .help("Illustrating the difference between appending and assigning to a vector");
-  program.opt("verbosity", 'v').help("Level of verbosity").set(1).otherwise(0);
+      .help("This option uses the default action, so it'll not append to a list from each appearence in the CLI. It "
+            "will instead parse a comma-separated list once");
+  program.opt("verbosity", 'v')
+      .help("Level of verbosity. If present without a value, sets 1. Else, parses the given value")
+      .set(1)
+      .otherwise(0);
 
   program.flag("append", 'a')
       .set(1)
       .otherwise(std::vector{-1})
-      .help("The equivalent of Python's argparse `append_const`")
+      .help("The equivalent of Python's argparse `append_const`: will append the defined value every time it appears "
+            "in the CLI")
       .action(append<int>);
   program.flag("flag", 'f')
       .set("do something!"s)
       .otherwise("nope"s)
-      .help("The equivalent of Python's argparse `store_const`");
-  program.flag("t").help("Flags with only short names are also supported").otherwise(false);
-
-  auto &subcmd = program.cmd("subcmd").intro("Just showing how subcommands work");
-  subcmd.pos("subname").help("Your name again, please");
-  subcmd.flag("ex").help("A nested flag").otherwise(false);
-
-  program.cmd("other").intro("An empty subcommand");
+      .help("The equivalent of Python's argparse `store_const`: will store the defined value if it appears in the CLI");
+  program.flag("t").help("We also support flags with only short names").otherwise(false);
 
   auto const args = program(argc, argv);
   print("\nCommand name: {}\n", args.cmd_name);
   print("Number of arguments: {}\n", args.size());
 
   print("name: {}\n", args.as<std::string>("name"));
-  print("gather-ints: [{}]\n", fmt::join(args.as<std::vector<int>>("gather-ints"), ", "));
 
   print("double: {}\n", args.as<double>("double"));
   print("last-name: {}\n", args.has("last-name"s) ? args.as<std::string>("last-name") : "no last name");
@@ -70,12 +64,4 @@ int main(int argc, char const *argv[]) {
   print("append: {}\n", args.as<std::vector<int>>("append"));
   print("flag: {}\n", args.as<std::string>("flag"));
   print("t: {}\n", args.as<bool>("t"));
-
-  if (args.subcmd != nullptr) {
-    auto subargs = *args.subcmd;
-    print("\nCommand name: {}\n", subargs.cmd_name);
-    print("Number of arguments: {}\n", subargs.size());
-    print("subname: {}\n", subargs["subname"].as<std::string>());
-    print("ex: {}\n", subargs.as<bool>("ex"));
-  }
 }
