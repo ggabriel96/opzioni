@@ -143,7 +143,7 @@ void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this, 80, ostream);
   formatter.print_title();
   ostream << nl;
-  ostream << formatter.usage();
+  formatter.print_usage();
   ostream << nl;
   ostream << formatter.help();
   ostream << nl;
@@ -236,32 +236,34 @@ void HelpFormatter::print_title() const noexcept {
   }
 }
 
-std::string HelpFormatter::usage() const noexcept {
+void HelpFormatter::print_usage() const noexcept {
   using fmt::format, fmt::join;
-  using std::views::drop, std::views::take, std::views::transform;
+  using std::ranges::transform;
+  using std::views::drop, std::views::take;
 
   std::vector<std::string> words;
   words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
 
   auto insert = std::back_inserter(words);
   words.push_back(program_name);
-  std::ranges::transform(positionals, insert, &Positional::format_usage);
-  std::ranges::transform(options, insert, &Option::format_usage);
-  std::ranges::transform(flags, insert, &Flag::format_usage);
+  transform(positionals, insert, &Positional::format_usage);
+  transform(options, insert, &Option::format_usage);
+  transform(flags, insert, &Flag::format_usage);
 
   if (cmds.size() == 1) {
     words.push_back(format("{{{}}}", cmds.front()->name));
   } else {
     // don't need space after commas because we'll join words with spaces afterwards
     words.push_back(format("{{{},", cmds.front()->name));
-    std::ranges::transform(cmds | drop(1) | take(cmds.size() - 2), insert,
-                           [](auto const &cmd) { return format("{},", cmd->name); });
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert, [](auto const &cmd) { return format("{},", cmd->name); });
     words.push_back(format("{}}}", cmds.back()->name));
   }
 
-  auto const split_lines = limit_within(words, this->max_width, 4);
-  auto const lines = split_lines | transform([](auto const &line) { return format("    {}", join(line, " ")); });
-  return format("Usage:\n{}\n", join(lines, "\n"));
+  auto const split_lines = limit_within(words, max_width, 4);
+  out << "Usage:\n";
+  for (auto const &line : split_lines) {
+    out << format("    {}\n", join(line, " "));
+  }
 }
 
 std::string HelpFormatter::help() const noexcept {
