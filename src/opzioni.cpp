@@ -253,7 +253,7 @@ void HelpFormatter::print_long_usage() const noexcept {
 
   if (cmds.size() == 1) {
     words.push_back(format("{{{}}}", cmds.front()->name));
-  } else {
+  } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
     words.push_back(format("{{{},", cmds.front()->name));
     transform(cmds | drop(1) | take(cmds.size() - 2), insert, [](auto const &cmd) { return format("{},", cmd->name); });
