@@ -10,8 +10,8 @@ int main(int argc, char const *argv[]) {
   using namespace std::string_literals;
 
   auto git =
-      Program("opzioni's example simulating the git interface")
-          .intro("An example to illustrate subcommands via simulation of the git CLI")
+      Program("opzioni's simulation of the git CLI")
+          .intro("An example to illustrate subcommands via simulation of the git interface")
           .details(
               "This is a more detailed description or additional information that goes at the end of the help info");
 
