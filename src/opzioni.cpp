@@ -267,7 +267,8 @@ void HelpFormatter::print_long_usage() const noexcept {
     words.push_back(format("{}}}", cmds.back()->name));
   }
 
-  auto const split_lines = limit_within(words, max_width, 4);
+  // -4 because we'll later print a left margin of 4 spaces
+  auto const split_lines = limit_within(words, max_width - 4);
   out << "Usage:\n";
   for (auto const &line : split_lines) {
     out << format("    {}\n", join(line, " "));
