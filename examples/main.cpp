@@ -12,7 +12,7 @@ int main(int argc, char const *argv[]) {
   using opzioni::actions::append;
   using namespace std::string_literals;
 
-  print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
+//   print("argv: {}\n", fmt::join(std::vector(argv, argv + argc), ", "));
 
   auto program =
       Program("main")
