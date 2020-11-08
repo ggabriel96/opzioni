@@ -96,7 +96,7 @@ SCENARIO("positional arguments") {
 
         REQUIRE(result.args.empty());
         REQUIRE(result.cmd_name == cmd_name);
-        REQUIRE(result.subcmd == nullptr);
+        REQUIRE(result.cmd_args == nullptr);
       }
     }
 
@@ -144,7 +144,7 @@ SCENARIO("positional arguments") {
   GIVEN("1 command is specified for the program") {
     auto const cmd_name = "./test";
     auto const subcmd_name = "cmd"s;
-    auto &subcmd = program.cmd(subcmd_name);
+    auto &cmd_args = program.cmd(subcmd_name);
 
     WHEN("the command is given in CLI") {
       std::array argv{cmd_name, subcmd_name.c_str()};
@@ -152,10 +152,10 @@ SCENARIO("positional arguments") {
       THEN("it is parsed as command; both cmd_name are set; everything else is empty") {
         auto const result = program(argv);
 
-        REQUIRE(result.subcmd != nullptr);
-        REQUIRE(result.subcmd->cmd_name == subcmd_name);
-        REQUIRE(result.subcmd->args.empty());
-        REQUIRE(result.subcmd->subcmd == nullptr);
+        REQUIRE(result.cmd_args != nullptr);
+        REQUIRE(result.cmd_args->cmd_name == subcmd_name);
+        REQUIRE(result.cmd_args->args.empty());
+        REQUIRE(result.cmd_args->cmd_args == nullptr);
 
         REQUIRE(result.cmd_name == cmd_name);
         REQUIRE(result.args.empty());
@@ -204,7 +204,7 @@ SCENARIO("positional arguments") {
 
     GIVEN("1 positional argument is specified for the command") {
       auto const pos = "pos"s;
-      subcmd.pos(pos);
+      cmd_args.pos(pos);
 
       WHEN("one positional argument is given after the command in CLI") {
         auto const pos_input = "positional"s;
@@ -213,11 +213,11 @@ SCENARIO("positional arguments") {
         THEN("we parse the positional as an argument to the command") {
           auto const result = program(argv);
 
-          REQUIRE(result.subcmd != nullptr);
-          REQUIRE(result.subcmd->cmd_name == subcmd_name);
-          REQUIRE(result.subcmd->subcmd == nullptr);
-          REQUIRE(result.subcmd->args.size() == 1);
-          REQUIRE(result.subcmd->as<std::string>(pos) == pos_input);
+          REQUIRE(result.cmd_args != nullptr);
+          REQUIRE(result.cmd_args->cmd_name == subcmd_name);
+          REQUIRE(result.cmd_args->cmd_args == nullptr);
+          REQUIRE(result.cmd_args->args.size() == 1);
+          REQUIRE(result.cmd_args->as<std::string>(pos) == pos_input);
 
           REQUIRE(result.cmd_name == cmd_name);
           REQUIRE(result.args.empty());

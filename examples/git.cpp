@@ -24,18 +24,15 @@ int main(int argc, char const *argv[]) {
       .otherwise(""s);
 
   auto const args = git(argc, argv);
-  print("\nCommand name: {}\n", args.cmd_name);
-  print("Command path: {}\n", args.cmd_path);
+  print("\nCommand path: {}\n", args.exec_path);
   print("Number of arguments: {}\n", args.size());
+  print("Sub-command name, if present: {}\n", args.cmd_name);
 
-  if (args.subcmd != nullptr) {
-    auto subargs = *args.subcmd;
-    print("\nSub-command name: {}\n", subargs.cmd_name);
-    print("Sub-command path: {}\n", subargs.cmd_path);
-    print("Number of arguments: {}\n", subargs.size());
-    if (subargs.cmd_name == "clone"s) {
-      print("repository: {}\n", subargs["repository"].as<std::string>());
-      print("directory: {}\n", subargs.as<std::string>("directory"));
-    }
+  if (auto const clone = args.cmd("clone")) {
+    print("\nSub-command path: {}\n", clone->exec_path);
+    print("Number of arguments: {}\n", clone->size());
+    print("Sub-command name, if present: {}\n", clone->cmd_name);
+    print("repository: {}\n", clone->as<std::string>("repository"));
+    print("directory: {}\n", clone->as<std::string>("directory"));
   }
 }

@@ -25,8 +25,7 @@ int main(int argc, char const *argv[]) {
       .otherwise(std::vector<int>{});
 
   auto const args = program(argc, argv);
-  print("\nCommand name: {}\n", args.cmd_name);
-  print("Command path: {}\n", args.cmd_path);
+  print("\nCommand path: {}\n", args.exec_path);
   print("Number of arguments: {}\n", args.size());
 
   print("gather-all: {}\n", args.as<std::vector<int>>("gather-all"));

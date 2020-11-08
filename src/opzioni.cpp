@@ -74,6 +74,10 @@ template <> std::string Arg<ArgumentType::FLAG>::format_description() const noex
   // return format;
 }
 
+std::string Command::format_long_usage() const noexcept { return name; }
+
+std::string Command::format_description() const noexcept { return spec->introduction; }
+
 // +---------+
 // | Program |
 // +---------+
@@ -121,10 +125,9 @@ Program &Program::cmd(std::string name) {
     throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
   auto const idx = cmds.size();
-  auto &command = cmds.emplace_back(std::make_unique<Program>());
-  command->name = name;
+  auto &command = cmds.emplace_back(name, std::make_unique<Program>());
   cmds_idx[name] = idx;
-  return *command;
+  return *command.spec;
 }
 
 ArgMap Program::operator()(int argc, char const *argv[]) {
@@ -138,10 +141,6 @@ ArgMap Program::operator()(std::span<char const *> args) {
   set_defaults(map);
   return map;
 }
-
-std::string Program::format_long_usage() const noexcept { return name; }
-
-std::string Program::format_description() const noexcept { return introduction; }
 
 void Program::print_usage(std::ostream &ostream) const noexcept {
   HelpFormatter formatter(*this, 80, ostream);
@@ -171,9 +170,9 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
-Program *Program::is_command(std::string const &whole_arg) const noexcept {
+Command const *Program::is_command(std::string const &whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
-    return cmds[cmd_idx->second].get();
+    return &cmds[cmd_idx->second];
   return nullptr;
 }
 
@@ -210,12 +209,12 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole
 
 HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
     : out(out), max_width(max_width), program_title(program.title), program_introduction(program.introduction),
-      program_description(program.description), program_name(program.name), program_path(program.path),
-      flags(program.flags), options(program.options), positionals(program.positionals), cmds(program.cmds) {
+      program_description(program.description), program_path(program.path), flags(program.flags),
+      options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
-  std::sort(cmds.begin(), cmds.end(), [](auto const &lhs, auto const &rhs) { return *lhs < *rhs; });
+  std::sort(cmds.begin(), cmds.end());
 }
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
@@ -234,8 +233,6 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 void HelpFormatter::print_title() const noexcept {
   if (!program_title.empty())
     out << program_title << nl;
-  else if (!program_name.empty())
-    out << program_name << nl;
   else
     out << program_path << nl;
 }
@@ -263,12 +260,12 @@ void HelpFormatter::print_long_usage() const noexcept {
   transform(flags, insert, &Flag::format_usage);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front()->name));
+    words.push_back(format("{{{}}}", cmds.front().name));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front()->name));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, [](auto const &cmd) { return format("{},", cmd->name); });
-    words.push_back(format("{}}}", cmds.back()->name));
+    words.push_back(format("{{{},", cmds.front().name));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert, [](auto const &cmd) { return format("{},", cmd.name); });
+    words.push_back(format("{}}}", cmds.back().name));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
@@ -314,7 +311,7 @@ void HelpFormatter::print_help() const noexcept {
   if (!cmds.empty()) {
     out << pending_nl << "Commands:\n";
     for (auto const &arg : cmds) {
-      print_arg_help(*arg, padding);
+      print_arg_help(arg, padding);
     }
   }
 }
@@ -336,8 +333,7 @@ namespace parsing {
 
 ArgMap Parser::operator()() {
   map.reset();
-  map.cmd_name = std::string(spec.name);
-  map.cmd_path = std::string(args[0]);
+  map.exec_path = std::string(args[0]);
   current_positional_idx = 0;
   for (std::size_t index = 1; index < args.size();) {
     index += std::visit(*this, decide_type(index));
@@ -420,10 +416,11 @@ std::size_t Parser::operator()(Positional positional) {
 
 std::size_t Parser::operator()(Command cmd) {
   auto const remaining_args_count = args.size() - cmd.index;
-  auto const cmd_path = fmt::format("{} {}", spec.path, cmd.program.name);
+  auto const exec_path = fmt::format("{} {}", spec.path, cmd.name);
   auto subargs = args.last(remaining_args_count);
-  subargs[0] = cmd_path.data();
-  map.subcmd = memory::ValuePtr(std::make_unique<ArgMap>(std::move(cmd.program(subargs))));
+  subargs[0] = exec_path.data();
+  map.cmd_name = cmd.name;
+  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move(cmd.spec(subargs))));
   return remaining_args_count;
 }
 
@@ -436,7 +433,7 @@ alternatives Parser::decide_type(std::size_t index) const noexcept {
     return DashDash{index};
 
   if (auto cmd = spec.is_command(arg); cmd != nullptr)
-    return Command{*cmd, index};
+    return Command{index, cmd->name, *cmd->spec};
 
   if (auto const positional = looks_positional(arg); positional)
     return Positional{index};

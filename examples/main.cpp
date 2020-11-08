@@ -48,8 +48,7 @@ int main(int argc, char const *argv[]) {
   program.flag("t").help("We also support flags with only short names").otherwise(false);
 
   auto const args = program(argc, argv);
-  print("\nCommand name: {}\n", args.cmd_name);
-  print("Command path: {}\n", args.cmd_path);
+  print("\nCommand path: {}\n", args.exec_path);
   print("Number of arguments: {}\n", args.size());
 
   print("name: {}\n", args.as<std::string>("name"));

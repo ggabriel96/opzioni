@@ -97,17 +97,30 @@ struct ArgMap {
 
   bool has(std::string name) const noexcept { return args.contains(name); }
 
+  ArgMap *cmd(std::string_view name) {
+    if (cmd_name == name)
+      return cmd_args.get();
+    return nullptr;
+  }
+
+  ArgMap const *cmd(std::string_view name) const {
+    if (cmd_name == name)
+      return cmd_args.get();
+    return nullptr;
+  }
+
   auto size() const noexcept { return this->args.size(); }
 
   void reset() noexcept {
     args.clear();
-    subcmd = nullptr;
-    cmd_name = std::string();
+    exec_path = "";
+    cmd_name = "";
+    cmd_args = nullptr;
   }
 
-  std::string cmd_name;
-  std::string cmd_path;
-  memory::ValuePtr<ArgMap> subcmd;
+  std::string exec_path{};
+  std::string cmd_name{};
+  memory::ValuePtr<ArgMap> cmd_args;
   std::map<std::string, ArgValue> args;
 };
 
@@ -187,6 +200,16 @@ template <ArgumentType type> bool operator<(Arg<type> const &lhs, Arg<type> cons
   return lhs.is_required && !rhs.is_required;
 }
 
+struct Command {
+  std::string name{};
+  memory::ValuePtr<Program> spec;
+
+  std::string format_long_usage() const noexcept;
+  std::string format_description() const noexcept;
+
+  auto operator<=>(Command const &other) const noexcept { return name <=> other.name; }
+};
+
 namespace parsing {
 
 struct ParsedOption {
@@ -197,8 +220,9 @@ struct ParsedOption {
 ParsedOption parse_option(std::string) noexcept;
 
 struct Command {
-  Program &program;
   std::size_t index;
+  std::string_view name;
+  Program &spec;
 };
 
 struct DashDash {
@@ -261,13 +285,12 @@ struct Program {
   std::string title{};
   std::string introduction{};
   std::string description{};
-  std::string name{};
   std::string path{};
 
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
-  std::vector<memory::ValuePtr<Program>> cmds;
+  std::vector<Command> cmds;
 
   std::map<std::string, std::size_t> cmds_idx;
   std::map<std::string, std::size_t> flags_idx;
@@ -299,19 +322,15 @@ struct Program {
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
-  std::string format_long_usage() const noexcept;
-  std::string format_description() const noexcept;
   void print_usage(std::ostream & = std::cout) const noexcept;
 
   void set_defaults(ArgMap &) const noexcept;
 
-  Program *is_command(std::string const &) const noexcept;
+  Command const *is_command(std::string const &) const noexcept;
   bool is_flag(std::string const &) const noexcept;
   std::optional<std::string> is_long_flag(std::string const &) const noexcept;
   std::optional<std::string> is_short_flags(std::string const &) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
-
-  auto operator<=>(Program const &other) const noexcept { return name <=> other.name; }
 };
 
 // +------------+
@@ -336,12 +355,11 @@ private:
   std::string const program_title;
   std::string const program_introduction;
   std::string const program_description;
-  std::string const program_name;
   std::string const program_path;
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
-  std::vector<memory::ValuePtr<Program>> cmds;
+  std::vector<Command> cmds;
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
