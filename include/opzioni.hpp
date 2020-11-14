@@ -185,9 +185,9 @@ template <ArgumentType type> struct Arg {
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return abbrev != '\0'; }
 
-  std::string format_description() const noexcept;
   std::string format_usage() const noexcept;
   std::string format_long_usage() const noexcept;
+  std::string get_help_description() const noexcept;
 };
 
 template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
@@ -205,7 +205,7 @@ struct Command {
   memory::ValuePtr<Program> spec;
 
   std::string format_long_usage() const noexcept;
-  std::string format_description() const noexcept;
+  std::string get_help_description() const noexcept;
 
   auto operator<=>(Command const &other) const noexcept { return name <=> other.name; }
 };
@@ -364,7 +364,7 @@ private:
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
-    auto const description = arg.format_description();
+    auto const description = arg.get_help_description();
     // -4 because we'll later print a left margin of 4 spaces
     auto const lines = limit_within(description, max_width - padding.size() - 4);
     // -4 again because we'll shift it 4 spaces into the padding, invading it,

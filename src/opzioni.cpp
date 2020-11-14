@@ -53,15 +53,15 @@ template <> std::string Arg<ArgumentType::FLAG>::format_long_usage() const noexc
   return fmt::format("{0:->{1}}", name, width);
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_description() const noexcept {
+template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept {
   return fmt::format("{}", description);
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_description() const noexcept {
+template <> std::string Arg<ArgumentType::OPTION>::get_help_description() const noexcept {
   return fmt::format("{}", description);
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_description() const noexcept {
+template <> std::string Arg<ArgumentType::FLAG>::get_help_description() const noexcept {
   return fmt::format("{}", description);
   // auto const fmt_variant = [](auto const &var) { return fmt::format("{}", var); };
   // auto format =
@@ -76,7 +76,7 @@ template <> std::string Arg<ArgumentType::FLAG>::format_description() const noex
 
 std::string Command::format_long_usage() const noexcept { return name; }
 
-std::string Command::format_description() const noexcept { return spec->introduction; }
+std::string Command::get_help_description() const noexcept { return spec->introduction; }
 
 // +---------+
 // | Program |
