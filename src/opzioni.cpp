@@ -150,7 +150,7 @@ ArgMap Program::operator()(std::span<char const *> args) {
 }
 
 void Program::print_usage(std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this, 80, ostream);
+  HelpFormatter formatter(*this, 100, ostream);
   formatter.print_title();
   if (!introduction.empty()) {
     ostream << nl;
