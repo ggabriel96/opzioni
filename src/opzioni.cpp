@@ -67,14 +67,14 @@ template <> std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexc
   return format_base_usage();
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept {
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_description() const noexcept {
   if (default_value) {
     return fmt::format("{} (default: {})", description, std::visit(builtin2str, *default_value));
   }
   return description;
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::get_help_description() const noexcept {
+template <> std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
   std::string format = description;
   if (set_value || default_value) {
     format += " (";
@@ -90,7 +90,7 @@ template <> std::string Arg<ArgumentType::OPTION>::get_help_description() const 
   return format;
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::get_help_description() const noexcept {
+template <> std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   std::string format = description;
   if (set_value || default_value) {
     format += " (";
@@ -108,7 +108,7 @@ template <> std::string Arg<ArgumentType::FLAG>::get_help_description() const no
 
 std::string Command::format_help_usage() const noexcept { return name; }
 
-std::string Command::get_help_description() const noexcept { return spec->introduction; }
+std::string Command::format_help_description() const noexcept { return spec->introduction; }
 
 // +---------+
 // | Program |
