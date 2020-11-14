@@ -24,7 +24,7 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noex
   return fmt::format("[<{}>]", name);
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return name; }
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const noexcept { return name; }
 
 template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
@@ -40,7 +40,7 @@ template <> std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept
   return "[" + format_base_usage() + "]";
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_long_usage() const noexcept {
+template <> std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
   if (has_abbrev())
     return fmt::format("-{}, {}", abbrev, format_base_usage());
   return format_base_usage();
@@ -54,7 +54,7 @@ template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
   return fmt::format("[{0:->{1}}]", name, width);
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_long_usage() const noexcept {
+template <> std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
   if (has_abbrev())
     return fmt::format("-{}, --{}", abbrev, name);
   // width of: at least one dash + another dash if not single letter + name length
@@ -96,7 +96,7 @@ template <> std::string Arg<ArgumentType::FLAG>::get_help_description() const no
   return format;
 }
 
-std::string Command::format_long_usage() const noexcept { return name; }
+std::string Command::format_help_usage() const noexcept { return name; }
 
 std::string Command::get_help_description() const noexcept { return spec->introduction; }
 

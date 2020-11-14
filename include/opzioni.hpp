@@ -189,7 +189,7 @@ template <ArgumentType type> struct Arg {
 
   std::string format_base_usage() const noexcept;
   std::string format_usage() const noexcept;
-  std::string format_long_usage() const noexcept;
+  std::string format_help_usage() const noexcept;
   std::string get_help_description() const noexcept;
 };
 
@@ -207,7 +207,7 @@ struct Command {
   std::string name{};
   memory::ValuePtr<Program> spec;
 
-  std::string format_long_usage() const noexcept;
+  std::string format_help_usage() const noexcept;
   std::string get_help_description() const noexcept;
 
   auto operator<=>(Command const &other) const noexcept { return name <=> other.name; }
@@ -372,7 +372,7 @@ private:
     auto const lines = limit_within(description, max_width - padding.size() - 4);
     // -4 again because we'll shift it 4 spaces into the padding, invading it,
     // so we can have the possible following lines indented
-    out << fmt::format("    {:<{}} {}\n", arg.format_long_usage(), padding.size() - 4, fmt::join(lines.front(), " "));
+    out << fmt::format("    {:<{}} {}\n", arg.format_help_usage(), padding.size() - 4, fmt::join(lines.front(), " "));
     for (auto const &line : lines | drop(1)) {
       out << fmt::format("    {} {}\n", padding, fmt::join(line, " "));
     };
