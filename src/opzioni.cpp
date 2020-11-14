@@ -67,7 +67,12 @@ template <> std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexc
   return format_base_usage();
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept { return description; }
+template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept {
+  if (default_value) {
+    return fmt::format("{} (default: {})", description, std::visit(builtin2str, *default_value));
+  }
+  return description;
+}
 
 template <> std::string Arg<ArgumentType::OPTION>::get_help_description() const noexcept {
   std::string format = description;
