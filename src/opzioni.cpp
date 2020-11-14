@@ -9,6 +9,11 @@
 
 namespace opzioni {
 
+std::string builtin2str(BuiltinType const &variant) noexcept {
+  auto const _2str = [](auto const &val) { return fmt::format("{}", val); };
+  return std::visit(_2str, variant);
+}
+
 // +-----+
 // | Arg |
 // +-----+
@@ -53,25 +58,38 @@ template <> std::string Arg<ArgumentType::FLAG>::format_long_usage() const noexc
   return fmt::format("{0:->{1}}", name, width);
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept {
-  return fmt::format("{}", description);
-}
+template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept { return description; }
 
 template <> std::string Arg<ArgumentType::OPTION>::get_help_description() const noexcept {
-  return fmt::format("{}", description);
+  std::string format = description;
+  if (set_value || default_value) {
+    format += " (";
+    if (set_value)
+      format += fmt::format("valueless: {}", std::visit(builtin2str, *set_value));
+    if (default_value) {
+      if (set_value)
+        format += ", ";
+      format += fmt::format("default: {}", std::visit(builtin2str, *default_value));
+    }
+    format += ")";
+  }
+  return format;
 }
 
 template <> std::string Arg<ArgumentType::FLAG>::get_help_description() const noexcept {
-  return fmt::format("{}", description);
-  // auto const fmt_variant = [](auto const &var) { return fmt::format("{}", var); };
-  // auto format =
-  //     fmt::format("{}: {} (sets {} if present", format_usage(), description, std::visit(fmt_variant, *set_value));
-  // if (default_value) {
-  //   format += fmt::format(", default is {})", std::visit(fmt_variant, *default_value));
-  // } else {
-  //   format += fmt::format(")");
-  // }
-  // return format;
+  std::string format = description;
+  if (set_value || default_value) {
+    format += " (";
+    if (set_value)
+      format += fmt::format("sets: {}", std::visit(builtin2str, *set_value));
+    if (default_value) {
+      if (set_value)
+        format += ", ";
+      format += fmt::format("default: {}", std::visit(builtin2str, *default_value));
+    }
+    format += ")";
+  }
+  return format;
 }
 
 std::string Command::format_long_usage() const noexcept { return name; }

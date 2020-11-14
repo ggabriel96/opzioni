@@ -36,6 +36,8 @@ template <typename... Ts> struct VariantOf<TypeList<Ts...>> { using type = std::
 using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>, std::vector<std::string>>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
 
+std::string builtin2str(BuiltinType const &) noexcept;
+
 // +----------------------+
 // | forward declarations |
 // +----------------------+
