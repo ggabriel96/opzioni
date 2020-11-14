@@ -1,6 +1,6 @@
 project(
     'opzioni', 'cpp',
-    version: '0.28.0',
+    version: '0.29.0',
     license: 'BSL-1.0',
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
@@ -18,7 +18,7 @@ catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 # +--------------------+
 opzioni_lib = library(
     'opzioni',
-    ['src/converters.cpp', 'src/opzioni.cpp'],
+    ['src/converters.cpp', 'src/opzioni.cpp', 'src/string.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true

@@ -10,7 +10,7 @@ SCENARIO("argument specification") {
   using Catch::Matchers::Message;
 
   GIVEN("an empty program specification") {
-    Program program;
+    Program program("test");
 
     WHEN("user specifies a positional argument") {
       auto const positional_name = "positional"s;
@@ -19,7 +19,7 @@ SCENARIO("argument specification") {
       THEN("it is added to the specification, is marked required, and its address is returned") {
         REQUIRE(program.positionals.size() == 1);
         REQUIRE(program.options.size() == 0);
-        REQUIRE(program.flags.size() == 0);
+        REQUIRE(program.flags.size() == 1);
         REQUIRE(&inserted_positional == &program.positionals[0]);
 
         REQUIRE(inserted_positional.name == positional_name);
@@ -40,8 +40,8 @@ SCENARIO("argument specification") {
       THEN("it is added to the specification and its address is returned") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 1);
-        REQUIRE(program.flags.size() == 0);
-        REQUIRE(&inserted_option == &program.options[option_name]);
+        REQUIRE(program.flags.size() == 1);
+        REQUIRE(&inserted_option == &program.options[0]);
 
         REQUIRE(inserted_option.name == option_name);
         REQUIRE(inserted_option.description == ""s);
@@ -62,8 +62,9 @@ SCENARIO("argument specification") {
            "address is returned") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 0);
-        REQUIRE(program.flags.size() == 1);
-        REQUIRE(&inserted_flag == &program.flags[flag_name]);
+        // A --help flag is added by default
+        REQUIRE(program.flags.size() == 2);
+        REQUIRE(&inserted_flag == &program.flags[1]);
 
         REQUIRE(inserted_flag.name == flag_name);
         REQUIRE(inserted_flag.description == ""s);
@@ -83,7 +84,7 @@ SCENARIO("positional arguments") {
   using Catch::Matchers::Message;
   using namespace std::string_literals;
 
-  opzioni::Program program;
+  opzioni::Program program("test");
 
   GIVEN("no arguments are specified for the program") {
     auto const cmd_name = "./test";
@@ -94,9 +95,10 @@ SCENARIO("positional arguments") {
       THEN("we set cmd_name, but parse nothing") {
         auto const result = program(argv);
 
+        REQUIRE(result.exec_path == cmd_name);
+        REQUIRE(result.cmd_args == nullptr);
+        REQUIRE(result.cmd_name == ""s);
         REQUIRE(result.args.empty());
-        REQUIRE(result.cmd_name == cmd_name);
-        REQUIRE(result.subcmd == nullptr);
       }
     }
 
@@ -144,7 +146,7 @@ SCENARIO("positional arguments") {
   GIVEN("1 command is specified for the program") {
     auto const cmd_name = "./test";
     auto const subcmd_name = "cmd"s;
-    auto &subcmd = program.cmd(subcmd_name);
+    auto &cmd_args = program.cmd(subcmd_name);
 
     WHEN("the command is given in CLI") {
       std::array argv{cmd_name, subcmd_name.c_str()};
@@ -152,12 +154,14 @@ SCENARIO("positional arguments") {
       THEN("it is parsed as command; both cmd_name are set; everything else is empty") {
         auto const result = program(argv);
 
-        REQUIRE(result.subcmd != nullptr);
-        REQUIRE(result.subcmd->cmd_name == subcmd_name);
-        REQUIRE(result.subcmd->args.empty());
-        REQUIRE(result.subcmd->subcmd == nullptr);
+        REQUIRE(result.cmd_args != nullptr);
+        REQUIRE(result.cmd_name == subcmd_name);
 
-        REQUIRE(result.cmd_name == cmd_name);
+        REQUIRE(result.cmd_args->args.empty());
+        REQUIRE(result.cmd_args->cmd_name.empty());
+        REQUIRE(result.cmd_args->cmd_args == nullptr);
+
+        REQUIRE(result.exec_path == cmd_name);
         REQUIRE(result.args.empty());
       }
     }
@@ -204,7 +208,7 @@ SCENARIO("positional arguments") {
 
     GIVEN("1 positional argument is specified for the command") {
       auto const pos = "pos"s;
-      subcmd.pos(pos);
+      cmd_args.pos(pos);
 
       WHEN("one positional argument is given after the command in CLI") {
         auto const pos_input = "positional"s;
@@ -213,13 +217,13 @@ SCENARIO("positional arguments") {
         THEN("we parse the positional as an argument to the command") {
           auto const result = program(argv);
 
-          REQUIRE(result.subcmd != nullptr);
-          REQUIRE(result.subcmd->cmd_name == subcmd_name);
-          REQUIRE(result.subcmd->subcmd == nullptr);
-          REQUIRE(result.subcmd->args.size() == 1);
-          REQUIRE(result.subcmd->as<std::string>(pos) == pos_input);
+          REQUIRE(result.cmd_args != nullptr);
+          REQUIRE(result.cmd_name == subcmd_name);
+          REQUIRE(result.cmd_args->cmd_args == nullptr);
+          REQUIRE(result.cmd_args->args.size() == 1);
+          REQUIRE(result.cmd_args->as<std::string>(pos) == pos_input);
 
-          REQUIRE(result.cmd_name == cmd_name);
+          REQUIRE(result.exec_path == cmd_name);
           REQUIRE(result.args.empty());
         }
       }
