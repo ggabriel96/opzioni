@@ -181,8 +181,8 @@ ArgMap Program::operator()(std::span<char const *> args) {
   return map;
 }
 
-void Program::print_usage(std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this, 100, ostream);
+void Program::print_usage(std::size_t const max_width, std::ostream &ostream) const noexcept {
+  HelpFormatter formatter(*this, max_width, ostream);
   formatter.print_title();
   if (!introduction.empty()) {
     ostream << nl;

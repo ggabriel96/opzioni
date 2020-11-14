@@ -326,7 +326,7 @@ struct Program {
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
-  void print_usage(std::ostream & = std::cout) const noexcept;
+  void print_usage(std::size_t const = 100, std::ostream & = std::cout) const noexcept;
 
   void set_defaults(ArgMap &) const noexcept;
 
