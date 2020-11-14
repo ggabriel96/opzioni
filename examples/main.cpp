@@ -30,10 +30,7 @@ int main(int argc, char const *argv[]) {
       .otherwise(std::vector<int>{})
       .help("This option uses the default action, so it'll not append to a list from each appearence in the CLI. It "
             "will instead parse a comma-separated list once");
-  program.opt("verbosity", 'v')
-      .help("Level of verbosity. If present without a value, sets 1. Else, parses the given value")
-      .set(1)
-      .otherwise(0);
+  program.opt("verbose", 'v').help("Level of verbosity").set(1).otherwise(0);
 
   program.flag("append", 'a')
       .set(1)
@@ -59,7 +56,7 @@ int main(int argc, char const *argv[]) {
   print("num: [{}]\n", fmt::join(args.as<std::vector<int>>("num"), ", "));
   print("str: [{}]\n", fmt::join(args.as<std::vector<std::string>>("str"), ", "));
   print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
-  print("verbosity: {}\n", args.as<int>("verbosity"));
+  print("verbose: {}\n", args.as<int>("verbose"));
 
   print("append: {}\n", args.as<std::vector<int>>("append"));
   print("flag: {}\n", args.as<std::string>("flag"));
