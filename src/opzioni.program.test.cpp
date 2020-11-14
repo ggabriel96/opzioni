@@ -19,7 +19,7 @@ SCENARIO("argument specification") {
       THEN("it is added to the specification, is marked required, and its address is returned") {
         REQUIRE(program.positionals.size() == 1);
         REQUIRE(program.options.size() == 0);
-        REQUIRE(program.flags.size() == 0);
+        REQUIRE(program.flags.size() == 1);
         REQUIRE(&inserted_positional == &program.positionals[0]);
 
         REQUIRE(inserted_positional.name == positional_name);
@@ -40,8 +40,8 @@ SCENARIO("argument specification") {
       THEN("it is added to the specification and its address is returned") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 1);
-        REQUIRE(program.flags.size() == 0);
-        // REQUIRE(&inserted_option == &program.options[option_name]);
+        REQUIRE(program.flags.size() == 1);
+        REQUIRE(&inserted_option == &program.options[0]);
 
         REQUIRE(inserted_option.name == option_name);
         REQUIRE(inserted_option.description == ""s);
@@ -62,8 +62,9 @@ SCENARIO("argument specification") {
            "address is returned") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 0);
-        REQUIRE(program.flags.size() == 1);
-        // REQUIRE(&inserted_flag == &program.flags[flag_name]);
+        // A --help flag is added by default
+        REQUIRE(program.flags.size() == 2);
+        REQUIRE(&inserted_flag == &program.flags[1]);
 
         REQUIRE(inserted_flag.name == flag_name);
         REQUIRE(inserted_flag.description == ""s);
@@ -94,9 +95,10 @@ SCENARIO("positional arguments") {
       THEN("we set cmd_name, but parse nothing") {
         auto const result = program(argv);
 
-        REQUIRE(result.args.empty());
-        REQUIRE(result.cmd_name == cmd_name);
+        REQUIRE(result.exec_path == cmd_name);
         REQUIRE(result.cmd_args == nullptr);
+        REQUIRE(result.cmd_name == ""s);
+        REQUIRE(result.args.empty());
       }
     }
 
@@ -153,11 +155,13 @@ SCENARIO("positional arguments") {
         auto const result = program(argv);
 
         REQUIRE(result.cmd_args != nullptr);
-        REQUIRE(result.cmd_args->cmd_name == subcmd_name);
+        REQUIRE(result.cmd_name == subcmd_name);
+
         REQUIRE(result.cmd_args->args.empty());
+        REQUIRE(result.cmd_args->cmd_name.empty());
         REQUIRE(result.cmd_args->cmd_args == nullptr);
 
-        REQUIRE(result.cmd_name == cmd_name);
+        REQUIRE(result.exec_path == cmd_name);
         REQUIRE(result.args.empty());
       }
     }
@@ -214,12 +218,12 @@ SCENARIO("positional arguments") {
           auto const result = program(argv);
 
           REQUIRE(result.cmd_args != nullptr);
-          REQUIRE(result.cmd_args->cmd_name == subcmd_name);
+          REQUIRE(result.cmd_name == subcmd_name);
           REQUIRE(result.cmd_args->cmd_args == nullptr);
           REQUIRE(result.cmd_args->args.size() == 1);
           REQUIRE(result.cmd_args->as<std::string>(pos) == pos_input);
 
-          REQUIRE(result.cmd_name == cmd_name);
+          REQUIRE(result.exec_path == cmd_name);
           REQUIRE(result.args.empty());
         }
       }
