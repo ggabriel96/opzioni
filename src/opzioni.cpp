@@ -46,20 +46,21 @@ template <> std::string Arg<ArgumentType::OPTION>::format_help_usage() const noe
   return format_base_usage();
 }
 
+template <> std::string Arg<ArgumentType::FLAG>::format_base_usage() const noexcept {
+  auto const dashes = name.length() > 1 ? "--" : "-";
+  return fmt::format("{}{}", dashes, name);
+}
+
 template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
-  // width of: at least one dash + another dash if not single letter + name length
-  int const width = 1 + int(name.length() > 1) + name.length();
-  if (this->is_required)
-    return fmt::format("{0:->{1}}", name, width);
-  return fmt::format("[{0:->{1}}]", name, width);
+  if (is_required)
+    return format_base_usage();
+  return "[" + format_base_usage() + "]";
 }
 
 template <> std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
   if (has_abbrev())
-    return fmt::format("-{}, --{}", abbrev, name);
-  // width of: at least one dash + another dash if not single letter + name length
-  int const width = 1 + int(name.length() > 1) + name.length();
-  return fmt::format("{0:->{1}}", name, width);
+    return fmt::format("-{}, {}", abbrev, format_base_usage());
+  return format_base_usage();
 }
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::get_help_description() const noexcept { return description; }
