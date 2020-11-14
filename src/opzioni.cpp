@@ -92,6 +92,13 @@ Program &Program::details(std::string description) noexcept {
   return *this;
 }
 
+Program &Program::override_help(actions::signature<ArgumentType::FLAG> action) noexcept {
+  auto const help_idx = flags_idx["help"];
+  auto &help = flags[help_idx];
+  help.action(action);
+  return *this;
+}
+
 Positional &Program::pos(std::string name) {
   Positional arg{.name = name, .is_required = true};
   return *positionals.insert(positionals.end(), arg);

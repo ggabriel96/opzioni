@@ -309,6 +309,7 @@ struct Program {
 
   Program &intro(std::string) noexcept;
   Program &details(std::string) noexcept;
+  Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
   Flag &flag(std::string);
   Flag &flag(std::string, char);
