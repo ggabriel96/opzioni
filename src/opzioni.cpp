@@ -26,20 +26,24 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noex
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_long_usage() const noexcept { return name; }
 
+template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
+  auto const dashes = name.length() > 1 ? "--" : "-";
+  auto val = has_abbrev() ? fmt::format("<{}>", abbrev) : fmt::format("<{}>", name);
+  if (set_value)
+    val = "[" + val + "]";
+  return fmt::format("{}{} {}", dashes, name, val);
+}
+
 template <> std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
-  // width of: at least one dash + another dash if not single letter + name length
-  int const width = 1 + int(name.length() > 1) + name.length();
-  if (this->is_required)
-    return fmt::format("{0:->{1}} <{0}>", name, width);
-  return fmt::format("[{0:->{1}} <{0}>]", name, width);
+  if (is_required)
+    return format_base_usage();
+  return "[" + format_base_usage() + "]";
 }
 
 template <> std::string Arg<ArgumentType::OPTION>::format_long_usage() const noexcept {
   if (has_abbrev())
-    return fmt::format("-{0}, --{1} <{0}>", abbrev, name);
-  // width of: at least one dash + another dash if not single letter + name length
-  int const width = 1 + int(name.length() > 1) + name.length();
-  return fmt::format("{0:->{1}} <{0}>", name, width);
+    return fmt::format("-{}, {}", abbrev, format_base_usage());
+  return format_base_usage();
 }
 
 template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {

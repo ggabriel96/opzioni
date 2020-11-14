@@ -187,6 +187,7 @@ template <ArgumentType type> struct Arg {
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return abbrev != '\0'; }
 
+  std::string format_base_usage() const noexcept;
   std::string format_usage() const noexcept;
   std::string format_long_usage() const noexcept;
   std::string get_help_description() const noexcept;
