@@ -18,13 +18,17 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 // | Arg |
 // +-----+
 
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept { return name; }
+
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
-  if (this->is_required)
-    return fmt::format("<{}>", name);
-  return fmt::format("[<{}>]", name);
+  if (is_required)
+    return "<" + format_base_usage() + ">";
+  return "[<" + format_base_usage() + ">]";
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const noexcept { return name; }
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const noexcept {
+  return format_base_usage();
+}
 
 template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
