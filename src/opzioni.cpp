@@ -18,7 +18,7 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 // | Arg |
 // +-----+
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept { return name; }
+template <> std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept { return std::string(name); }
 
 template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
   if (is_required)
@@ -32,7 +32,7 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const
 
 template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
-  auto val = has_abbrev() ? fmt::format("<{}>", abbrev) : fmt::format("<{}>", name);
+  auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
   if (set_value)
     val = "[" + val + "]";
   return fmt::format("{}{} {}", dashes, name, val);
@@ -71,11 +71,11 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_description()
   if (default_value) {
     return fmt::format("{} (default: {})", description, std::visit(builtin2str, *default_value));
   }
-  return description;
+  return std::string(description);
 }
 
 template <> std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
-  std::string format = description;
+  std::string format(description);
   if (set_value || default_value) {
     format += " (";
     if (set_value)
@@ -91,7 +91,7 @@ template <> std::string Arg<ArgumentType::OPTION>::format_help_description() con
 }
 
 template <> std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
-  std::string format = description;
+  std::string format(description);
   if (set_value || default_value) {
     format += " (";
     if (set_value)
@@ -106,20 +106,20 @@ template <> std::string Arg<ArgumentType::FLAG>::format_help_description() const
   return format;
 }
 
-std::string Command::format_help_usage() const noexcept { return name; }
+std::string Command::format_help_usage() const noexcept { return std::string(name); }
 
-std::string Command::format_help_description() const noexcept { return spec->introduction; }
+std::string Command::format_help_description() const noexcept { return std::string(spec->introduction); }
 
 // +---------+
 // | Program |
 // +---------+
 
-Program &Program::intro(std::string introduction) noexcept {
+Program &Program::intro(std::string_view introduction) noexcept {
   this->introduction = introduction;
   return *this;
 }
 
-Program &Program::details(std::string description) noexcept {
+Program &Program::details(std::string_view description) noexcept {
   this->description = description;
   return *this;
 }
@@ -131,35 +131,35 @@ Program &Program::override_help(actions::signature<ArgumentType::FLAG> action) n
   return *this;
 }
 
-Positional &Program::pos(std::string name) {
+Positional &Program::pos(std::string_view name) {
   Positional arg{.name = name, .is_required = true};
   return *positionals.insert(positionals.end(), arg);
 }
 
-Option &Program::opt(std::string name) { return opt(name, '\0'); }
+Option &Program::opt(std::string_view name) { return opt(name, {}); }
 
-Option &Program::opt(std::string name, char abbrev) {
+Option &Program::opt(std::string_view name, char const (&abbrev)[2]) {
   auto const idx = options.size();
   auto &opt = options.emplace_back(name, abbrev);
   options_idx[opt.name] = idx;
   if (opt.has_abbrev())
-    options_idx[std::string(1, opt.abbrev)] = idx;
+    options_idx[opt.abbrev] = idx;
   return opt;
 }
 
-Flag &Program::flag(std::string name) { return flag(name, '\0'); }
+Flag &Program::flag(std::string_view name) { return flag(name, {}); }
 
-Flag &Program::flag(std::string name, char abbrev) {
+Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
   auto const idx = flags.size();
   Flag arg{.name = name, .abbrev = abbrev, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
   flags_idx[flag.name] = idx;
   if (flag.has_abbrev())
-    flags_idx[std::string(1, flag.abbrev)] = idx;
+    flags_idx[flag.abbrev] = idx;
   return flag;
 }
 
-Program &Program::cmd(std::string name) {
+Program &Program::cmd(std::string_view name) {
   if (cmds_idx.contains(name)) {
     throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
@@ -209,33 +209,33 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
-Command const *Program::is_command(std::string const &whole_arg) const noexcept {
+Command const *Program::is_command(std::string_view const whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
     return &cmds[cmd_idx->second];
   return nullptr;
 }
 
-bool Program::is_flag(std::string const &name) const noexcept { return flags_idx.contains(name); }
+bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
 
-std::optional<std::string> Program::is_long_flag(std::string const &whole_arg) const noexcept {
+std::string_view Program::is_long_flag(std::string_view const whole_arg) const noexcept {
   auto const name = whole_arg.substr(2);
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   if (num_of_dashes == 2 && name.length() >= 2 && is_flag(name))
     return name;
-  return std::nullopt;
+  return {};
 }
 
-std::optional<std::string> Program::is_short_flags(std::string const &whole_arg) const noexcept {
+std::string_view Program::is_short_flags(std::string_view const whole_arg) const noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const flags = whole_arg.substr(1);
   auto const all_short_flags =
-      std::all_of(flags.begin(), flags.end(), [this](char const &c) { return this->is_flag(std::string(1, c)); });
+      std::all_of(flags.begin(), flags.end(), [this](char const c) { return this->is_flag(std::string_view(&c, 1)); });
   if (num_of_dashes == 1 && flags.length() >= 1 && all_short_flags)
     return flags;
-  return std::nullopt;
+  return {};
 }
 
-std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole_arg) const noexcept {
+std::optional<parsing::ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
   auto const parsed_option = parsing::parse_option(whole_arg);
   if (options_idx.contains(parsed_option.name))
     return parsed_option;
@@ -397,9 +397,8 @@ std::size_t Parser::operator()(Flag flag) {
 
 std::size_t Parser::operator()(ManyFlags flags) {
   using std::views::transform;
-  auto char_to_flag = [](char c) { return Flag{std::string(1, c)}; };
-  for (auto const &flag : flags.chars | transform(char_to_flag)) {
-    (*this)(flag);
+  for (auto const flag : flags.chars) {
+    (*this)(Flag{std::string_view(&flag, 1)});
   }
   return 1;
 }
@@ -419,7 +418,7 @@ std::size_t Parser::operator()(Option option) {
     // From that index + 1 is where we start to parse values up to gather amount
     std::size_t count = 0;
     do {
-      auto const value = std::string(args[option.index + 1 + count]);
+      auto const value = std::string_view(args[option.index + 1 + count]);
       arg.act(spec, map, arg, value);
       ++count;
     } while (count < gather_amount && would_be_positional(option.index + 1 + count));
@@ -466,7 +465,7 @@ std::size_t Parser::operator()(Command cmd) {
 std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(std::string(args[unknown.index])); }
 
 alternatives Parser::decide_type(std::size_t index) const noexcept {
-  auto const arg = std::string(args[index]);
+  auto const arg = std::string_view(args[index]);
 
   if (is_dash_dash(arg))
     return DashDash{index};
@@ -474,14 +473,14 @@ alternatives Parser::decide_type(std::size_t index) const noexcept {
   if (auto cmd = spec.is_command(arg); cmd != nullptr)
     return Command{index, cmd->name, *cmd->spec};
 
-  if (auto const positional = looks_positional(arg); positional)
+  if (auto const positional = looks_positional(arg); !positional.empty())
     return Positional{index};
 
-  if (auto const flags = spec.is_short_flags(arg); flags)
-    return ManyFlags{*flags};
+  if (auto const flags = spec.is_short_flags(arg); !flags.empty())
+    return ManyFlags{flags};
 
-  if (auto const flag = spec.is_long_flag(arg); flag)
-    return Flag{*flag};
+  if (auto const flag = spec.is_long_flag(arg); !flag.empty())
+    return Flag{flag};
 
   if (auto const option = spec.is_option(arg); option)
     return Option{*option, index};
@@ -493,25 +492,25 @@ alternatives Parser::decide_type(std::size_t index) const noexcept {
 // | "helpers" |
 // +-----------+
 
-bool Parser::is_dash_dash(std::string const &whole_arg) const noexcept {
+bool Parser::is_dash_dash(std::string_view const whole_arg) const noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
 }
 
-std::optional<std::string> Parser::looks_positional(std::string const &whole_arg) const noexcept {
+std::string_view Parser::looks_positional(std::string_view const whole_arg) const noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string::npos))
+  if (num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos))
     return whole_arg;
-  return std::nullopt;
+  return {};
 }
 
 bool Parser::would_be_positional(std::size_t idx) const noexcept {
   return std::holds_alternative<Positional>(decide_type(idx));
 }
 
-ParsedOption parse_option(std::string whole_arg) noexcept {
+ParsedOption parse_option(std::string_view const whole_arg) noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string::npos;
+  bool const has_equals = eq_idx != std::string_view::npos;
   if (num_of_dashes == 1) {
     // short option, e.g. `-O`
     auto const name = whole_arg.substr(1, 1);
@@ -548,7 +547,7 @@ ParsedOption parse_option(std::string whole_arg) noexcept {
 
 namespace actions {
 
-void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string> const &) {
+void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string_view> const) {
   program.print_usage();
   std::exit(0);
 }

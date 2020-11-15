@@ -54,20 +54,20 @@ using Positional = Arg<ArgumentType::POSITIONAL>;
 namespace actions {
 
 template <ArgumentType type>
-using signature = void (*)(Program const &, ArgMap &, Arg<type> const &, std::optional<std::string> const &);
+using signature = void (*)(Program const &, ArgMap &, Arg<type> const &, std::optional<std::string_view> const);
 
-template <typename T> void assign(Program const &, ArgMap &, Flag const &, std::optional<std::string> const &);
-template <typename T> void assign(Program const &, ArgMap &, Option const &, std::optional<std::string> const &);
-template <typename T> void assign(Program const &, ArgMap &, Positional const &, std::optional<std::string> const &);
+template <typename T> void assign(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
+template <typename T> void assign(Program const &, ArgMap &, Option const &, std::optional<std::string_view> const);
+template <typename T> void assign(Program const &, ArgMap &, Positional const &, std::optional<std::string_view> const);
 
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(Program const &, ArgMap &, Flag const &, std::optional<std::string> const &);
+void append(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(Program const &, ArgMap &, Option const &, std::optional<std::string> const &);
+void append(Program const &, ArgMap &, Option const &, std::optional<std::string_view> const);
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(Program const &, ArgMap &, Positional const &, std::optional<std::string> const &);
+void append(Program const &, ArgMap &, Positional const &, std::optional<std::string_view> const);
 
-void print_help(Program const &, ArgMap &, Flag const &, std::optional<std::string> const &);
+void print_help(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
 
 } // namespace actions
 
@@ -86,18 +86,18 @@ struct ArgValue {
 };
 
 struct ArgMap {
-  ArgValue operator[](std::string name) const {
+  ArgValue operator[](std::string_view name) const {
     if (!args.contains(name))
       throw UnknownArgument(fmt::format("Could not find argument `{}`", name));
     return args.at(name);
   }
 
-  template <typename T> T as(std::string name) const {
+  template <typename T> T as(std::string_view name) const {
     auto const arg = (*this)[name];
     return arg.as<T>();
   }
 
-  bool has(std::string name) const noexcept { return args.contains(name); }
+  bool has(std::string_view name) const noexcept { return args.contains(name); }
 
   ArgMap *cmd(std::string_view name) {
     if (cmd_name == name)
@@ -123,25 +123,25 @@ struct ArgMap {
   std::string exec_path{};
   std::string cmd_name{};
   memory::ValuePtr<ArgMap> cmd_args;
-  std::map<std::string, ArgValue> args;
+  std::map<std::string_view, ArgValue> args;
 };
 
 template <ArgumentType type> struct Arg {
-  std::string name{};
-  std::conditional_t<type != ArgumentType::POSITIONAL, char, std::monostate> abbrev{};
-  std::string description{};
+  std::string_view name{};
+  std::conditional_t<type != ArgumentType::POSITIONAL, std::string_view, std::monostate> abbrev{};
+  std::string_view description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
   std::conditional_t<type != ArgumentType::POSITIONAL, std::optional<BuiltinType>, std::monostate> set_value{};
   actions::signature<type> act = actions::assign<std::string>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
-  Arg<type> &aka(char abbrev) noexcept requires(type != ArgumentType::POSITIONAL) {
+  Arg<type> &aka(char const (&abbrev)[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
     this->abbrev = abbrev;
     return *this;
   }
 
-  Arg<type> &help(std::string description) noexcept {
+  Arg<type> &help(std::string_view description) noexcept {
     this->description = description;
     return *this;
   }
@@ -185,7 +185,7 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return abbrev != '\0'; }
+  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
 
   std::string format_base_usage() const noexcept;
   std::string format_usage() const noexcept;
@@ -204,7 +204,7 @@ template <ArgumentType type> bool operator<(Arg<type> const &lhs, Arg<type> cons
 }
 
 struct Command {
-  std::string name{};
+  std::string_view name{};
   memory::ValuePtr<Program> spec;
 
   std::string format_help_usage() const noexcept;
@@ -216,11 +216,12 @@ struct Command {
 namespace parsing {
 
 struct ParsedOption {
-  std::string name;
-  std::optional<std::string> value;
+  std::string_view name;
+  // no string and empty string mean different things here
+  std::optional<std::string_view> value;
 };
 
-ParsedOption parse_option(std::string) noexcept;
+ParsedOption parse_option(std::string_view const) noexcept;
 
 struct Command {
   std::size_t index;
@@ -233,11 +234,11 @@ struct DashDash {
 };
 
 struct Flag {
-  std::string name;
+  std::string_view name;
 };
 
 struct ManyFlags {
-  std::string chars;
+  std::string_view chars;
 };
 
 struct Option {
@@ -276,8 +277,8 @@ private:
 
   parsing::alternatives decide_type(std::size_t) const noexcept;
 
-  bool is_dash_dash(std::string const &) const noexcept;
-  std::optional<std::string> looks_positional(std::string const &) const noexcept;
+  bool is_dash_dash(std::string_view const) const noexcept;
+  std::string_view looks_positional(std::string_view const) const noexcept;
 
   bool would_be_positional(std::size_t) const noexcept;
 };
@@ -285,43 +286,44 @@ private:
 } // namespace parsing
 
 struct Program {
-  std::string title{};
-  std::string introduction{};
-  std::string description{};
-  std::string path{};
+  std::string_view title{};
+  std::string_view introduction{};
+  std::string_view description{};
+  std::string_view path{};
 
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
   std::vector<Command> cmds;
 
-  std::map<std::string, std::size_t> cmds_idx;
-  std::map<std::string, std::size_t> flags_idx;
-  std::map<std::string, std::size_t> options_idx;
+  std::map<std::string_view, std::size_t> cmds_idx;
+  std::map<std::string_view, std::size_t> flags_idx;
+  std::map<std::string_view, std::size_t> options_idx;
 
   Program() : Program({}, {}, {}) {}
 
-  Program(std::string title) : Program(title, {}, {}) {}
+  Program(std::string_view title) : Program(title, {}, {}) {}
 
-  Program(std::string title, std::string introduction) : Program(title, introduction, {}) {}
+  Program(std::string_view title, std::string_view introduction) : Program(title, introduction, {}) {}
 
-  Program(std::string title, std::string introduction, std::string description)
+  Program(std::string_view title, std::string_view introduction, std::string_view description)
       : title(title), introduction(introduction), description(description) {
-    flag("help", 'h').help("Display this information").action(actions::print_help);
+    flag("help", "h").help("Display this information").action(actions::print_help);
   }
 
-  Program &intro(std::string) noexcept;
-  Program &details(std::string) noexcept;
+  Program &intro(std::string_view) noexcept;
+  Program &details(std::string_view) noexcept;
   Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
-  Flag &flag(std::string);
-  Flag &flag(std::string, char);
+  Positional &pos(std::string_view);
 
-  Option &opt(std::string);
-  Option &opt(std::string, char);
+  Flag &flag(std::string_view);
+  Flag &flag(std::string_view, char const (&)[2]);
 
-  Program &cmd(std::string);
-  Positional &pos(std::string);
+  Option &opt(std::string_view);
+  Option &opt(std::string_view, char const (&)[2]);
+
+  Program &cmd(std::string_view);
 
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
@@ -330,11 +332,11 @@ struct Program {
 
   void set_defaults(ArgMap &) const noexcept;
 
-  Command const *is_command(std::string const &) const noexcept;
-  bool is_flag(std::string const &) const noexcept;
-  std::optional<std::string> is_long_flag(std::string const &) const noexcept;
-  std::optional<std::string> is_short_flags(std::string const &) const noexcept;
-  std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
+  Command const *is_command(std::string_view const) const noexcept;
+  bool is_flag(std::string_view const) const noexcept;
+  std::string_view is_long_flag(std::string_view const) const noexcept;
+  std::string_view is_short_flags(std::string_view const) const noexcept;
+  std::optional<parsing::ParsedOption> is_option(std::string_view const) const noexcept;
 };
 
 // +------------+
@@ -385,14 +387,14 @@ private:
 
 namespace actions {
 
-template <typename T> void assign_to(ArgMap &map, std::string const &name, T value) {
+template <typename T> void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
     throw DuplicateAssignment(fmt::format(
         "Attempted to assign argument `{}` but it was already set. Did you specify it more than once?", name));
 }
 
-template <typename Elem, typename Container> void append_to(ArgMap &map, std::string const &name, Elem value) {
+template <typename Elem, typename Container> void append_to(ArgMap &map, std::string_view const name, Elem value) {
   if (auto list = map.args.find(name); list != map.args.end()) {
     std::get<Container>(list->second.value).emplace_back(std::move(value));
   } else {
@@ -405,12 +407,12 @@ template <typename Elem, typename Container> void append_to(ArgMap &map, std::st
 // +--------+
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string> const &parsed_value) {
+void assign(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, std::get<T>(*arg.set_value));
 }
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
+void assign(Program const &, ArgMap &map, Option const &arg, std::optional<std::string_view> const parsed_value) {
   if (parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
@@ -418,7 +420,7 @@ void assign(Program const &, ArgMap &map, Option const &arg, std::optional<std::
 }
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
+void assign(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<T>(*parsed_value));
 }
 
@@ -427,13 +429,13 @@ void assign(Program const &, ArgMap &map, Positional const &arg, std::optional<s
 // +--------+
 
 template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string> const &parsed_value) {
+void append(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string_view> const parsed_value) {
   Elem value = std::get<Elem>(*arg.set_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
 
 template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
+void append(Program const &, ArgMap &map, Option const &arg, std::optional<std::string_view> const parsed_value) {
   if (parsed_value)
     append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
   else
@@ -441,7 +443,7 @@ void append(Program const &, ArgMap &map, Option const &arg, std::optional<std::
 }
 
 template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
+void append(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string_view> const parsed_value) {
   Elem value = convert<Elem>(*parsed_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
