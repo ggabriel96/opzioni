@@ -1,4 +1,3 @@
-
 #ifndef OPZIONI_STRING_H
 #define OPZIONI_STRING_H
 

@@ -1,4 +1,3 @@
-
 #ifndef OPZIONI_MEMORY_H
 #define OPZIONI_MEMORY_H
 
