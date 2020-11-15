@@ -128,7 +128,7 @@ struct ArgMap {
 
 template <ArgumentType type> struct Arg {
   std::string_view name{};
-  std::conditional_t<type != ArgumentType::POSITIONAL, char, std::monostate> abbrev{};
+  std::conditional_t<type != ArgumentType::POSITIONAL, std::string_view, std::monostate> abbrev{};
   std::string_view description{};
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
@@ -136,8 +136,8 @@ template <ArgumentType type> struct Arg {
   actions::signature<type> act = actions::assign<std::string>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
-  Arg<type> &aka(char const abbrev[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
-    this->abbrev = abbrev[0];
+  Arg<type> &aka(std::string_view abbrev) noexcept requires(type != ArgumentType::POSITIONAL) {
+    this->abbrev = abbrev;
     return *this;
   }
 
@@ -185,7 +185,7 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return abbrev != '\0'; }
+  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
 
   std::string format_base_usage() const noexcept;
   std::string format_usage() const noexcept;
@@ -316,14 +316,12 @@ struct Program {
   Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
   Positional &pos(std::string_view);
-  Flag &flag(std::string_view);
-  Option &opt(std::string_view);
 
-  // using char const[2] so we get the lifetime of a string literal,
-  // but we only store a char so the user cannot get around the
-  // interface by assignint directly to the argument
-  Flag &flag(std::string_view, char const[2]);
-  Option &opt(std::string_view, char const[2]);
+  Flag &flag(std::string_view);
+  Flag &flag(std::string_view, std::string_view);
+
+  Option &opt(std::string_view);
+  Option &opt(std::string_view, std::string_view);
 
   Program &cmd(std::string_view);
 

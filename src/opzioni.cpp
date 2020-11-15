@@ -32,7 +32,7 @@ template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const
 
 template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
-  auto val = has_abbrev() ? fmt::format("<{}>", abbrev) : fmt::format("<{}>", name);
+  auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
   if (set_value)
     val = "[" + val + "]";
   return fmt::format("{}{} {}", dashes, name, val);
@@ -136,26 +136,26 @@ Positional &Program::pos(std::string_view name) {
   return *positionals.insert(positionals.end(), arg);
 }
 
-Option &Program::opt(std::string_view name) { return opt(name, ""); }
+Option &Program::opt(std::string_view name) { return opt(name, {}); }
 
-Option &Program::opt(std::string_view name, char const abbrev[2]) {
+Option &Program::opt(std::string_view name, std::string_view abbrev) {
   auto const idx = options.size();
-  auto &opt = options.emplace_back(name, abbrev[0]);
+  auto &opt = options.emplace_back(name, abbrev);
   options_idx[opt.name] = idx;
   if (opt.has_abbrev())
-    options_idx[abbrev] = idx;
+    options_idx[opt.abbrev] = idx;
   return opt;
 }
 
-Flag &Program::flag(std::string_view name) { return flag(name, ""); }
+Flag &Program::flag(std::string_view name) { return flag(name, {}); }
 
-Flag &Program::flag(std::string_view name, char const abbrev[2]) {
+Flag &Program::flag(std::string_view name, std::string_view abbrev) {
   auto const idx = flags.size();
-  Flag arg{.name = name, .abbrev = abbrev[0], .set_value = true, .act = actions::assign<bool>};
+  Flag arg{.name = name, .abbrev = abbrev, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
   flags_idx[flag.name] = idx;
   if (flag.has_abbrev())
-    flags_idx[abbrev] = idx;
+    flags_idx[flag.abbrev] = idx;
   return flag;
 }
 
