@@ -2,8 +2,8 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "ninja",
-            "command": "ninja -C ${workspaceFolder}/build",
+            "label": "build",
+            "command": "make build",
         }
     ],
     "version": "2.0.0"
