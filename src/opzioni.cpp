@@ -106,20 +106,20 @@ template <> std::string Arg<ArgumentType::FLAG>::format_help_description() const
   return format;
 }
 
-std::string Command::format_help_usage() const noexcept { return name; }
+std::string Command::format_help_usage() const noexcept { return std::string(name); }
 
-std::string Command::format_help_description() const noexcept { return spec->introduction; }
+std::string Command::format_help_description() const noexcept { return std::string(spec->introduction); }
 
 // +---------+
 // | Program |
 // +---------+
 
-Program &Program::intro(std::string introduction) noexcept {
+Program &Program::intro(std::string_view introduction) noexcept {
   this->introduction = introduction;
   return *this;
 }
 
-Program &Program::details(std::string description) noexcept {
+Program &Program::details(std::string_view description) noexcept {
   this->description = description;
   return *this;
 }
@@ -159,7 +159,7 @@ Flag &Program::flag(std::string_view name, std::string_view abbrev) {
   return flag;
 }
 
-Program &Program::cmd(std::string name) {
+Program &Program::cmd(std::string_view name) {
   if (cmds_idx.contains(name)) {
     throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
   }
@@ -209,7 +209,7 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
-Command const *Program::is_command(std::string const &whole_arg) const noexcept {
+Command const *Program::is_command(std::string_view const whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
     return &cmds[cmd_idx->second];
   return nullptr;

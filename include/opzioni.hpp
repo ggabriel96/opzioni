@@ -204,7 +204,7 @@ template <ArgumentType type> bool operator<(Arg<type> const &lhs, Arg<type> cons
 }
 
 struct Command {
-  std::string name{};
+  std::string_view name{};
   memory::ValuePtr<Program> spec;
 
   std::string format_help_usage() const noexcept;
@@ -285,9 +285,9 @@ private:
 } // namespace parsing
 
 struct Program {
-  std::string title{};
-  std::string introduction{};
-  std::string description{};
+  std::string_view title{};
+  std::string_view introduction{};
+  std::string_view description{};
   std::string path{};
 
   std::vector<Flag> flags;
@@ -301,17 +301,17 @@ struct Program {
 
   Program() : Program({}, {}, {}) {}
 
-  Program(std::string title) : Program(title, {}, {}) {}
+  Program(std::string_view title) : Program(title, {}, {}) {}
 
-  Program(std::string title, std::string introduction) : Program(title, introduction, {}) {}
+  Program(std::string_view title, std::string_view introduction) : Program(title, introduction, {}) {}
 
-  Program(std::string title, std::string introduction, std::string description)
+  Program(std::string_view title, std::string_view introduction, std::string_view description)
       : title(title), introduction(introduction), description(description) {
     flag("help", "h").help("Display this information").action(actions::print_help);
   }
 
-  Program &intro(std::string) noexcept;
-  Program &details(std::string) noexcept;
+  Program &intro(std::string_view) noexcept;
+  Program &details(std::string_view) noexcept;
   Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
   Positional &pos(std::string_view);
@@ -322,7 +322,7 @@ struct Program {
   Option &opt(std::string_view);
   Option &opt(std::string_view, std::string_view);
 
-  Program &cmd(std::string);
+  Program &cmd(std::string_view);
 
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
@@ -331,7 +331,7 @@ struct Program {
 
   void set_defaults(ArgMap &) const noexcept;
 
-  Command const *is_command(std::string const &) const noexcept;
+  Command const *is_command(std::string_view const) const noexcept;
   bool is_flag(std::string_view const) const noexcept;
   std::string_view is_long_flag(std::string_view const) const noexcept;
   std::string_view is_short_flags(std::string_view const) const noexcept;
