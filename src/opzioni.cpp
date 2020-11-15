@@ -138,7 +138,7 @@ Positional &Program::pos(std::string_view name) {
 
 Option &Program::opt(std::string_view name) { return opt(name, {}); }
 
-Option &Program::opt(std::string_view name, std::string_view abbrev) {
+Option &Program::opt(std::string_view name, char const (&abbrev)[2]) {
   auto const idx = options.size();
   auto &opt = options.emplace_back(name, abbrev);
   options_idx[opt.name] = idx;
@@ -149,7 +149,7 @@ Option &Program::opt(std::string_view name, std::string_view abbrev) {
 
 Flag &Program::flag(std::string_view name) { return flag(name, {}); }
 
-Flag &Program::flag(std::string_view name, std::string_view abbrev) {
+Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
   auto const idx = flags.size();
   Flag arg{.name = name, .abbrev = abbrev, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);

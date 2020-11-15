@@ -136,7 +136,7 @@ template <ArgumentType type> struct Arg {
   actions::signature<type> act = actions::assign<std::string>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
-  Arg<type> &aka(std::string_view abbrev) noexcept requires(type != ArgumentType::POSITIONAL) {
+  Arg<type> &aka(char const (&abbrev)[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
     this->abbrev = abbrev;
     return *this;
   }
@@ -318,10 +318,10 @@ struct Program {
   Positional &pos(std::string_view);
 
   Flag &flag(std::string_view);
-  Flag &flag(std::string_view, std::string_view);
+  Flag &flag(std::string_view, char const (&)[2]);
 
   Option &opt(std::string_view);
-  Option &opt(std::string_view, std::string_view);
+  Option &opt(std::string_view, char const (&)[2]);
 
   Program &cmd(std::string_view);
 
