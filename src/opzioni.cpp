@@ -229,7 +229,7 @@ std::string_view Program::is_short_flags(std::string_view const whole_arg) const
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const flags = whole_arg.substr(1);
   auto const all_short_flags =
-      std::all_of(flags.begin(), flags.end(), [this](char const &c) { return this->is_flag(std::string(1, c)); });
+      std::all_of(flags.begin(), flags.end(), [this](char const c) { return this->is_flag(std::string_view(&c, 1)); });
   if (num_of_dashes == 1 && flags.length() >= 1 && all_short_flags)
     return flags;
   return {};
@@ -397,9 +397,8 @@ std::size_t Parser::operator()(Flag flag) {
 
 std::size_t Parser::operator()(ManyFlags flags) {
   using std::views::transform;
-  auto char_to_flag = [](char c) { return Flag{std::string(1, c)}; };
-  for (auto const &flag : flags.chars | transform(char_to_flag)) {
-    (*this)(flag);
+  for (auto const flag : flags.chars) {
+    (*this)(Flag{std::string_view(&flag, 1)});
   }
   return 1;
 }
