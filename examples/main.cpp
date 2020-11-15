@@ -21,24 +21,24 @@ int main(int argc, char const *argv[]) {
 
   program.pos("name").help("Your first name");
 
-  program.opt("double", 'd').help("A double").otherwise(7.11);
+  program.opt("double", "d").help("A double").otherwise(7.11);
   program.opt("last-name").help("Your last name");
   program.opt("o").help("We also support options with only short names").otherwise("oh"s);
-  program.opt("num", 'n').help("Creates a list of numbers with each appearence of this argument").action(append<int>);
+  program.opt("num", "n").help("Creates a list of numbers with each appearence of this argument").action(append<int>);
   program.opt("str").help("Appends to a list of strings").action(append<std::string>).otherwise(std::vector{""s});
   program.opt("vec")
       .otherwise(std::vector<int>{})
       .help("This option uses the default action, so it'll not append to a list from each appearence in the CLI. It "
             "will instead parse a comma-separated list once");
-  program.opt("verbose", 'v').help("Level of verbosity").set(1).otherwise(0);
+  program.opt("verbose", "v").help("Level of verbosity").set(1).otherwise(0);
 
-  program.flag("append", 'a')
+  program.flag("append", "a")
       .set(1)
       .otherwise(std::vector{-1})
       .help("The equivalent of Python's argparse `append_const`: will append the defined value every time it appears "
             "in the CLI")
       .action(append<int>);
-  program.flag("flag", 'f')
+  program.flag("flag", "f")
       .set("do something!"s)
       .otherwise("nope"s)
       .help("The equivalent of Python's argparse `store_const`: will store the defined value if it appears in the CLI");
