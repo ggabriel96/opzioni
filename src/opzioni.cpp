@@ -548,7 +548,7 @@ ParsedOption parse_option(std::string whole_arg) noexcept {
 
 namespace actions {
 
-void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string> const &) {
+void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string_view> const) {
   program.print_usage();
   std::exit(0);
 }

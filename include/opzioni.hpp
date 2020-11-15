@@ -54,20 +54,20 @@ using Positional = Arg<ArgumentType::POSITIONAL>;
 namespace actions {
 
 template <ArgumentType type>
-using signature = void (*)(Program const &, ArgMap &, Arg<type> const &, std::optional<std::string> const &);
+using signature = void (*)(Program const &, ArgMap &, Arg<type> const &, std::optional<std::string_view> const);
 
-template <typename T> void assign(Program const &, ArgMap &, Flag const &, std::optional<std::string> const &);
-template <typename T> void assign(Program const &, ArgMap &, Option const &, std::optional<std::string> const &);
-template <typename T> void assign(Program const &, ArgMap &, Positional const &, std::optional<std::string> const &);
+template <typename T> void assign(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
+template <typename T> void assign(Program const &, ArgMap &, Option const &, std::optional<std::string_view> const);
+template <typename T> void assign(Program const &, ArgMap &, Positional const &, std::optional<std::string_view> const);
 
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(Program const &, ArgMap &, Flag const &, std::optional<std::string> const &);
+void append(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(Program const &, ArgMap &, Option const &, std::optional<std::string> const &);
+void append(Program const &, ArgMap &, Option const &, std::optional<std::string_view> const);
 template <typename Elem, typename Container = std::vector<Elem>>
-void append(Program const &, ArgMap &, Positional const &, std::optional<std::string> const &);
+void append(Program const &, ArgMap &, Positional const &, std::optional<std::string_view> const);
 
-void print_help(Program const &, ArgMap &, Flag const &, std::optional<std::string> const &);
+void print_help(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
 
 } // namespace actions
 
@@ -406,12 +406,12 @@ template <typename Elem, typename Container> void append_to(ArgMap &map, std::st
 // +--------+
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string> const &parsed_value) {
+void assign(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, std::get<T>(*arg.set_value));
 }
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
+void assign(Program const &, ArgMap &map, Option const &arg, std::optional<std::string_view> const parsed_value) {
   if (parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
@@ -419,7 +419,7 @@ void assign(Program const &, ArgMap &map, Option const &arg, std::optional<std::
 }
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
+void assign(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<T>(*parsed_value));
 }
 
@@ -428,13 +428,13 @@ void assign(Program const &, ArgMap &map, Positional const &arg, std::optional<s
 // +--------+
 
 template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string> const &parsed_value) {
+void append(Program const &, ArgMap &map, Flag const &arg, std::optional<std::string_view> const parsed_value) {
   Elem value = std::get<Elem>(*arg.set_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
 
 template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Option const &arg, std::optional<std::string> const &parsed_value) {
+void append(Program const &, ArgMap &map, Option const &arg, std::optional<std::string_view> const parsed_value) {
   if (parsed_value)
     append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
   else
@@ -442,7 +442,7 @@ void append(Program const &, ArgMap &map, Option const &arg, std::optional<std::
 }
 
 template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string> const &parsed_value) {
+void append(Program const &, ArgMap &map, Positional const &arg, std::optional<std::string_view> const parsed_value) {
   Elem value = convert<Elem>(*parsed_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
