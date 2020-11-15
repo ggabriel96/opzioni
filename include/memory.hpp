@@ -8,7 +8,8 @@ namespace opzioni {
 
 namespace memory {
 
-template <typename T> class ValuePtr {
+template <typename T>
+class ValuePtr {
 public:
   ValuePtr() = default;
   ValuePtr(ValuePtr &&) = default;
@@ -35,9 +36,15 @@ private:
   std::unique_ptr<T> ptr;
 };
 
-template <typename T> bool operator==(ValuePtr<T> const &lhs, std::nullptr_t) noexcept { return lhs.get() == nullptr; }
+template <typename T>
+bool operator==(ValuePtr<T> const &lhs, std::nullptr_t) noexcept {
+  return lhs.get() == nullptr;
+}
 
-template <typename T> bool operator!=(std::nullptr_t, ValuePtr<T> const &rhs) noexcept { return !(rhs == nullptr); }
+template <typename T>
+bool operator!=(std::nullptr_t, ValuePtr<T> const &rhs) noexcept {
+  return !(rhs == nullptr);
+}
 
 } // namespace memory
 

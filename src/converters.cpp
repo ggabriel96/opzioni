@@ -2,7 +2,8 @@
 
 namespace opzioni {
 
-template <> auto convert<bool>(std::string_view value) -> bool {
+template <>
+auto convert<bool>(std::string_view value) -> bool {
   if (value.empty())
     throw ConversionError("Cannot convert an empty string to bool");
   if (value == "1" || value == "true")
@@ -12,6 +13,9 @@ template <> auto convert<bool>(std::string_view value) -> bool {
   throw ConversionError(fmt::format("Cannot convert `{}` to bool", value));
 }
 
-template <> auto convert<std::string>(std::string_view value) -> std::string { return std::string(value); }
+template <>
+auto convert<std::string>(std::string_view value) -> std::string {
+  return std::string(value);
+}
 
 } // namespace opzioni

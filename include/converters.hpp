@@ -17,9 +17,11 @@
 
 namespace opzioni {
 
-template <typename TargetType> auto convert(std::string_view) -> TargetType;
+template <typename TargetType>
+auto convert(std::string_view) -> TargetType;
 
-template <concepts::Integer Int> auto convert(std::string_view arg_val) -> Int {
+template <concepts::Integer Int>
+auto convert(std::string_view arg_val) -> Int {
   if (arg_val.empty())
     throw ConversionError("Cannot convert an empty string to an integer type");
   Int integer = 0;
@@ -29,7 +31,8 @@ template <concepts::Integer Int> auto convert(std::string_view arg_val) -> Int {
   return integer;
 }
 
-template <std::floating_point Float> auto convert(std::string_view arg_val) -> Float {
+template <std::floating_point Float>
+auto convert(std::string_view arg_val) -> Float {
   if (arg_val.empty())
     throw ConversionError("Cannot convert an empty string to a floating point type");
   char *end = nullptr;
@@ -49,7 +52,8 @@ template <std::floating_point Float> auto convert(std::string_view arg_val) -> F
   return floatnum;
 }
 
-template <concepts::Container Container> auto convert(std::string_view value) -> Container {
+template <concepts::Container Container>
+auto convert(std::string_view value) -> Container {
   Container container;
   if (!value.empty()) {
     auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };

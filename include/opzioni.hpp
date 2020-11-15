@@ -28,10 +28,16 @@ namespace opzioni {
 // | related to type list and builtin types |
 // +----------------------------------------+
 
-template <typename...> struct TypeList;
+template <typename...>
+struct TypeList;
 
-template <typename...> struct VariantOf;
-template <typename... Ts> struct VariantOf<TypeList<Ts...>> { using type = std::variant<Ts...>; };
+template <typename...>
+struct VariantOf;
+
+template <typename... Ts>
+struct VariantOf<TypeList<Ts...>> {
+  using type = std::variant<Ts...>;
+};
 
 using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>, std::vector<std::string>>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
@@ -44,7 +50,10 @@ std::string builtin2str(BuiltinType const &) noexcept;
 enum struct ArgumentType { FLAG, OPTION, POSITIONAL };
 
 struct ArgMap;
-template <ArgumentType> struct Arg;
+
+template <ArgumentType>
+struct Arg;
+
 class Program;
 
 using Flag = Arg<ArgumentType::FLAG>;
@@ -56,9 +65,14 @@ namespace actions {
 template <ArgumentType type>
 using signature = void (*)(Program const &, ArgMap &, Arg<type> const &, std::optional<std::string_view> const);
 
-template <typename T> void assign(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
-template <typename T> void assign(Program const &, ArgMap &, Option const &, std::optional<std::string_view> const);
-template <typename T> void assign(Program const &, ArgMap &, Positional const &, std::optional<std::string_view> const);
+template <typename T>
+void assign(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
+
+template <typename T>
+void assign(Program const &, ArgMap &, Option const &, std::optional<std::string_view> const);
+
+template <typename T>
+void assign(Program const &, ArgMap &, Positional const &, std::optional<std::string_view> const);
 
 template <typename Elem, typename Container = std::vector<Elem>>
 void append(Program const &, ArgMap &, Flag const &, std::optional<std::string_view> const);
@@ -82,7 +96,10 @@ struct GatherAmount {
 struct ArgValue {
   BuiltinType value{};
 
-  template <typename T> T as() const { return std::get<T>(value); }
+  template <typename T>
+  T as() const {
+    return std::get<T>(value);
+  }
 };
 
 struct ArgMap {
@@ -92,7 +109,8 @@ struct ArgMap {
     return args.at(name);
   }
 
-  template <typename T> T as(std::string_view name) const {
+  template <typename T>
+  T as(std::string_view name) const {
     auto const arg = (*this)[name];
     return arg.as<T>();
   }
@@ -126,7 +144,8 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
-template <ArgumentType type> struct Arg {
+template <ArgumentType type>
+struct Arg {
   std::string_view name{};
   std::conditional_t<type != ArgumentType::POSITIONAL, std::string_view, std::monostate> abbrev{};
   std::string_view description{};
@@ -156,7 +175,8 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  template <typename T = std::string> Arg<type> &gather() noexcept requires(type != ArgumentType::FLAG) {
+  template <typename T = std::string>
+  Arg<type> &gather() noexcept requires(type != ArgumentType::FLAG) {
     return gather<T>(0);
   }
 
@@ -167,7 +187,8 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  template <typename T> Arg<type> &otherwise(T value) {
+  template <typename T>
+  Arg<type> &otherwise(T value) {
     default_value = std::move(value);
     is_required = false;
     // checking if act is the default because we cannot unconditionally
@@ -177,7 +198,8 @@ template <ArgumentType type> struct Arg {
     return *this;
   }
 
-  template <typename T> Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
+  template <typename T>
+  Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
     set_value = std::move(value);
     if (act == static_cast<actions::signature<type>>(actions::assign<bool>) ||
         act == static_cast<actions::signature<type>>(actions::assign<std::string>))
@@ -193,11 +215,13 @@ template <ArgumentType type> struct Arg {
   std::string format_help_description() const noexcept;
 };
 
-template <ArgumentType type> void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
+template <ArgumentType type>
+void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
   map.args[arg.name] = ArgValue{*arg.default_value};
 }
 
-template <ArgumentType type> bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
+template <ArgumentType type>
+bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
   if (lhs.is_required == rhs.is_required)
     return lhs.name < rhs.name;
   return lhs.is_required && !rhs.is_required;
@@ -387,14 +411,16 @@ private:
 
 namespace actions {
 
-template <typename T> void assign_to(ArgMap &map, std::string_view const name, T value) {
+template <typename T>
+void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
     throw DuplicateAssignment(fmt::format(
         "Attempted to assign argument `{}` but it was already set. Did you specify it more than once?", name));
 }
 
-template <typename Elem, typename Container> void append_to(ArgMap &map, std::string_view const name, Elem value) {
+template <typename Elem, typename Container>
+void append_to(ArgMap &map, std::string_view const name, Elem value) {
   if (auto list = map.args.find(name); list != map.args.end()) {
     std::get<Container>(list->second.value).emplace_back(std::move(value));
   } else {

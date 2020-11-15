@@ -18,19 +18,25 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 // | Arg |
 // +-----+
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept { return std::string(name); }
+template <>
+std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept {
+  return std::string(name);
+}
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
   if (is_required)
     return "<" + format_base_usage() + ">";
   return "[<" + format_base_usage() + ">]";
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const noexcept {
   return format_base_usage();
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
   auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
   if (set_value)
@@ -38,43 +44,50 @@ template <> std::string Arg<ArgumentType::OPTION>::format_base_usage() const noe
   return fmt::format("{}{} {}", dashes, name, val);
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
   if (is_required)
     return format_base_usage();
   return "[" + format_base_usage() + "]";
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
   if (has_abbrev())
     return fmt::format("-{}, {}", abbrev, format_base_usage());
   return format_base_usage();
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_base_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::FLAG>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
   return fmt::format("{}{}", dashes, name);
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
   if (is_required)
     return format_base_usage();
   return "[" + format_base_usage() + "]";
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
+template <>
+std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
   if (has_abbrev())
     return fmt::format("-{}, {}", abbrev, format_base_usage());
   return format_base_usage();
 }
 
-template <> std::string Arg<ArgumentType::POSITIONAL>::format_help_description() const noexcept {
+template <>
+std::string Arg<ArgumentType::POSITIONAL>::format_help_description() const noexcept {
   if (default_value) {
     return fmt::format("{} (default: {})", description, std::visit(builtin2str, *default_value));
   }
   return std::string(description);
 }
 
-template <> std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
+template <>
+std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
   std::string format(description);
   if (set_value || default_value) {
     format += " (";
@@ -90,7 +103,8 @@ template <> std::string Arg<ArgumentType::OPTION>::format_help_description() con
   return format;
 }
 
-template <> std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
+template <>
+std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   std::string format(description);
   if (set_value || default_value) {
     format += " (";
