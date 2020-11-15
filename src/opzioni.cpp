@@ -235,7 +235,7 @@ std::string_view Program::is_short_flags(std::string_view const whole_arg) const
   return {};
 }
 
-std::optional<parsing::ParsedOption> Program::is_option(std::string const &whole_arg) const noexcept {
+std::optional<parsing::ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
   auto const parsed_option = parsing::parse_option(whole_arg);
   if (options_idx.contains(parsed_option.name))
     return parsed_option;
@@ -419,7 +419,7 @@ std::size_t Parser::operator()(Option option) {
     // From that index + 1 is where we start to parse values up to gather amount
     std::size_t count = 0;
     do {
-      auto const value = std::string(args[option.index + 1 + count]);
+      auto const value = std::string_view(args[option.index + 1 + count]);
       arg.act(spec, map, arg, value);
       ++count;
     } while (count < gather_amount && would_be_positional(option.index + 1 + count));
@@ -466,7 +466,7 @@ std::size_t Parser::operator()(Command cmd) {
 std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(std::string(args[unknown.index])); }
 
 alternatives Parser::decide_type(std::size_t index) const noexcept {
-  auto const arg = std::string(args[index]);
+  auto const arg = std::string_view(args[index]);
 
   if (is_dash_dash(arg))
     return DashDash{index};
@@ -474,7 +474,7 @@ alternatives Parser::decide_type(std::size_t index) const noexcept {
   if (auto cmd = spec.is_command(arg); cmd != nullptr)
     return Command{index, cmd->name, *cmd->spec};
 
-  if (auto const positional = looks_positional(arg); positional)
+  if (auto const positional = looks_positional(arg); !positional.empty())
     return Positional{index};
 
   if (auto const flags = spec.is_short_flags(arg); !flags.empty())
@@ -493,25 +493,25 @@ alternatives Parser::decide_type(std::size_t index) const noexcept {
 // | "helpers" |
 // +-----------+
 
-bool Parser::is_dash_dash(std::string const &whole_arg) const noexcept {
+bool Parser::is_dash_dash(std::string_view const whole_arg) const noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
 }
 
-std::optional<std::string> Parser::looks_positional(std::string const &whole_arg) const noexcept {
+std::string_view Parser::looks_positional(std::string_view const whole_arg) const noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string::npos))
+  if (num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos))
     return whole_arg;
-  return std::nullopt;
+  return {};
 }
 
 bool Parser::would_be_positional(std::size_t idx) const noexcept {
   return std::holds_alternative<Positional>(decide_type(idx));
 }
 
-ParsedOption parse_option(std::string whole_arg) noexcept {
+ParsedOption parse_option(std::string_view const whole_arg) noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string::npos;
+  bool const has_equals = eq_idx != std::string_view::npos;
   if (num_of_dashes == 1) {
     // short option, e.g. `-O`
     auto const name = whole_arg.substr(1, 1);

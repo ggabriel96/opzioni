@@ -216,11 +216,12 @@ struct Command {
 namespace parsing {
 
 struct ParsedOption {
-  std::string name;
-  std::optional<std::string> value;
+  std::string_view name;
+  // no string and empty string mean different things here
+  std::optional<std::string_view> value;
 };
 
-ParsedOption parse_option(std::string) noexcept;
+ParsedOption parse_option(std::string_view const) noexcept;
 
 struct Command {
   std::size_t index;
@@ -276,8 +277,8 @@ private:
 
   parsing::alternatives decide_type(std::size_t) const noexcept;
 
-  bool is_dash_dash(std::string const &) const noexcept;
-  std::optional<std::string> looks_positional(std::string const &) const noexcept;
+  bool is_dash_dash(std::string_view const) const noexcept;
+  std::string_view looks_positional(std::string_view const) const noexcept;
 
   bool would_be_positional(std::size_t) const noexcept;
 };
@@ -335,7 +336,7 @@ struct Program {
   bool is_flag(std::string_view const) const noexcept;
   std::string_view is_long_flag(std::string_view const) const noexcept;
   std::string_view is_short_flags(std::string_view const) const noexcept;
-  std::optional<parsing::ParsedOption> is_option(std::string const &) const noexcept;
+  std::optional<parsing::ParsedOption> is_option(std::string_view const) const noexcept;
 };
 
 // +------------+
