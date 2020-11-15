@@ -289,7 +289,7 @@ struct Program {
   std::string_view title{};
   std::string_view introduction{};
   std::string_view description{};
-  std::string path{};
+  std::string_view path{};
 
   std::vector<Flag> flags;
   std::vector<Option> options;
