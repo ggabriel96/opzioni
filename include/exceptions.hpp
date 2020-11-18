@@ -2,6 +2,9 @@
 #define OPZIONI_EXCEPTIONS_H
 
 #include <stdexcept>
+#include <string_view>
+
+#include <fmt/format.h>
 
 namespace opzioni {
 
@@ -44,7 +47,8 @@ class ArgumentAlreadyExists : public ConsumerError {
 };
 
 class ArgumentNotFound : public ConsumerError {
-  using ConsumerError::ConsumerError;
+public:
+  ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
 };
 
 class UnknownArgument : public ConsumerError {
