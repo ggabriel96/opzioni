@@ -110,7 +110,7 @@ struct ArgValue {
 struct ArgMap {
   ArgValue operator[](std::string_view name) const {
     if (!args.contains(name))
-      throw UnknownArgument(fmt::format("Could not find argument `{}`", name));
+      throw ArgumentNotFound(fmt::format("Could not find argument `{}`", name));
     return args.at(name);
   }
 

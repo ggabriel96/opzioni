@@ -15,6 +15,10 @@ class UserError : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+// +-------------+
+// | user errors |
+// +-------------+
+
 class ConversionError : public UserError {
   using UserError::UserError;
 };
@@ -27,12 +31,23 @@ struct DuplicateAssignment : public UserError {
   using UserError::UserError;
 };
 
-// has mixed usage, will fix later...
-class UnknownArgument : public std::out_of_range {
-  using std::out_of_range::out_of_range;
+struct ParseError : public UserError {
+  using UserError::UserError;
 };
 
+// +-----------------+
+// | consumer errors |
+// +-----------------+
+
 class ArgumentAlreadyExists : public ConsumerError {
+  using ConsumerError::ConsumerError;
+};
+
+class ArgumentNotFound : public ConsumerError {
+  using ConsumerError::ConsumerError;
+};
+
+class UnknownArgument : public ConsumerError {
   using ConsumerError::ConsumerError;
 };
 

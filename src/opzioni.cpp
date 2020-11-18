@@ -448,7 +448,7 @@ std::size_t Parser::operator()(Option option) {
 
 std::size_t Parser::operator()(Positional positional) {
   if (current_positional_idx >= spec.positionals.size()) {
-    throw UnknownArgument(
+    throw ParseError(
         fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
                     args[positional.index], spec.positionals.size()));
   }
