@@ -32,8 +32,8 @@ class UnknownArgument : public std::out_of_range {
   using std::out_of_range::out_of_range;
 };
 
-class ArgumentAlreadyExists : public std::logic_error {
-  using std::logic_error::logic_error;
+class ArgumentAlreadyExists : public ConsumerError {
+  using ConsumerError::ConsumerError;
 };
 
 } // namespace opzioni
