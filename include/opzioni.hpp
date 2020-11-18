@@ -100,6 +100,11 @@ struct ArgValue {
   T as() const {
     return std::get<T>(value);
   }
+
+  template <typename T>
+  operator T() const {
+    return as<T>();
+  }
 };
 
 struct ArgMap {
