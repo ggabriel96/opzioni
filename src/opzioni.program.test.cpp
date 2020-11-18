@@ -107,7 +107,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error about that positional") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
@@ -117,7 +117,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error about that positional (the dash)") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `-`. This program expects 0 positional arguments"));
       }
     }
@@ -127,7 +127,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error about the first argument") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
@@ -137,7 +137,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error for the argument after dash-dash") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
@@ -171,7 +171,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error about that positional") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
@@ -181,7 +181,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error because the command was interpreted as positional") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `cmd`. This program expects 0 positional arguments"));
       }
     }
@@ -191,7 +191,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error about that positional") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
@@ -201,7 +201,7 @@ SCENARIO("positional arguments") {
 
       THEN("we throw an error about that positional") {
         REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnknownArgument,
+            program(argv), opzioni::ParseError,
             Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
       }
     }
