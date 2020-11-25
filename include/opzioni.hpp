@@ -329,17 +329,6 @@ struct Program {
   std::map<std::string_view, std::size_t> flags_idx;
   std::map<std::string_view, std::size_t> options_idx;
 
-  Program() : Program({}, {}, {}) {}
-
-  Program(std::string_view title) : Program(title, {}, {}) {}
-
-  Program(std::string_view title, std::string_view introduction) : Program(title, introduction, {}) {}
-
-  Program(std::string_view title, std::string_view introduction, std::string_view description)
-      : title(title), introduction(introduction), description(description) {
-    flag("help", "h").help("Display this information").action(actions::print_help);
-  }
-
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
   Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
@@ -367,6 +356,12 @@ struct Program {
   std::string_view is_short_flags(std::string_view const) const noexcept;
   std::optional<parsing::ParsedOption> is_option(std::string_view const) const noexcept;
 };
+
+// +-----------+
+// | utilities |
+// +-----------+
+
+Program program(std::string_view) noexcept;
 
 // +------------+
 // | formatting |

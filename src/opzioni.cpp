@@ -378,6 +378,17 @@ void HelpFormatter::print_description() const noexcept {
     out << limit_string_within(program_description, max_width) << nl;
 }
 
+
+// +-----------+
+// | utilities |
+// +-----------+
+
+Program program(std::string_view title) noexcept {
+  Program program(title);
+  program.flag("help", "h").help("Display this information").action(actions::print_help);
+  return program;
+}
+
 // +---------+
 // | parsing |
 // +---------+
