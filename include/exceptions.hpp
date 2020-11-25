@@ -18,6 +18,23 @@ class UserError : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+// +-----------------+
+// | consumer errors |
+// +-----------------+
+
+class ArgumentAlreadyExists : public ConsumerError {
+  using ConsumerError::ConsumerError;
+};
+
+class ArgumentNotFound : public ConsumerError {
+public:
+  ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
+};
+
+class UnknownArgument : public ConsumerError {
+  using ConsumerError::ConsumerError;
+};
+
 // +-------------+
 // | user errors |
 // +-------------+
@@ -36,23 +53,6 @@ struct DuplicateAssignment : public UserError {
 
 struct ParseError : public UserError {
   using UserError::UserError;
-};
-
-// +-----------------+
-// | consumer errors |
-// +-----------------+
-
-class ArgumentAlreadyExists : public ConsumerError {
-  using ConsumerError::ConsumerError;
-};
-
-class ArgumentNotFound : public ConsumerError {
-public:
-  ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
-};
-
-class UnknownArgument : public ConsumerError {
-  using ConsumerError::ConsumerError;
 };
 
 } // namespace opzioni
