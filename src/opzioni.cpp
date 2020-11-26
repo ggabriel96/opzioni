@@ -14,6 +14,20 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
   return std::visit(_2str, variant);
 }
 
+int print_error(Program const &program, UserError const &err) noexcept {
+  std::cerr << limit_string_within(err.what(), 80) << nl;
+  return -1;
+}
+
+int print_error_and_usage(Program const &program, UserError const &err) noexcept {
+  print_error(program, err);
+  HelpFormatter formatter(program, 80, std::cerr);
+  std::cerr << nl;
+  formatter.print_long_usage();
+  std::cerr << "\nSee `" << program.path << " --help` for more information\n";
+  return -1;
+}
+
 // +-----+
 // | Arg |
 // +-----+
@@ -188,11 +202,15 @@ ArgMap Program::operator()(int argc, char const *argv[]) {
 }
 
 ArgMap Program::operator()(std::span<char const *> args) {
-  this->path = args[0];
-  parsing::Parser parser(*this, args);
-  auto map = parser();
-  set_defaults(map);
-  return map;
+  try {
+    this->path = args[0];
+    parsing::Parser parser(*this, args);
+    auto map = parser();
+    set_defaults(map);
+    return map;
+  } catch (UserError const &err) {
+    std::exit(this->err_handler(*this, err));
+  }
 }
 
 void Program::print_usage(std::size_t const max_width, std::ostream &ostream) const noexcept {
@@ -386,6 +404,7 @@ void HelpFormatter::print_description() const noexcept {
 Program program(std::string_view title) noexcept {
   Program program(title);
   program.flag("help", "h").help("Display this information").action(actions::print_help);
+  program.err_handler = print_error_and_usage;
   return program;
 }
 

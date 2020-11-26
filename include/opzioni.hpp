@@ -60,6 +60,11 @@ using Flag = Arg<ArgumentType::FLAG>;
 using Option = Arg<ArgumentType::OPTION>;
 using Positional = Arg<ArgumentType::POSITIONAL>;
 
+using error_handler = int (*)(Program const &, UserError const &) noexcept;
+
+int print_error(Program const &, UserError const &) noexcept;
+int print_error_and_usage(Program const &, UserError const &) noexcept;
+
 namespace actions {
 
 template <ArgumentType type>
@@ -319,6 +324,8 @@ struct Program {
   std::string_view introduction{};
   std::string_view description{};
   std::string_view path{};
+
+  error_handler err_handler = print_error;
 
   std::vector<Flag> flags;
   std::vector<Option> options;
