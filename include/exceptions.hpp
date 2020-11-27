@@ -26,7 +26,7 @@ public:
 
 class ArgumentAlreadyExists : public ConsumerError {
 public:
-  using ConsumerError::ConsumerError;
+  ArgumentAlreadyExists(std::string_view name) : ConsumerError(fmt::format("Argument `{}` already exists", name)) {}
 };
 
 class ArgumentNotFound : public ConsumerError {

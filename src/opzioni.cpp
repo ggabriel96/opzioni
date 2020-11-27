@@ -200,7 +200,7 @@ Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
 
 Program &Program::cmd(std::string_view name) {
   if (cmds_idx.contains(name)) {
-    throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
+    throw ArgumentAlreadyExists(name);
   }
   auto const idx = cmds.size();
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
