@@ -40,7 +40,7 @@ public:
 
 class ConversionError : public UserError {
 public:
-  using UserError::UserError;
+  ConversionError(auto from, auto to) : UserError(fmt::format("Cannot convert `{}` to `{}`", from, to)) {}
 };
 
 class MissingValue : public UserError {
