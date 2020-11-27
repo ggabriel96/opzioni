@@ -25,7 +25,6 @@ int print_error_and_usage(Program const &program, UserError const &err) noexcept
   HelpFormatter formatter(program, 80, std::cerr);
   std::cerr << nl;
   formatter.print_long_usage();
-  std::cerr << "\nSee `" << program.path << " --help` for more information\n";
   return -1;
 }
 
