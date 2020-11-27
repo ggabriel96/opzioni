@@ -15,14 +15,15 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 }
 
 int print_error(Program const &program, UserError const &err) noexcept {
-  std::cerr << limit_string_within(err.what(), 80) << nl;
-  std::cerr << "\nSee `" << program.path << " --help` for more information\n";
+  auto const see_help = fmt::format("See `{} --help` for more information", program.path);
+  std::cerr << limit_string_within(err.what(), program.msg_width) << nl;
+  std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
   return -1;
 }
 
 int print_error_and_usage(Program const &program, UserError const &err) noexcept {
   print_error(program, err);
-  HelpFormatter formatter(program, 80, std::cerr);
+  HelpFormatter formatter(program, std::cerr);
   std::cerr << nl;
   formatter.print_long_usage();
   return -1;
@@ -223,8 +224,8 @@ ArgMap Program::operator()(std::span<char const *> args) {
   }
 }
 
-void Program::print_usage(std::size_t const max_width, std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this, max_width, ostream);
+void Program::print_usage(std::ostream &ostream) const noexcept {
+  HelpFormatter formatter(*this, ostream);
   formatter.print_title();
   if (!introduction.empty()) {
     ostream << nl;
@@ -288,8 +289,8 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string_view const w
 // | formatting |
 // +------------+
 
-HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
-    : out(out), max_width(max_width), program_title(program.title), program_introduction(program.introduction),
+HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
+    : out(out), max_width(program.msg_width), program_title(program.title), program_introduction(program.introduction),
       program_description(program.description), program_path(program.path), flags(program.flags),
       options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
@@ -406,7 +407,6 @@ void HelpFormatter::print_description() const noexcept {
     out << limit_string_within(program_description, max_width) << nl;
 }
 
-
 // +-----------+
 // | utilities |
 // +-----------+
@@ -488,9 +488,8 @@ std::size_t Parser::operator()(Option option) {
 
 std::size_t Parser::operator()(Positional positional) {
   if (current_positional_idx >= spec.positionals.size()) {
-    throw ParseError(
-        fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
-                    args[positional.index], spec.positionals.size()));
+    throw ParseError(fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
+                                 args[positional.index], spec.positionals.size()));
   }
   auto const arg = spec.positionals[current_positional_idx];
   // if gather amount is 0, we gather everything else
