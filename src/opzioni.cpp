@@ -16,6 +16,7 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 
 int print_error(Program const &program, UserError const &err) noexcept {
   std::cerr << limit_string_within(err.what(), 80) << nl;
+  std::cerr << "\nSee `" << program.path << " --help` for more information\n";
   return -1;
 }
 
