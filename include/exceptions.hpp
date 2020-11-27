@@ -58,11 +58,6 @@ public:
                               name)) {}
 };
 
-class ParseError : public UserError {
-public:
-  using UserError::UserError;
-};
-
 class UnexpectedPositional : public UserError {
 public:
   UnexpectedPositional(std::string_view name, std::size_t expected_amount)
