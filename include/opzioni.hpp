@@ -423,8 +423,7 @@ template <typename T>
 void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
-    throw DuplicateAssignment(fmt::format(
-        "Attempted to assign argument `{}` but it was already set. Did you specify it more than once?", name));
+    throw DuplicateAssignment(name);
 }
 
 template <typename Elem, typename Container>

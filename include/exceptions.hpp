@@ -43,8 +43,12 @@ class MissingValue : public UserError {
   using UserError::UserError;
 };
 
-struct DuplicateAssignment : public UserError {
-  using UserError::UserError;
+class DuplicateAssignment : public UserError {
+public:
+  DuplicateAssignment(std::string_view name)
+      : UserError(fmt::format("Attempt to assign argument `{}` failed because it was already set."
+                              " Did you specify it more than once?",
+                              name)) {}
 };
 
 struct ParseError : public UserError {
