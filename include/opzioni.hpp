@@ -325,6 +325,7 @@ struct Program {
   std::string_view description{};
   std::string_view path{};
 
+  std::size_t msg_width = 100;
   opzioni::error_handler error_handler = print_error;
 
   std::vector<Flag> flags;
@@ -338,6 +339,7 @@ struct Program {
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
+  Program &max_width(std::size_t) noexcept;
   Program &on_error(opzioni::error_handler) noexcept;
   Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 

@@ -152,6 +152,11 @@ Program &Program::details(std::string_view description) noexcept {
   return *this;
 }
 
+Program &Program::max_width(std::size_t msg_width) noexcept {
+  this->msg_width = msg_width;
+  return *this;
+}
+
 Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
   this->error_handler = error_handler;
   return *this;
