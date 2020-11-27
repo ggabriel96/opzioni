@@ -10,11 +10,13 @@ namespace opzioni {
 
 // Base class for exceptions thrown because of errors from the users of our library
 class ConsumerError : public std::logic_error {
+public:
   using std::logic_error::logic_error;
 };
 
 // Base class for exceptions thrown because of errors from the users of the CLI program
 class UserError : public std::runtime_error {
+public:
   using std::runtime_error::runtime_error;
 };
 
@@ -23,6 +25,7 @@ class UserError : public std::runtime_error {
 // +-----------------+
 
 class ArgumentAlreadyExists : public ConsumerError {
+public:
   using ConsumerError::ConsumerError;
 };
 
@@ -36,10 +39,12 @@ public:
 // +-------------+
 
 class ConversionError : public UserError {
+public:
   using UserError::UserError;
 };
 
 class MissingValue : public UserError {
+public:
   using UserError::UserError;
 };
 
