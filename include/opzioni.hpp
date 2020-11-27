@@ -325,7 +325,7 @@ struct Program {
   std::string_view description{};
   std::string_view path{};
 
-  error_handler err_handler = print_error;
+  opzioni::error_handler error_handler = print_error;
 
   std::vector<Flag> flags;
   std::vector<Option> options;

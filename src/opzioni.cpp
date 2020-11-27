@@ -209,7 +209,7 @@ ArgMap Program::operator()(std::span<char const *> args) {
     set_defaults(map);
     return map;
   } catch (UserError const &err) {
-    std::exit(this->err_handler(*this, err));
+    std::exit(this->error_handler(*this, err));
   }
 }
 
@@ -404,7 +404,7 @@ void HelpFormatter::print_description() const noexcept {
 Program program(std::string_view title) noexcept {
   Program program(title);
   program.flag("help", "h").help("Display this information").action(actions::print_help);
-  program.err_handler = print_error_and_usage;
+  program.error_handler = print_error_and_usage;
   return program;
 }
 
