@@ -160,6 +160,11 @@ Program &Program::override_help(actions::signature<ArgumentType::FLAG> action) n
   return *this;
 }
 
+Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
+  this->error_handler = error_handler;
+  return *this;
+}
+
 Positional &Program::pos(std::string_view name) {
   Positional arg{.name = name, .is_required = true};
   return *positionals.insert(positionals.end(), arg);
