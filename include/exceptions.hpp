@@ -61,6 +61,13 @@ public:
   using UserError::UserError;
 };
 
+class UnexpectedPositional : public UserError {
+public:
+  UnexpectedPositional(std::string_view name, std::size_t expected_amount)
+      : UserError(fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments", name,
+                              expected_amount)) {}
+};
+
 class UnknownArgument : public UserError {
 public:
   UnknownArgument(std::string_view name) : UserError(fmt::format("Unknown argument `{}`", name)) {}
