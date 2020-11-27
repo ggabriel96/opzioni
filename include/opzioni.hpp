@@ -60,6 +60,9 @@ using Flag = Arg<ArgumentType::FLAG>;
 using Option = Arg<ArgumentType::OPTION>;
 using Positional = Arg<ArgumentType::POSITIONAL>;
 
+// +----------------+
+// | error handlers |
+// +----------------+
 using error_handler = int (*)(Program const &, UserError const &) noexcept;
 
 int print_error(Program const &, UserError const &) noexcept;
