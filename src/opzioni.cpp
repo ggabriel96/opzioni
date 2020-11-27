@@ -153,15 +153,15 @@ Program &Program::details(std::string_view description) noexcept {
   return *this;
 }
 
+Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
+  this->error_handler = error_handler;
+  return *this;
+}
+
 Program &Program::override_help(actions::signature<ArgumentType::FLAG> action) noexcept {
   auto const help_idx = flags_idx["help"];
   auto &help = flags[help_idx];
   help.action(action);
-  return *this;
-}
-
-Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
-  this->error_handler = error_handler;
   return *this;
 }
 

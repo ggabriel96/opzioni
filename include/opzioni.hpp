@@ -338,8 +338,8 @@ struct Program {
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
-  Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
   Program &on_error(opzioni::error_handler) noexcept;
+  Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
   Positional &pos(std::string_view);
 
