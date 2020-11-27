@@ -45,7 +45,9 @@ public:
 
 class MissingValue : public UserError {
 public:
-  using UserError::UserError;
+  MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
+      : UserError(
+            fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
 };
 
 class DuplicateAssignment : public UserError {

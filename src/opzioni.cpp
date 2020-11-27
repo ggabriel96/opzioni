@@ -463,7 +463,7 @@ std::size_t Parser::operator()(Option option) {
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - option.index : arg.gather_n.amount;
   if (option.arg.value) {
     if (gather_amount != 1) {
-      throw MissingValue(fmt::format("Expected {} values for option `{}`, got 1", gather_amount, arg.name));
+      throw MissingValue(arg.name, gather_amount, 1);
     }
     arg.act(spec, map, arg, *option.arg.value);
     return 1;
@@ -481,8 +481,7 @@ std::size_t Parser::operator()(Option option) {
     arg.act(spec, map, arg, std::nullopt);
     return 1;
   } else {
-    throw MissingValue(fmt::format("Expected {} values for option `{}`, got {}", gather_amount, arg.name,
-                                   args.size() - (option.index + 1)));
+    throw MissingValue(arg.name, gather_amount, args.size() - (option.index + 1));
   }
 }
 
@@ -494,8 +493,7 @@ std::size_t Parser::operator()(Positional positional) {
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - positional.index : arg.gather_n.amount;
   if (positional.index + gather_amount > args.size()) {
-    throw MissingValue(fmt::format("Expected {} values for positional argument `{}`, got {}", gather_amount, arg.name,
-                                   args.size() - positional.index));
+    throw MissingValue(arg.name, gather_amount, args.size() - positional.index);
   }
   for (std::size_t count = 0; count < gather_amount; ++count) {
     arg.act(spec, map, arg, args[positional.index + count]);
