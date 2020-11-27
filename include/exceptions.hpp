@@ -31,10 +31,6 @@ public:
   ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
 };
 
-class UnknownArgument : public ConsumerError {
-  using ConsumerError::ConsumerError;
-};
-
 // +-------------+
 // | user errors |
 // +-------------+
@@ -53,6 +49,11 @@ struct DuplicateAssignment : public UserError {
 
 struct ParseError : public UserError {
   using UserError::UserError;
+};
+
+class UnknownArgument : public UserError {
+public:
+  UnknownArgument(std::string_view name) : UserError(fmt::format("Unknown argument `{}`", name)) {}
 };
 
 } // namespace opzioni

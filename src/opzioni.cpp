@@ -512,7 +512,7 @@ std::size_t Parser::operator()(Command cmd) {
   return remaining_args_count;
 }
 
-std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(std::string(args[unknown.index])); }
+std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(args[unknown.index]); }
 
 alternatives Parser::decide_type(std::size_t index) const noexcept {
   auto const arg = std::string_view(args[index]);
