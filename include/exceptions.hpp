@@ -51,7 +51,8 @@ public:
                               name)) {}
 };
 
-struct ParseError : public UserError {
+class ParseError : public UserError {
+public:
   using UserError::UserError;
 };
 
