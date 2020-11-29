@@ -260,64 +260,25 @@ struct ParsedOption {
 
 ParsedOption parse_option(std::string_view const) noexcept;
 
-struct Command {
-  std::size_t index;
-  std::string_view name;
-  Program &spec;
-};
-
-struct DashDash {
-  std::size_t index;
-};
-
-struct Flag {
-  std::string_view name;
-};
-
-struct ManyFlags {
-  std::string_view chars;
-};
-
-struct Option {
-  ParsedOption arg;
-  size_t index;
-};
-
-struct Positional {
-  std::size_t index;
-};
-
-struct Unknown {
-  std::size_t index;
-};
-
-using alternatives = std::variant<Command, DashDash, Flag, ManyFlags, Option, Positional, Unknown>;
-
 class Parser {
 public:
   Parser(Program const &spec, std::span<char const *> args) : spec(spec), args(args) {}
 
   ArgMap operator()();
-  std::size_t operator()(parsing::Flag);
-  std::size_t operator()(parsing::Option);
-  std::size_t operator()(parsing::Command);
-  std::size_t operator()(parsing::DashDash);
-  std::size_t operator()(parsing::ManyFlags);
-  std::size_t operator()(parsing::Positional);
-  std::size_t operator()(parsing::Unknown);
+  std::size_t assign_dash_dash(ArgMap &, std::span<char const *>);
+  std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
+  std::size_t assign_positional(ArgMap &, std::span<char const *>);
+  std::size_t assign_many_flags(ArgMap &, std::string_view) const;
+  std::size_t assign_flag(ArgMap &, std::string_view) const;
+  std::size_t assign_option(ArgMap &, std::span<char const *>, parsing::ParsedOption const) const;
 
 private:
-  ArgMap map;
   Program const &spec;
   std::span<char const *> args;
   std::size_t current_positional_idx{};
 
-  parsing::alternatives decide_type(std::size_t) const noexcept;
-
   bool is_dash_dash(std::string_view const) const noexcept;
-  std::string_view looks_positional(std::string_view const) const noexcept;
-
-  bool would_be_positional(std::size_t) const noexcept;
+  bool looks_positional(std::string_view const) const noexcept;
 };
 
 } // namespace parsing
