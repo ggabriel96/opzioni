@@ -190,7 +190,7 @@ Flag &Program::flag(std::string_view name) { return flag(name, {}); }
 
 Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
   auto const idx = flags.size();
-  Flag arg{.name = name, .abbrev = abbrev, .set_value = true, .act = actions::assign<bool>};
+  Flag arg{.name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
   flags_idx[flag.name] = idx;
   if (flag.has_abbrev())
