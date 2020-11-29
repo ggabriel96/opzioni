@@ -39,13 +39,7 @@ converters_test = executable(
     ['src/catch2_main.cpp', 'src/converters.test.cpp'],
     dependencies: test_deps
 )
-program_test = executable(
-    'program',
-    ['src/catch2_main.cpp', 'src/opzioni.program.test.cpp'],
-    dependencies: test_deps
-)
 test('converters', converters_test)
-test('program', program_test)
 
 # +----------+
 # | Examples |
