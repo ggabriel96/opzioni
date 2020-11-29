@@ -19,7 +19,7 @@ SCENARIO("argument specification") {
       THEN("it is added to the specification, is marked required, and its address is returned") {
         REQUIRE(program.positionals.size() == 1);
         REQUIRE(program.options.size() == 0);
-        REQUIRE(program.flags.size() == 1);
+        REQUIRE(program.flags.size() == 0);
         REQUIRE(&inserted_positional == &program.positionals[0]);
 
         REQUIRE(inserted_positional.name == positional_name);
@@ -40,7 +40,7 @@ SCENARIO("argument specification") {
       THEN("it is added to the specification and its address is returned") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 1);
-        REQUIRE(program.flags.size() == 1);
+        REQUIRE(program.flags.size() == 0);
         REQUIRE(&inserted_option == &program.options[0]);
 
         REQUIRE(inserted_option.name == option_name);
@@ -62,9 +62,8 @@ SCENARIO("argument specification") {
            "address is returned") {
         REQUIRE(program.positionals.size() == 0);
         REQUIRE(program.options.size() == 0);
-        // A --help flag is added by default
-        REQUIRE(program.flags.size() == 2);
-        REQUIRE(&inserted_flag == &program.flags[1]);
+        REQUIRE(program.flags.size() == 1);
+        REQUIRE(&inserted_flag == &program.flags[0]);
 
         REQUIRE(inserted_flag.name == flag_name);
         REQUIRE(inserted_flag.description == ""s);
