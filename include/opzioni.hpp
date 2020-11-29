@@ -60,6 +60,14 @@ using Flag = Arg<ArgumentType::FLAG>;
 using Option = Arg<ArgumentType::OPTION>;
 using Positional = Arg<ArgumentType::POSITIONAL>;
 
+// +----------------+
+// | error handlers |
+// +----------------+
+using error_handler = int (*)(Program const &, UserError const &) noexcept;
+
+int print_error(Program const &, UserError const &) noexcept;
+int print_error_and_usage(Program const &, UserError const &) noexcept;
+
 namespace actions {
 
 template <ArgumentType type>
@@ -110,7 +118,7 @@ struct ArgValue {
 struct ArgMap {
   ArgValue operator[](std::string_view name) const {
     if (!args.contains(name))
-      throw UnknownArgument(fmt::format("Could not find argument `{}`", name));
+      throw ArgumentNotFound(name);
     return args.at(name);
   }
 
@@ -320,6 +328,9 @@ struct Program {
   std::string_view description{};
   std::string_view path{};
 
+  std::size_t msg_width = 100;
+  opzioni::error_handler error_handler = print_error;
+
   std::vector<Flag> flags;
   std::vector<Option> options;
   std::vector<Positional> positionals;
@@ -329,19 +340,10 @@ struct Program {
   std::map<std::string_view, std::size_t> flags_idx;
   std::map<std::string_view, std::size_t> options_idx;
 
-  Program() : Program({}, {}, {}) {}
-
-  Program(std::string_view title) : Program(title, {}, {}) {}
-
-  Program(std::string_view title, std::string_view introduction) : Program(title, introduction, {}) {}
-
-  Program(std::string_view title, std::string_view introduction, std::string_view description)
-      : title(title), introduction(introduction), description(description) {
-    flag("help", "h").help("Display this information").action(actions::print_help);
-  }
-
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
+  Program &max_width(std::size_t) noexcept;
+  Program &on_error(opzioni::error_handler) noexcept;
   Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
   Positional &pos(std::string_view);
@@ -357,7 +359,7 @@ struct Program {
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
-  void print_usage(std::size_t const = 100, std::ostream & = std::cout) const noexcept;
+  void print_usage(std::ostream & = std::cout) const noexcept;
 
   void set_defaults(ArgMap &) const noexcept;
 
@@ -368,13 +370,19 @@ struct Program {
   std::optional<parsing::ParsedOption> is_option(std::string_view const) const noexcept;
 };
 
+// +-----------+
+// | utilities |
+// +-----------+
+
+Program program(std::string_view) noexcept;
+
 // +------------+
 // | formatting |
 // +------------+
 
 class HelpFormatter {
 public:
-  HelpFormatter(Program const &, std::size_t const, std::ostream &);
+  HelpFormatter(Program const &, std::ostream &);
 
   void print_title() const noexcept;
   void print_intro() const noexcept;
@@ -420,8 +428,7 @@ template <typename T>
 void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
-    throw DuplicateAssignment(fmt::format(
-        "Attempted to assign argument `{}` but it was already set. Did you specify it more than once?", name));
+    throw DuplicateAssignment(name);
 }
 
 template <typename Elem, typename Container>

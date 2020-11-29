@@ -14,6 +14,21 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
   return std::visit(_2str, variant);
 }
 
+int print_error(Program const &program, UserError const &err) noexcept {
+  auto const see_help = fmt::format("See `{} --help` for more information", program.path);
+  std::cerr << limit_string_within(err.what(), program.msg_width) << nl;
+  std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
+  return -1;
+}
+
+int print_error_and_usage(Program const &program, UserError const &err) noexcept {
+  print_error(program, err);
+  HelpFormatter formatter(program, std::cerr);
+  std::cerr << nl;
+  formatter.print_long_usage();
+  return -1;
+}
+
 // +-----+
 // | Arg |
 // +-----+
@@ -138,6 +153,16 @@ Program &Program::details(std::string_view description) noexcept {
   return *this;
 }
 
+Program &Program::max_width(std::size_t msg_width) noexcept {
+  this->msg_width = msg_width;
+  return *this;
+}
+
+Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
+  this->error_handler = error_handler;
+  return *this;
+}
+
 Program &Program::override_help(actions::signature<ArgumentType::FLAG> action) noexcept {
   auto const help_idx = flags_idx["help"];
   auto &help = flags[help_idx];
@@ -175,7 +200,7 @@ Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
 
 Program &Program::cmd(std::string_view name) {
   if (cmds_idx.contains(name)) {
-    throw ArgumentAlreadyExists(fmt::format("Subcommand `{}` already exists.", name));
+    throw ArgumentAlreadyExists(name);
   }
   auto const idx = cmds.size();
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
@@ -188,15 +213,19 @@ ArgMap Program::operator()(int argc, char const *argv[]) {
 }
 
 ArgMap Program::operator()(std::span<char const *> args) {
-  this->path = args[0];
-  parsing::Parser parser(*this, args);
-  auto map = parser();
-  set_defaults(map);
-  return map;
+  try {
+    this->path = args[0];
+    parsing::Parser parser(*this, args);
+    auto map = parser();
+    set_defaults(map);
+    return map;
+  } catch (UserError const &err) {
+    std::exit(this->error_handler(*this, err));
+  }
 }
 
-void Program::print_usage(std::size_t const max_width, std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this, max_width, ostream);
+void Program::print_usage(std::ostream &ostream) const noexcept {
+  HelpFormatter formatter(*this, ostream);
   formatter.print_title();
   if (!introduction.empty()) {
     ostream << nl;
@@ -260,8 +289,8 @@ std::optional<parsing::ParsedOption> Program::is_option(std::string_view const w
 // | formatting |
 // +------------+
 
-HelpFormatter::HelpFormatter(Program const &program, std::size_t const max_width, std::ostream &out)
-    : out(out), max_width(max_width), program_title(program.title), program_introduction(program.introduction),
+HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
+    : out(out), max_width(program.msg_width), program_title(program.title), program_introduction(program.introduction),
       program_description(program.description), program_path(program.path), flags(program.flags),
       options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
@@ -378,6 +407,17 @@ void HelpFormatter::print_description() const noexcept {
     out << limit_string_within(program_description, max_width) << nl;
 }
 
+// +-----------+
+// | utilities |
+// +-----------+
+
+Program program(std::string_view title) noexcept {
+  Program program(title);
+  program.flag("help", "h").help("Display this information").action(actions::print_help);
+  program.error_handler = print_error_and_usage;
+  return program;
+}
+
 // +---------+
 // | parsing |
 // +---------+
@@ -423,7 +463,7 @@ std::size_t Parser::operator()(Option option) {
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - option.index : arg.gather_n.amount;
   if (option.arg.value) {
     if (gather_amount != 1) {
-      throw MissingValue(fmt::format("Expected {} values for option `{}`, got 1", gather_amount, arg.name));
+      throw MissingValue(arg.name, gather_amount, 1);
     }
     arg.act(spec, map, arg, *option.arg.value);
     return 1;
@@ -441,23 +481,19 @@ std::size_t Parser::operator()(Option option) {
     arg.act(spec, map, arg, std::nullopt);
     return 1;
   } else {
-    throw MissingValue(fmt::format("Expected {} values for option `{}`, got {}", gather_amount, arg.name,
-                                   args.size() - (option.index + 1)));
+    throw MissingValue(arg.name, gather_amount, args.size() - (option.index + 1));
   }
 }
 
 std::size_t Parser::operator()(Positional positional) {
   if (current_positional_idx >= spec.positionals.size()) {
-    throw UnknownArgument(
-        fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments",
-                    args[positional.index], spec.positionals.size()));
+    throw UnexpectedPositional(args[positional.index], spec.positionals.size());
   }
   auto const arg = spec.positionals[current_positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - positional.index : arg.gather_n.amount;
   if (positional.index + gather_amount > args.size()) {
-    throw MissingValue(fmt::format("Expected {} values for positional argument `{}`, got {}", gather_amount, arg.name,
-                                   args.size() - positional.index));
+    throw MissingValue(arg.name, gather_amount, args.size() - positional.index);
   }
   for (std::size_t count = 0; count < gather_amount; ++count) {
     arg.act(spec, map, arg, args[positional.index + count]);
@@ -476,7 +512,7 @@ std::size_t Parser::operator()(Command cmd) {
   return remaining_args_count;
 }
 
-std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(std::string(args[unknown.index])); }
+std::size_t Parser::operator()(Unknown unknown) { throw UnknownArgument(args[unknown.index]); }
 
 alternatives Parser::decide_type(std::size_t index) const noexcept {
   auto const arg = std::string_view(args[index]);

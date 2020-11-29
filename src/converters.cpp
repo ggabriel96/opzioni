@@ -5,12 +5,12 @@ namespace opzioni {
 template <>
 auto convert<bool>(std::string_view value) -> bool {
   if (value.empty())
-    throw ConversionError("Cannot convert an empty string to bool");
+    throw ConversionError("empty string", "bool");
   if (value == "1" || value == "true")
     return true;
   if (value == "0" || value == "false")
     return false;
-  throw ConversionError(fmt::format("Cannot convert `{}` to bool", value));
+  throw ConversionError(value, "bool");
 }
 
 template <>

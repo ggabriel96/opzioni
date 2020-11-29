@@ -6,10 +6,9 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
-  using opzioni::Program;
   using namespace std::string_literals;
 
-  auto git = Program("git CLI simulation, v0.1")
+  auto git = opzioni::program("git CLI simulation, v0.1")
                  .intro("An example to illustrate subcommands via simulation of the git interface")
                  .details("See 'git <command> --help' to read about a specific subcommand.");
 

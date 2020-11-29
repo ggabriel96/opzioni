@@ -2,51 +2,72 @@
 #define OPZIONI_EXCEPTIONS_H
 
 #include <stdexcept>
+#include <string_view>
+
+#include <fmt/format.h>
 
 namespace opzioni {
 
-class MissingRequiredArgument : public std::out_of_range {
-  using std::out_of_range::out_of_range;
-};
-
-class ConversionError : public std::domain_error {
-  using std::domain_error::domain_error;
-};
-
-class FlagHasValue : public std::invalid_argument {
-  using std::invalid_argument::invalid_argument;
-};
-
-class InvalidArgument : public std::invalid_argument {
-  using std::invalid_argument::invalid_argument;
-};
-
-class InvalidChoice : public std::out_of_range {
-  using std::out_of_range::out_of_range;
-};
-
-class MissingValue : public std::invalid_argument {
-  using std::invalid_argument::invalid_argument;
-};
-
-class ParseError : public std::invalid_argument {
-  using std::invalid_argument::invalid_argument;
-};
-
-class UnknownArgument : public std::out_of_range {
-  using std::out_of_range::out_of_range;
-};
-
-class ArgumentAlreadyExists : public std::logic_error {
+// Base class for exceptions thrown because of errors from the users of our library
+class ConsumerError : public std::logic_error {
+public:
   using std::logic_error::logic_error;
 };
 
-class TooManyDashes : public std::invalid_argument {
-  using std::invalid_argument::invalid_argument;
+// Base class for exceptions thrown because of errors from the users of the CLI program
+class UserError : public std::runtime_error {
+public:
+  using std::runtime_error::runtime_error;
 };
 
-struct DuplicateAssignment : std::invalid_argument {
-  using std::invalid_argument::invalid_argument;
+// +-----------------+
+// | consumer errors |
+// +-----------------+
+
+class ArgumentAlreadyExists : public ConsumerError {
+public:
+  ArgumentAlreadyExists(std::string_view name) : ConsumerError(fmt::format("Argument `{}` already exists", name)) {}
+};
+
+class ArgumentNotFound : public ConsumerError {
+public:
+  ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
+};
+
+// +-------------+
+// | user errors |
+// +-------------+
+
+class ConversionError : public UserError {
+public:
+  ConversionError(auto from, auto to) : UserError(fmt::format("Cannot convert `{}` to `{}`", from, to)) {}
+};
+
+class MissingValue : public UserError {
+public:
+  MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
+      : UserError(
+            fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
+};
+
+class DuplicateAssignment : public UserError {
+public:
+  DuplicateAssignment(std::string_view name)
+      : UserError(fmt::format("Attempt to assign argument `{}` failed because it was already set."
+                              " Did you specify it more than once?",
+                              name)) {}
+};
+
+class UnexpectedPositional : public UserError {
+public:
+  UnexpectedPositional(std::string_view name, std::size_t expected_amount)
+      : UserError(fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments", name,
+                              expected_amount)) {}
+};
+
+class UnknownArgument : public UserError {
+public:
+  UnknownArgument(std::string_view name) : UserError(fmt::format("Unknown argument `{}`", name)) {}
 };
 
 } // namespace opzioni
