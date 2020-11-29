@@ -7,7 +7,6 @@
 SCENARIO("argument specification") {
   using namespace opzioni;
   using namespace std::string_literals;
-  using Catch::Matchers::Message;
 
   GIVEN("an empty program specification") {
     Program program("test");
@@ -80,7 +79,6 @@ SCENARIO("argument specification") {
 }
 
 SCENARIO("positional arguments") {
-  using Catch::Matchers::Message;
   using namespace std::string_literals;
 
   opzioni::Program program("test");
@@ -105,9 +103,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "positional"};
 
       THEN("we throw an error about that positional") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
@@ -115,9 +111,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "-"};
 
       THEN("we throw an error about that positional (the dash)") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `-`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
@@ -125,9 +119,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "positional", "sometime", "somewhere"};
 
       THEN("we throw an error about the first argument") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
@@ -135,9 +127,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "--", "positional"};
 
       THEN("we throw an error for the argument after dash-dash") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
   }
@@ -169,9 +159,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "positional"};
 
       THEN("we throw an error about that positional") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
@@ -179,9 +167,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "--", subcmd_name.c_str()};
 
       THEN("we throw an error because the command was interpreted as positional") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `cmd`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
@@ -189,9 +175,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "positional", "cmd"};
 
       THEN("we throw an error about that positional") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
@@ -199,9 +183,7 @@ SCENARIO("positional arguments") {
       std::array argv{cmd_name, "cmd", "positional"};
 
       THEN("we throw an error about that positional") {
-        REQUIRE_THROWS_MATCHES(
-            program(argv), opzioni::UnexpectedPositional,
-            Message("Unexpected positional argument `positional`. This program expects 0 positional arguments"));
+        REQUIRE_THROWS_AS(program(argv), opzioni::UnexpectedPositional);
       }
     }
 
