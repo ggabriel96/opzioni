@@ -359,8 +359,6 @@ struct Program {
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
-  void print_usage(std::ostream & = std::cout) const noexcept;
-
   void set_defaults(ArgMap &) const noexcept;
 
   Command const *is_command(std::string_view const) const noexcept;
@@ -375,6 +373,7 @@ struct Program {
 // +-----------+
 
 Program program(std::string_view) noexcept;
+void print_full_help(Program const &, std::ostream & = std::cout) noexcept;
 
 // +------------+
 // | formatting |

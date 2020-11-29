@@ -224,21 +224,6 @@ ArgMap Program::operator()(std::span<char const *> args) {
   }
 }
 
-void Program::print_usage(std::ostream &ostream) const noexcept {
-  HelpFormatter formatter(*this, ostream);
-  formatter.print_title();
-  if (!introduction.empty()) {
-    ostream << nl;
-    formatter.print_intro();
-  }
-  ostream << nl;
-  formatter.print_long_usage();
-  ostream << nl;
-  formatter.print_help();
-  ostream << nl;
-  formatter.print_description();
-}
-
 void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   using std::views::transform;
@@ -416,6 +401,21 @@ Program program(std::string_view title) noexcept {
   program.flag("help", "h").help("Display this information").action(actions::print_help);
   program.error_handler = print_error_and_usage;
   return program;
+}
+
+void print_full_help(Program const &program, std::ostream &ostream) noexcept {
+  HelpFormatter formatter(program, ostream);
+  formatter.print_title();
+  if (!program.introduction.empty()) {
+    ostream << nl;
+    formatter.print_intro();
+  }
+  ostream << nl;
+  formatter.print_long_usage();
+  ostream << nl;
+  formatter.print_help();
+  ostream << nl;
+  formatter.print_description();
 }
 
 // +---------+
@@ -598,7 +598,7 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 namespace actions {
 
 void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string_view> const) {
-  program.print_usage();
+  print_full_help(program);
   std::exit(0);
 }
 
