@@ -305,6 +305,8 @@ public:
   std::optional<ParsedOption> is_option(std::string_view const) const noexcept;
 
 private:
+  ArgMap parse(std::span<char const *>) const;
+
   std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
   std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
   std::size_t assign_many_flags(ArgMap &, std::string_view) const;
