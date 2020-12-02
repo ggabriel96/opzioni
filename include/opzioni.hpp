@@ -296,6 +296,8 @@ public:
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
+private:
+  ArgMap parse(std::span<char const *>) const;
   void set_defaults(ArgMap &) const noexcept;
 
   Command const *is_command(std::string_view const) const noexcept;
@@ -303,9 +305,6 @@ public:
   std::string_view is_long_flag(std::string_view const) const noexcept;
   std::string_view is_short_flags(std::string_view const) const noexcept;
   std::optional<ParsedOption> is_option(std::string_view const) const noexcept;
-
-private:
-  ArgMap parse(std::span<char const *>) const;
 
   std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
   std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
