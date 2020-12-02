@@ -427,15 +427,21 @@ namespace parsing {
 ArgMap Parser::operator()() {
   ArgMap map;
   map.exec_path = std::string(args[0]);
-  current_positional_idx = 0;
+  std::size_t current_positional_idx = 0;
   for (std::size_t index = 1; index < args.size();) {
     auto const arg = std::string_view(args[index]);
     if (is_dash_dash(arg)) {
-      index += assign_dash_dash(map, args.subspan(index));
+      // +1 to ignore the dash-dash
+      for (std::size_t offset = index + 1; offset < args.size();) {
+        offset += assign_positional(map, args.subspan(offset), current_positional_idx);
+        ++current_positional_idx;
+      }
+      index = args.size();
     } else if (auto cmd = spec.is_command(arg); cmd != nullptr) {
       index += assign_command(map, args.subspan(index), *cmd);
     } else if (looks_positional(arg)) {
-      index += assign_positional(map, args.subspan(index));
+      index += assign_positional(map, args.subspan(index), current_positional_idx);
+      ++current_positional_idx;
     } else if (auto const flags = spec.is_short_flags(arg); !flags.empty()) {
       index += assign_many_flags(map, flags);
     } else if (auto const flag = spec.is_long_flag(arg); !flag.empty()) {
@@ -449,14 +455,6 @@ ArgMap Parser::operator()() {
   return map;
 }
 
-std::size_t Parser::assign_dash_dash(ArgMap &map, std::span<char const *> args) {
-  // start at 1 to ignore the dash-dash
-  for (std::size_t i = 1; i < args.size();) {
-    i += assign_positional(map, args.subspan(i));
-  }
-  return args.size();
-}
-
 std::size_t Parser::assign_command(ArgMap &map, std::span<char const *> args, Command const &cmd) const {
   auto const exec_path = fmt::format("{} {}", spec.path, cmd.name);
   args[0] = exec_path.data();
@@ -465,11 +463,12 @@ std::size_t Parser::assign_command(ArgMap &map, std::span<char const *> args, Co
   return args.size();
 }
 
-std::size_t Parser::assign_positional(ArgMap &map, std::span<char const *> args) {
-  if (current_positional_idx >= spec.positionals.size()) {
+std::size_t Parser::assign_positional(ArgMap &map, std::span<char const *> args,
+                                      std::size_t const positional_idx) const {
+  if (positional_idx >= spec.positionals.size()) {
     throw UnexpectedPositional(args[0], spec.positionals.size());
   }
-  auto const arg = spec.positionals[current_positional_idx];
+  auto const arg = spec.positionals[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() : arg.gather_n.amount;
   if (gather_amount > args.size()) {
@@ -478,7 +477,6 @@ std::size_t Parser::assign_positional(ArgMap &map, std::span<char const *> args)
   for (std::size_t count = 0; count < gather_amount; ++count) {
     arg.act(spec, map, arg, args[count]);
   }
-  ++current_positional_idx;
   return gather_amount;
 }
 
@@ -499,7 +497,7 @@ std::size_t Parser::assign_flag(ArgMap &map, std::string_view flag) const {
 std::size_t Parser::assign_option(ArgMap &map, std::span<char const *> args, parsing::ParsedOption const option) const {
   auto const arg_idx = spec.options_idx.at(option.name);
   auto const arg = spec.options[arg_idx];
-  auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1: arg.gather_n.amount;
+  auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
   if (option.value) {
     if (gather_amount != 1) {
       throw MissingValue(arg.name, gather_amount, 1);

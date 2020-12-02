@@ -265,9 +265,8 @@ public:
   Parser(Program const &spec, std::span<char const *> args) : spec(spec), args(args) {}
 
   ArgMap operator()();
-  std::size_t assign_dash_dash(ArgMap &, std::span<char const *>);
   std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
-  std::size_t assign_positional(ArgMap &, std::span<char const *>);
+  std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
   std::size_t assign_many_flags(ArgMap &, std::string_view) const;
   std::size_t assign_flag(ArgMap &, std::string_view) const;
   std::size_t assign_option(ArgMap &, std::span<char const *>, parsing::ParsedOption const) const;
@@ -275,7 +274,6 @@ public:
 private:
   Program const &spec;
   std::span<char const *> args;
-  std::size_t current_positional_idx{};
 
   bool is_dash_dash(std::string_view const) const noexcept;
   bool looks_positional(std::string_view const) const noexcept;
