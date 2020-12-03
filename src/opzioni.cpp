@@ -267,20 +267,23 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
+// +-----------------+
+// | parsing helpers |
+// +-----------------+
+
+bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
+  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
+}
+
 Command const *Program::is_command(std::string_view const whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
     return &cmds[cmd_idx->second];
   return nullptr;
 }
 
-bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
-
-std::string_view Program::is_long_flag(std::string_view const whole_arg) const noexcept {
-  auto const name = whole_arg.substr(2);
+bool Program::looks_positional(std::string_view const whole_arg) const noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 2 && name.length() >= 2 && is_flag(name))
-    return name;
-  return {};
+  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
 }
 
 std::string_view Program::is_short_flags(std::string_view const whole_arg) const noexcept {
@@ -293,6 +296,14 @@ std::string_view Program::is_short_flags(std::string_view const whole_arg) const
   return {};
 }
 
+std::string_view Program::is_long_flag(std::string_view const whole_arg) const noexcept {
+  auto const name = whole_arg.substr(2);
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  if (num_of_dashes == 2 && name.length() >= 2 && is_flag(name))
+    return name;
+  return {};
+}
+
 std::optional<ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
   auto const parsed_option = parse_option(whole_arg);
   if (options_idx.contains(parsed_option.name))
@@ -300,9 +311,11 @@ std::optional<ParsedOption> Program::is_option(std::string_view const whole_arg)
   return std::nullopt;
 }
 
-// +-----------------+
-// | parsing helpers |
-// +-----------------+
+bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
+
+// +---------------------+
+// | parsing assignments |
+// +---------------------+
 
 std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Command const &cmd) const {
   auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
@@ -369,15 +382,6 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
   } else {
     throw MissingValue(arg.name, gather_amount, args.size() - 1);
   }
-}
-
-bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
-  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
-}
-
-bool Program::looks_positional(std::string_view const whole_arg) const noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
 }
 
 ParsedOption parse_option(std::string_view const whole_arg) noexcept {
