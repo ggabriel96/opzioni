@@ -267,6 +267,7 @@ public:
 
   std::size_t msg_width = 100;
   opzioni::error_handler error_handler = print_error;
+  bool has_auto_help{false};
 
   std::vector<Flag> flags;
   std::vector<Option> options;
@@ -279,9 +280,11 @@ public:
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
+
   Program &max_width(std::size_t) noexcept;
   Program &on_error(opzioni::error_handler) noexcept;
-  Program &override_help(actions::signature<ArgumentType::FLAG>) noexcept;
+  Program &auto_help() noexcept;
+  Program &auto_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
   Positional &pos(std::string_view);
 
