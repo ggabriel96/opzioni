@@ -355,8 +355,8 @@ private:
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
     auto const description = arg.format_help_description();
-    // -4 because we'll later print a left margin of 4 spaces
-    auto const lines = limit_within(description, max_width - padding.size() - 4);
+    // -8 because we'll later print a left margin of 8 spaces (4 of indentation, 4 of alignment)
+    auto const lines = limit_within(description, max_width - padding.size() - 8);
     // -4 again because we'll shift it 4 spaces into the padding, invading it,
     // so we can have the possible following lines indented
     out << fmt::format("    {:<{}} {}\n", arg.format_help_usage(), padding.size() - 4, fmt::join(lines.front(), " "));

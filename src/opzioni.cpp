@@ -68,9 +68,12 @@ std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
 
 template <>
 std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
+  auto const base_usage = format_base_usage();
   if (has_abbrev())
-    return fmt::format("-{}, {}", abbrev, format_base_usage());
-  return format_base_usage();
+    return fmt::format("-{}, {}", abbrev, base_usage);
+  if (name.length() == 1)
+    return base_usage;
+  return fmt::format("    {}", base_usage);
 }
 
 template <>
@@ -88,9 +91,12 @@ std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
 
 template <>
 std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
+  auto const base_usage = format_base_usage();
   if (has_abbrev())
-    return fmt::format("-{}, {}", abbrev, format_base_usage());
-  return format_base_usage();
+    return fmt::format("-{}, {}", abbrev, base_usage);
+  if (name.length() == 1)
+    return base_usage;
+  return fmt::format("    {}", format_base_usage());
 }
 
 template <>
@@ -448,7 +454,11 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
     lengths[1] = std::ranges::max(options | transform(get_name) | transform(&std::string_view::length));
   if (!positionals.empty())
     lengths[2] = std::ranges::max(positionals | transform(get_name) | transform(&std::string_view::length));
-  return 3 * std::ranges::max(lengths);
+  // +8 because of left margin (4 of indentation, 4 of alignment)
+  // *2 because maximum length is twice the length of the name if has no abbreviation
+  // +5 because of formatting artifacts from arguments (e.g. <>)
+  // +3 to give it 4 spaces between usage and description (not +4 because `print_arg_help` puts a space between them)
+  return 8 + 2 * std::ranges::max(lengths) + 5 + 3;
 }
 
 void HelpFormatter::print_title() const noexcept {
