@@ -322,7 +322,6 @@ private:
 // | utilities |
 // +-----------+
 
-Program program(std::string_view) noexcept;
 void print_full_help(Program const &, std::ostream & = std::cout) noexcept;
 
 // +------------+

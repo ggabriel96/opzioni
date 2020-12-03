@@ -7,8 +7,9 @@
 int main(int argc, char const *argv[]) {
   using fmt::print;
 
-  auto program =
-      opzioni::program("opzioni's gather example").intro("A short example file to illustrate the gather feature");
+  auto program = opzioni::Program("opzioni's gather example")
+                     .intro("A short example file to illustrate the gather feature")
+                     .auto_help();
 
   program.pos("gather-all")
       .help("This is the equivalent of Python's argparse `nargs` with value `+`: it requires at least one value and "

@@ -552,13 +552,6 @@ void HelpFormatter::print_description() const noexcept {
 // | utilities |
 // +-----------+
 
-Program program(std::string_view title) noexcept {
-  Program program(title);
-  program.flag("help", "h").help("Display this information").action(actions::print_help);
-  program.error_handler = print_error_and_usage;
-  return program;
-}
-
 void print_full_help(Program const &program, std::ostream &ostream) noexcept {
   HelpFormatter formatter(program, ostream);
   formatter.print_title();
