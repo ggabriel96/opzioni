@@ -163,9 +163,7 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
   return *this;
 }
 
-Program &Program::auto_help() noexcept {
-  return this->auto_help(actions::print_help);
-}
+Program &Program::auto_help() noexcept { return this->auto_help(actions::print_help); }
 
 Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
   this->flag("help", "h").help("Display this information").action(action);
