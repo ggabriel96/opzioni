@@ -163,10 +163,11 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
   return *this;
 }
 
-Program &Program::override_help(actions::signature<ArgumentType::FLAG> action) noexcept {
-  auto const help_idx = flags_idx["help"];
-  auto &help = flags[help_idx];
-  help.action(action);
+Program &Program::auto_help() noexcept { return this->auto_help(actions::print_help); }
+
+Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
+  this->flag("help", "h").help("Display this information").action(action);
+  this->has_auto_help = true;
   return *this;
 }
 
@@ -205,6 +206,9 @@ Program &Program::cmd(std::string_view name) {
   auto const idx = cmds.size();
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
   cmds_idx[name] = idx;
+  if (this->has_auto_help) {
+    command.spec->auto_help(this->flags[0].act);
+  }
   return *command.spec;
 }
 
@@ -545,13 +549,6 @@ void HelpFormatter::print_description() const noexcept {
 // +-----------+
 // | utilities |
 // +-----------+
-
-Program program(std::string_view title) noexcept {
-  Program program(title);
-  program.flag("help", "h").help("Display this information").action(actions::print_help);
-  program.error_handler = print_error_and_usage;
-  return program;
-}
 
 void print_full_help(Program const &program, std::ostream &ostream) noexcept {
   HelpFormatter formatter(program, ostream);

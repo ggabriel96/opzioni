@@ -8,9 +8,10 @@ int main(int argc, char const *argv[]) {
   using fmt::print;
   using namespace std::string_literals;
 
-  auto git = opzioni::program("git CLI simulation, v0.1")
+  auto git = opzioni::Program("git CLI simulation, v0.1")
                  .intro("An example to illustrate subcommands via simulation of the git interface")
-                 .details("See 'git <command> --help' to read about a specific subcommand.");
+                 .details("See 'git <command> --help' to read about a specific subcommand.")
+                 .auto_help();
 
   auto &clone = git.cmd("clone").intro("Clone a repository into a new directory");
   clone.pos("repository")

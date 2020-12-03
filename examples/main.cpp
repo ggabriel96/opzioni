@@ -11,10 +11,11 @@ int main(int argc, char const *argv[]) {
   using opzioni::actions::append;
   using namespace std::string_literals;
 
-  auto program = opzioni::program("opzioni's main example")
+  auto program = opzioni::Program("opzioni's main example")
                      .intro("A short example file illustrating opzioni's simpler features")
                      .details("This example only covers simple positionals, options, and flags. For examples of more "
-                              "complicated parse actions or subcommands, please take a look at the other examples.");
+                              "complicated parse actions or subcommands, please take a look at the other examples.")
+                     .auto_help();
 
   program.pos("name").help("Your first name");
 
