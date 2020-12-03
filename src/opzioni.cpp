@@ -207,7 +207,7 @@ Program &Program::cmd(std::string_view name) {
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
   cmds_idx[name] = idx;
   if (this->has_auto_help) {
-    command.spec->auto_help(flags[0].act);
+    command.spec->auto_help(this->flags[0].act);
   }
   return *command.spec;
 }
