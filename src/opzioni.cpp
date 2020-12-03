@@ -454,7 +454,7 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
     lengths[1] = std::ranges::max(options | transform(get_name) | transform(&std::string_view::length));
   if (!positionals.empty())
     lengths[2] = std::ranges::max(positionals | transform(get_name) | transform(&std::string_view::length));
-  return 3 * std::ranges::max(lengths);
+  return 8 + 3 * std::ranges::max(lengths); // +8 because of left margin
 }
 
 void HelpFormatter::print_title() const noexcept {
