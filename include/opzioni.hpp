@@ -250,8 +250,6 @@ struct Command {
   auto operator<=>(Command const &other) const noexcept { return name <=> other.name; }
 };
 
-namespace parsing {
-
 struct ParsedOption {
   std::string_view name;
   // no string and empty string mean different things here
@@ -260,28 +258,8 @@ struct ParsedOption {
 
 ParsedOption parse_option(std::string_view const) noexcept;
 
-class Parser {
+class Program {
 public:
-  Parser(Program const &spec, std::span<char const *> args) : spec(spec), args(args) {}
-
-  ArgMap operator()();
-  std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
-  std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
-  std::size_t assign_many_flags(ArgMap &, std::string_view) const;
-  std::size_t assign_flag(ArgMap &, std::string_view) const;
-  std::size_t assign_option(ArgMap &, std::span<char const *>, parsing::ParsedOption const) const;
-
-private:
-  Program const &spec;
-  std::span<char const *> args;
-
-  bool is_dash_dash(std::string_view const) const noexcept;
-  bool looks_positional(std::string_view const) const noexcept;
-};
-
-} // namespace parsing
-
-struct Program {
   std::string_view title{};
   std::string_view introduction{};
   std::string_view description{};
@@ -318,13 +296,23 @@ struct Program {
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
+private:
+  ArgMap parse(std::span<char const *>) const;
   void set_defaults(ArgMap &) const noexcept;
 
+  bool is_dash_dash(std::string_view const) const noexcept;
   Command const *is_command(std::string_view const) const noexcept;
-  bool is_flag(std::string_view const) const noexcept;
-  std::string_view is_long_flag(std::string_view const) const noexcept;
+  bool looks_positional(std::string_view const) const noexcept;
   std::string_view is_short_flags(std::string_view const) const noexcept;
-  std::optional<parsing::ParsedOption> is_option(std::string_view const) const noexcept;
+  std::string_view is_long_flag(std::string_view const) const noexcept;
+  std::optional<ParsedOption> is_option(std::string_view const) const noexcept;
+  bool is_flag(std::string_view const) const noexcept;
+
+  std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
+  std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
+  std::size_t assign_many_flags(ArgMap &, std::string_view) const;
+  std::size_t assign_flag(ArgMap &, std::string_view) const;
+  std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
 };
 
 // +-----------+

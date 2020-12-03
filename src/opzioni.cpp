@@ -215,13 +215,43 @@ ArgMap Program::operator()(int argc, char const *argv[]) {
 ArgMap Program::operator()(std::span<char const *> args) {
   try {
     this->path = args[0];
-    parsing::Parser parser(*this, args);
-    auto map = parser();
+    auto map = parse(args);
     set_defaults(map);
     return map;
   } catch (UserError const &err) {
     std::exit(this->error_handler(*this, err));
   }
+}
+
+ArgMap Program::parse(std::span<char const *> args) const {
+  ArgMap map;
+  map.exec_path = std::string(args[0]);
+  std::size_t current_positional_idx = 0;
+  for (std::size_t index = 1; index < args.size();) {
+    auto const arg = std::string_view(args[index]);
+    if (is_dash_dash(arg)) {
+      // +1 to ignore the dash-dash
+      for (std::size_t offset = index + 1; offset < args.size();) {
+        offset += assign_positional(map, args.subspan(offset), current_positional_idx);
+        ++current_positional_idx;
+      }
+      index = args.size();
+    } else if (auto cmd = is_command(arg); cmd != nullptr) {
+      index += assign_command(map, args.subspan(index), *cmd);
+    } else if (looks_positional(arg)) {
+      index += assign_positional(map, args.subspan(index), current_positional_idx);
+      ++current_positional_idx;
+    } else if (auto const flags = is_short_flags(arg); !flags.empty()) {
+      index += assign_many_flags(map, flags);
+    } else if (auto const flag = is_long_flag(arg); !flag.empty()) {
+      index += assign_flag(map, flag);
+    } else if (auto const option = is_option(arg); option.has_value()) {
+      index += assign_option(map, args.subspan(index), *option);
+    } else {
+      throw UnknownArgument(arg);
+    }
+  }
+  return map;
 }
 
 void Program::set_defaults(ArgMap &map) const noexcept {
@@ -237,20 +267,23 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
+// +-----------------+
+// | parsing helpers |
+// +-----------------+
+
+bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
+  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
+}
+
 Command const *Program::is_command(std::string_view const whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
     return &cmds[cmd_idx->second];
   return nullptr;
 }
 
-bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
-
-std::string_view Program::is_long_flag(std::string_view const whole_arg) const noexcept {
-  auto const name = whole_arg.substr(2);
+bool Program::looks_positional(std::string_view const whole_arg) const noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 2 && name.length() >= 2 && is_flag(name))
-    return name;
-  return {};
+  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
 }
 
 std::string_view Program::is_short_flags(std::string_view const whole_arg) const noexcept {
@@ -263,11 +296,128 @@ std::string_view Program::is_short_flags(std::string_view const whole_arg) const
   return {};
 }
 
-std::optional<parsing::ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
-  auto const parsed_option = parsing::parse_option(whole_arg);
+std::string_view Program::is_long_flag(std::string_view const whole_arg) const noexcept {
+  auto const name = whole_arg.substr(2);
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  if (num_of_dashes == 2 && name.length() >= 2 && is_flag(name))
+    return name;
+  return {};
+}
+
+std::optional<ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
+  auto const parsed_option = parse_option(whole_arg);
   if (options_idx.contains(parsed_option.name))
     return parsed_option;
   return std::nullopt;
+}
+
+bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
+
+// +---------------------+
+// | parsing assignments |
+// +---------------------+
+
+std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Command const &cmd) const {
+  auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
+  args[0] = exec_path.data();
+  map.cmd_name = cmd.name;
+  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move((*cmd.spec)(args))));
+  return args.size();
+}
+
+std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
+                                       std::size_t const positional_idx) const {
+  if (positional_idx >= this->positionals.size()) {
+    throw UnexpectedPositional(args[0], this->positionals.size());
+  }
+  auto const arg = this->positionals[positional_idx];
+  // if gather amount is 0, we gather everything else
+  auto const gather_amount = arg.gather_n.amount == 0 ? args.size() : arg.gather_n.amount;
+  if (gather_amount > args.size()) {
+    throw MissingValue(arg.name, gather_amount, args.size());
+  }
+  for (std::size_t count = 0; count < gather_amount; ++count) {
+    arg.act(*this, map, arg, args[count]);
+  }
+  return gather_amount;
+}
+
+std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) const {
+  for (auto const flag : flags) {
+    assign_flag(map, std::string_view(&flag, 1));
+  }
+  return 1;
+}
+
+std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
+  auto const arg_idx = this->flags_idx.at(flag);
+  auto const arg = this->flags[arg_idx];
+  arg.act(*this, map, arg, std::nullopt);
+  return 1;
+}
+
+std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
+  auto const arg_idx = this->options_idx.at(option.name);
+  auto const arg = this->options[arg_idx];
+  auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
+  if (option.value) {
+    if (gather_amount != 1) {
+      throw MissingValue(arg.name, gather_amount, 1);
+    }
+    arg.act(*this, map, arg, *option.value);
+    return 1;
+  } else if (gather_amount < args.size()) {
+    // + 1 everywhere because 0 is the index in `args` that the option is,
+    // so 1 is where we start to parse values up to gather amount
+    std::size_t count = 0;
+    do {
+      auto const value = std::string_view(args[count + 1]);
+      arg.act(*this, map, arg, value);
+      ++count;
+    } while (count < gather_amount);
+    return gather_amount + 1;
+  } else if (arg.set_value) {
+    arg.act(*this, map, arg, std::nullopt);
+    return 1;
+  } else {
+    throw MissingValue(arg.name, gather_amount, args.size() - 1);
+  }
+}
+
+ParsedOption parse_option(std::string_view const whole_arg) noexcept {
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  auto const eq_idx = whole_arg.find('=', num_of_dashes);
+  bool const has_equals = eq_idx != std::string_view::npos;
+  if (num_of_dashes == 1) {
+    // short option, e.g. `-O`
+    auto const name = whole_arg.substr(1, 1);
+    if (has_equals) {
+      if (whole_arg.length() > 3) {
+        // has equals followed by some value, e.g. `-O=2`
+        return {name, whole_arg.substr(3)};
+      }
+      // should this `-O=` be handled like this?
+      return {name, ""};
+    }
+    if (whole_arg.length() > 2) {
+      // only followed by some value, e.g. `-O2`
+      return {name, whole_arg.substr(2)};
+    }
+    // case left: has no value (next CLI argument could be it)
+    return {name, std::nullopt};
+  }
+  if (num_of_dashes == 2 && whole_arg.length() > 3) {
+    // long option, e.g. `--name`
+    if (has_equals) {
+      auto const name = whole_arg.substr(2, eq_idx - 2);
+      auto const value = whole_arg.substr(eq_idx + 1);
+      return {name, value};
+    }
+    // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
+    return {whole_arg.substr(2), std::nullopt};
+  }
+  // not an option
+  return {"", std::nullopt};
 }
 
 // +------------+
@@ -417,161 +567,6 @@ void print_full_help(Program const &program, std::ostream &ostream) noexcept {
   ostream << nl;
   formatter.print_description();
 }
-
-// +---------+
-// | parsing |
-// +---------+
-
-namespace parsing {
-
-ArgMap Parser::operator()() {
-  ArgMap map;
-  map.exec_path = std::string(args[0]);
-  std::size_t current_positional_idx = 0;
-  for (std::size_t index = 1; index < args.size();) {
-    auto const arg = std::string_view(args[index]);
-    if (is_dash_dash(arg)) {
-      // +1 to ignore the dash-dash
-      for (std::size_t offset = index + 1; offset < args.size();) {
-        offset += assign_positional(map, args.subspan(offset), current_positional_idx);
-        ++current_positional_idx;
-      }
-      index = args.size();
-    } else if (auto cmd = spec.is_command(arg); cmd != nullptr) {
-      index += assign_command(map, args.subspan(index), *cmd);
-    } else if (looks_positional(arg)) {
-      index += assign_positional(map, args.subspan(index), current_positional_idx);
-      ++current_positional_idx;
-    } else if (auto const flags = spec.is_short_flags(arg); !flags.empty()) {
-      index += assign_many_flags(map, flags);
-    } else if (auto const flag = spec.is_long_flag(arg); !flag.empty()) {
-      index += assign_flag(map, flag);
-    } else if (auto const option = spec.is_option(arg); option.has_value()) {
-      index += assign_option(map, args.subspan(index), *option);
-    } else {
-      throw UnknownArgument(arg);
-    }
-  }
-  return map;
-}
-
-std::size_t Parser::assign_command(ArgMap &map, std::span<char const *> args, Command const &cmd) const {
-  auto const exec_path = fmt::format("{} {}", spec.path, cmd.name);
-  args[0] = exec_path.data();
-  map.cmd_name = cmd.name;
-  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move((*cmd.spec)(args))));
-  return args.size();
-}
-
-std::size_t Parser::assign_positional(ArgMap &map, std::span<char const *> args,
-                                      std::size_t const positional_idx) const {
-  if (positional_idx >= spec.positionals.size()) {
-    throw UnexpectedPositional(args[0], spec.positionals.size());
-  }
-  auto const arg = spec.positionals[positional_idx];
-  // if gather amount is 0, we gather everything else
-  auto const gather_amount = arg.gather_n.amount == 0 ? args.size() : arg.gather_n.amount;
-  if (gather_amount > args.size()) {
-    throw MissingValue(arg.name, gather_amount, args.size());
-  }
-  for (std::size_t count = 0; count < gather_amount; ++count) {
-    arg.act(spec, map, arg, args[count]);
-  }
-  return gather_amount;
-}
-
-std::size_t Parser::assign_many_flags(ArgMap &map, std::string_view flags) const {
-  for (auto const flag : flags) {
-    assign_flag(map, std::string_view(&flag, 1));
-  }
-  return 1;
-}
-
-std::size_t Parser::assign_flag(ArgMap &map, std::string_view flag) const {
-  auto const arg_idx = spec.flags_idx.at(flag);
-  auto const arg = spec.flags[arg_idx];
-  arg.act(spec, map, arg, std::nullopt);
-  return 1;
-}
-
-std::size_t Parser::assign_option(ArgMap &map, std::span<char const *> args, parsing::ParsedOption const option) const {
-  auto const arg_idx = spec.options_idx.at(option.name);
-  auto const arg = spec.options[arg_idx];
-  auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
-  if (option.value) {
-    if (gather_amount != 1) {
-      throw MissingValue(arg.name, gather_amount, 1);
-    }
-    arg.act(spec, map, arg, *option.value);
-    return 1;
-  } else if (gather_amount < args.size()) {
-    // + 1 everywhere because 0 is the index in `args` that the option is,
-    // so 1 is where we start to parse values up to gather amount
-    std::size_t count = 0;
-    do {
-      auto const value = std::string_view(args[count + 1]);
-      arg.act(spec, map, arg, value);
-      ++count;
-    } while (count < gather_amount);
-    return gather_amount + 1;
-  } else if (arg.set_value) {
-    arg.act(spec, map, arg, std::nullopt);
-    return 1;
-  } else {
-    throw MissingValue(arg.name, gather_amount, args.size() - 1);
-  }
-}
-
-// +-----------------+
-// | parsing helpers |
-// +-----------------+
-
-bool Parser::is_dash_dash(std::string_view const whole_arg) const noexcept {
-  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
-}
-
-bool Parser::looks_positional(std::string_view const whole_arg) const noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
-}
-
-ParsedOption parse_option(std::string_view const whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string_view::npos;
-  if (num_of_dashes == 1) {
-    // short option, e.g. `-O`
-    auto const name = whole_arg.substr(1, 1);
-    if (has_equals) {
-      if (whole_arg.length() > 3) {
-        // has equals followed by some value, e.g. `-O=2`
-        return {name, whole_arg.substr(3)};
-      }
-      // should this `-O=` be handled like this?
-      return {name, ""};
-    }
-    if (whole_arg.length() > 2) {
-      // only followed by some value, e.g. `-O2`
-      return {name, whole_arg.substr(2)};
-    }
-    // case left: has no value (next CLI argument could be it)
-    return {name, std::nullopt};
-  }
-  if (num_of_dashes == 2 && whole_arg.length() > 3) {
-    // long option, e.g. `--name`
-    if (has_equals) {
-      auto const name = whole_arg.substr(2, eq_idx - 2);
-      auto const value = whole_arg.substr(eq_idx + 1);
-      return {name, value};
-    }
-    // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
-    return {whole_arg.substr(2), std::nullopt};
-  }
-  // not an option
-  return {"", std::nullopt};
-}
-
-} // namespace parsing
 
 // +---------+
 // | actions |
