@@ -68,9 +68,12 @@ std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
 
 template <>
 std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
+  auto const base_usage = format_base_usage();
   if (has_abbrev())
-    return fmt::format("-{}, {}", abbrev, format_base_usage());
-  return format_base_usage();
+    return fmt::format("-{}, {}", abbrev, base_usage);
+  if (name.length() == 1)
+    return base_usage;
+  return fmt::format("    {}", base_usage);
 }
 
 template <>
@@ -88,9 +91,12 @@ std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
 
 template <>
 std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
+  auto const base_usage = format_base_usage();
   if (has_abbrev())
-    return fmt::format("-{}, {}", abbrev, format_base_usage());
-  return format_base_usage();
+    return fmt::format("-{}, {}", abbrev, base_usage);
+  if (name.length() == 1)
+    return base_usage;
+  return fmt::format("    {}", format_base_usage());
 }
 
 template <>
