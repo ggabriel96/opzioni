@@ -45,11 +45,12 @@ public:
   ConversionError(auto from, auto to) : UserError(fmt::format("Cannot convert `{}` to `{}`", from, to)) {}
 };
 
-class MissingValue : public UserError {
+class DuplicateAssignment : public UserError {
 public:
-  MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
-      : UserError(
-            fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
+  DuplicateAssignment(std::string_view name)
+      : UserError(fmt::format("Attempt to assign argument `{}` failed because it was already set."
+                              " Did you specify it more than once?",
+                              name)) {}
 };
 
 class MissingRequiredArguments : public UserError {
@@ -58,12 +59,11 @@ public:
       : UserError(fmt::format("Missing required arguments: `{}`", fmt::join(names, "`, `"))) {}
 };
 
-class DuplicateAssignment : public UserError {
+class MissingValue : public UserError {
 public:
-  DuplicateAssignment(std::string_view name)
-      : UserError(fmt::format("Attempt to assign argument `{}` failed because it was already set."
-                              " Did you specify it more than once?",
-                              name)) {}
+  MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
+      : UserError(
+            fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
 };
 
 class UnexpectedPositional : public UserError {
