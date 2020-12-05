@@ -147,6 +147,23 @@ std::string Command::format_help_usage() const noexcept { return std::string(nam
 
 std::string Command::format_help_description() const noexcept { return std::string(program->introduction); }
 
+// +-------------+
+// | Arg helpers |
+// +-------------+
+
+Positional pos(std::string_view name) noexcept { return Positional{.name = name, .is_required = true}; }
+
+Option opt(std::string_view name) noexcept { return opt(name, {}); }
+
+Option opt(std::string_view name, char const (&abbrev)[2]) noexcept { return Option{.name = name, .abbrev = abbrev}; }
+
+Flag flg(std::string_view name) noexcept { return flg(name, {}); }
+
+Flag flg(std::string_view name, char const (&abbrev)[2]) noexcept {
+  return Flag{
+      .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
+}
+
 // +---------+
 // | Program |
 // +---------+
@@ -174,39 +191,32 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
 Program &Program::auto_help() noexcept { return this->auto_help(actions::print_help); }
 
 Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
-  this->flag("help", "h").help("Display this information").action(action);
+  this->add(flg("help", "h").help("Display this information").action(action));
   this->has_auto_help = true;
   return *this;
 }
 
-Positional &Program::pos(std::string_view name) {
-  if (contains_pos_or_cmd(name))
-    throw ArgumentAlreadyExists(name);
-  Positional arg{.name = name, .is_required = true};
+Positional &Program::add(Positional arg) {
+  if (contains_pos_or_cmd(arg.name))
+    throw ArgumentAlreadyExists(arg.name);
   return *positionals.insert(positionals.end(), arg);
 }
 
-Option &Program::opt(std::string_view name) { return opt(name, {}); }
-
-Option &Program::opt(std::string_view name, char const (&abbrev)[2]) {
-  if (contains_opt_or_flag(name, abbrev))
-    throw ArgumentAlreadyExists(name);
+Option &Program::add(Option arg) {
+  if (contains_opt_or_flag(arg.name, arg.abbrev))
+    throw ArgumentAlreadyExists(arg.name);
   auto const idx = options.size();
-  auto &opt = options.emplace_back(name, abbrev);
+  auto &opt = *options.insert(options.end(), arg);
   options_idx[opt.name] = idx;
   if (opt.has_abbrev())
     options_idx[opt.abbrev] = idx;
   return opt;
 }
 
-Flag &Program::flag(std::string_view name) { return flag(name, {}); }
-
-Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
-  if (contains_opt_or_flag(name, abbrev))
-    throw ArgumentAlreadyExists(name);
+Flag &Program::add(Flag arg) {
+  if (contains_opt_or_flag(arg.name, arg.abbrev))
+    throw ArgumentAlreadyExists(arg.name);
   auto const idx = flags.size();
-  Flag arg{
-      .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
   flags_idx[flag.name] = idx;
   if (flag.has_abbrev())

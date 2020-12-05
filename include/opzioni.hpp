@@ -240,6 +240,16 @@ bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
   return lhs.is_required && !rhs.is_required;
 }
 
+// +-------------+
+// | Arg helpers |
+// +-------------+
+
+Positional pos(std::string_view) noexcept;
+Option opt(std::string_view) noexcept;
+Option opt(std::string_view, char const (&)[2]) noexcept;
+Flag flg(std::string_view) noexcept;
+Flag flg(std::string_view, char const (&)[2]) noexcept;
+
 struct Command {
   std::string_view name{};
   memory::ValuePtr<Program> program;
@@ -286,13 +296,9 @@ public:
   Program &auto_help() noexcept;
   Program &auto_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
-  Positional &pos(std::string_view);
-
-  Flag &flag(std::string_view);
-  Flag &flag(std::string_view, char const (&)[2]);
-
-  Option &opt(std::string_view);
-  Option &opt(std::string_view, char const (&)[2]);
+  Flag &add(Flag);
+  Option &add(Option);
+  Positional &add(Positional);
 
   Program &cmd(std::string_view);
 
