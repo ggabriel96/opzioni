@@ -303,6 +303,9 @@ private:
   ArgMap parse(std::span<char const *>) const;
   void set_defaults(ArgMap &) const noexcept;
 
+  bool contains_pos_or_cmd(std::string_view const) const noexcept;
+  bool contains_opt_or_flag(std::string_view const, std::string_view const) const noexcept;
+
   bool is_dash_dash(std::string_view const) const noexcept;
   Command const *is_command(std::string_view const) const noexcept;
   bool looks_positional(std::string_view const) const noexcept;

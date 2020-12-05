@@ -180,6 +180,8 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
 }
 
 Positional &Program::pos(std::string_view name) {
+  if (contains_pos_or_cmd(name))
+    throw ArgumentAlreadyExists(name);
   Positional arg{.name = name, .is_required = true};
   return *positionals.insert(positionals.end(), arg);
 }
@@ -187,6 +189,8 @@ Positional &Program::pos(std::string_view name) {
 Option &Program::opt(std::string_view name) { return opt(name, {}); }
 
 Option &Program::opt(std::string_view name, char const (&abbrev)[2]) {
+  if (contains_opt_or_flag(name, abbrev))
+    throw ArgumentAlreadyExists(name);
   auto const idx = options.size();
   auto &opt = options.emplace_back(name, abbrev);
   options_idx[opt.name] = idx;
@@ -198,6 +202,8 @@ Option &Program::opt(std::string_view name, char const (&abbrev)[2]) {
 Flag &Program::flag(std::string_view name) { return flag(name, {}); }
 
 Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
+  if (contains_opt_or_flag(name, abbrev))
+    throw ArgumentAlreadyExists(name);
   auto const idx = flags.size();
   Flag arg{.name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .act = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
@@ -208,9 +214,8 @@ Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
 }
 
 Program &Program::cmd(std::string_view name) {
-  if (cmds_idx.contains(name)) {
+  if (contains_pos_or_cmd(name))
     throw ArgumentAlreadyExists(name);
-  }
   auto const idx = cmds.size();
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
   cmds_idx[name] = idx;
@@ -277,6 +282,17 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::FLAG>(map, flag);
   for (auto const &option : options | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::OPTION>(map, option);
+}
+
+bool Program::contains_pos_or_cmd(std::string_view const name) const noexcept {
+  return cmds_idx.contains(name) || std::ranges::find_if(positionals, [&name](auto const &positional) {
+                                      return positional.name == name;
+                                    }) != positionals.end();
+}
+
+bool Program::contains_opt_or_flag(std::string_view const name, std::string_view const abbrev) const noexcept {
+  return options_idx.contains(name) || flags_idx.contains(name) ||
+         (!abbrev.empty() && (options_idx.contains(abbrev) || flags_idx.contains(abbrev)));
 }
 
 // +-----------------+
