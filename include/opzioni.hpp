@@ -250,14 +250,14 @@ Opt opt(std::string_view, char const (&)[2]) noexcept;
 Flg flg(std::string_view) noexcept;
 Flg flg(std::string_view, char const (&)[2]) noexcept;
 
-struct Command {
+struct Cmd {
   std::string_view name{};
   memory::ValuePtr<Program> program;
 
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
 
-  auto operator<=>(Command const &other) const noexcept { return name <=> other.name; }
+  auto operator<=>(Cmd const &other) const noexcept { return name <=> other.name; }
 };
 
 struct ParsedOption {
@@ -282,7 +282,7 @@ public:
   std::vector<Flg> flags;
   std::vector<Opt> options;
   std::vector<Pos> positionals;
-  std::vector<Command> cmds;
+  std::vector<Cmd> cmds;
 
   std::map<std::string_view, std::size_t> cmds_idx;
   std::map<std::string_view, std::size_t> flags_idx;
@@ -314,14 +314,14 @@ private:
   bool contains_opt_or_flag(std::string_view const, std::string_view const) const noexcept;
 
   bool is_dash_dash(std::string_view const) const noexcept;
-  Command const *is_command(std::string_view const) const noexcept;
+  Cmd const *is_command(std::string_view const) const noexcept;
   bool looks_positional(std::string_view const) const noexcept;
   std::string_view is_short_flags(std::string_view const) const noexcept;
   std::string_view is_long_flag(std::string_view const) const noexcept;
   std::optional<ParsedOption> is_option(std::string_view const) const noexcept;
   bool is_flag(std::string_view const) const noexcept;
 
-  std::size_t assign_command(ArgMap &, std::span<char const *>, Command const &) const;
+  std::size_t assign_command(ArgMap &, std::span<char const *>, Cmd const &) const;
   std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
   std::size_t assign_many_flags(ArgMap &, std::string_view) const;
   std::size_t assign_flag(ArgMap &, std::string_view) const;
@@ -360,7 +360,7 @@ private:
   std::vector<Flg> flags;
   std::vector<Opt> options;
   std::vector<Pos> positionals;
-  std::vector<Command> cmds;
+  std::vector<Cmd> cmds;
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;

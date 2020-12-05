@@ -143,9 +143,9 @@ std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   return format;
 }
 
-std::string Command::format_help_usage() const noexcept { return std::string(name); }
+std::string Cmd::format_help_usage() const noexcept { return std::string(name); }
 
-std::string Command::format_help_description() const noexcept { return std::string(program->introduction); }
+std::string Cmd::format_help_description() const noexcept { return std::string(program->introduction); }
 
 // +-------------+
 // | Arg helpers |
@@ -330,7 +330,7 @@ bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
 }
 
-Command const *Program::is_command(std::string_view const whole_arg) const noexcept {
+Cmd const *Program::is_command(std::string_view const whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
     return &cmds[cmd_idx->second];
   return nullptr;
@@ -372,7 +372,7 @@ bool Program::is_flag(std::string_view const name) const noexcept { return flags
 // | parsing assignments |
 // +---------------------+
 
-std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Command const &cmd) const {
+std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) const {
   auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
   args[0] = exec_path.data();
   map.cmd_name = cmd.name;
