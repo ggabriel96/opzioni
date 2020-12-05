@@ -14,20 +14,18 @@ int main(int argc, char const *argv[]) {
                  .details("See 'git <command> --help' to read about a specific subcommand.")
                  .auto_help();
 
-  auto &clone = git.cmd("clone").intro("Clone a repository into a new directory");
-  clone.add(
+  git.cmd("clone").intro("Clone a repository into a new directory") +
       pos("repository")
           .help(
               "The (possibly remote) repository to clone from. See the GIT URLS section below for more information on "
-              "specifying repositories."));
-  clone.add(
+              "specifying repositories.") +
       pos("directory")
           .help(
               "The name of a new directory to clone into. The \"humanish\" part of the source repository is used if no "
               "directory is explicitly given (repo for /path/to/repo.git and foo for host.xz:foo/.git). Cloning into "
               "an "
               "existing directory is only allowed if the directory is empty.")
-          .otherwise(""s));
+          .otherwise(""s);
 
   auto const args = git(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);
