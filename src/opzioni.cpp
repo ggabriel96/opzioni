@@ -196,32 +196,33 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
   return *this;
 }
 
-Pos &Program::add(Pos arg) {
-  if (contains_pos_or_cmd(arg.name))
-    throw ArgumentAlreadyExists(arg.name);
-  return *positionals.insert(positionals.end(), arg);
+Program &Program::add(Pos pos) {
+  if (contains_pos_or_cmd(pos.name))
+    throw ArgumentAlreadyExists(pos.name);
+  positionals.push_back(pos);
+  return *this;
 }
 
-Opt &Program::add(Opt arg) {
-  if (contains_opt_or_flag(arg.name, arg.abbrev))
-    throw ArgumentAlreadyExists(arg.name);
+Program &Program::add(Opt opt) {
+  if (contains_opt_or_flag(opt.name, opt.abbrev))
+    throw ArgumentAlreadyExists(opt.name);
   auto const idx = options.size();
-  auto &opt = *options.insert(options.end(), arg);
+  options.push_back(opt);
   options_idx[opt.name] = idx;
   if (opt.has_abbrev())
     options_idx[opt.abbrev] = idx;
-  return opt;
+  return *this;
 }
 
-Flg &Program::add(Flg arg) {
-  if (contains_opt_or_flag(arg.name, arg.abbrev))
-    throw ArgumentAlreadyExists(arg.name);
+Program &Program::add(Flg flg) {
+  if (contains_opt_or_flag(flg.name, flg.abbrev))
+    throw ArgumentAlreadyExists(flg.name);
   auto const idx = flags.size();
-  auto &flag = *flags.insert(flags.end(), arg);
-  flags_idx[flag.name] = idx;
-  if (flag.has_abbrev())
-    flags_idx[flag.abbrev] = idx;
-  return flag;
+  flags.push_back(flg);
+  flags_idx[flg.name] = idx;
+  if (flg.has_abbrev())
+    flags_idx[flg.abbrev] = idx;
+  return *this;
 }
 
 Program &Program::cmd(std::string_view name) {

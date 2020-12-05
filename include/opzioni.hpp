@@ -296,9 +296,9 @@ public:
   Program &auto_help() noexcept;
   Program &auto_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
-  Flg &add(Flg);
-  Opt &add(Opt);
-  Pos &add(Pos);
+  Program &add(Flg);
+  Program &add(Opt);
+  Program &add(Pos);
 
   Program &cmd(std::string_view);
 
