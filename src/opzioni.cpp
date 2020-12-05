@@ -151,16 +151,16 @@ std::string Command::format_help_description() const noexcept { return std::stri
 // | Arg helpers |
 // +-------------+
 
-Positional pos(std::string_view name) noexcept { return Positional{.name = name, .is_required = true}; }
+Pos pos(std::string_view name) noexcept { return Pos{.name = name, .is_required = true}; }
 
-Option opt(std::string_view name) noexcept { return opt(name, {}); }
+Opt opt(std::string_view name) noexcept { return opt(name, {}); }
 
-Option opt(std::string_view name, char const (&abbrev)[2]) noexcept { return Option{.name = name, .abbrev = abbrev}; }
+Opt opt(std::string_view name, char const (&abbrev)[2]) noexcept { return Opt{.name = name, .abbrev = abbrev}; }
 
-Flag flg(std::string_view name) noexcept { return flg(name, {}); }
+Flg flg(std::string_view name) noexcept { return flg(name, {}); }
 
-Flag flg(std::string_view name, char const (&abbrev)[2]) noexcept {
-  return Flag{
+Flg flg(std::string_view name, char const (&abbrev)[2]) noexcept {
+  return Flg{
       .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
 }
 
@@ -196,13 +196,13 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
   return *this;
 }
 
-Positional &Program::add(Positional arg) {
+Pos &Program::add(Pos arg) {
   if (contains_pos_or_cmd(arg.name))
     throw ArgumentAlreadyExists(arg.name);
   return *positionals.insert(positionals.end(), arg);
 }
 
-Option &Program::add(Option arg) {
+Opt &Program::add(Opt arg) {
   if (contains_opt_or_flag(arg.name, arg.abbrev))
     throw ArgumentAlreadyExists(arg.name);
   auto const idx = options.size();
@@ -213,7 +213,7 @@ Option &Program::add(Option arg) {
   return opt;
 }
 
-Flag &Program::add(Flag arg) {
+Flg &Program::add(Flg arg) {
   if (contains_opt_or_flag(arg.name, arg.abbrev))
     throw ArgumentAlreadyExists(arg.name);
   auto const idx = flags.size();
@@ -531,9 +531,9 @@ void HelpFormatter::print_long_usage() const noexcept {
 
   auto insert = std::back_inserter(words);
   words.push_back(program_path);
-  transform(positionals, insert, &Positional::format_usage);
-  transform(options, insert, &Option::format_usage);
-  transform(flags, insert, &Flag::format_usage);
+  transform(positionals, insert, &Pos::format_usage);
+  transform(options, insert, &Opt::format_usage);
+  transform(flags, insert, &Flg::format_usage);
 
   if (cmds.size() == 1) {
     words.push_back(format("{{{}}}", cmds.front().name));
@@ -626,7 +626,7 @@ void print_full_help(Program const &program, std::ostream &ostream) noexcept {
 
 namespace actions {
 
-void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string_view> const) {
+void print_help(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
   print_full_help(program);
   std::exit(0);
 }
