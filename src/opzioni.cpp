@@ -145,7 +145,7 @@ std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
 
 std::string Command::format_help_usage() const noexcept { return std::string(name); }
 
-std::string Command::format_help_description() const noexcept { return std::string(spec->introduction); }
+std::string Command::format_help_description() const noexcept { return std::string(program->introduction); }
 
 // +---------+
 // | Program |
@@ -220,9 +220,9 @@ Program &Program::cmd(std::string_view name) {
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
   cmds_idx[name] = idx;
   if (this->has_auto_help) {
-    command.spec->auto_help(this->flags[0].act);
+    command.program->auto_help(this->flags[0].act);
   }
-  return *command.spec;
+  return *command.program;
 }
 
 ArgMap Program::operator()(int argc, char const *argv[]) {
@@ -349,7 +349,7 @@ std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, C
   auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
   args[0] = exec_path.data();
   map.cmd_name = cmd.name;
-  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move((*cmd.spec)(args))));
+  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move((*cmd.program)(args))));
   return args.size();
 }
 

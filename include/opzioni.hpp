@@ -242,7 +242,7 @@ bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
 
 struct Command {
   std::string_view name{};
-  memory::ValuePtr<Program> spec;
+  memory::ValuePtr<Program> program;
 
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
