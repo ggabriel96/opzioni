@@ -305,6 +305,11 @@ public:
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
+  template <ArgumentType type>
+  Program &operator+(Arg<type> arg) {
+    return add(arg);
+  }
+
 private:
   ArgMap parse(std::span<char const *>) const;
   void check_contains_required(ArgMap const &) const;
