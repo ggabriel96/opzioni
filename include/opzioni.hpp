@@ -165,7 +165,7 @@ struct Arg {
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
   std::conditional_t<type != ArgumentType::POSITIONAL, std::optional<BuiltinType>, std::monostate> set_value{};
-  actions::signature<type> act = actions::assign<std::string>;
+  actions::signature<type> action_fn = actions::assign<std::string>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
   Arg<type> &aka(char const (&abbrev)[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
@@ -183,8 +183,8 @@ struct Arg {
     return *this;
   }
 
-  Arg<type> &action(actions::signature<type> act) noexcept {
-    this->act = act;
+  Arg<type> &action(actions::signature<type> action_fn) noexcept {
+    this->action_fn = action_fn;
     return *this;
   }
 
@@ -196,7 +196,7 @@ struct Arg {
   template <typename T = std::string>
   Arg<type> &gather(std::size_t gather_n) noexcept requires(type != ArgumentType::FLAG) {
     this->gather_n = {gather_n};
-    act = actions::append<T>;
+    action_fn = actions::append<T>;
     return *this;
   }
 
@@ -204,19 +204,19 @@ struct Arg {
   Arg<type> &otherwise(T value) {
     default_value = std::move(value);
     is_required = false;
-    // checking if act is the default because we cannot unconditionally
+    // checking if action_fn is the default because we cannot unconditionally
     // set it as the user might have set it before calling this function
-    if (act == static_cast<actions::signature<type>>(actions::assign<std::string>))
-      act = actions::assign<T>;
+    if (action_fn == static_cast<actions::signature<type>>(actions::assign<std::string>))
+      action_fn = actions::assign<T>;
     return *this;
   }
 
   template <typename T>
   Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
     set_value = std::move(value);
-    if (act == static_cast<actions::signature<type>>(actions::assign<bool>) ||
-        act == static_cast<actions::signature<type>>(actions::assign<std::string>))
-      act = actions::assign<T>;
+    if (action_fn == static_cast<actions::signature<type>>(actions::assign<bool>) ||
+        action_fn == static_cast<actions::signature<type>>(actions::assign<std::string>))
+      action_fn = actions::assign<T>;
     return *this;
   }
 

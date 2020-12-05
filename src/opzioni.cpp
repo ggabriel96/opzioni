@@ -205,7 +205,8 @@ Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
   if (contains_opt_or_flag(name, abbrev))
     throw ArgumentAlreadyExists(name);
   auto const idx = flags.size();
-  Flag arg{.name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .act = actions::assign<bool>};
+  Flag arg{
+      .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
   auto &flag = *flags.insert(flags.end(), arg);
   flags_idx[flag.name] = idx;
   if (flag.has_abbrev())
@@ -220,7 +221,7 @@ Program &Program::cmd(std::string_view name) {
   auto &command = cmds.emplace_back(name, std::make_unique<Program>());
   cmds_idx[name] = idx;
   if (this->has_auto_help) {
-    command.program->auto_help(this->flags[0].act);
+    command.program->auto_help(this->flags[0].action_fn);
   }
   return *command.program;
 }
@@ -381,7 +382,7 @@ std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args
     throw MissingValue(arg.name, gather_amount, args.size());
   }
   for (std::size_t count = 0; count < gather_amount; ++count) {
-    arg.act(*this, map, arg, args[count]);
+    arg.action_fn(*this, map, arg, args[count]);
   }
   return gather_amount;
 }
@@ -396,7 +397,7 @@ std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) cons
 std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
   auto const arg_idx = this->flags_idx.at(flag);
   auto const arg = this->flags[arg_idx];
-  arg.act(*this, map, arg, std::nullopt);
+  arg.action_fn(*this, map, arg, std::nullopt);
   return 1;
 }
 
@@ -408,7 +409,7 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
     if (gather_amount != 1) {
       throw MissingValue(arg.name, gather_amount, 1);
     }
-    arg.act(*this, map, arg, *option.value);
+    arg.action_fn(*this, map, arg, *option.value);
     return 1;
   } else if (gather_amount < args.size()) {
     // + 1 everywhere because 0 is the index in `args` that the option is,
@@ -416,12 +417,12 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
     std::size_t count = 0;
     do {
       auto const value = std::string_view(args[count + 1]);
-      arg.act(*this, map, arg, value);
+      arg.action_fn(*this, map, arg, value);
       ++count;
     } while (count < gather_amount);
     return gather_amount + 1;
   } else if (arg.set_value) {
-    arg.act(*this, map, arg, std::nullopt);
+    arg.action_fn(*this, map, arg, std::nullopt);
     return 1;
   } else {
     throw MissingValue(arg.name, gather_amount, args.size() - 1);
