@@ -204,8 +204,10 @@ Program &Program::add(Pos pos) {
 }
 
 Program &Program::add(Opt opt) {
-  if (contains_opt_or_flag(opt.name, opt.abbrev))
+  if (contains_opt_or_flag(opt.name))
     throw ArgumentAlreadyExists(opt.name);
+  if (opt.has_abbrev() && (options_idx.contains(opt.abbrev) || flags_idx.contains(opt.abbrev)))
+    throw ArgumentAlreadyExists(opt.abbrev);
   auto const idx = options.size();
   options.push_back(opt);
   options_idx[opt.name] = idx;
@@ -215,8 +217,10 @@ Program &Program::add(Opt opt) {
 }
 
 Program &Program::add(Flg flg) {
-  if (contains_opt_or_flag(flg.name, flg.abbrev))
+  if (contains_opt_or_flag(flg.name))
     throw ArgumentAlreadyExists(flg.name);
+  if (flg.has_abbrev() && (options_idx.contains(flg.abbrev) || flags_idx.contains(flg.abbrev)))
+    throw ArgumentAlreadyExists(flg.abbrev);
   auto const idx = flags.size();
   flags.push_back(flg);
   flags_idx[flg.name] = idx;
@@ -318,9 +322,8 @@ bool Program::contains_pos_or_cmd(std::string_view const name) const noexcept {
                                     }) != positionals.end();
 }
 
-bool Program::contains_opt_or_flag(std::string_view const name, std::string_view const abbrev) const noexcept {
-  return options_idx.contains(name) || flags_idx.contains(name) ||
-         (!abbrev.empty() && (options_idx.contains(abbrev) || flags_idx.contains(abbrev)));
+bool Program::contains_opt_or_flag(std::string_view const name) const noexcept {
+  return options_idx.contains(name) || flags_idx.contains(name);
 }
 
 // +-----------------+

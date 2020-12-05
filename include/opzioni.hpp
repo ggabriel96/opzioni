@@ -316,7 +316,7 @@ private:
   void set_defaults(ArgMap &) const noexcept;
 
   bool contains_pos_or_cmd(std::string_view const) const noexcept;
-  bool contains_opt_or_flag(std::string_view const, std::string_view const) const noexcept;
+  bool contains_opt_or_flag(std::string_view const) const noexcept;
 
   bool is_dash_dash(std::string_view const) const noexcept;
   Cmd const *is_command(std::string_view const) const noexcept;
