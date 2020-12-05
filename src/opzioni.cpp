@@ -15,9 +15,11 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 }
 
 int print_error(Program const &program, UserError const &err) noexcept {
-  auto const see_help = fmt::format("See `{} --help` for more information", program.path);
   std::cerr << limit_string_within(err.what(), program.msg_width) << nl;
-  std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
+  if (program.has_auto_help) {
+    auto const see_help = fmt::format("See `{} --help` for more information", program.path);
+    std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
+  }
   return -1;
 }
 
