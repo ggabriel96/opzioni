@@ -301,6 +301,7 @@ public:
 
 private:
   ArgMap parse(std::span<char const *>) const;
+  void check_contains_required(ArgMap const &) const;
   void set_defaults(ArgMap &) const noexcept;
 
   bool contains_pos_or_cmd(std::string_view const) const noexcept;

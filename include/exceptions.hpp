@@ -1,6 +1,8 @@
 #ifndef OPZIONI_EXCEPTIONS_H
 #define OPZIONI_EXCEPTIONS_H
 
+#include "concepts.hpp"
+
 #include <stdexcept>
 #include <string_view>
 
@@ -48,6 +50,12 @@ public:
   MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
       : UserError(
             fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
+};
+
+class MissingRequiredArguments : public UserError {
+public:
+  explicit MissingRequiredArguments(concepts::Container auto const &names)
+      : UserError(fmt::format("Missing required arguments: `{}`", fmt::join(names, "`, `"))) {}
 };
 
 class DuplicateAssignment : public UserError {

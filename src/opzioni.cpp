@@ -233,6 +233,7 @@ ArgMap Program::operator()(std::span<char const *> args) {
   try {
     this->path = args[0];
     auto map = parse(args);
+    check_contains_required(map);
     set_defaults(map);
     return map;
   } catch (UserError const &err) {
@@ -269,6 +270,21 @@ ArgMap Program::parse(std::span<char const *> args) const {
     }
   }
   return map;
+}
+
+void Program::check_contains_required(ArgMap const &map) const {
+  using std::ranges::transform;
+  using std::views::filter;
+  auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
+  auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
+  auto is_required = [](auto const &arg) { return arg.is_required; };
+  std::vector<std::string_view> missing_arg_names;
+  auto insert = std::back_inserter(missing_arg_names);
+  transform(positionals | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(options | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(flags | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  if (!missing_arg_names.empty())
+    throw MissingRequiredArguments(missing_arg_names);
 }
 
 void Program::set_defaults(ArgMap &map) const noexcept {
