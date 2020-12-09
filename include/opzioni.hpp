@@ -255,11 +255,11 @@ struct Cmd {
 // +-------------+
 
 Cmd cmd(std::string_view, Program *) noexcept;
-Pos pos(std::string_view) noexcept;
-Opt opt(std::string_view) noexcept;
-Opt opt(std::string_view, char const (&)[2]) noexcept;
 Flg flg(std::string_view) noexcept;
 Flg flg(std::string_view, char const (&)[2]) noexcept;
+Opt opt(std::string_view) noexcept;
+Opt opt(std::string_view, char const (&)[2]) noexcept;
+Pos pos(std::string_view) noexcept;
 
 struct ParsedOption {
   std::string_view name;
@@ -292,10 +292,10 @@ public:
   Program &auto_help() noexcept;
   Program &auto_help(actions::signature<ArgumentType::FLAG>) noexcept;
 
+  Program &add(Cmd);
   Program &add(Flg);
   Program &add(Opt);
   Program &add(Pos);
-  Program &add(Cmd);
 
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;

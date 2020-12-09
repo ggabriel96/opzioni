@@ -153,18 +153,18 @@ std::string Cmd::format_help_description() const noexcept { return std::string(p
 
 Cmd cmd(std::string_view name, Program *program) noexcept { return Cmd{.name = name, .program = program}; }
 
-Pos pos(std::string_view name) noexcept { return Pos{.name = name, .is_required = true}; }
-
-Opt opt(std::string_view name) noexcept { return opt(name, {}); }
-
-Opt opt(std::string_view name, char const (&abbrev)[2]) noexcept { return Opt{.name = name, .abbrev = abbrev}; }
-
 Flg flg(std::string_view name) noexcept { return flg(name, {}); }
 
 Flg flg(std::string_view name, char const (&abbrev)[2]) noexcept {
   return Flg{
       .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
 }
+
+Opt opt(std::string_view name) noexcept { return opt(name, {}); }
+
+Opt opt(std::string_view name, char const (&abbrev)[2]) noexcept { return Opt{.name = name, .abbrev = abbrev}; }
+
+Pos pos(std::string_view name) noexcept { return Pos{.name = name, .is_required = true}; }
 
 // +---------+
 // | Program |
@@ -198,23 +198,12 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
   return *this;
 }
 
-Program &Program::add(Pos pos) {
-  if (contains_pos_or_cmd(pos.name))
-    throw ArgumentAlreadyExists(pos.name);
-  _positionals.push_back(pos);
-  return *this;
-}
-
-Program &Program::add(Opt opt) {
-  if (contains_opt_or_flag(opt.name))
-    throw ArgumentAlreadyExists(opt.name);
-  if (opt.has_abbrev() && (options_idx.contains(opt.abbrev) || flags_idx.contains(opt.abbrev)))
-    throw ArgumentAlreadyExists(opt.abbrev);
-  auto const idx = _options.size();
-  _options.push_back(opt);
-  options_idx[opt.name] = idx;
-  if (opt.has_abbrev())
-    options_idx[opt.abbrev] = idx;
+Program &Program::add(Cmd cmd) {
+  if (contains_pos_or_cmd(cmd.name))
+    throw ArgumentAlreadyExists(cmd.name);
+  auto const idx = _cmds.size();
+  _cmds.push_back(cmd);
+  cmds_idx[cmd.name] = idx;
   return *this;
 }
 
@@ -231,12 +220,23 @@ Program &Program::add(Flg flg) {
   return *this;
 }
 
-Program &Program::add(Cmd cmd) {
-  if (contains_pos_or_cmd(cmd.name))
-    throw ArgumentAlreadyExists(cmd.name);
-  auto const idx = _cmds.size();
-  _cmds.push_back(cmd);
-  cmds_idx[cmd.name] = idx;
+Program &Program::add(Opt opt) {
+  if (contains_opt_or_flag(opt.name))
+    throw ArgumentAlreadyExists(opt.name);
+  if (opt.has_abbrev() && (options_idx.contains(opt.abbrev) || flags_idx.contains(opt.abbrev)))
+    throw ArgumentAlreadyExists(opt.abbrev);
+  auto const idx = _options.size();
+  _options.push_back(opt);
+  options_idx[opt.name] = idx;
+  if (opt.has_abbrev())
+    options_idx[opt.abbrev] = idx;
+  return *this;
+}
+
+Program &Program::add(Pos pos) {
+  if (contains_pos_or_cmd(pos.name))
+    throw ArgumentAlreadyExists(pos.name);
+  _positionals.push_back(pos);
   return *this;
 }
 
