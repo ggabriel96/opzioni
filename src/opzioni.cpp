@@ -199,42 +199,32 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
 }
 
 Program &Program::add(Cmd cmd) {
-  if (contains_pos_or_cmd(cmd.name))
+  if (has_cmd(cmd.name) || has_pos(cmd.name))
     throw ArgumentAlreadyExists(cmd.name);
-  auto const idx = _cmds.size();
   _cmds.push_back(cmd);
-  cmds_idx[cmd.name] = idx;
   return *this;
 }
 
 Program &Program::add(Flg flg) {
-  if (contains_opt_or_flag(flg.name))
+  if (has_flg(flg.name) || has_opt(flg.name))
     throw ArgumentAlreadyExists(flg.name);
-  if (flg.has_abbrev() && (options_idx.contains(flg.abbrev) || flags_idx.contains(flg.abbrev)))
+  if (flg.has_abbrev() && (has_flg(flg.abbrev) || has_opt(flg.abbrev)))
     throw ArgumentAlreadyExists(flg.abbrev);
-  auto const idx = _flags.size();
   _flags.push_back(flg);
-  flags_idx[flg.name] = idx;
-  if (flg.has_abbrev())
-    flags_idx[flg.abbrev] = idx;
   return *this;
 }
 
 Program &Program::add(Opt opt) {
-  if (contains_opt_or_flag(opt.name))
+  if (has_flg(opt.name) || has_opt(opt.name))
     throw ArgumentAlreadyExists(opt.name);
-  if (opt.has_abbrev() && (options_idx.contains(opt.abbrev) || flags_idx.contains(opt.abbrev)))
+  if (opt.has_abbrev() && (has_flg(opt.abbrev) || has_opt(opt.abbrev)))
     throw ArgumentAlreadyExists(opt.abbrev);
-  auto const idx = _options.size();
   _options.push_back(opt);
-  options_idx[opt.name] = idx;
-  if (opt.has_abbrev())
-    options_idx[opt.abbrev] = idx;
   return *this;
 }
 
 Program &Program::add(Pos pos) {
-  if (contains_pos_or_cmd(pos.name))
+  if (has_cmd(pos.name) || has_pos(pos.name))
     throw ArgumentAlreadyExists(pos.name);
   _positionals.push_back(pos);
   return *this;
@@ -314,16 +304,6 @@ void Program::set_defaults(ArgMap &map) const noexcept {
     set_default<ArgumentType::OPTION>(map, option);
 }
 
-bool Program::contains_pos_or_cmd(std::string_view const name) const noexcept {
-  return cmds_idx.contains(name) || std::ranges::find_if(_positionals, [&name](auto const &positional) {
-                                      return positional.name == name;
-                                    }) != _positionals.end();
-}
-
-bool Program::contains_opt_or_flag(std::string_view const name) const noexcept {
-  return options_idx.contains(name) || flags_idx.contains(name);
-}
-
 // +-----------------+
 // | parsing helpers |
 // +-----------------+
@@ -333,8 +313,8 @@ bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
 }
 
 Cmd const *Program::is_command(std::string_view const whole_arg) const noexcept {
-  if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
-    return &_cmds[cmd_idx->second];
+  if (auto const cmd = find_cmd(whole_arg); cmd != _cmds.end())
+    return &*cmd;
   return nullptr;
 }
 
@@ -363,12 +343,12 @@ std::string_view Program::is_long_flag(std::string_view const whole_arg) const n
 
 std::optional<ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
   auto const parsed_option = parse_option(whole_arg);
-  if (options_idx.contains(parsed_option.name))
+  if (has_opt(parsed_option.name))
     return parsed_option;
   return std::nullopt;
 }
 
-bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
+bool Program::is_flag(std::string_view const name) const noexcept { return has_flg(name); }
 
 // +---------------------+
 // | parsing assignments |
@@ -407,15 +387,13 @@ std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) cons
 }
 
 std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
-  auto const arg_idx = this->flags_idx.at(flag);
-  auto const arg = _flags[arg_idx];
+  auto const &arg = *find_flg(flag);
   arg.action_fn(*this, map, arg, std::nullopt);
   return 1;
 }
 
 std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
-  auto const arg_idx = this->options_idx.at(option.name);
-  auto const arg = _options[arg_idx];
+  auto const &arg = *find_opt(option.name);
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
   if (option.value) {
     if (gather_amount != 1) {

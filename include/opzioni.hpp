@@ -5,6 +5,7 @@
 #include "exceptions.hpp"
 #include "string.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -300,15 +301,39 @@ public:
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;
 
+  template <typename T>
+  Program &operator+(T arg) {
+    return add(arg);
+  }
+
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
   std::vector<Flg> const &flags() const noexcept { return _flags; }
   std::vector<Opt> const &options() const noexcept { return _options; }
   std::vector<Pos> const &positionals() const noexcept { return _positionals; }
 
-  template <typename T>
-  Program &operator+(T arg) {
-    return add(arg);
+  auto find_cmd(std::string_view name) const noexcept {
+    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.name; });
   }
+
+  bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
+
+  auto find_flg(std::string_view name) const noexcept {
+    return std::ranges::find_if(_flags, [name](auto const &flg) { return flg.name == name || flg.abbrev == name; });
+  }
+
+  bool has_flg(std::string_view name) const noexcept { return find_flg(name) != _flags.end(); }
+
+  auto find_opt(std::string_view name) const noexcept {
+    return std::ranges::find_if(_options, [name](auto const &opt) { return opt.name == name || opt.abbrev == name; });
+  }
+
+  bool has_opt(std::string_view name) const noexcept { return find_opt(name) != _options.end(); }
+
+  auto find_pos(std::string_view name) const noexcept {
+    return std::ranges::find(_positionals, name, [](auto const &pos) { return pos.name; });
+  }
+
+  bool has_pos(std::string_view name) const noexcept { return find_pos(name) != _positionals.end(); }
 
 private:
   std::vector<Cmd> _cmds;
@@ -316,16 +341,9 @@ private:
   std::vector<Opt> _options;
   std::vector<Pos> _positionals;
 
-  std::map<std::string_view, std::size_t> cmds_idx;
-  std::map<std::string_view, std::size_t> flags_idx;
-  std::map<std::string_view, std::size_t> options_idx;
-
   ArgMap parse(std::span<char const *>) const;
   void check_contains_required(ArgMap const &) const;
   void set_defaults(ArgMap &) const noexcept;
-
-  bool contains_pos_or_cmd(std::string_view const) const noexcept;
-  bool contains_opt_or_flag(std::string_view const) const noexcept;
 
   bool is_dash_dash(std::string_view const) const noexcept;
   Cmd const *is_command(std::string_view const) const noexcept;
