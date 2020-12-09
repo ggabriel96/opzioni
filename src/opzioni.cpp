@@ -201,7 +201,7 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
 Program &Program::add(Pos pos) {
   if (contains_pos_or_cmd(pos.name))
     throw ArgumentAlreadyExists(pos.name);
-  positionals.push_back(pos);
+  _positionals.push_back(pos);
   return *this;
 }
 
@@ -210,8 +210,8 @@ Program &Program::add(Opt opt) {
     throw ArgumentAlreadyExists(opt.name);
   if (opt.has_abbrev() && (options_idx.contains(opt.abbrev) || flags_idx.contains(opt.abbrev)))
     throw ArgumentAlreadyExists(opt.abbrev);
-  auto const idx = options.size();
-  options.push_back(opt);
+  auto const idx = _options.size();
+  _options.push_back(opt);
   options_idx[opt.name] = idx;
   if (opt.has_abbrev())
     options_idx[opt.abbrev] = idx;
@@ -223,8 +223,8 @@ Program &Program::add(Flg flg) {
     throw ArgumentAlreadyExists(flg.name);
   if (flg.has_abbrev() && (options_idx.contains(flg.abbrev) || flags_idx.contains(flg.abbrev)))
     throw ArgumentAlreadyExists(flg.abbrev);
-  auto const idx = flags.size();
-  flags.push_back(flg);
+  auto const idx = _flags.size();
+  _flags.push_back(flg);
   flags_idx[flg.name] = idx;
   if (flg.has_abbrev())
     flags_idx[flg.abbrev] = idx;
@@ -234,8 +234,8 @@ Program &Program::add(Flg flg) {
 Program &Program::add(Cmd cmd) {
   if (contains_pos_or_cmd(cmd.name))
     throw ArgumentAlreadyExists(cmd.name);
-  auto const idx = cmds.size();
-  cmds.push_back(cmd);
+  auto const idx = _cmds.size();
+  _cmds.push_back(cmd);
   cmds_idx[cmd.name] = idx;
   return *this;
 }
@@ -294,9 +294,9 @@ void Program::check_contains_required(ArgMap const &map) const {
   auto is_required = [](auto const &arg) { return arg.is_required; };
   std::vector<std::string_view> missing_arg_names;
   auto insert = std::back_inserter(missing_arg_names);
-  transform(positionals | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-  transform(options | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-  transform(flags | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_positionals | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_options | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_flags | filter(wasnt_parsed) | filter(is_required), insert, get_name);
   if (!missing_arg_names.empty())
     throw MissingRequiredArguments(missing_arg_names);
 }
@@ -306,18 +306,18 @@ void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::transform;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
   auto has_default = [](auto const &arg) { return arg.default_value.has_value(); };
-  for (auto const &positional : positionals | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &positional : _positionals | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::POSITIONAL>(map, positional);
-  for (auto const &flag : flags | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &flag : _flags | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::FLAG>(map, flag);
-  for (auto const &option : options | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &option : _options | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::OPTION>(map, option);
 }
 
 bool Program::contains_pos_or_cmd(std::string_view const name) const noexcept {
-  return cmds_idx.contains(name) || std::ranges::find_if(positionals, [&name](auto const &positional) {
+  return cmds_idx.contains(name) || std::ranges::find_if(_positionals, [&name](auto const &positional) {
                                       return positional.name == name;
-                                    }) != positionals.end();
+                                    }) != _positionals.end();
 }
 
 bool Program::contains_opt_or_flag(std::string_view const name) const noexcept {
@@ -334,7 +334,7 @@ bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
 
 Cmd const *Program::is_command(std::string_view const whole_arg) const noexcept {
   if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
-    return &cmds[cmd_idx->second];
+    return &_cmds[cmd_idx->second];
   return nullptr;
 }
 
@@ -384,10 +384,10 @@ std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, C
 
 std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
                                        std::size_t const positional_idx) const {
-  if (positional_idx >= this->positionals.size()) {
-    throw UnexpectedPositional(args[0], this->positionals.size());
+  if (positional_idx >= this->_positionals.size()) {
+    throw UnexpectedPositional(args[0], this->_positionals.size());
   }
-  auto const arg = this->positionals[positional_idx];
+  auto const arg = this->_positionals[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() : arg.gather_n.amount;
   if (gather_amount > args.size()) {
@@ -408,14 +408,14 @@ std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) cons
 
 std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
   auto const arg_idx = this->flags_idx.at(flag);
-  auto const arg = this->flags[arg_idx];
+  auto const arg = this->_flags[arg_idx];
   arg.action_fn(*this, map, arg, std::nullopt);
   return 1;
 }
 
 std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
   auto const arg_idx = this->options_idx.at(option.name);
-  auto const arg = this->options[arg_idx];
+  auto const arg = this->_options[arg_idx];
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
   if (option.value) {
     if (gather_amount != 1) {
@@ -483,8 +483,8 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 
 HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
     : out(out), max_width(program.msg_width), program_name(program.name), program_title(program.title),
-      program_introduction(program.introduction), program_description(program.description), flags(program.flags),
-      options(program.options), positionals(program.positionals), cmds(program.cmds) {
+      program_introduction(program.introduction), program_description(program.description), flags(program.flags()),
+      options(program.options()), positionals(program.positionals()), cmds(program.cmds()) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());

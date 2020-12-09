@@ -280,14 +280,9 @@ public:
   opzioni::error_handler error_handler = print_error;
   bool has_auto_help{false};
 
-  std::vector<Flg> flags;
-  std::vector<Opt> options;
-  std::vector<Pos> positionals;
-  std::vector<Cmd> cmds;
-
-  std::map<std::string_view, std::size_t> cmds_idx;
-  std::map<std::string_view, std::size_t> flags_idx;
-  std::map<std::string_view, std::size_t> options_idx;
+  Program() = default;
+  Program(std::string_view name) : Program(name, {}) {}
+  Program(std::string_view name, std::string_view title) : name(name), title(title) {}
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
@@ -305,12 +300,26 @@ public:
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;
 
+  std::vector<Cmd> const &cmds() const noexcept { return this->_cmds; }
+  std::vector<Flg> const &flags() const noexcept { return this->_flags; }
+  std::vector<Opt> const &options() const noexcept { return this->_options; }
+  std::vector<Pos> const &positionals() const noexcept { return this->_positionals; }
+
   template <typename T>
   Program &operator+(T arg) {
     return add(arg);
   }
 
 private:
+  std::vector<Cmd> _cmds;
+  std::vector<Flg> _flags;
+  std::vector<Opt> _options;
+  std::vector<Pos> _positionals;
+
+  std::map<std::string_view, std::size_t> cmds_idx;
+  std::map<std::string_view, std::size_t> flags_idx;
+  std::map<std::string_view, std::size_t> options_idx;
+
   ArgMap parse(std::span<char const *>) const;
   void check_contains_required(ArgMap const &) const;
   void set_defaults(ArgMap &) const noexcept;
