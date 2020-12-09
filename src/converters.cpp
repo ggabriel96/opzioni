@@ -14,8 +14,8 @@ auto convert<bool>(std::string_view value) -> bool {
 }
 
 template <>
-auto convert<std::string>(std::string_view value) -> std::string {
-  return std::string(value);
+auto convert<std::string_view>(std::string_view value) -> std::string_view {
+  return std::string_view(value);
 }
 
 } // namespace opzioni

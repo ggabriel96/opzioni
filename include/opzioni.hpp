@@ -39,7 +39,7 @@ struct VariantOf<TypeList<Ts...>> {
   using type = std::variant<Ts...>;
 };
 
-using BuiltinTypes = TypeList<bool, int, double, std::string, std::vector<int>, std::vector<std::string>>;
+using BuiltinTypes = TypeList<bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
 
 std::string builtin2str(BuiltinType const &) noexcept;
@@ -165,7 +165,7 @@ struct Arg {
   bool is_required = false;
   std::optional<BuiltinType> default_value{};
   std::conditional_t<type != ArgumentType::POSITIONAL, std::optional<BuiltinType>, std::monostate> set_value{};
-  actions::signature<type> action_fn = actions::assign<std::string>;
+  actions::signature<type> action_fn = actions::assign<std::string_view>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
   Arg<type> &aka(char const (&abbrev)[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
@@ -188,12 +188,12 @@ struct Arg {
     return *this;
   }
 
-  template <typename T = std::string>
+  template <typename T = std::string_view>
   Arg<type> &gather() noexcept requires(type != ArgumentType::FLAG) {
     return gather<T>(0);
   }
 
-  template <typename T = std::string>
+  template <typename T = std::string_view>
   Arg<type> &gather(std::size_t gather_n) noexcept requires(type != ArgumentType::FLAG) {
     this->gather_n = {gather_n};
     action_fn = actions::append<T>;
@@ -206,7 +206,7 @@ struct Arg {
     is_required = false;
     // checking if action_fn is the default because we cannot unconditionally
     // set it as the user might have set it before calling this function
-    if (action_fn == static_cast<actions::signature<type>>(actions::assign<std::string>))
+    if (action_fn == static_cast<actions::signature<type>>(actions::assign<std::string_view>))
       action_fn = actions::assign<T>;
     return *this;
   }
@@ -215,7 +215,7 @@ struct Arg {
   Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
     set_value = std::move(value);
     if (action_fn == static_cast<actions::signature<type>>(actions::assign<bool>) ||
-        action_fn == static_cast<actions::signature<type>>(actions::assign<std::string>))
+        action_fn == static_cast<actions::signature<type>>(actions::assign<std::string_view>))
       action_fn = actions::assign<T>;
     return *this;
   }
