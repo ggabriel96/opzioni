@@ -9,7 +9,7 @@ int main(int argc, char const *argv[]) {
   using opzioni::opt, opzioni::pos;
 
   auto program =
-      opzioni::Program("opzioni's gather example")
+      opzioni::Program("gather")
           .intro("A short example file to illustrate the gather feature")
           .auto_help() +
       pos("gather-all")

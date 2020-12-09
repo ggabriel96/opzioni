@@ -271,10 +271,10 @@ ParsedOption parse_option(std::string_view const) noexcept;
 
 class Program {
 public:
+  std::string_view name{};
   std::string_view title{};
   std::string_view introduction{};
   std::string_view description{};
-  std::string_view path{};
 
   std::size_t msg_width = 100;
   opzioni::error_handler error_handler = print_error;
@@ -302,8 +302,8 @@ public:
   Program &add(Pos);
   Program &add(Cmd);
 
-  ArgMap operator()(int, char const *[]);
-  ArgMap operator()(std::span<char const *>);
+  ArgMap operator()(int, char const *[]) const;
+  ArgMap operator()(std::span<char const *>) const;
 
   template <typename T>
   Program &operator+(T arg) {
@@ -358,10 +358,10 @@ public:
 private:
   std::ostream &out;
   std::size_t const max_width;
+  std::string const program_name;
   std::string const program_title;
   std::string const program_introduction;
   std::string const program_description;
-  std::string const program_path;
   std::vector<Flg> flags;
   std::vector<Opt> options;
   std::vector<Pos> positionals;

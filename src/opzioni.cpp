@@ -17,7 +17,7 @@ std::string builtin2str(BuiltinType const &variant) noexcept {
 int print_error(Program const &program, UserError const &err) noexcept {
   std::cerr << limit_string_within(err.what(), program.msg_width) << nl;
   if (program.has_auto_help) {
-    auto const see_help = fmt::format("See `{} --help` for more information", program.path);
+    auto const see_help = fmt::format("See `{} --help` for more information", program.name);
     std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
   }
   return -1;
@@ -240,13 +240,12 @@ Program &Program::add(Cmd cmd) {
   return *this;
 }
 
-ArgMap Program::operator()(int argc, char const *argv[]) {
+ArgMap Program::operator()(int argc, char const *argv[]) const {
   return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
 }
 
-ArgMap Program::operator()(std::span<char const *> args) {
+ArgMap Program::operator()(std::span<char const *> args) const {
   try {
-    this->path = args[0];
     auto map = parse(args);
     check_contains_required(map);
     set_defaults(map);
@@ -376,7 +375,7 @@ bool Program::is_flag(std::string_view const name) const noexcept { return flags
 // +---------------------+
 
 std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) const {
-  auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
+  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.name);
   args[0] = exec_path.data();
   map.cmd_name = cmd.name;
   map.cmd_args = std::make_shared<ArgMap>(std::move((*cmd.program)(args)));
@@ -483,8 +482,8 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 // +------------+
 
 HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
-    : out(out), max_width(program.msg_width), program_title(program.title), program_introduction(program.introduction),
-      program_description(program.description), program_path(program.path), flags(program.flags),
+    : out(out), max_width(program.msg_width), program_name(program.name), program_title(program.title),
+      program_introduction(program.introduction), program_description(program.description), flags(program.flags),
       options(program.options), positionals(program.positionals), cmds(program.cmds) {
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
@@ -510,10 +509,10 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 }
 
 void HelpFormatter::print_title() const noexcept {
+  out << program_name;
   if (!program_title.empty())
-    out << program_title << nl;
-  else
-    out << program_path << nl;
+    out << " - " << program_title;
+  out << nl;
 }
 
 void HelpFormatter::print_intro() const noexcept {
@@ -533,7 +532,7 @@ void HelpFormatter::print_long_usage() const noexcept {
   words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
 
   auto insert = std::back_inserter(words);
-  words.push_back(program_path);
+  words.push_back(program_name);
   transform(positionals, insert, &Pos::format_usage);
   transform(options, insert, &Opt::format_usage);
   transform(flags, insert, &Flg::format_usage);

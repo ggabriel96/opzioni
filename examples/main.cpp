@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]) {
   using opzioni::flg, opzioni::opt, opzioni::pos;
 
   auto program =
-      opzioni::Program("opzioni's main example")
+      opzioni::Program("main")
           .intro("A short example file illustrating opzioni's simpler features")
           .details("This example only covers simple positionals, options, and flags. For examples of more"
                    " complicated parse actions or subcommands, please take a look at the other examples.")
