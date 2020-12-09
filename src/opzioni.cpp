@@ -151,6 +151,8 @@ std::string Cmd::format_help_description() const noexcept { return std::string(p
 // | Arg helpers |
 // +-------------+
 
+Cmd cmd(std::string_view name, Program *program) noexcept { return Cmd{.name = name, .program = program}; }
+
 Pos pos(std::string_view name) noexcept { return Pos{.name = name, .is_required = true}; }
 
 Opt opt(std::string_view name) noexcept { return opt(name, {}); }
@@ -229,16 +231,13 @@ Program &Program::add(Flg flg) {
   return *this;
 }
 
-Program &Program::cmd(std::string_view name) {
-  if (contains_pos_or_cmd(name))
-    throw ArgumentAlreadyExists(name);
+Program &Program::add(Cmd cmd) {
+  if (contains_pos_or_cmd(cmd.name))
+    throw ArgumentAlreadyExists(cmd.name);
   auto const idx = cmds.size();
-  auto &command = cmds.emplace_back(name, std::make_unique<Program>());
-  cmds_idx[name] = idx;
-  if (this->has_auto_help) {
-    command.program->auto_help(this->flags[0].action_fn);
-  }
-  return *command.program;
+  cmds.push_back(cmd);
+  cmds_idx[cmd.name] = idx;
+  return *this;
 }
 
 ArgMap Program::operator()(int argc, char const *argv[]) {

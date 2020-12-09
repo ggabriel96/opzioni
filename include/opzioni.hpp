@@ -240,25 +240,26 @@ bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
   return lhs.is_required && !rhs.is_required;
 }
 
-// +-------------+
-// | Arg helpers |
-// +-------------+
-
-Pos pos(std::string_view) noexcept;
-Opt opt(std::string_view) noexcept;
-Opt opt(std::string_view, char const (&)[2]) noexcept;
-Flg flg(std::string_view) noexcept;
-Flg flg(std::string_view, char const (&)[2]) noexcept;
-
 struct Cmd {
   std::string_view name{};
-  memory::ValuePtr<Program> program;
+  Program *program;
 
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
 
   auto operator<=>(Cmd const &other) const noexcept { return name <=> other.name; }
 };
+
+// +-------------+
+// | Arg helpers |
+// +-------------+
+
+Cmd cmd(std::string_view, Program *) noexcept;
+Pos pos(std::string_view) noexcept;
+Opt opt(std::string_view) noexcept;
+Opt opt(std::string_view, char const (&)[2]) noexcept;
+Flg flg(std::string_view) noexcept;
+Flg flg(std::string_view, char const (&)[2]) noexcept;
 
 struct ParsedOption {
   std::string_view name;
@@ -299,14 +300,13 @@ public:
   Program &add(Flg);
   Program &add(Opt);
   Program &add(Pos);
-
-  Program &cmd(std::string_view);
+  Program &add(Cmd);
 
   ArgMap operator()(int, char const *[]);
   ArgMap operator()(std::span<char const *>);
 
-  template <ArgumentType type>
-  Program &operator+(Arg<type> arg) {
+  template <typename T>
+  Program &operator+(T arg) {
     return add(arg);
   }
 
