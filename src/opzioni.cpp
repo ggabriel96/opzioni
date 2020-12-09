@@ -384,10 +384,10 @@ std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, C
 
 std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
                                        std::size_t const positional_idx) const {
-  if (positional_idx >= this->_positionals.size()) {
-    throw UnexpectedPositional(args[0], this->_positionals.size());
+  if (positional_idx >= _positionals.size()) {
+    throw UnexpectedPositional(args[0], _positionals.size());
   }
-  auto const arg = this->_positionals[positional_idx];
+  auto const arg = _positionals[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() : arg.gather_n.amount;
   if (gather_amount > args.size()) {
@@ -408,14 +408,14 @@ std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) cons
 
 std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
   auto const arg_idx = this->flags_idx.at(flag);
-  auto const arg = this->_flags[arg_idx];
+  auto const arg = _flags[arg_idx];
   arg.action_fn(*this, map, arg, std::nullopt);
   return 1;
 }
 
 std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
   auto const arg_idx = this->options_idx.at(option.name);
-  auto const arg = this->_options[arg_idx];
+  auto const arg = _options[arg_idx];
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
   if (option.value) {
     if (gather_amount != 1) {

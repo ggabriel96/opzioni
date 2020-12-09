@@ -300,10 +300,10 @@ public:
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;
 
-  std::vector<Cmd> const &cmds() const noexcept { return this->_cmds; }
-  std::vector<Flg> const &flags() const noexcept { return this->_flags; }
-  std::vector<Opt> const &options() const noexcept { return this->_options; }
-  std::vector<Pos> const &positionals() const noexcept { return this->_positionals; }
+  std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
+  std::vector<Flg> const &flags() const noexcept { return _flags; }
+  std::vector<Opt> const &options() const noexcept { return _options; }
+  std::vector<Pos> const &positionals() const noexcept { return _positionals; }
 
   template <typename T>
   Program &operator+(T arg) {
