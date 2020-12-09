@@ -3,11 +3,11 @@
 
 #include "converters.hpp"
 #include "exceptions.hpp"
-#include "memory.hpp"
 #include "string.hpp"
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <ranges>
@@ -153,7 +153,7 @@ struct ArgMap {
 
   std::string exec_path{};
   std::string cmd_name{};
-  memory::ValuePtr<ArgMap> cmd_args;
+  std::shared_ptr<ArgMap> cmd_args;
   std::map<std::string_view, ArgValue> args;
 };
 

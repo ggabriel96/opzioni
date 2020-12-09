@@ -379,7 +379,7 @@ std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, C
   auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
   args[0] = exec_path.data();
   map.cmd_name = cmd.name;
-  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move((*cmd.program)(args))));
+  map.cmd_args = std::make_shared<ArgMap>(std::move((*cmd.program)(args)));
   return args.size();
 }
 
