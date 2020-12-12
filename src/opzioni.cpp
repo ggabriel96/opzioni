@@ -7,6 +7,23 @@
 #include <tuple>
 #include <variant>
 
+template <>
+struct fmt::formatter<std::monostate> {
+  constexpr auto parse(format_parse_context &ctx) {
+    auto it = ctx.begin() + 1, end = ctx.end();
+    // We have nothing to parse for std::monostate
+    if (it != end && *it != '}')
+      throw format_error("std::monostate does not take any format specifier");
+    return end;
+  }
+
+  template <typename FormatContext>
+  auto format(std::monostate const &_, FormatContext &ctx) {
+    // ctx.out() is an output iterator to write to.
+    return format_to(ctx.out(), "_");
+  }
+};
+
 namespace opzioni {
 
 std::string builtin2str(BuiltinType const &variant) noexcept {
