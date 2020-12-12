@@ -60,16 +60,16 @@ SCENARIO("bool", "[BuiltinType]") {
 }
 
 SCENARIO("vector<int>", "[vector]") {
-  using vec = std::vector<int>;
+  using type = std::vector<int>;
   using namespace std::string_view_literals;
 
   GIVEN("an empty string") {
     auto const input = ""sv;
 
     WHEN("calling convert") {
-      auto const result = opzioni::convert<vec>(input);
+      auto const result = opzioni::convert<type>(input);
 
-      THEN("we should get an empty vector") { REQUIRE(result == vec{}); }
+      THEN("we should get an empty vector") { REQUIRE(result == type{}); }
     }
   }
 
@@ -77,9 +77,9 @@ SCENARIO("vector<int>", "[vector]") {
     auto const input = "2"sv;
 
     WHEN("calling convert") {
-      auto const result = opzioni::convert<vec>(input);
+      auto const result = opzioni::convert<type>(input);
 
-      THEN("we should get a vector of int of one element") { REQUIRE(result == vec{2}); }
+      THEN("we should get a vector of int of one element") { REQUIRE(result == type{2}); }
     }
   }
 
@@ -87,9 +87,9 @@ SCENARIO("vector<int>", "[vector]") {
     auto const input = "1,2,3"sv;
 
     WHEN("calling convert") {
-      auto const result = opzioni::convert<vec>(input);
+      auto const result = opzioni::convert<type>(input);
 
-      THEN("we should get a vector of int of that list") { REQUIRE(result == vec{1, 2, 3}); }
+      THEN("we should get a vector of int of that list") { REQUIRE(result == type{1, 2, 3}); }
     }
   }
 
@@ -97,9 +97,9 @@ SCENARIO("vector<int>", "[vector]") {
     auto const input = "1,2,3,"sv;
 
     WHEN("calling convert") {
-      auto const result = opzioni::convert<vec>(input);
+      auto const result = opzioni::convert<type>(input);
 
-      THEN("we should get a vector of int of that list") { REQUIRE(result == vec{1, 2, 3}); }
+      THEN("we should get a vector of int of that list") { REQUIRE(result == type{1, 2, 3}); }
     }
   }
 
@@ -107,7 +107,7 @@ SCENARIO("vector<int>", "[vector]") {
     auto const input = ",1,2,3"sv;
 
     WHEN("calling convert") {
-      THEN("we should throw an error") { REQUIRE_THROWS_AS(opzioni::convert<vec>(input), opzioni::ConversionError); }
+      THEN("we should throw an error") { REQUIRE_THROWS_AS(opzioni::convert<type>(input), opzioni::ConversionError); }
     }
   }
 }
