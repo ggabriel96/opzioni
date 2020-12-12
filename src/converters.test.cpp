@@ -22,6 +22,18 @@ SCENARIO("vector<int>", "[vector]") {
     }
   }
 
+  GIVEN("a list of only one integer") {
+    auto const input = "2"sv;
+
+    WHEN("calling convert") {
+      auto const result = opzioni::convert<vec>(input);
+
+      THEN("we should get a vector of int of one element") {
+        REQUIRE(result == vec{2});
+      }
+    }
+  }
+
   GIVEN("a comma-separated list of integers with a trailing comma") {
     auto const input = "1,2,3,"sv;
 
