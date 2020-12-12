@@ -181,11 +181,6 @@ public:
 
   Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
 
-  Arg<type> &aka(char const (&abbrev)[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
-    this->abbrev = abbrev;
-    return *this;
-  }
-
   Arg<type> &help(std::string_view description) noexcept {
     this->description = description;
     return *this;
