@@ -15,4 +15,4 @@ clean:
 	rm build/ -rf
 
 format:
-	clang-format -i --verbose $(find . -name '*.cpp') $(find . -name '*.hpp')
+	clang-format --verbose -i $(shell find . -name '*.cpp') $(shell find . -name '*.hpp')
