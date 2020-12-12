@@ -253,14 +253,18 @@ bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
   return lhs.is_required && !rhs.is_required;
 }
 
-struct Cmd {
-  // just a helper struct to encapsulate the pointer indirection
+class Cmd {
+public:
+  // just a helper to encapsulate the pointer indirection
   Program *program;
+
+  Cmd(Program &program) : program(&program) {}
 
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
 
   auto operator<=>(Cmd const &) const noexcept;
+private:
 };
 
 struct ParsedOption {
