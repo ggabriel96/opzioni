@@ -10,6 +10,18 @@ SCENARIO("vector<int>", "[vector]") {
   using vec = std::vector<int>;
   using namespace std::string_view_literals;
 
+  GIVEN("an empty string") {
+    auto const input = ""sv;
+
+    WHEN("calling convert") {
+      auto const result = opzioni::convert<vec>(input);
+
+      THEN("we should get an empty vector") {
+        REQUIRE(result == vec{});
+      }
+    }
+  }
+
   GIVEN("a proper comma-separated list of integers") {
     auto const input = "1,2,3"sv;
 
