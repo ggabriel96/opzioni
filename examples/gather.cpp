@@ -9,9 +9,7 @@ int main(int argc, char const *argv[]) {
   using opzioni::opt, opzioni::pos;
 
   auto program =
-      opzioni::Program("gather")
-          .intro("A short example file to illustrate the gather feature")
-          .auto_help() +
+      opzioni::Program("gather").intro("A short example file to illustrate the gather feature").auto_help() +
       pos("gather-all")
           .help(
               "This is the equivalent of Python's argparse `nargs` with value `+`: it requires at least one value and "
