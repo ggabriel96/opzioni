@@ -1,11 +1,8 @@
 {
 	"name": "opzioni",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
-	"containerUser": "conan",
-	"mounts": ["type=bind,source=${localEnv:HOME}/.ssh/,target=/home/conan/.ssh/"],
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "opzioni",
+	"workspaceFolder": "/home/conan/opzioni/",
 
 	"settings": { 
 		"terminal.integrated.shell.linux": "/usr/bin/zsh"

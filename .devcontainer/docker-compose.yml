@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  opzioni:
+    build:
+      context: ./
+    user: conan
+    working_dir: /home/conan/opzioni/
+    entrypoint: sleep infinity
+    volumes:
+      - ../:/home/conan/opzioni:Z

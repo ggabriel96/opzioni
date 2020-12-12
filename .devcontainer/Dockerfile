@@ -8,5 +8,5 @@ RUN DEBIAN_FRONTEND=noninteractive \
 RUN usermod -s $(which zsh) conan
 
 USER conan
-RUN pip install meson
+RUN pip install meson ninja
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
