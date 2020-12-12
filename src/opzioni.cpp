@@ -159,7 +159,9 @@ std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   return format;
 }
 
-std::string Cmd::format_help_usage() const noexcept { return std::string(program->name); }
+std::string Cmd::format_usage() const noexcept { return std::string(program->name); }
+
+std::string Cmd::format_help_usage() const noexcept { return format_usage(); }
 
 std::string Cmd::format_help_description() const noexcept { return std::string(program->introduction); }
 
@@ -514,13 +516,12 @@ void HelpFormatter::print_long_usage() const noexcept {
   transform(flags, insert, &Flg::format_usage);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().program->name));
+    words.push_back(format("{{{}}}", cmds.front().format_usage()));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().program->name));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert,
-              [](auto const &cmd) { return format("{},", cmd.program->name); });
-    words.push_back(format("{}}}", cmds.back().program->name));
+    words.push_back(format("{{{},", cmds.front().format_usage()));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &Cmd::format_usage);
+    words.push_back(format("{}}}", cmds.back().format_usage()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces

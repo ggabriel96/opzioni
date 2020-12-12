@@ -260,6 +260,7 @@ public:
 
   Cmd(Program &program) : program(&program) {}
 
+  std::string format_usage() const noexcept;
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
 
