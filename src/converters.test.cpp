@@ -16,21 +16,7 @@ SCENARIO("vector<int>", "[vector]") {
     WHEN("calling convert") {
       auto const result = opzioni::convert<vec>(input);
 
-      THEN("we should get an empty vector") {
-        REQUIRE(result == vec{});
-      }
-    }
-  }
-
-  GIVEN("a proper comma-separated list of integers") {
-    auto const input = "1,2,3"sv;
-
-    WHEN("calling convert") {
-      auto const result = opzioni::convert<vec>(input);
-
-      THEN("we should get a vector of int of that list") {
-        REQUIRE(result == vec{1, 2, 3});
-      }
+      THEN("we should get an empty vector") { REQUIRE(result == vec{}); }
     }
   }
 
@@ -40,9 +26,17 @@ SCENARIO("vector<int>", "[vector]") {
     WHEN("calling convert") {
       auto const result = opzioni::convert<vec>(input);
 
-      THEN("we should get a vector of int of one element") {
-        REQUIRE(result == vec{2});
-      }
+      THEN("we should get a vector of int of one element") { REQUIRE(result == vec{2}); }
+    }
+  }
+
+  GIVEN("a proper comma-separated list of integers") {
+    auto const input = "1,2,3"sv;
+
+    WHEN("calling convert") {
+      auto const result = opzioni::convert<vec>(input);
+
+      THEN("we should get a vector of int of that list") { REQUIRE(result == vec{1, 2, 3}); }
     }
   }
 
@@ -52,9 +46,7 @@ SCENARIO("vector<int>", "[vector]") {
     WHEN("calling convert") {
       auto const result = opzioni::convert<vec>(input);
 
-      THEN("we should get a vector of int of that list") {
-        REQUIRE(result == vec{1, 2, 3});
-      }
+      THEN("we should get a vector of int of that list") { REQUIRE(result == vec{1, 2, 3}); }
     }
   }
 
@@ -62,9 +54,7 @@ SCENARIO("vector<int>", "[vector]") {
     auto const input = ",1,2,3"sv;
 
     WHEN("calling convert") {
-      THEN("we should throw an error") {
-        REQUIRE_THROWS_AS(opzioni::convert<vec>(input), opzioni::ConversionError);
-      }
+      THEN("we should throw an error") { REQUIRE_THROWS_AS(opzioni::convert<vec>(input), opzioni::ConversionError); }
     }
   }
 }
