@@ -160,7 +160,8 @@ struct ArgMap {
 };
 
 template <ArgumentType type>
-struct Arg {
+class Arg {
+public:
   std::string_view name{};
   std::conditional_t<type != ArgumentType::POSITIONAL, std::string_view, std::monostate> abbrev{};
   std::string_view description{};
@@ -169,6 +170,16 @@ struct Arg {
   std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
   actions::signature<type> action_fn = actions::assign<std::string_view>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
+
+  Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::FLAG)
+      : name(name), abbrev(abbrev), default_value(false), set_value(true), action_fn(actions::assign<bool>) {}
+  Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
+
+  Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::OPTION)
+      : name(name), abbrev(abbrev) {}
+  Arg(std::string_view name) requires(type == ArgumentType::OPTION) : Arg(name, {}) {}
+
+  Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
 
   Arg<type> &aka(char const (&abbrev)[2]) noexcept requires(type != ArgumentType::POSITIONAL) {
     this->abbrev = abbrev;
@@ -230,6 +241,8 @@ struct Arg {
   std::string format_usage() const noexcept;
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
+
+private:
 };
 
 template <ArgumentType type>
@@ -254,17 +267,6 @@ struct Cmd {
 
   auto operator<=>(Cmd const &) const noexcept;
 };
-
-// +-------------+
-// | Arg helpers |
-// +-------------+
-
-Cmd cmd(Program *) noexcept;
-Flg flg(std::string_view) noexcept;
-Flg flg(std::string_view, char const (&)[2]) noexcept;
-Opt opt(std::string_view) noexcept;
-Opt opt(std::string_view, char const (&)[2]) noexcept;
-Pos pos(std::string_view) noexcept;
 
 struct ParsedOption {
   std::string_view name;

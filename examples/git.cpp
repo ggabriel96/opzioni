@@ -6,15 +6,15 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
-  using opzioni::Program, opzioni::pos, opzioni::cmd;
+  using opzioni::Program, opzioni::Pos, opzioni::Cmd;
   using namespace std::string_view_literals;
 
   auto clone =
       Program("clone", "Clone a repository into a new directory").auto_help() +
-      pos("repository")
+      Pos("repository")
           .help("The (possibly remote) repository to clone from."
                 " See the GIT URLS section below for more information on specifying repositories.") +
-      pos("directory")
+      Pos("directory")
           .help(
               "The name of a new directory to clone into. The \"humanish\" part of the source repository is used if no "
               "directory is explicitly given (repo for /path/to/repo.git and foo for host.xz:foo/.git). Cloning into "
@@ -25,7 +25,7 @@ int main(int argc, char const *argv[]) {
                  .intro("An example to illustrate subcommands via simulation of the git interface")
                  .details("See 'git <command> --help' to read about a specific subcommand.")
                  .auto_help() +
-             cmd(&clone);
+             Cmd(&clone);
 
   auto const args = git(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);

@@ -6,11 +6,11 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
-  using opzioni::opt, opzioni::pos;
+  using opzioni::Opt, opzioni::Pos;
 
   auto program =
       opzioni::Program("gather").intro("A short example file to illustrate the gather feature").auto_help() +
-      pos("gather-all")
+      Pos("gather-all")
           .help(
               "This is the equivalent of Python's argparse `nargs` with value `+`: it requires at least one value and "
               "consumes all of them into a vector. Note that this exact type of argument is rather limiting because, "
@@ -18,7 +18,7 @@ int main(int argc, char const *argv[]) {
               "any subsequent positional or command argument (options and flags may appear before it, though)")
           .gather<int>()
           .otherwise(std::vector<int>{}) +
-      opt("gather-2")
+      Opt("gather-2")
           .help("This is similar to the previous gather, but it limits the amount of arguments to only 2,"
                 " so it is not so problematic")
           .gather<int>(2)

@@ -165,25 +165,6 @@ std::string Cmd::format_help_description() const noexcept { return std::string(p
 
 auto Cmd::operator<=>(Cmd const &other) const noexcept { return this->program->name <=> other.program->name; }
 
-// +-------------+
-// | Arg helpers |
-// +-------------+
-
-Cmd cmd(Program *program) noexcept { return Cmd(program); }
-
-Flg flg(std::string_view name) noexcept { return flg(name, {}); }
-
-Flg flg(std::string_view name, char const (&abbrev)[2]) noexcept {
-  return Flg{
-      .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
-}
-
-Opt opt(std::string_view name) noexcept { return opt(name, {}); }
-
-Opt opt(std::string_view name, char const (&abbrev)[2]) noexcept { return Opt{.name = name, .abbrev = abbrev}; }
-
-Pos pos(std::string_view name) noexcept { return Pos{.name = name, .is_required = true}; }
-
 // +---------+
 // | Program |
 // +---------+
@@ -211,7 +192,7 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
 Program &Program::auto_help() noexcept { return this->auto_help(actions::print_help); }
 
 Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
-  this->add(flg("help", "h").help("Display this information").action(action));
+  this->add(Flg("help", "h").help("Display this information").action(action));
   this->has_auto_help = true;
   return *this;
 }
