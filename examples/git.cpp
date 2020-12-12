@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
   using namespace std::string_view_literals;
 
   auto clone =
-      Program("clone", "Clone a repository into a new directory").auto_help() +
+      Program("clone").intro("Clone a repository into a new directory").auto_help() +
       Pos("repository")
           .help("The (possibly remote) repository to clone from."
                 " See the GIT URLS section below for more information on specifying repositories.") +

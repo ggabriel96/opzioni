@@ -233,9 +233,9 @@ public:
   bool has_set() const noexcept { return set_value.index() != 0; }
 
   std::string format_base_usage() const noexcept;
-  std::string format_usage() const noexcept;
-  std::string format_help_usage() const noexcept;
-  std::string format_help_description() const noexcept;
+  std::string format_for_help_description() const noexcept;
+  std::string format_for_help_index() const noexcept;
+  std::string format_for_usage_summary() const noexcept;
 
 private:
 };
@@ -260,9 +260,9 @@ public:
 
   Cmd(Program &program) : program(&program) {}
 
-  std::string format_usage() const noexcept;
-  std::string format_help_usage() const noexcept;
-  std::string format_help_description() const noexcept;
+  std::string format_for_help_description() const noexcept;
+  std::string format_for_help_index() const noexcept;
+  std::string format_for_usage_summary() const noexcept;
 
   auto operator<=>(Cmd const &) const noexcept;
 
@@ -403,13 +403,14 @@ private:
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
-    auto const description = arg.format_help_description();
+    auto const description = arg.format_for_help_description();
     // -8 because we'll later print a left margin of 8 spaces (4 of indentation, 4 of alignment)
-    auto const lines = limit_within(description, max_width - padding.size() - 8);
+    auto const description_lines = limit_within(description, max_width - padding.size() - 8);
     // -4 again because we'll shift it 4 spaces into the padding, invading it,
     // so we can have the possible following lines indented
-    out << fmt::format("    {:<{}} {}\n", arg.format_help_usage(), padding.size() - 4, fmt::join(lines.front(), " "));
-    for (auto const &line : lines | drop(1)) {
+    out << fmt::format("    {:<{}} {}\n", arg.format_for_help_index(), padding.size() - 4,
+                       fmt::join(description_lines.front(), " "));
+    for (auto const &line : description_lines | drop(1)) {
       out << fmt::format("    {} {}\n", padding, fmt::join(line, " "));
     };
   }

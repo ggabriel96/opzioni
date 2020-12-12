@@ -58,15 +58,22 @@ std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept {
 }
 
 template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_usage() const noexcept {
-  if (is_required)
-    return "<" + format_base_usage() + ">";
-  return "[<" + format_base_usage() + ">]";
+std::string Arg<ArgumentType::POSITIONAL>::format_for_help_description() const noexcept {
+  if (has_default())
+    return fmt::format("{} (default: {})", description, builtin2str(default_value));
+  return std::string(description);
 }
 
 template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_help_usage() const noexcept {
+std::string Arg<ArgumentType::POSITIONAL>::format_for_help_index() const noexcept {
   return format_base_usage();
+}
+
+template <>
+std::string Arg<ArgumentType::POSITIONAL>::format_for_usage_summary() const noexcept {
+  if (is_required)
+    return "<" + format_base_usage() + ">";
+  return "[<" + format_base_usage() + ">]";
 }
 
 template <>
@@ -79,14 +86,24 @@ std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
 }
 
 template <>
-std::string Arg<ArgumentType::OPTION>::format_usage() const noexcept {
-  if (is_required)
-    return format_base_usage();
-  return "[" + format_base_usage() + "]";
+std::string Arg<ArgumentType::OPTION>::format_for_help_description() const noexcept {
+  std::string format(description);
+  if (has_set() || has_default()) {
+    format += " (";
+    if (has_set())
+      format += fmt::format("sets: {}", builtin2str(set_value));
+    if (has_default()) {
+      if (has_set())
+        format += ", ";
+      format += fmt::format("default: {}", builtin2str(default_value));
+    }
+    format += ")";
+  }
+  return format;
 }
 
 template <>
-std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
+std::string Arg<ArgumentType::OPTION>::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
   if (has_abbrev())
     return fmt::format("-{}, {}", abbrev, base_usage);
@@ -96,20 +113,37 @@ std::string Arg<ArgumentType::OPTION>::format_help_usage() const noexcept {
 }
 
 template <>
-std::string Arg<ArgumentType::FLAG>::format_base_usage() const noexcept {
-  auto const dashes = name.length() > 1 ? "--" : "-";
-  return fmt::format("{}{}", dashes, name);
-}
-
-template <>
-std::string Arg<ArgumentType::FLAG>::format_usage() const noexcept {
+std::string Arg<ArgumentType::OPTION>::format_for_usage_summary() const noexcept {
   if (is_required)
     return format_base_usage();
   return "[" + format_base_usage() + "]";
 }
 
 template <>
-std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
+std::string Arg<ArgumentType::FLAG>::format_base_usage() const noexcept {
+  auto const dashes = name.length() > 1 ? "--" : "-";
+  return fmt::format("{}{}", dashes, name);
+}
+
+template <>
+std::string Arg<ArgumentType::FLAG>::format_for_help_description() const noexcept {
+  std::string format(description);
+  if (has_set() || has_default()) {
+    format += " (";
+    if (has_set())
+      format += fmt::format("sets: {}", builtin2str(set_value));
+    if (has_default()) {
+      if (has_set())
+        format += ", ";
+      format += fmt::format("default: {}", builtin2str(default_value));
+    }
+    format += ")";
+  }
+  return format;
+}
+
+template <>
+std::string Arg<ArgumentType::FLAG>::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
   if (has_abbrev())
     return fmt::format("-{}, {}", abbrev, base_usage);
@@ -119,51 +153,17 @@ std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
 }
 
 template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_help_description() const noexcept {
-  if (has_default())
-    return fmt::format("{} (default: {})", description, builtin2str(default_value));
-  return std::string(description);
+std::string Arg<ArgumentType::FLAG>::format_for_usage_summary() const noexcept {
+  if (is_required)
+    return format_base_usage();
+  return "[" + format_base_usage() + "]";
 }
 
-template <>
-std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
-  std::string format(description);
-  if (has_set() || has_default()) {
-    format += " (";
-    if (has_set())
-      format += fmt::format("sets: {}", builtin2str(set_value));
-    if (has_default()) {
-      if (has_set())
-        format += ", ";
-      format += fmt::format("default: {}", builtin2str(default_value));
-    }
-    format += ")";
-  }
-  return format;
-}
+std::string Cmd::format_for_help_description() const noexcept { return std::string(program->introduction); }
 
-template <>
-std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
-  std::string format(description);
-  if (has_set() || has_default()) {
-    format += " (";
-    if (has_set())
-      format += fmt::format("sets: {}", builtin2str(set_value));
-    if (has_default()) {
-      if (has_set())
-        format += ", ";
-      format += fmt::format("default: {}", builtin2str(default_value));
-    }
-    format += ")";
-  }
-  return format;
-}
+std::string Cmd::format_for_help_index() const noexcept { return format_for_usage_summary(); }
 
-std::string Cmd::format_usage() const noexcept { return std::string(program->name); }
-
-std::string Cmd::format_help_usage() const noexcept { return format_usage(); }
-
-std::string Cmd::format_help_description() const noexcept { return std::string(program->introduction); }
+std::string Cmd::format_for_usage_summary() const noexcept { return std::string(program->name); }
 
 auto Cmd::operator<=>(Cmd const &other) const noexcept { return this->program->name <=> other.program->name; }
 
@@ -511,17 +511,17 @@ void HelpFormatter::print_long_usage() const noexcept {
 
   auto insert = std::back_inserter(words);
   words.push_back(program_name);
-  transform(positionals, insert, &Pos::format_usage);
-  transform(options, insert, &Opt::format_usage);
-  transform(flags, insert, &Flg::format_usage);
+  transform(positionals, insert, &Pos::format_for_usage_summary);
+  transform(options, insert, &Opt::format_for_usage_summary);
+  transform(flags, insert, &Flg::format_for_usage_summary);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().format_usage()));
+    words.push_back(format("{{{}}}", cmds.front().format_for_usage_summary()));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().format_usage()));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &Cmd::format_usage);
-    words.push_back(format("{}}}", cmds.back().format_usage()));
+    words.push_back(format("{{{},", cmds.front().format_for_usage_summary()));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &Cmd::format_for_usage_summary);
+    words.push_back(format("{}}}", cmds.back().format_for_usage_summary()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
