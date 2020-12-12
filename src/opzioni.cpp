@@ -7,17 +7,34 @@
 #include <tuple>
 #include <variant>
 
+template <>
+struct fmt::formatter<std::monostate> {
+  constexpr auto parse(format_parse_context &ctx) {
+    auto it = ctx.begin() + 1, end = ctx.end();
+    // We have nothing to parse for std::monostate
+    if (it != end && *it != '}')
+      throw format_error("std::monostate does not take any format specifier");
+    return end;
+  }
+
+  template <typename FormatContext>
+  auto format(std::monostate const &_, FormatContext &ctx) {
+    // ctx.out() is an output iterator to write to.
+    return format_to(ctx.out(), "_");
+  }
+};
+
 namespace opzioni {
 
 std::string builtin2str(BuiltinType const &variant) noexcept {
-  auto const _2str = [](auto const &val) { return fmt::format("{}", val); };
+  auto const _2str = [](auto const &val) { return fmt::to_string(val); };
   return std::visit(_2str, variant);
 }
 
 int print_error(Program const &program, UserError const &err) noexcept {
   std::cerr << limit_string_within(err.what(), program.msg_width) << nl;
   if (program.has_auto_help) {
-    auto const see_help = fmt::format("See `{} --help` for more information", program.path);
+    auto const see_help = fmt::format("See `{} --help` for more information", program.name);
     std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
   }
   return -1;
@@ -56,7 +73,7 @@ template <>
 std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
   auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
-  if (set_value)
+  if (has_set())
     val = "[" + val + "]";
   return fmt::format("{}{} {}", dashes, name, val);
 }
@@ -103,23 +120,22 @@ std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
 
 template <>
 std::string Arg<ArgumentType::POSITIONAL>::format_help_description() const noexcept {
-  if (default_value) {
-    return fmt::format("{} (default: {})", description, std::visit(builtin2str, *default_value));
-  }
+  if (has_default())
+    return fmt::format("{} (default: {})", description, builtin2str(default_value));
   return std::string(description);
 }
 
 template <>
 std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
   std::string format(description);
-  if (set_value || default_value) {
+  if (has_set() || has_default()) {
     format += " (";
-    if (set_value)
-      format += fmt::format("valueless: {}", std::visit(builtin2str, *set_value));
-    if (default_value) {
-      if (set_value)
+    if (has_set())
+      format += fmt::format("sets: {}", builtin2str(set_value));
+    if (has_default()) {
+      if (has_set())
         format += ", ";
-      format += fmt::format("default: {}", std::visit(builtin2str, *default_value));
+      format += fmt::format("default: {}", builtin2str(default_value));
     }
     format += ")";
   }
@@ -129,23 +145,25 @@ std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept 
 template <>
 std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   std::string format(description);
-  if (set_value || default_value) {
+  if (has_set() || has_default()) {
     format += " (";
-    if (set_value)
-      format += fmt::format("sets: {}", std::visit(builtin2str, *set_value));
-    if (default_value) {
-      if (set_value)
+    if (has_set())
+      format += fmt::format("sets: {}", builtin2str(set_value));
+    if (has_default()) {
+      if (has_set())
         format += ", ";
-      format += fmt::format("default: {}", std::visit(builtin2str, *default_value));
+      format += fmt::format("default: {}", builtin2str(default_value));
     }
     format += ")";
   }
   return format;
 }
 
-std::string Command::format_help_usage() const noexcept { return std::string(name); }
+std::string Cmd::format_help_usage() const noexcept { return std::string(program->name); }
 
-std::string Command::format_help_description() const noexcept { return std::string(program->introduction); }
+std::string Cmd::format_help_description() const noexcept { return std::string(program->introduction); }
+
+auto Cmd::operator<=>(Cmd const &other) const noexcept { return this->program->name <=> other.program->name; }
 
 // +---------+
 // | Program |
@@ -174,65 +192,49 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
 Program &Program::auto_help() noexcept { return this->auto_help(actions::print_help); }
 
 Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
-  this->flag("help", "h").help("Display this information").action(action);
+  this->add(Flg("help", "h").help("Display this information").action(action));
   this->has_auto_help = true;
   return *this;
 }
 
-Positional &Program::pos(std::string_view name) {
-  if (contains_pos_or_cmd(name))
-    throw ArgumentAlreadyExists(name);
-  Positional arg{.name = name, .is_required = true};
-  return *positionals.insert(positionals.end(), arg);
+Program &Program::add(Cmd cmd) {
+  if (has_cmd(cmd.program->name) || has_pos(cmd.program->name))
+    throw ArgumentAlreadyExists(cmd.program->name);
+  _cmds.push_back(cmd);
+  return *this;
 }
 
-Option &Program::opt(std::string_view name) { return opt(name, {}); }
-
-Option &Program::opt(std::string_view name, char const (&abbrev)[2]) {
-  if (contains_opt_or_flag(name, abbrev))
-    throw ArgumentAlreadyExists(name);
-  auto const idx = options.size();
-  auto &opt = options.emplace_back(name, abbrev);
-  options_idx[opt.name] = idx;
-  if (opt.has_abbrev())
-    options_idx[opt.abbrev] = idx;
-  return opt;
+Program &Program::add(Flg flg) {
+  if (has_flg(flg.name) || has_opt(flg.name))
+    throw ArgumentAlreadyExists(flg.name);
+  if (flg.has_abbrev() && (has_flg(flg.abbrev) || has_opt(flg.abbrev)))
+    throw ArgumentAlreadyExists(flg.abbrev);
+  _flags.push_back(flg);
+  return *this;
 }
 
-Flag &Program::flag(std::string_view name) { return flag(name, {}); }
-
-Flag &Program::flag(std::string_view name, char const (&abbrev)[2]) {
-  if (contains_opt_or_flag(name, abbrev))
-    throw ArgumentAlreadyExists(name);
-  auto const idx = flags.size();
-  Flag arg{
-      .name = name, .abbrev = abbrev, .default_value = false, .set_value = true, .action_fn = actions::assign<bool>};
-  auto &flag = *flags.insert(flags.end(), arg);
-  flags_idx[flag.name] = idx;
-  if (flag.has_abbrev())
-    flags_idx[flag.abbrev] = idx;
-  return flag;
+Program &Program::add(Opt opt) {
+  if (has_flg(opt.name) || has_opt(opt.name))
+    throw ArgumentAlreadyExists(opt.name);
+  if (opt.has_abbrev() && (has_flg(opt.abbrev) || has_opt(opt.abbrev)))
+    throw ArgumentAlreadyExists(opt.abbrev);
+  _options.push_back(opt);
+  return *this;
 }
 
-Program &Program::cmd(std::string_view name) {
-  if (contains_pos_or_cmd(name))
-    throw ArgumentAlreadyExists(name);
-  auto const idx = cmds.size();
-  auto &command = cmds.emplace_back(name, std::make_unique<Program>());
-  cmds_idx[name] = idx;
-  if (this->has_auto_help) {
-    command.program->auto_help(this->flags[0].action_fn);
-  }
-  return *command.program;
+Program &Program::add(Pos pos) {
+  if (has_cmd(pos.name) || has_pos(pos.name))
+    throw ArgumentAlreadyExists(pos.name);
+  _positionals.push_back(pos);
+  return *this;
 }
 
-ArgMap Program::operator()(int argc, char const *argv[]) {
+ArgMap Program::operator()(int argc, char const *argv[]) const {
   return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
 }
 
-ArgMap Program::operator()(std::span<char const *> args) {
+ArgMap Program::operator()(std::span<char const *> args) const {
   try {
-    this->path = args[0];
     auto map = parse(args);
     check_contains_required(map);
     set_defaults(map);
@@ -281,9 +283,9 @@ void Program::check_contains_required(ArgMap const &map) const {
   auto is_required = [](auto const &arg) { return arg.is_required; };
   std::vector<std::string_view> missing_arg_names;
   auto insert = std::back_inserter(missing_arg_names);
-  transform(positionals | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-  transform(options | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-  transform(flags | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_positionals | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_options | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_flags | filter(wasnt_parsed) | filter(is_required), insert, get_name);
   if (!missing_arg_names.empty())
     throw MissingRequiredArguments(missing_arg_names);
 }
@@ -292,24 +294,12 @@ void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   using std::views::transform;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  auto has_default = [](auto const &arg) { return arg.default_value.has_value(); };
-  for (auto const &positional : positionals | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &positional : _positionals | filter(wasnt_parsed) | filter(&Pos::has_default))
     set_default<ArgumentType::POSITIONAL>(map, positional);
-  for (auto const &flag : flags | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &flag : _flags | filter(wasnt_parsed) | filter(&Flg::has_default))
     set_default<ArgumentType::FLAG>(map, flag);
-  for (auto const &option : options | filter(wasnt_parsed) | filter(has_default))
+  for (auto const &option : _options | filter(wasnt_parsed) | filter(&Opt::has_default))
     set_default<ArgumentType::OPTION>(map, option);
-}
-
-bool Program::contains_pos_or_cmd(std::string_view const name) const noexcept {
-  return cmds_idx.contains(name) || std::ranges::find_if(positionals, [&name](auto const &positional) {
-                                      return positional.name == name;
-                                    }) != positionals.end();
-}
-
-bool Program::contains_opt_or_flag(std::string_view const name, std::string_view const abbrev) const noexcept {
-  return options_idx.contains(name) || flags_idx.contains(name) ||
-         (!abbrev.empty() && (options_idx.contains(abbrev) || flags_idx.contains(abbrev)));
 }
 
 // +-----------------+
@@ -320,9 +310,9 @@ bool Program::is_dash_dash(std::string_view const whole_arg) const noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
 }
 
-Command const *Program::is_command(std::string_view const whole_arg) const noexcept {
-  if (auto const cmd_idx = cmds_idx.find(whole_arg); cmd_idx != cmds_idx.end())
-    return &cmds[cmd_idx->second];
+Cmd const *Program::is_command(std::string_view const whole_arg) const noexcept {
+  if (auto const cmd = find_cmd(whole_arg); cmd != _cmds.end())
+    return &*cmd;
   return nullptr;
 }
 
@@ -351,31 +341,31 @@ std::string_view Program::is_long_flag(std::string_view const whole_arg) const n
 
 std::optional<ParsedOption> Program::is_option(std::string_view const whole_arg) const noexcept {
   auto const parsed_option = parse_option(whole_arg);
-  if (options_idx.contains(parsed_option.name))
+  if (has_opt(parsed_option.name))
     return parsed_option;
   return std::nullopt;
 }
 
-bool Program::is_flag(std::string_view const name) const noexcept { return flags_idx.contains(name); }
+bool Program::is_flag(std::string_view const name) const noexcept { return has_flg(name); }
 
 // +---------------------+
 // | parsing assignments |
 // +---------------------+
 
-std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Command const &cmd) const {
-  auto const exec_path = fmt::format("{} {}", this->path, cmd.name);
+std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) const {
+  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.program->name);
   args[0] = exec_path.data();
-  map.cmd_name = cmd.name;
-  map.cmd_args = memory::ValuePtr(std::make_unique<ArgMap>(std::move((*cmd.program)(args))));
+  map.cmd_name = cmd.program->name;
+  map.cmd_args = std::make_shared<ArgMap>(std::move((*cmd.program)(args)));
   return args.size();
 }
 
 std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
                                        std::size_t const positional_idx) const {
-  if (positional_idx >= this->positionals.size()) {
-    throw UnexpectedPositional(args[0], this->positionals.size());
+  if (positional_idx >= _positionals.size()) {
+    throw UnexpectedPositional(args[0], _positionals.size());
   }
-  auto const arg = this->positionals[positional_idx];
+  auto const arg = _positionals[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() : arg.gather_n.amount;
   if (gather_amount > args.size()) {
@@ -395,15 +385,13 @@ std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) cons
 }
 
 std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
-  auto const arg_idx = this->flags_idx.at(flag);
-  auto const arg = this->flags[arg_idx];
+  auto const &arg = *find_flg(flag);
   arg.action_fn(*this, map, arg, std::nullopt);
   return 1;
 }
 
 std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
-  auto const arg_idx = this->options_idx.at(option.name);
-  auto const arg = this->options[arg_idx];
+  auto const &arg = *find_opt(option.name);
   auto const gather_amount = arg.gather_n.amount == 0 ? args.size() - 1 : arg.gather_n.amount;
   if (option.value) {
     if (gather_amount != 1) {
@@ -421,7 +409,7 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
       ++count;
     } while (count < gather_amount);
     return gather_amount + 1;
-  } else if (arg.set_value) {
+  } else if (arg.has_set()) {
     arg.action_fn(*this, map, arg, std::nullopt);
     return 1;
   } else {
@@ -470,13 +458,13 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 // +------------+
 
 HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
-    : out(out), max_width(program.msg_width), program_title(program.title), program_introduction(program.introduction),
-      program_description(program.description), program_path(program.path), flags(program.flags),
-      options(program.options), positionals(program.positionals), cmds(program.cmds) {
+    : out(out), max_width(program.msg_width), program_name(program.name), program_title(program.title),
+      program_introduction(program.introduction), program_description(program.description), cmds(program.cmds()),
+      flags(program.flags()), options(program.options()), positionals(program.positionals()) {
+  std::sort(cmds.begin(), cmds.end());
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
-  std::sort(cmds.begin(), cmds.end());
 }
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
@@ -497,10 +485,10 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 }
 
 void HelpFormatter::print_title() const noexcept {
+  out << program_name;
   if (!program_title.empty())
-    out << program_title << nl;
-  else
-    out << program_path << nl;
+    out << " - " << program_title;
+  out << nl;
 }
 
 void HelpFormatter::print_intro() const noexcept {
@@ -517,21 +505,22 @@ void HelpFormatter::print_long_usage() const noexcept {
   using std::views::drop, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
+  words.reserve(1 + cmds.size() + flags.size() + options.size() + positionals.size());
 
   auto insert = std::back_inserter(words);
-  words.push_back(program_path);
-  transform(positionals, insert, &Positional::format_usage);
-  transform(options, insert, &Option::format_usage);
-  transform(flags, insert, &Flag::format_usage);
+  words.push_back(program_name);
+  transform(positionals, insert, &Pos::format_usage);
+  transform(options, insert, &Opt::format_usage);
+  transform(flags, insert, &Flg::format_usage);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().name));
+    words.push_back(format("{{{}}}", cmds.front().program->name));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().name));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, [](auto const &cmd) { return format("{},", cmd.name); });
-    words.push_back(format("{}}}", cmds.back().name));
+    words.push_back(format("{{{},", cmds.front().program->name));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert,
+              [](auto const &cmd) { return format("{},", cmd.program->name); });
+    words.push_back(format("{}}}", cmds.back().program->name));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
@@ -616,7 +605,7 @@ void print_full_help(Program const &program, std::ostream &ostream) noexcept {
 
 namespace actions {
 
-void print_help(Program const &program, ArgMap &, Flag const &, std::optional<std::string_view> const) {
+void print_help(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
   print_full_help(program);
   std::exit(0);
 }
