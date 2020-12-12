@@ -264,6 +264,7 @@ public:
   std::string format_help_description() const noexcept;
 
   auto operator<=>(Cmd const &) const noexcept;
+
 private:
 };
 
