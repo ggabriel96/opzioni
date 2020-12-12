@@ -21,7 +21,10 @@ int main(int argc, char const *argv[]) {
       Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
       Opt("last-name").help("Your last name") +
       Opt("o").help("We also support options with only short names").otherwise("oh"sv) +
-      Opt("num", "n").help("Creates a list of numbers with each appearence of this argument").action(append<int>) +
+      Opt("num", "n")
+          .help("Creates a list of numbers with each appearence of this argument")
+          .action(append<int>)
+          .required() +
       Opt("str").help("Appends to a list of strings").action(append<std::string_view>).otherwise(std::vector{""sv}) +
       Opt("vec")
           .otherwise(std::vector<int>{})
