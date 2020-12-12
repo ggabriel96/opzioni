@@ -159,15 +159,17 @@ std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   return format;
 }
 
-std::string Cmd::format_help_usage() const noexcept { return std::string(name); }
+std::string Cmd::format_help_usage() const noexcept { return std::string(program->name); }
 
 std::string Cmd::format_help_description() const noexcept { return std::string(program->introduction); }
+
+auto Cmd::operator<=>(Cmd const &other) const noexcept { return this->program->name <=> other.program->name; }
 
 // +-------------+
 // | Arg helpers |
 // +-------------+
 
-Cmd cmd(std::string_view name, Program *program) noexcept { return Cmd{.name = name, .program = program}; }
+Cmd cmd(Program *program) noexcept { return Cmd(program); }
 
 Flg flg(std::string_view name) noexcept { return flg(name, {}); }
 
@@ -215,8 +217,8 @@ Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexc
 }
 
 Program &Program::add(Cmd cmd) {
-  if (has_cmd(cmd.name) || has_pos(cmd.name))
-    throw ArgumentAlreadyExists(cmd.name);
+  if (has_cmd(cmd.program->name) || has_pos(cmd.program->name))
+    throw ArgumentAlreadyExists(cmd.program->name);
   _cmds.push_back(cmd);
   return *this;
 }
@@ -371,9 +373,9 @@ bool Program::is_flag(std::string_view const name) const noexcept { return has_f
 // +---------------------+
 
 std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) const {
-  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.name);
+  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.program->name);
   args[0] = exec_path.data();
-  map.cmd_name = cmd.name;
+  map.cmd_name = cmd.program->name;
   map.cmd_args = std::make_shared<ArgMap>(std::move((*cmd.program)(args)));
   return args.size();
 }
@@ -477,12 +479,12 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 
 HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
     : out(out), max_width(program.msg_width), program_name(program.name), program_title(program.title),
-      program_introduction(program.introduction), program_description(program.description), flags(program.flags()),
-      options(program.options()), positionals(program.positionals()), cmds(program.cmds()) {
+      program_introduction(program.introduction), program_description(program.description), cmds(program.cmds()),
+      flags(program.flags()), options(program.options()), positionals(program.positionals()) {
+  std::sort(cmds.begin(), cmds.end());
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
   std::sort(positionals.begin(), positionals.end());
-  std::sort(cmds.begin(), cmds.end());
 }
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
@@ -523,7 +525,7 @@ void HelpFormatter::print_long_usage() const noexcept {
   using std::views::drop, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + positionals.size() + options.size() + flags.size() + cmds.size());
+  words.reserve(1 + cmds.size() + flags.size() + options.size() + positionals.size());
 
   auto insert = std::back_inserter(words);
   words.push_back(program_name);
@@ -532,12 +534,13 @@ void HelpFormatter::print_long_usage() const noexcept {
   transform(flags, insert, &Flg::format_usage);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().name));
+    words.push_back(format("{{{}}}", cmds.front().program->name));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().name));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, [](auto const &cmd) { return format("{},", cmd.name); });
-    words.push_back(format("{}}}", cmds.back().name));
+    words.push_back(format("{{{},", cmds.front().program->name));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert,
+              [](auto const &cmd) { return format("{},", cmd.program->name); });
+    words.push_back(format("{}}}", cmds.back().program->name));
   }
 
   // -4 because we'll later print a left margin of 4 spaces

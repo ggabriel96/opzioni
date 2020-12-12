@@ -246,20 +246,20 @@ bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
 }
 
 struct Cmd {
-  std::string_view name{};
+  // just a helper struct to encapsulate the pointer indirection
   Program *program;
 
   std::string format_help_usage() const noexcept;
   std::string format_help_description() const noexcept;
 
-  auto operator<=>(Cmd const &other) const noexcept { return name <=> other.name; }
+  auto operator<=>(Cmd const &) const noexcept;
 };
 
 // +-------------+
 // | Arg helpers |
 // +-------------+
 
-Cmd cmd(std::string_view, Program *) noexcept;
+Cmd cmd(Program *) noexcept;
 Flg flg(std::string_view) noexcept;
 Flg flg(std::string_view, char const (&)[2]) noexcept;
 Opt opt(std::string_view) noexcept;
@@ -316,7 +316,7 @@ public:
   std::vector<Pos> const &positionals() const noexcept { return _positionals; }
 
   auto find_cmd(std::string_view name) const noexcept {
-    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.name; });
+    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->name; });
   }
 
   bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
@@ -393,10 +393,10 @@ private:
   std::string const program_title;
   std::string const program_introduction;
   std::string const program_description;
+  std::vector<Cmd> cmds;
   std::vector<Flg> flags;
   std::vector<Opt> options;
   std::vector<Pos> positionals;
-  std::vector<Cmd> cmds;
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
