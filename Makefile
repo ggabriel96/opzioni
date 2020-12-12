@@ -1,4 +1,4 @@
-.PHONY: all build conan-build conan-install clean
+.PHONY: all build conan-build conan-install clean format
 
 all: conan-install conan-build
 
@@ -13,3 +13,6 @@ conan-install:
 
 clean:
 	rm build/ -rf
+
+format:
+	clang-format -i --verbose $(find . -name '*.cpp') $(find . -name '*.hpp')
