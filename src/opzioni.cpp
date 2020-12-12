@@ -27,7 +27,7 @@ struct fmt::formatter<std::monostate> {
 namespace opzioni {
 
 std::string builtin2str(BuiltinType const &variant) noexcept {
-  auto const _2str = [](auto const &val) { return fmt::format("{}", val); };
+  auto const _2str = [](auto const &val) { return fmt::to_string(val); };
   return std::visit(_2str, variant);
 }
 
@@ -73,7 +73,7 @@ template <>
 std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
   auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
-  if (set_value)
+  if (has_set())
     val = "[" + val + "]";
   return fmt::format("{}{} {}", dashes, name, val);
 }
@@ -120,23 +120,22 @@ std::string Arg<ArgumentType::FLAG>::format_help_usage() const noexcept {
 
 template <>
 std::string Arg<ArgumentType::POSITIONAL>::format_help_description() const noexcept {
-  if (default_value) {
-    return fmt::format("{} (default: {})", description, std::visit(builtin2str, *default_value));
-  }
+  if (has_default())
+    return fmt::format("{} (default: {})", description, builtin2str(default_value));
   return std::string(description);
 }
 
 template <>
 std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept {
   std::string format(description);
-  if (set_value || default_value) {
+  if (has_set() || has_default()) {
     format += " (";
-    if (set_value)
-      format += fmt::format("valueless: {}", std::visit(builtin2str, *set_value));
-    if (default_value) {
-      if (set_value)
+    if (has_set())
+      format += fmt::format("sets: {}", builtin2str(set_value));
+    if (has_default()) {
+      if (has_set())
         format += ", ";
-      format += fmt::format("default: {}", std::visit(builtin2str, *default_value));
+      format += fmt::format("default: {}", builtin2str(default_value));
     }
     format += ")";
   }
@@ -146,14 +145,14 @@ std::string Arg<ArgumentType::OPTION>::format_help_description() const noexcept 
 template <>
 std::string Arg<ArgumentType::FLAG>::format_help_description() const noexcept {
   std::string format(description);
-  if (set_value || default_value) {
+  if (has_set() || has_default()) {
     format += " (";
-    if (set_value)
-      format += fmt::format("sets: {}", std::visit(builtin2str, *set_value));
-    if (default_value) {
-      if (set_value)
+    if (has_set())
+      format += fmt::format("sets: {}", builtin2str(set_value));
+    if (has_default()) {
+      if (has_set())
         format += ", ";
-      format += fmt::format("default: {}", std::visit(builtin2str, *default_value));
+      format += fmt::format("default: {}", builtin2str(default_value));
     }
     format += ")";
   }
@@ -312,7 +311,7 @@ void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   using std::views::transform;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  auto has_default = [](auto const &arg) { return arg.default_value.has_value(); };
+  auto has_default = [](auto const &arg) { return arg.has_default(); };
   for (auto const &positional : _positionals | filter(wasnt_parsed) | filter(has_default))
     set_default<ArgumentType::POSITIONAL>(map, positional);
   for (auto const &flag : _flags | filter(wasnt_parsed) | filter(has_default))
@@ -428,7 +427,7 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
       ++count;
     } while (count < gather_amount);
     return gather_amount + 1;
-  } else if (arg.set_value) {
+  } else if (arg.has_set()) {
     arg.action_fn(*this, map, arg, std::nullopt);
     return 1;
   } else {

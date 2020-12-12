@@ -40,7 +40,8 @@ struct VariantOf<TypeList<Ts...>> {
   using type = std::variant<Ts...>;
 };
 
-using BuiltinTypes = TypeList<bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
+using BuiltinTypes =
+    TypeList<std::monostate, bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
 
 std::string builtin2str(BuiltinType const &) noexcept;
@@ -164,8 +165,8 @@ struct Arg {
   std::conditional_t<type != ArgumentType::POSITIONAL, std::string_view, std::monostate> abbrev{};
   std::string_view description{};
   bool is_required = false;
-  std::optional<BuiltinType> default_value{};
-  std::conditional_t<type != ArgumentType::POSITIONAL, std::optional<BuiltinType>, std::monostate> set_value{};
+  BuiltinType default_value{};
+  std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
   actions::signature<type> action_fn = actions::assign<std::string_view>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
 
@@ -222,6 +223,8 @@ struct Arg {
   }
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
+  bool has_default() const noexcept { return default_value.index() != 0; }
+  bool has_set() const noexcept { return set_value.index() != 0; }
 
   std::string format_base_usage() const noexcept;
   std::string format_usage() const noexcept;
@@ -231,7 +234,8 @@ struct Arg {
 
 template <ArgumentType type>
 void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
-  map.args[arg.name] = ArgValue{*arg.default_value};
+  if (arg.has_default())
+    map.args[arg.name] = ArgValue{arg.default_value};
 }
 
 template <ArgumentType type>
@@ -436,7 +440,7 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
 
 template <typename T>
 void assign(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
-  assign_to(map, arg.name, std::get<T>(*arg.set_value));
+  assign_to(map, arg.name, std::get<T>(arg.set_value));
 }
 
 template <typename T>
@@ -444,7 +448,7 @@ void assign(Program const &, ArgMap &map, Opt const &arg, std::optional<std::str
   if (parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
-    assign_to(map, arg.name, std::get<T>(*arg.set_value));
+    assign_to(map, arg.name, std::get<T>(arg.set_value));
 }
 
 template <typename T>
@@ -458,7 +462,7 @@ void assign(Program const &, ArgMap &map, Pos const &arg, std::optional<std::str
 
 template <typename Elem, typename Container>
 void append(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
-  Elem value = std::get<Elem>(*arg.set_value);
+  Elem value = std::get<Elem>(arg.set_value);
   append_to<Elem, Container>(map, arg.name, value);
 }
 
@@ -467,7 +471,7 @@ void append(Program const &, ArgMap &map, Opt const &arg, std::optional<std::str
   if (parsed_value)
     append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
   else
-    append_to<Elem, Container>(map, arg.name, std::get<Elem>(*arg.set_value));
+    append_to<Elem, Container>(map, arg.name, std::get<Elem>(arg.set_value));
 }
 
 template <typename Elem, typename Container>
