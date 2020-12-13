@@ -1,5 +1,6 @@
 build/
 builddir/
+.cache/
 .ccls-cache/
 
 # VS Code
