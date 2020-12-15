@@ -8,7 +8,7 @@ from conans.tools import collect_libs, load
 
 class OpzioniConan(ConanFile):
     name = "opzioni"
-    license = "MIT"
+    license = "BSL-1.0"
     author = "Gabriel Galli (ggabriel96@hotmail.com)"
     url = "https://github.com/ggabriel96/opzioni"
     description = "A simple command line arguments library for C++"
