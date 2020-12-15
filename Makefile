@@ -1,6 +1,6 @@
-.PHONY: all install configure build format clean
+.PHONY: all install configure build test format clean
 
-all: install configure build
+all: install configure build test
 
 install:
 	conan install -if build/ -b missing .
@@ -10,6 +10,9 @@ configure:
 
 build:
 	ninja -C build/
+
+test:
+	meson test -C build/
 
 format:
 	clang-format --verbose -i $(shell find . -name '*.cpp') $(shell find . -name '*.hpp')
