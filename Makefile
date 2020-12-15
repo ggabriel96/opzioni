@@ -6,7 +6,7 @@ install:
 	conan install -if build/ -b missing .
 
 configure:
-	meson setup --build.pkg-config-path=build/ -Dexamples=True build/
+	meson setup --build.pkg-config-path=build/ -Dbuild-examples=True build/
 
 build:
 	ninja -C build/
