@@ -20,13 +20,7 @@ jobs:
       - name: Install Meson and its dependencies
         run: pip install meson ninja
 
-      - run: conan install . -if build -b missing -s build_type=Debug -o build_examples=True
-
-      - name: Configure
-        run: conan build -bf build --configure .
-
-      - name: Build
-        run: conan build -bf build --build .
-
-      - name: Test
-        run: conan build -bf build --test .
+      - run: make install
+      - run: make configure
+      - run: make build
+      - run: make test
