@@ -9,7 +9,7 @@ configure:
 	meson setup --build.pkg-config-path=build/ -Dbuild-examples=True build/
 
 build:
-	ninja -C build/
+	meson compile -C build/
 
 test:
 	meson test -C build/
