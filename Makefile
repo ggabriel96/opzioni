@@ -1,18 +1,29 @@
-.PHONY: all build conan-build conan-install clean format
+.PHONY: all install build package export ninja format clean
 
-all: conan-install conan-build
+all: install build
+
+install:
+	conan install . \
+		-if build/ \
+		-b missing \
+		-o opzioni:build_examples=True \
+		-s opzioni:build_type=Debug \
+		-s compiler.libcxx=libstdc++11
 
 build:
-	ninja -C build/
-
-conan-build:
 	conan build -bf build/ .
 
-conan-install:
-	conan install -if build/ -b missing -o opzioni:build_examples=True -s opzioni:build_type=Debug .
+package: install build
+	conan package -bf build/ -pf package/ .
 
-clean:
-	rm build/ -rf
+export: package
+	conan export-pkg -pf package/ .
+
+ninja:
+	ninja -C build/
 
 format:
 	clang-format --verbose -i $(shell find . -name '*.cpp') $(shell find . -name '*.hpp')
+
+clean:
+	rm build/ package/ -rf
