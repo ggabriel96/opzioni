@@ -25,4 +25,4 @@ clean:
 # --------------------
 
 create:
-	conan create . opzioni/stable
+	conan create . opzioni/stable -b missing
