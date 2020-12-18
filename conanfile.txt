@@ -1,8 +1,0 @@
-[requires]
-fmt/[>=7.0.3 <8.0.0]
-
-[build_requires]
-catch2/[>=2.13.0 <3.0.0]
-
-[generators]
-pkg_config
