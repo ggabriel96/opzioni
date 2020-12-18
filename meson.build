@@ -44,6 +44,6 @@ test('converters', converters_test)
 # +----------+
 # | Examples |
 # +----------+
-if get_option('build-examples')
+if get_option('examples')
     subdir('examples/')
 endif

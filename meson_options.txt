@@ -1,2 +1,2 @@
-option('build-examples', type: 'boolean', value: false,
+option('examples', type: 'boolean', value: false,
        description: 'Whether to also build all files in examples/')

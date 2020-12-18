@@ -1,12 +1,12 @@
-.PHONY: all install configure build test format clean
+.PHONY: all install configure build test format create clean
 
 all: install configure build test
 
 install:
-	conan install -if build/ -b missing -s compiler.libcxx=libstdc++11 .
+	conan install -b missing -s compiler.libcxx=libstdc++11 .
 
 configure:
-	meson setup --build.pkg-config-path=build/ -Dbuild-examples=True build/
+	meson setup --build.pkg-config-path=./ -Dexamples=True build/
 
 build:
 	meson compile -C build/
@@ -16,6 +16,9 @@ test:
 
 format:
 	clang-format --verbose -i $(shell find . -name '*.cpp') $(shell find . -name '*.hpp')
+
+create:
+	conan create . opzioni/stable
 
 clean:
 	rm build/ -rf
