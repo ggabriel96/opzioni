@@ -401,7 +401,7 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
     }
     arg.action_fn(*this, map, arg, *option.value);
     return 1;
-  } else if (gather_amount < args.size()) {
+  } else if (gather_amount < args.size() && looks_positional(args[1])) {
     // + 1 everywhere because 0 is the index in `args` that the option is,
     // so 1 is where we start to parse values up to gather amount
     std::size_t count = 0;
