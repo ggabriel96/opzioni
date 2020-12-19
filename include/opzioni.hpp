@@ -89,11 +89,11 @@ void assign(Program const &, ArgMap &, Opt const &, std::optional<std::string_vi
 template <typename T>
 void assign(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
 
-template <typename Elem, typename Container = std::vector<Elem>>
+template <typename Elem>
 void append(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
-template <typename Elem, typename Container = std::vector<Elem>>
+template <typename Elem>
 void append(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
-template <typename Elem, typename Container = std::vector<Elem>>
+template <typename Elem>
 void append(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
 
 void print_help(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
@@ -441,12 +441,12 @@ void assign_to(ArgMap &map, std::string_view const name, T value) {
     throw DuplicateAssignment(name);
 }
 
-template <typename Elem, typename Container>
+template <typename Elem>
 void append_to(ArgMap &map, std::string_view const name, Elem value) {
   if (auto list = map.args.find(name); list != map.args.end()) {
-    std::get<Container>(list->second.value).emplace_back(std::move(value));
+    std::get<std::vector<Elem>>(list->second.value).emplace_back(std::move(value));
   } else {
-    assign_to(map, name, Container{std::move(value)});
+    assign_to(map, name, std::vector<Elem>{std::move(value)});
   }
 }
 
@@ -476,24 +476,22 @@ void assign(Program const &, ArgMap &map, Pos const &arg, std::optional<std::str
 // | append |
 // +--------+
 
-template <typename Elem, typename Container>
+template <typename Elem>
 void append(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
-  Elem value = std::get<Elem>(arg.set_value);
-  append_to<Elem, Container>(map, arg.name, value);
+  append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
 }
 
-template <typename Elem, typename Container>
+template <typename Elem>
 void append(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
   if (parsed_value)
-    append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
+    append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
-    append_to<Elem, Container>(map, arg.name, std::get<Elem>(arg.set_value));
+    append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
 }
 
-template <typename Elem, typename Container>
+template <typename Elem>
 void append(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
-  Elem value = convert<Elem>(*parsed_value);
-  append_to<Elem, Container>(map, arg.name, value);
+  append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
 }
 
 } // namespace actions
