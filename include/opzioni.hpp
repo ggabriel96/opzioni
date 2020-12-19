@@ -33,6 +33,14 @@ template <typename...>
 struct TypeList;
 
 template <typename...>
+struct Concat;
+
+template <typename... Lhs, typename... Rhs>
+struct Concat<TypeList<Lhs...>, TypeList<Rhs...>> {
+  using type = TypeList<Lhs..., Rhs...>;
+};
+
+template <typename...>
 struct VariantOf;
 
 template <typename... Ts>
@@ -40,13 +48,20 @@ struct VariantOf<TypeList<Ts...>> {
   using type = std::variant<Ts...>;
 };
 
+template <typename...>
+struct VectorOf;
+
+template <typename... Ts>
+struct VectorOf<TypeList<Ts...>> {
+  using type = TypeList<std::vector<Ts>...>;
+};
+
 // types that may be used as default_value and set_value
-using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
-using BuiltinType = VariantOf<BuiltinTypes>::type;
+using ScalarTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
+using BuiltinType = VariantOf<ScalarTypes>::type;
 
 // types that may be the result of parsing the CLI
-using ExternalTypes =
-    TypeList<std::monostate, bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
+using ExternalTypes = Concat<ScalarTypes, VectorOf<ScalarTypes>::type>::type;
 using ExternalType = VariantOf<ExternalTypes>::type;
 
 std::string builtin2str(BuiltinType const &) noexcept;
