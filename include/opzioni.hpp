@@ -40,9 +40,14 @@ struct VariantOf<TypeList<Ts...>> {
   using type = std::variant<Ts...>;
 };
 
-using BuiltinTypes =
-    TypeList<std::monostate, bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
+// types that may be used as default_value and set_value
+using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
 using BuiltinType = VariantOf<BuiltinTypes>::type;
+
+// types that may be the result of parsing the CLI
+using ExternalTypes =
+    TypeList<std::monostate, bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
+using ExternalType = VariantOf<ExternalTypes>::type;
 
 std::string builtin2str(BuiltinType const &) noexcept;
 
@@ -104,7 +109,7 @@ struct GatherAmount {
 };
 
 struct ArgValue {
-  BuiltinType value{};
+  ExternalType value{};
 
   template <typename T>
   T as() const {
@@ -115,6 +120,19 @@ struct ArgValue {
   operator T() const {
     return as<T>();
   }
+};
+
+class ArgValueSetter {
+public:
+  ArgValueSetter(ArgValue &arg) : arg(arg) {}
+
+  template <typename T>
+  auto operator()(T value) {
+    this->arg.value = value;
+  }
+
+private:
+  ArgValue &arg;
 };
 
 struct ArgMap {
@@ -239,12 +257,6 @@ public:
 
 private:
 };
-
-template <ArgumentType type>
-void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
-  if (arg.has_default())
-    map.args[arg.name] = ArgValue{arg.default_value};
-}
 
 template <ArgumentType type>
 bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {

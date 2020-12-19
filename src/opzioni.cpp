@@ -296,12 +296,18 @@ void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   using std::views::transform;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  for (auto const &positional : _positionals | filter(wasnt_parsed) | filter(&Pos::has_default))
-    set_default<ArgumentType::POSITIONAL>(map, positional);
-  for (auto const &flag : _flags | filter(wasnt_parsed) | filter(&Flg::has_default))
-    set_default<ArgumentType::FLAG>(map, flag);
-  for (auto const &option : _options | filter(wasnt_parsed) | filter(&Opt::has_default))
-    set_default<ArgumentType::OPTION>(map, option);
+  for (auto const &positional : _positionals | filter(wasnt_parsed) | filter(&Pos::has_default)) {
+    ArgValueSetter setter(map.args[positional.name]);
+    std::visit(setter, positional.default_value);
+  }
+  for (auto const &flag : _flags | filter(wasnt_parsed) | filter(&Flg::has_default)) {
+    ArgValueSetter setter(map.args[flag.name]);
+    std::visit(setter, flag.default_value);
+  }
+  for (auto const &option : _options | filter(wasnt_parsed) | filter(&Opt::has_default)) {
+    ArgValueSetter setter(map.args[option.name]);
+    std::visit(setter, option.default_value);
+  }
 }
 
 // +-----------------+

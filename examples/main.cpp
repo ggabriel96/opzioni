@@ -21,19 +21,14 @@ int main(int argc, char const *argv[]) {
       Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
       Opt("last-name").help("Your last name") +
       Opt("o").help("We also support options with only short names").otherwise("oh"sv) +
-      Opt("num", "n")
-          .help("Creates a list of numbers with each appearence of this argument")
-          .action(append<int>)
-          .required() +
-      Opt("str").help("Appends to a list of strings").action(append<std::string_view>).otherwise(std::vector{""sv}) +
-      Opt("vec")
-          .otherwise(std::vector<int>{})
-          .help("This option uses the default action, so it'll not append to a list from each appearence in the CLI."
-                " It will instead parse a comma-separated list once") +
+      Opt("num", "n").help("Creates a list of numbers with each appearence of this argument").action(append<int>) +
+      Opt("str").help("Appends to a list of strings").action(append<std::string_view>) +
+      Opt("vec").help(
+          "This option uses the default action, so it'll not append to a list from each appearence in the CLI."
+          " It will instead parse a comma-separated list once") +
       Opt("verbose", "v").help("Level of verbosity").set(1).otherwise(0) +
       Flg("append", "a")
           .set(1)
-          .otherwise(std::vector{-1})
           .help("The equivalent of Python's argparse `append_const`:"
                 " will append the defined value every time it appears in the CLI")
           .action(append<int>) +
@@ -53,12 +48,15 @@ int main(int argc, char const *argv[]) {
   print("double: {}\n", args.as<double>("double"));
   print("last-name: {}\n", args.has("last-name"sv) ? args.as<std::string_view>("last-name") : "no last name");
   print("o: {}\n", args.as<std::string_view>("o"));
-  print("num: [{}]\n", fmt::join(args.as<std::vector<int>>("num"), ", "));
-  print("str: [{}]\n", fmt::join(args.as<std::vector<std::string_view>>("str"), ", "));
-  print("vec: [{}]\n", fmt::join(args.as<std::vector<int>>("vec"), ", "));
+  print("num: [{}]\n", fmt::join(args.has("num") ? args.as<std::vector<int>>("num") : std::vector<int>{}, ", "));
+  print("str: [{}]\n",
+        fmt::join(args.has("str") ? args.as<std::vector<std::string_view>>("str") : std::vector<std::string_view>{},
+                  ", "));
+  print("vec: [{}]\n", fmt::join(args.has("vec") ? args.as<std::vector<int>>("vec") : std::vector<int>{}, ", "));
   print("verbose: {}\n", args.as<int>("verbose"));
 
-  print("append: {}\n", args.as<std::vector<int>>("append"));
+  print("{}\n", args.has("append"));
+  print("append: {}\n", args.has("append") ? args.as<std::vector<int>>("append") : std::vector<int>{});
   print("flag: {}\n", args.as<std::string_view>("flag"));
   print("t: {}\n", args.as<bool>("t"));
 }
