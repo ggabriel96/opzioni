@@ -279,6 +279,10 @@ public:
     return *this;
   }
 
+  Arg<type> &otherwise(char const *value) {
+    return otherwise(std::string_view(value));
+  }
+
   Arg<type> &required() noexcept {
     this->is_required = true;
     return *this;
@@ -289,6 +293,10 @@ public:
     set_value = std::move(value);
     action_fn = actions::assign<T>;
     return *this;
+  }
+
+  Arg<type> &set(char const *value) requires(type != ArgumentType::POSITIONAL) {
+    return set(std::string_view(value));
   }
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }

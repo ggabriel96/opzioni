@@ -8,7 +8,6 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
-  using namespace std::string_view_literals;
   using opzioni::Program, opzioni::Flg, opzioni::Opt, opzioni::Pos;
 
   auto program =
@@ -19,7 +18,7 @@ int main(int argc, char const *argv[]) {
           .auto_help() +
       Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
       Opt("last-name").help("Your last name") +
-      Opt("o").help("We also support options with only short names").otherwise("oh"sv) +
+      Opt("o").help("We also support options with only short names").otherwise("oh") +
       Opt("num", "n").append<int>().help("Creates a vector of numbers with each appearence of this argument") +
       Opt("csv").csv_of<int>().help("In contrast to `append`, this will create a vector of numbers from a single "
                                     "comma-separated list of values") +
@@ -30,8 +29,8 @@ int main(int argc, char const *argv[]) {
           .help("The equivalent of Python's argparse `append_const`:"
                 " will append the defined value every time it appears in the CLI") +
       Flg("flag", "f")
-          .set("do something!"sv)
-          .otherwise("nope"sv)
+          .set("do something!")
+          .otherwise("nope")
           .help("The equivalent of Python's argparse `store_const`:"
                 " will store the defined value if it appears in the CLI") +
       Flg("t").help("We also support flags with only short names").otherwise(false);
