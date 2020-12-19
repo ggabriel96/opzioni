@@ -302,11 +302,11 @@ public:
   bool has_set() const noexcept { return set_value.index() != 0; }
 
   void set_default_to(ArgValue &arg) const noexcept requires(type != ArgumentType::FLAG) {
-    if (has_default()) {
+    if (default_setter != nullptr) {
+      default_setter(arg);
+    } else if (has_default()) {
       ArgValueSetter setter(arg);
       std::visit(setter, default_value);
-    } else if (default_setter != nullptr) {
-      default_setter(arg);
     }
   }
 
