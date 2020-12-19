@@ -33,6 +33,14 @@ template <typename...>
 struct TypeList;
 
 template <typename...>
+struct Concat;
+
+template <typename... Lhs, typename... Rhs>
+struct Concat<TypeList<Lhs...>, TypeList<Rhs...>> {
+  using type = TypeList<Lhs..., Rhs...>;
+};
+
+template <typename...>
 struct VariantOf;
 
 template <typename... Ts>
@@ -40,9 +48,21 @@ struct VariantOf<TypeList<Ts...>> {
   using type = std::variant<Ts...>;
 };
 
-using BuiltinTypes =
-    TypeList<std::monostate, bool, int, double, std::string_view, std::vector<int>, std::vector<std::string_view>>;
-using BuiltinType = VariantOf<BuiltinTypes>::type;
+template <typename...>
+struct VectorOf;
+
+template <typename... Ts>
+struct VectorOf<TypeList<Ts...>> {
+  using type = TypeList<std::vector<Ts>...>;
+};
+
+// types that may be used as default_value and set_value
+using ScalarTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
+using BuiltinType = VariantOf<ScalarTypes>::type;
+
+// types that may be the result of parsing the CLI
+using ExternalTypes = Concat<ScalarTypes, VectorOf<ScalarTypes>::type>::type;
+using ExternalType = VariantOf<ExternalTypes>::type;
 
 std::string builtin2str(BuiltinType const &) noexcept;
 
@@ -84,12 +104,17 @@ void assign(Program const &, ArgMap &, Opt const &, std::optional<std::string_vi
 template <typename T>
 void assign(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
 
-template <typename Elem, typename Container = std::vector<Elem>>
+template <typename Elem>
 void append(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
-template <typename Elem, typename Container = std::vector<Elem>>
+template <typename Elem>
 void append(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
-template <typename Elem, typename Container = std::vector<Elem>>
+template <typename Elem>
 void append(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
+
+template <typename T>
+void csv(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
+template <typename T>
+void csv(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
 
 void print_help(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
 
@@ -104,7 +129,7 @@ struct GatherAmount {
 };
 
 struct ArgValue {
-  BuiltinType value{};
+  ExternalType value{};
 
   template <typename T>
   T as() const {
@@ -115,6 +140,19 @@ struct ArgValue {
   operator T() const {
     return as<T>();
   }
+};
+
+class ArgValueSetter {
+public:
+  ArgValueSetter(ArgValue &arg) : arg(arg) {}
+
+  template <typename T>
+  auto operator()(T value) {
+    this->arg.value = value;
+  }
+
+private:
+  ArgValue &arg;
 };
 
 struct ArgMap {
@@ -159,6 +197,13 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
+template <typename T>
+void set_empty_vector(ArgValue &arg) noexcept {
+  arg.value = std::vector<T>{};
+}
+
+using default_value_setter = void (*)(ArgValue &);
+
 template <ArgumentType type>
 class Arg {
 public:
@@ -170,10 +215,11 @@ public:
   std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
   actions::signature<type> action_fn = actions::assign<std::string_view>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
+  default_value_setter default_setter = nullptr;
 
   Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
   Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::FLAG)
-      : name(name), abbrev(abbrev), default_value(false), set_value(true), action_fn(actions::assign<bool>) {}
+      : name(name), abbrev(abbrev), set_value(true), action_fn(actions::assign<bool>) {}
 
   Arg(std::string_view name) requires(type == ArgumentType::OPTION) : Arg(name, {}) {}
   Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::OPTION)
@@ -181,18 +227,22 @@ public:
 
   Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
 
-  Arg<type> &help(std::string_view description) noexcept {
-    this->description = description;
-    return *this;
-  }
-
-  Arg<type> &required() noexcept {
-    this->is_required = true;
-    return *this;
-  }
-
   Arg<type> &action(actions::signature<type> action_fn) noexcept {
     this->action_fn = action_fn;
+    return *this;
+  }
+
+  template <typename T>
+  Arg<type> &append() noexcept {
+    this->action_fn = actions::append<T>;
+    this->default_setter = set_empty_vector<T>;
+    return *this;
+  }
+
+  template <typename T>
+  Arg<type> &csv_of() noexcept {
+    this->action_fn = actions::csv<T>;
+    this->default_setter = set_empty_vector<T>;
     return *this;
   }
 
@@ -204,33 +254,66 @@ public:
   template <typename T = std::string_view>
   Arg<type> &gather(std::size_t gather_n) noexcept requires(type != ArgumentType::FLAG) {
     this->gather_n = {gather_n};
+    if (gather_n != 1)
+      default_setter = set_empty_vector<T>;
     action_fn = actions::append<T>;
     return *this;
   }
 
-  template <typename T>
-  Arg<type> &otherwise(T value) {
-    default_value = std::move(value);
-    is_required = false;
-    // checking if action_fn is the default because we cannot unconditionally
-    // set it as the user might have set it before calling this function
-    if (action_fn == static_cast<actions::signature<type>>(actions::assign<std::string_view>))
-      action_fn = actions::assign<T>;
+  Arg<type> &help(std::string_view description) noexcept {
+    this->description = description;
     return *this;
   }
 
   template <typename T>
-  Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
-    set_value = std::move(value);
-    if (action_fn == static_cast<actions::signature<type>>(actions::assign<bool>) ||
-        action_fn == static_cast<actions::signature<type>>(actions::assign<std::string_view>))
-      action_fn = actions::assign<T>;
+  Arg<type> &of() noexcept {
+    this->action_fn = actions::assign<T>;
     return *this;
+  }
+
+  template <typename T>
+  Arg<type> &otherwise(T value) noexcept {
+    default_value = std::move(value);
+    action_fn = actions::assign<T>;
+    is_required = false;
+    return *this;
+  }
+
+  Arg<type> &otherwise(char const *value) noexcept { return otherwise(std::string_view(value)); }
+
+  Arg<type> &required() noexcept {
+    this->is_required = true;
+    return *this;
+  }
+
+  template <typename T>
+  Arg<type> &set(T value) noexcept requires(type != ArgumentType::POSITIONAL) {
+    set_value = std::move(value);
+    action_fn = actions::assign<T>;
+    return *this;
+  }
+
+  Arg<type> &set(char const *value) noexcept requires(type != ArgumentType::POSITIONAL) {
+    return set(std::string_view(value));
   }
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
   bool has_default() const noexcept { return default_value.index() != 0; }
   bool has_set() const noexcept { return set_value.index() != 0; }
+
+  void set_default_to(ArgValue &arg) const noexcept requires(type != ArgumentType::FLAG) {
+    if (default_setter != nullptr) {
+      default_setter(arg);
+    } else if (has_default()) {
+      ArgValueSetter setter(arg);
+      std::visit(setter, default_value);
+    }
+  }
+
+  void set_default_to(ArgValue &arg) const noexcept requires(type == ArgumentType::FLAG) {
+    ArgValueSetter setter(arg);
+    std::visit(setter, default_value);
+  }
 
   std::string format_base_usage() const noexcept;
   std::string format_for_help_description() const noexcept;
@@ -239,12 +322,6 @@ public:
 
 private:
 };
-
-template <ArgumentType type>
-void set_default(ArgMap &map, Arg<type> const &arg) noexcept {
-  if (arg.has_default())
-    map.args[arg.name] = ArgValue{arg.default_value};
-}
 
 template <ArgumentType type>
 bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
@@ -422,25 +499,16 @@ private:
 
 namespace actions {
 
+// +--------+
+// | assign |
+// +--------+
+
 template <typename T>
 void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
     throw DuplicateAssignment(name);
 }
-
-template <typename Elem, typename Container>
-void append_to(ArgMap &map, std::string_view const name, Elem value) {
-  if (auto list = map.args.find(name); list != map.args.end()) {
-    std::get<Container>(list->second.value).emplace_back(std::move(value));
-  } else {
-    assign_to(map, name, Container{std::move(value)});
-  }
-}
-
-// +--------+
-// | assign |
-// +--------+
 
 template <typename T>
 void assign(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
@@ -464,24 +532,45 @@ void assign(Program const &, ArgMap &map, Pos const &arg, std::optional<std::str
 // | append |
 // +--------+
 
-template <typename Elem, typename Container>
-void append(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
-  Elem value = std::get<Elem>(arg.set_value);
-  append_to<Elem, Container>(map, arg.name, value);
+template <typename Elem>
+void append_to(ArgMap &map, std::string_view const name, Elem value) {
+  if (auto list = map.args.find(name); list != map.args.end()) {
+    std::get<std::vector<Elem>>(list->second.value).emplace_back(std::move(value));
+  } else {
+    assign_to(map, name, std::vector<Elem>{std::move(value)});
+  }
 }
 
-template <typename Elem, typename Container>
+template <typename Elem>
+void append(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
+  append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
+}
+
+template <typename Elem>
 void append(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
   if (parsed_value)
-    append_to<Elem, Container>(map, arg.name, convert<Elem>(*parsed_value));
+    append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
-    append_to<Elem, Container>(map, arg.name, std::get<Elem>(arg.set_value));
+    append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
 }
 
-template <typename Elem, typename Container>
+template <typename Elem>
 void append(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
-  Elem value = convert<Elem>(*parsed_value);
-  append_to<Elem, Container>(map, arg.name, value);
+  append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
+}
+
+// +-----+
+// | csv |
+// +-----+
+
+template <typename T>
+void csv(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
+  assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
+}
+
+template <typename T>
+void csv(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
+  assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
 }
 
 } // namespace actions

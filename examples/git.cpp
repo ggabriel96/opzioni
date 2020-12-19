@@ -1,5 +1,3 @@
-#include <vector>
-
 #include <fmt/format.h>
 
 #include "opzioni.hpp"
@@ -7,7 +5,6 @@
 int main(int argc, char const *argv[]) {
   using fmt::print;
   using opzioni::Program, opzioni::Pos, opzioni::Cmd;
-  using namespace std::string_view_literals;
 
   auto clone =
       Program("clone").intro("Clone a repository into a new directory").auto_help() +
@@ -19,7 +16,7 @@ int main(int argc, char const *argv[]) {
               "The name of a new directory to clone into. The \"humanish\" part of the source repository is used if no "
               "directory is explicitly given (repo for /path/to/repo.git and foo for host.xz:foo/.git). Cloning into "
               "an existing directory is only allowed if the directory is empty.")
-          .otherwise(""sv);
+          .otherwise("");
 
   auto git = Program("git", "git CLI simulation, v0.1")
                  .intro("An example to illustrate subcommands via simulation of the git interface")
