@@ -227,16 +227,6 @@ public:
 
   Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
 
-  Arg<type> &help(std::string_view description) noexcept {
-    this->description = description;
-    return *this;
-  }
-
-  Arg<type> &required() noexcept {
-    this->is_required = true;
-    return *this;
-  }
-
   Arg<type> &action(actions::signature<type> action_fn) noexcept {
     this->action_fn = action_fn;
     return *this;
@@ -245,6 +235,13 @@ public:
   template <typename T>
   Arg<type> &append() noexcept {
     this->action_fn = actions::append<T>;
+    this->default_setter = set_empty_vector<T>;
+    return *this;
+  }
+
+  template <typename T>
+  Arg<type> &csv_of() noexcept {
+    this->action_fn = actions::csv<T>;
     this->default_setter = set_empty_vector<T>;
     return *this;
   }
@@ -263,16 +260,14 @@ public:
     return *this;
   }
 
-  template <typename T>
-  Arg<type> &of() noexcept {
-    this->action_fn = actions::assign<T>;
+  Arg<type> &help(std::string_view description) noexcept {
+    this->description = description;
     return *this;
   }
 
   template <typename T>
-  Arg<type> &csv_of() noexcept {
-    this->action_fn = actions::csv<T>;
-    this->default_setter = set_empty_vector<T>;
+  Arg<type> &of() noexcept {
+    this->action_fn = actions::assign<T>;
     return *this;
   }
 
@@ -281,6 +276,11 @@ public:
     default_value = std::move(value);
     action_fn = actions::assign<T>;
     is_required = false;
+    return *this;
+  }
+
+  Arg<type> &required() noexcept {
+    this->is_required = true;
     return *this;
   }
 
