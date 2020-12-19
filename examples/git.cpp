@@ -1,5 +1,3 @@
-#include <vector>
-
 #include <fmt/format.h>
 
 #include "opzioni.hpp"
