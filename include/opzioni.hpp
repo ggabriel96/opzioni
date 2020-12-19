@@ -272,14 +272,14 @@ public:
   }
 
   template <typename T>
-  Arg<type> &otherwise(T value) {
+  Arg<type> &otherwise(T value) noexcept {
     default_value = std::move(value);
     action_fn = actions::assign<T>;
     is_required = false;
     return *this;
   }
 
-  Arg<type> &otherwise(char const *value) { return otherwise(std::string_view(value)); }
+  Arg<type> &otherwise(char const *value) noexcept { return otherwise(std::string_view(value)); }
 
   Arg<type> &required() noexcept {
     this->is_required = true;
@@ -287,13 +287,15 @@ public:
   }
 
   template <typename T>
-  Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
+  Arg<type> &set(T value) noexcept requires(type != ArgumentType::POSITIONAL) {
     set_value = std::move(value);
     action_fn = actions::assign<T>;
     return *this;
   }
 
-  Arg<type> &set(char const *value) requires(type != ArgumentType::POSITIONAL) { return set(std::string_view(value)); }
+  Arg<type> &set(char const *value) noexcept requires(type != ArgumentType::POSITIONAL) {
+    return set(std::string_view(value));
+  }
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
   bool has_default() const noexcept { return default_value.index() != 0; }
