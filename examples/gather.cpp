@@ -26,6 +26,6 @@ int main(int argc, char const *argv[]) {
   print("\nCommand path: {}\n", args.exec_path);
   print("Number of arguments: {}\n", args.size());
 
-  print("gather-all: {}\n", args.has("gather-all") ? args.as<std::vector<int>>("gather-all") : std::vector<int>{});
-  print("gather-2: {}\n", args.has("gather-2") ? args.as<std::vector<int>>("gather-2") : std::vector<int>{});
+  print("gather-all: {}\n", args.as<std::vector<int>>("gather-all"));
+  print("gather-2: {}\n", args.as<std::vector<int>>("gather-2"));
 }

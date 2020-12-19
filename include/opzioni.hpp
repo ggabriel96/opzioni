@@ -111,6 +111,11 @@ void append(Program const &, ArgMap &, Opt const &, std::optional<std::string_vi
 template <typename Elem>
 void append(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
 
+template <typename T>
+void csv(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
+template <typename T>
+void csv(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
+
 void print_help(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
 
 } // namespace actions
@@ -192,6 +197,13 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
+template <typename T>
+void set_empty_vector(ArgValue &arg) noexcept {
+  arg.value = std::vector<T>{};
+}
+
+using default_value_setter = void (*)(ArgValue &);
+
 template <ArgumentType type>
 class Arg {
 public:
@@ -203,6 +215,7 @@ public:
   std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
   actions::signature<type> action_fn = actions::assign<std::string_view>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
+  default_value_setter default_setter = nullptr;
 
   Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
   Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::FLAG)
@@ -229,6 +242,13 @@ public:
     return *this;
   }
 
+  template <typename T>
+  Arg<type> &append() noexcept {
+    this->action_fn = actions::append<T>;
+    this->default_setter = set_empty_vector<T>;
+    return *this;
+  }
+
   template <typename T = std::string_view>
   Arg<type> &gather() noexcept requires(type != ArgumentType::FLAG) {
     return gather<T>(0);
@@ -237,33 +257,57 @@ public:
   template <typename T = std::string_view>
   Arg<type> &gather(std::size_t gather_n) noexcept requires(type != ArgumentType::FLAG) {
     this->gather_n = {gather_n};
+    if (gather_n != 1)
+      default_setter = set_empty_vector<T>;
     action_fn = actions::append<T>;
+    return *this;
+  }
+
+  template <typename T>
+  Arg<type> &of() noexcept {
+    this->action_fn = actions::assign<T>;
+    return *this;
+  }
+
+  template <typename T>
+  Arg<type> &csv_of() noexcept {
+    this->action_fn = actions::csv<T>;
+    this->default_setter = set_empty_vector<T>;
     return *this;
   }
 
   template <typename T>
   Arg<type> &otherwise(T value) {
     default_value = std::move(value);
+    action_fn = actions::assign<T>;
     is_required = false;
-    // checking if action_fn is the default because we cannot unconditionally
-    // set it as the user might have set it before calling this function
-    if (action_fn == static_cast<actions::signature<type>>(actions::assign<std::string_view>))
-      action_fn = actions::assign<T>;
     return *this;
   }
 
   template <typename T>
   Arg<type> &set(T value) requires(type != ArgumentType::POSITIONAL) {
     set_value = std::move(value);
-    if (action_fn == static_cast<actions::signature<type>>(actions::assign<bool>) ||
-        action_fn == static_cast<actions::signature<type>>(actions::assign<std::string_view>))
-      action_fn = actions::assign<T>;
+    action_fn = actions::assign<T>;
     return *this;
   }
 
   bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
   bool has_default() const noexcept { return default_value.index() != 0; }
   bool has_set() const noexcept { return set_value.index() != 0; }
+
+  void set_default_to(ArgValue &arg) const noexcept requires(type != ArgumentType::FLAG) {
+    if (has_default()) {
+      ArgValueSetter setter(arg);
+      std::visit(setter, default_value);
+    } else if (default_setter != nullptr) {
+      default_setter(arg);
+    }
+  }
+
+  void set_default_to(ArgValue &arg) const noexcept requires(type == ArgumentType::FLAG) {
+    ArgValueSetter setter(arg);
+    std::visit(setter, default_value);
+  }
 
   std::string format_base_usage() const noexcept;
   std::string format_for_help_description() const noexcept;
@@ -449,25 +493,16 @@ private:
 
 namespace actions {
 
+// +--------+
+// | assign |
+// +--------+
+
 template <typename T>
 void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
     throw DuplicateAssignment(name);
 }
-
-template <typename Elem>
-void append_to(ArgMap &map, std::string_view const name, Elem value) {
-  if (auto list = map.args.find(name); list != map.args.end()) {
-    std::get<std::vector<Elem>>(list->second.value).emplace_back(std::move(value));
-  } else {
-    assign_to(map, name, std::vector<Elem>{std::move(value)});
-  }
-}
-
-// +--------+
-// | assign |
-// +--------+
 
 template <typename T>
 void assign(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
@@ -492,6 +527,15 @@ void assign(Program const &, ArgMap &map, Pos const &arg, std::optional<std::str
 // +--------+
 
 template <typename Elem>
+void append_to(ArgMap &map, std::string_view const name, Elem value) {
+  if (auto list = map.args.find(name); list != map.args.end()) {
+    std::get<std::vector<Elem>>(list->second.value).emplace_back(std::move(value));
+  } else {
+    assign_to(map, name, std::vector<Elem>{std::move(value)});
+  }
+}
+
+template <typename Elem>
 void append(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
   append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
 }
@@ -507,6 +551,20 @@ void append(Program const &, ArgMap &map, Opt const &arg, std::optional<std::str
 template <typename Elem>
 void append(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
   append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
+}
+
+// +-----+
+// | csv |
+// +-----+
+
+template <typename T>
+void csv(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
+  assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
+}
+
+template <typename T>
+void csv(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
+  assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
 }
 
 } // namespace actions
