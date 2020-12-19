@@ -1,4 +1,4 @@
-name: Test and build
+name: Test Conan package
 
 on:
   pull_request:
@@ -20,7 +20,4 @@ jobs:
       - name: Install Meson and its dependencies
         run: pip install meson ninja
 
-      - run: make install
-      - run: make configure
-      - run: make build
-      - run: make test
+      - run: make create

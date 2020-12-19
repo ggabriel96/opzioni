@@ -4,6 +4,13 @@ package/
 .cache/
 .ccls-cache/
 
+# Conan
+*.pc
+conan.lock
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
+
 # VS Code
 .vscode/
 

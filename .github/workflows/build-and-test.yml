@@ -1,0 +1,26 @@
+name: Build and test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  gcc:
+    runs-on: ubuntu-latest
+    container:
+      image: conanio/gcc10:latest
+      options: -u root
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Meson and its dependencies
+        run: pip install meson ninja
+
+      - run: make install
+      - run: make configure
+      - run: make build
+      - run: make test
