@@ -6,20 +6,18 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
-  using opzioni::Opt, opzioni::Pos;
+  using opzioni::Program, opzioni::Pos, opzioni::Opt;
 
   auto program =
-      opzioni::Program("gather").intro("A short example file to illustrate the gather feature").auto_help() +
+      Program("gather").intro("A short example file to illustrate the gather feature").auto_help() +
       Pos("gather-all")
-          .help(
-              "This is the equivalent of Python's argparse `nargs` with value `+`: it requires at least one value and "
-              "consumes all of them into a vector. Note that this exact type of argument is rather limiting because, "
-              "as it consumes every argument when it is its turn in the parsing process, it will not allow us to parse "
-              "any subsequent positional or command argument (options and flags may appear before it, though)")
+          .help("This is the equivalent of Python's argparse `nargs` with `+`: it requires at least one value and "
+                "consumes all of them into a vector. Note that precisely this type of argument is somewhat limiting "
+                "because, since it consumes every argument, it will not allow us to parse anything that comes after it")
           .gather<int>() +
       Opt("gather-2")
-          .help("This is similar to the previous gather, but it limits the amount of arguments to only 2,"
-                " so it is not so problematic")
+          .help("This is similar to the previous gather, but it limits the amount of consumed arguments to only 2,"
+                " hence it is not so problematic")
           .gather<int>(2);
 
   auto const args = program(argc, argv);
