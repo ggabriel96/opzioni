@@ -191,7 +191,7 @@ public:
 
   Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
   Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::FLAG)
-      : name(name), abbrev(abbrev), default_value(false), set_value(true), action_fn(actions::assign<bool>) {}
+      : name(name), abbrev(abbrev), set_value(true), action_fn(actions::assign<bool>) {}
 
   Arg(std::string_view name) requires(type == ArgumentType::OPTION) : Arg(name, {}) {}
   Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::OPTION)
