@@ -118,6 +118,8 @@ void csv(Program const &, ArgMap &, Pos const &, std::optional<std::string_view>
 
 void print_help(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
 
+void print_version(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
+
 } // namespace actions
 
 // +-----------+
@@ -357,6 +359,7 @@ ParsedOption parse_option(std::string_view const) noexcept;
 class Program {
 public:
   std::string_view name{};
+  std::string_view version{};
   std::string_view title{};
   std::string_view introduction{};
   std::string_view description{};
@@ -371,11 +374,14 @@ public:
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
+  Program &v(std::string_view) noexcept; // I don't know what else to call this
 
   Program &max_width(std::size_t) noexcept;
   Program &on_error(opzioni::error_handler) noexcept;
   Program &auto_help() noexcept;
   Program &auto_help(actions::signature<ArgumentType::FLAG>) noexcept;
+  Program &auto_version(std::string_view) noexcept;
+  Program &auto_version(std::string_view, actions::signature<ArgumentType::FLAG>) noexcept;
 
   Program &add(Cmd);
   Program &add(Flg);

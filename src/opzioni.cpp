@@ -181,6 +181,11 @@ Program &Program::details(std::string_view description) noexcept {
   return *this;
 }
 
+Program &Program::v(std::string_view version) noexcept {
+  this->version = version;
+  return *this;
+}
+
 Program &Program::max_width(std::size_t msg_width) noexcept {
   this->msg_width = msg_width;
   return *this;
@@ -196,6 +201,16 @@ Program &Program::auto_help() noexcept { return this->auto_help(actions::print_h
 Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
   this->add(Flg("help", "h").help("Display this information").action(action));
   this->has_auto_help = true;
+  return *this;
+}
+
+Program &Program::auto_version(std::string_view version) noexcept {
+  return this->auto_version(version, actions::print_version);
+}
+
+Program &Program::auto_version(std::string_view version, actions::signature<ArgumentType::FLAG> action) noexcept {
+  this->version = version;
+  this->add(Flg("version", "V").help("Display the software version").action(action));
   return *this;
 }
 
@@ -608,6 +623,11 @@ namespace actions {
 
 void print_help(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
   print_full_help(program);
+  std::exit(0);
+}
+
+void print_version(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
+  fmt::print("{} {}\n", program.name, program.version);
   std::exit(0);
 }
 
