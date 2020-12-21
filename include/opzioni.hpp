@@ -476,6 +476,7 @@ private:
   std::ostream &out;
   std::size_t const max_width;
   std::string const program_name;
+  std::string const program_version;
   std::string const program_title;
   std::string const program_introduction;
   std::string const program_description;
