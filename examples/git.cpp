@@ -18,7 +18,8 @@ int main(int argc, char const *argv[]) {
               "an existing directory is only allowed if the directory is empty.")
           .otherwise("");
 
-  auto git = Program("git", "git CLI simulation, v0.1")
+  auto git = Program("git", "git CLI simulation")
+                 .auto_version("0.1")
                  .intro("An example to illustrate subcommands via simulation of the git interface")
                  .details("See 'git <command> --help' to read about a specific subcommand.")
                  .auto_help() +
