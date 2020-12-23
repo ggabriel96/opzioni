@@ -181,6 +181,11 @@ Program &Program::details(std::string_view description) noexcept {
   return *this;
 }
 
+Program &Program::v(std::string_view version) noexcept {
+  this->version = version;
+  return *this;
+}
+
 Program &Program::max_width(std::size_t msg_width) noexcept {
   this->msg_width = msg_width;
   return *this;
@@ -196,6 +201,16 @@ Program &Program::auto_help() noexcept { return this->auto_help(actions::print_h
 Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
   this->add(Flg("help", "h").help("Display this information").action(action));
   this->has_auto_help = true;
+  return *this;
+}
+
+Program &Program::auto_version(std::string_view version) noexcept {
+  return this->auto_version(version, actions::print_version);
+}
+
+Program &Program::auto_version(std::string_view version, actions::signature<ArgumentType::FLAG> action) noexcept {
+  this->version = version;
+  this->add(Flg("version", "V").help("Display the software version").action(action));
   return *this;
 }
 
@@ -460,9 +475,10 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 // +------------+
 
 HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
-    : out(out), max_width(program.msg_width), program_name(program.name), program_title(program.title),
-      program_introduction(program.introduction), program_description(program.description), cmds(program.cmds()),
-      flags(program.flags()), options(program.options()), positionals(program.positionals()) {
+    : out(out), max_width(program.msg_width), program_name(program.name), program_version(program.version),
+      program_title(program.title), program_introduction(program.introduction),
+      program_description(program.description), cmds(program.cmds()), flags(program.flags()),
+      options(program.options()), positionals(program.positionals()) {
   std::sort(cmds.begin(), cmds.end());
   std::sort(flags.begin(), flags.end());
   std::sort(options.begin(), options.end());
@@ -488,6 +504,8 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
 
 void HelpFormatter::print_title() const noexcept {
   out << program_name;
+  if (!program_version.empty())
+    out << ' ' << program_version;
   if (!program_title.empty())
     out << " - " << program_title;
   out << nl;
@@ -608,6 +626,11 @@ namespace actions {
 
 void print_help(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
   print_full_help(program);
+  std::exit(0);
+}
+
+void print_version(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
+  fmt::print("{} {}\n", program.name, program.version);
   std::exit(0);
 }
 
