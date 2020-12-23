@@ -216,7 +216,7 @@ public:
   BuiltinType default_value{};
   std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
   actions::signature<type> action_fn = actions::assign<std::string_view>;
-  std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_n{};
+  std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_info{};
   default_value_setter default_setter = nullptr;
 
   Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
@@ -254,9 +254,9 @@ public:
   }
 
   template <typename T = std::string_view>
-  Arg<type> &gather(std::size_t gather_n) noexcept requires(type != ArgumentType::FLAG) {
-    this->gather_n = {gather_n};
-    if (gather_n != 1)
+  Arg<type> &gather(std::size_t amount) noexcept requires(type != ArgumentType::FLAG) {
+    this->gather_info.amount = amount;
+    if (amount != 1)
       default_setter = set_empty_vector<T>;
     action_fn = actions::append<T>;
     return *this;
