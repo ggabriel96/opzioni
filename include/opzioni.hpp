@@ -383,11 +383,6 @@ public:
   Program &auto_version(std::string_view) noexcept;
   Program &auto_version(std::string_view, actions::signature<ArgumentType::FLAG>) noexcept;
 
-  Program &add(Cmd);
-  Program &add(Flg);
-  Program &add(Opt);
-  Program &add(Pos);
-
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;
 
@@ -430,6 +425,11 @@ private:
   std::vector<Flg> _flags;
   std::vector<Opt> _options;
   std::vector<Pos> _positionals;
+
+  Program &add(Cmd);
+  Program &add(Flg);
+  Program &add(Opt);
+  Program &add(Pos);
 
   ArgMap parse(std::span<char const *>) const;
   void check_contains_required(ArgMap const &) const;
