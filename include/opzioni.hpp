@@ -331,6 +331,12 @@ bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
   return lhs.is_required && !rhs.is_required;
 }
 
+bool constexpr operator==(Arg const &lhs, Arg const &rhs) noexcept {
+  auto const same_name = lhs.name == rhs.name;
+  auto const same_abbrev = lhs.has_abbrev() && rhs.has_abbrev() && lhs.abbrev == rhs.abbrev;
+  return same_name || same_abbrev;
+}
+
 consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
   validate_arg(lhs);
   validate_arg(rhs);
@@ -357,13 +363,8 @@ consteval void validate_arg(Arg const &arg) noexcept {
 
 template <std::size_t N>
 consteval void validate_args(std::array<Arg, N> const &args, Arg const &other) noexcept {
-  if (std::find_if(args.begin(), args.end(), [&other](auto const &arg) {
-        auto const same_name = arg.name == other.name;
-        auto const same_abbrev = arg.has_abbrev() && other.has_abbrev() && arg.abbrev == other.abbrev;
-        return same_name || same_abbrev;
-      }) != args.end()) {
+  if (std::ranges::find(args, other) != args.end())
     throw "Trying to add argument with a duplicate name";
-  }
 }
 
 // +----------------------+
