@@ -10,16 +10,19 @@ int main(int argc, char const *argv[]) {
   using opzioni::Program, opzioni::Pos, opzioni::Opt;
 
   auto program =
-      Program("gather").intro("A short example file to illustrate the gather feature") + Help() + Version() +
-      Pos("gather-all")
-          .help("This is the equivalent of Python's argparse `nargs` with `+`: it requires at least one value and "
-                "consumes all of them into a vector. Note that precisely this type of argument is somewhat limiting "
-                "because, since it consumes every argument, it will not allow us to parse anything that comes after it")
-          .gather<int>() +
-      Opt("gather-2")
-          .help("This is similar to the previous gather, but it limits the amount of consumed arguments to only 2,"
-                " hence it is not so problematic")
-          .gather<int>(2);
+      Program("gather").intro("A short example file to illustrate the gather feature") +
+      Help() * Version() *
+          Pos("gather-all")
+              .help(
+                  "This is the equivalent of Python's argparse `nargs` with `+`: it requires at least one value and "
+                  "consumes all of them into a vector. Note that precisely this type of argument is somewhat limiting "
+                  "because, since it consumes every argument, it will not allow us to parse anything that comes after "
+                  "it")
+              .gather<int>() *
+          Opt("gather-2")
+              .help("This is similar to the previous gather, but it limits the amount of consumed arguments to only 2,"
+                    " hence it is not so problematic")
+              .gather<int>(2);
 
   auto const args = program(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);

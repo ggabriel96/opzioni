@@ -319,6 +319,16 @@ bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
   return lhs.is_required && !rhs.is_required;
 }
 
+consteval auto operator*(Arg const lhs, Arg const rhs) noexcept { return std::array<Arg, 2>{lhs, rhs}; }
+
+template <std::size_t N>
+consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcept {
+  std::array<Arg, N + 1> newargs;
+  std::copy_n(args.begin(), N, newargs.begin());
+  newargs[N] = other;
+  return newargs;
+}
+
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
     throw "abbreviations must be a single letter"; // placeholder
@@ -405,9 +415,15 @@ public:
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;
 
-  template <typename T>
-  Program &operator+(T arg) {
-    return add(arg);
+  Program &operator+(Cmd cmd) { return add(cmd); }
+
+  // Program &operator+(Arg arg) { return add(arg); }
+
+  template <std::size_t N>
+  Program &operator+(std::array<Arg, N> args) {
+    for (auto &&arg : args)
+      add(arg);
+    return *this;
   }
 
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
