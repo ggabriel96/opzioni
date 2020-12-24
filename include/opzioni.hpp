@@ -277,9 +277,16 @@ struct Arg {
 
   consteval Arg set(char const *value) const noexcept { return set(std::string_view(value)); }
 
-  bool has_abbrev() const noexcept { return !abbrev.empty(); }
-  bool has_default() const noexcept { return default_value.index() != 0; }
-  bool has_set() const noexcept { return set_value.index() != 0; }
+  consteval void validate() const noexcept {
+    if (is_required && has_default())
+      throw "A required argument cannot have a default value";
+    if (has_default() && has_set() && default_value.index() != set_value.index())
+      throw "The default and set values must be of the same type";
+  }
+
+  constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
+  constexpr bool has_default() const noexcept { return default_value.index() != 0; }
+  constexpr bool has_set() const noexcept { return set_value.index() != 0; }
 
   void set_default_to(ArgValue &arg) const noexcept {
     if (default_setter != nullptr) {
@@ -319,10 +326,16 @@ bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
   return lhs.is_required && !rhs.is_required;
 }
 
-consteval auto operator*(Arg const lhs, Arg const rhs) noexcept { return std::array<Arg, 2>{lhs, rhs}; }
+consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
+  lhs.validate();
+  rhs.validate();
+  return std::array<Arg, 2>{lhs, rhs};
+}
 
 template <std::size_t N>
 consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcept {
+  other.validate();
+
   std::array<Arg, N + 1> newargs;
   std::copy_n(args.begin(), N, newargs.begin());
   newargs[N] = other;
