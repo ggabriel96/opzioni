@@ -447,6 +447,7 @@ public:
   std::size_t msg_width = 100;
   opzioni::error_handler error_handler = print_error;
   bool has_auto_help{false};
+  std::size_t positionals_amount = 0;
 
   Program() = default;
   Program(std::string_view name) : Program(name, {}) {}
@@ -473,40 +474,29 @@ public:
     return *this;
   }
 
+  std::vector<Arg> const &args() const noexcept { return _args; }
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
-  std::vector<Arg> const &flags() const noexcept { return _flags; }
-  std::vector<Arg> const &options() const noexcept { return _options; }
-  std::vector<Arg> const &positionals() const noexcept { return _positionals; }
 
-  auto find_cmd(std::string_view name) const noexcept {
+  constexpr auto find_arg(std::string_view name, ArgType type) const noexcept {
+    return std::ranges::find_if(_args, [name, type](auto const &arg) {
+      return arg.type == type && (arg.name == name || (arg.has_abbrev() && arg.abbrev == name));
+    });
+  }
+
+  bool has_arg(std::string_view name, ArgType type) const noexcept { return find_arg(name, type) != _args.end(); }
+  bool has_flg(std::string_view name) const noexcept { return has_arg(name, ArgType::FLG); }
+  bool has_opt(std::string_view name) const noexcept { return has_arg(name, ArgType::OPT); }
+  bool has_pos(std::string_view name) const noexcept { return has_arg(name, ArgType::POS); }
+
+  constexpr auto find_cmd(std::string_view name) const noexcept {
     return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->name; });
   }
 
   bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
 
-  auto find_flg(std::string_view name) const noexcept {
-    return std::ranges::find_if(_flags, [name](auto const &flg) { return flg.name == name || flg.abbrev == name; });
-  }
-
-  bool has_flg(std::string_view name) const noexcept { return find_flg(name) != _flags.end(); }
-
-  auto find_opt(std::string_view name) const noexcept {
-    return std::ranges::find_if(_options, [name](auto const &opt) { return opt.name == name || opt.abbrev == name; });
-  }
-
-  bool has_opt(std::string_view name) const noexcept { return find_opt(name) != _options.end(); }
-
-  auto find_pos(std::string_view name) const noexcept {
-    return std::ranges::find(_positionals, name, [](auto const &pos) { return pos.name; });
-  }
-
-  bool has_pos(std::string_view name) const noexcept { return find_pos(name) != _positionals.end(); }
-
 private:
+  std::vector<Arg> _args;
   std::vector<Cmd> _cmds;
-  std::vector<Arg> _flags;
-  std::vector<Arg> _options;
-  std::vector<Arg> _positionals;
 
   Program &add(Arg);
   Program &add(Cmd);
@@ -560,10 +550,9 @@ private:
   std::string const program_title;
   std::string const program_introduction;
   std::string const program_description;
+  std::size_t positionals_amount;
   std::vector<Cmd> cmds;
-  std::vector<Arg> flags;
-  std::vector<Arg> options;
-  std::vector<Arg> positionals;
+  std::vector<Arg> args;
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;

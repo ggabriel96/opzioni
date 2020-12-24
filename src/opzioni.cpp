@@ -155,12 +155,8 @@ Program &Program::add(Cmd cmd) {
 }
 
 Program &Program::add(Arg arg) {
-  if (arg.type == ArgType::POS)
-    _positionals.push_back(arg);
-  else if (arg.type == ArgType::OPT)
-    _options.push_back(arg);
-  else
-    _flags.push_back(arg);
+  _args.push_back(arg);
+  positionals_amount += (arg.type == ArgType::POS);
   return *this;
 }
 
@@ -218,23 +214,16 @@ void Program::check_contains_required(ArgMap const &map) const {
   auto is_required = [](auto const &arg) { return arg.is_required; };
   std::vector<std::string_view> missing_arg_names;
   auto insert = std::back_inserter(missing_arg_names);
-  transform(_positionals | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-  transform(_options | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-  transform(_flags | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(_args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
   if (!missing_arg_names.empty())
     throw MissingRequiredArguments(missing_arg_names);
 }
 
 void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
-  using std::views::transform;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  for (auto const &positional : _positionals | filter(wasnt_parsed))
-    positional.set_default_to(map.args[positional.name]);
-  for (auto const &flag : _flags | filter(wasnt_parsed))
-    flag.set_default_to(map.args[flag.name]);
-  for (auto const &option : _options | filter(wasnt_parsed))
-    option.set_default_to(map.args[option.name]);
+  for (auto const &arg : _args | filter(wasnt_parsed))
+    arg.set_default_to(map.args[arg.name]);
 }
 
 // +-----------------+
@@ -297,10 +286,10 @@ std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, C
 
 std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
                                        std::size_t const positional_idx) const {
-  if (positional_idx >= _positionals.size()) {
-    throw UnexpectedPositional(args[0], _positionals.size());
+  if (positional_idx >= positionals_amount) {
+    throw UnexpectedPositional(args[0], positionals_amount);
   }
-  auto const arg = _positionals[positional_idx];
+  auto const arg = _args[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_info.amount == 0 ? args.size() : arg.gather_info.amount;
   if (gather_amount > args.size()) {
@@ -320,13 +309,13 @@ std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) cons
 }
 
 std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
-  auto const &arg = *find_flg(flag);
+  auto const &arg = *find_arg(flag, ArgType::FLG);
   arg.action_fn(*this, map, arg, std::nullopt);
   return 1;
 }
 
 std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
-  auto const &arg = *find_opt(option.name);
+  auto const &arg = *find_arg(option.name, ArgType::OPT);
   auto const gather_amount = arg.gather_info.amount == 0 ? args.size() - 1 : arg.gather_info.amount;
   if (option.value) {
     if (gather_amount != 1) {
@@ -395,29 +384,23 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
     : out(out), max_width(program.msg_width), program_name(program.name), program_version(program.version),
       program_title(program.title), program_introduction(program.introduction),
-      program_description(program.description), cmds(program.cmds()), flags(program.flags()),
-      options(program.options()), positionals(program.positionals()) {
+      program_description(program.description), positionals_amount(program.positionals_amount), cmds(program.cmds()),
+      args(program.args()) {
   std::sort(cmds.begin(), cmds.end());
-  std::sort(flags.begin(), flags.end());
-  std::sort(options.begin(), options.end());
-  std::sort(positionals.begin(), positionals.end());
+  std::sort(args.begin(), args.end()); // @TODO: should not sort positionals!
 }
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
-  std::array<std::size_t, 3> lengths{0, 0, 0};
   auto const get_name = [](auto const &arg) -> std::string_view { return arg.name; };
-  if (!flags.empty())
-    lengths[0] = std::ranges::max(flags | transform(get_name) | transform(&std::string_view::length));
-  if (!options.empty())
-    lengths[1] = std::ranges::max(options | transform(get_name) | transform(&std::string_view::length));
-  if (!positionals.empty())
-    lengths[2] = std::ranges::max(positionals | transform(get_name) | transform(&std::string_view::length));
+  std::size_t max_name_length = 0;
+  if (!args.empty())
+    max_name_length = std::ranges::max(args | transform(get_name) | transform(&std::string_view::length));
   // +8 because of left margin (4 of indentation, 4 of alignment)
   // *2 because maximum length is twice the length of the name if has no abbreviation
   // +5 because of formatting artifacts from arguments (e.g. <>)
   // +3 to give it 4 spaces between usage and description (not +4 because `print_arg_help` puts a space between them)
-  return 8 + 2 * std::ranges::max(lengths) + 5 + 3;
+  return 8 + 2 * max_name_length + 5 + 3;
 }
 
 void HelpFormatter::print_title() const noexcept {
@@ -443,13 +426,11 @@ void HelpFormatter::print_long_usage() const noexcept {
   using std::views::drop, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + cmds.size() + flags.size() + options.size() + positionals.size());
+  words.reserve(1 + cmds.size() + args.size());
 
   auto insert = std::back_inserter(words);
   words.push_back(program_name);
-  transform(positionals, insert, &Arg::format_for_usage_summary);
-  transform(options, insert, &Arg::format_for_usage_summary);
-  transform(flags, insert, &Arg::format_for_usage_summary);
+  transform(args, insert, &Arg::format_for_usage_summary);
 
   if (cmds.size() == 1) {
     words.push_back(format("{{{}}}", cmds.front().format_for_usage_summary()));
@@ -472,27 +453,17 @@ void HelpFormatter::print_help() const noexcept {
   std::string_view pending_nl = "";
   auto const padding = std::string(help_padding_size(), ' ');
 
-  if (!positionals.empty()) {
+  if (positionals_amount > 0) {
     out << "Positionals:\n";
-    for (auto const &arg : positionals) {
+    for (auto const &arg : args | std::views::take(positionals_amount)) {
       print_arg_help(arg, padding);
     }
     pending_nl = "\n";
   }
 
-  if (!options.empty()) {
-    out << pending_nl << "Options:\n";
-    for (auto const &arg : options) {
-      print_arg_help(arg, padding);
-    }
-    pending_nl = "\n";
-  } else {
-    pending_nl = "";
-  }
-
-  if (!flags.empty()) {
-    out << pending_nl << "Flags:\n";
-    for (auto const &arg : flags) {
+  if (args.size() > positionals_amount) {
+    out << pending_nl << "Options & Flags:\n";
+    for (auto const &arg : args | std::views::drop(positionals_amount)) {
       print_arg_help(arg, padding);
     }
     pending_nl = "\n";
