@@ -338,6 +338,8 @@ bool constexpr operator==(Arg const &lhs, Arg const &rhs) noexcept {
 }
 
 consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
+  if (lhs == rhs)
+    throw "Trying to add argument with a duplicate name";
   validate_arg(lhs);
   validate_arg(rhs);
   return std::array<Arg, 2>{lhs, rhs};
