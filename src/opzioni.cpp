@@ -53,11 +53,11 @@ int print_error_and_usage(Program const &program, UserError const &err) noexcept
 // +-----+
 
 std::string Arg::format_base_usage() const noexcept {
-  if (type == ArgumentType::POSITIONAL)
+  if (type == ArgType::POSITIONAL)
     return std::string(name);
 
   auto const dashes = name.length() > 1 ? "--" : "-";
-  if (type == ArgumentType::OPTION) {
+  if (type == ArgType::OPTION) {
     auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
     if (has_set())
       val = "[" + val + "]";
@@ -86,7 +86,7 @@ std::string Arg::format_for_help_description() const noexcept {
 std::string Arg::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
 
-  if (type == ArgumentType::POSITIONAL)
+  if (type == ArgType::POSITIONAL)
     return base_usage;
 
   if (has_abbrev())
@@ -101,7 +101,7 @@ std::string Arg::format_for_help_index() const noexcept {
 std::string Arg::format_for_usage_summary() const noexcept {
   auto format = format_base_usage();
 
-  if (type == ArgumentType::POSITIONAL)
+  if (type == ArgType::POSITIONAL)
     format = "<" + format + ">";
 
   if (!is_required)
@@ -155,9 +155,9 @@ Program &Program::add(Cmd cmd) {
 }
 
 Program &Program::add(Arg arg) {
-  if (arg.type == ArgumentType::POSITIONAL)
+  if (arg.type == ArgType::POSITIONAL)
     _positionals.push_back(arg);
-  else if (arg.type == ArgumentType::OPTION)
+  else if (arg.type == ArgType::OPTION)
     _options.push_back(arg);
   else
     _flags.push_back(arg);
