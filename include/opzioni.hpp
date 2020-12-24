@@ -223,7 +223,7 @@ struct Arg {
   template <typename T = std::string_view>
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgumentType::FLAG)
-      throw "cannot be flag";
+      throw "Flags cannot use gather because they do not take values from the command-line";
     auto arg = *this;
     arg.gather_info.amount = amount;
     arg.action_fn = actions::append<T>;
@@ -269,7 +269,7 @@ struct Arg {
   template <typename T>
   consteval Arg set(T value) const noexcept {
     if (this->type == ArgumentType::POSITIONAL)
-      throw "cannot be positional";
+      throw "Positionals cannot use set value because they always take a value from the command-line";
     auto arg = Arg::With(*this, this->default_value, value);
     arg.action_fn = actions::assign<T>;
     return arg;
@@ -349,7 +349,7 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
-    throw "abbreviations must be a single letter"; // placeholder
+    throw "Abbreviations must be a single letter";
   return Arg{.type = ArgumentType::FLAG,
              .name = name,
              .abbrev = abbrev,
@@ -361,7 +361,7 @@ consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
-    throw "abbreviations must be a single letter"; // placeholder
+    throw "Abbreviations must be a single letter";
   return Arg{.type = ArgumentType::OPTION, .name = name, .abbrev = abbrev};
 }
 
