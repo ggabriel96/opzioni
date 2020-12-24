@@ -52,81 +52,22 @@ int print_error_and_usage(Program const &program, UserError const &err) noexcept
 // | Arg |
 // +-----+
 
-template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_base_usage() const noexcept {
-  return std::string(name);
-}
+std::string Arg::format_base_usage() const noexcept {
+  if (type == ArgumentType::POSITIONAL)
+    return std::string(name);
 
-template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_for_help_description() const noexcept {
-  if (has_default())
-    return fmt::format("{} (default: {})", description, builtin2str(default_value));
-  return std::string(description);
-}
-
-template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_for_help_index() const noexcept {
-  return format_base_usage();
-}
-
-template <>
-std::string Arg<ArgumentType::POSITIONAL>::format_for_usage_summary() const noexcept {
-  if (is_required)
-    return "<" + format_base_usage() + ">";
-  return "[<" + format_base_usage() + ">]";
-}
-
-template <>
-std::string Arg<ArgumentType::OPTION>::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
-  auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
-  if (has_set())
-    val = "[" + val + "]";
-  return fmt::format("{}{} {}", dashes, name, val);
-}
-
-template <>
-std::string Arg<ArgumentType::OPTION>::format_for_help_description() const noexcept {
-  std::string format(description);
-  if (has_set() || has_default()) {
-    format += " (";
+  if (type == ArgumentType::OPTION) {
+    auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
     if (has_set())
-      format += fmt::format("sets: {}", builtin2str(set_value));
-    if (has_default()) {
-      if (has_set())
-        format += ", ";
-      format += fmt::format("default: {}", builtin2str(default_value));
-    }
-    format += ")";
+      val = "[" + val + "]";
+    return fmt::format("{}{} {}", dashes, name, val);
   }
-  return format;
-}
 
-template <>
-std::string Arg<ArgumentType::OPTION>::format_for_help_index() const noexcept {
-  auto const base_usage = format_base_usage();
-  if (has_abbrev())
-    return fmt::format("-{}, {}", abbrev, base_usage);
-  if (name.length() == 1)
-    return base_usage;
-  return fmt::format("    {}", base_usage);
-}
-
-template <>
-std::string Arg<ArgumentType::OPTION>::format_for_usage_summary() const noexcept {
-  if (is_required)
-    return format_base_usage();
-  return "[" + format_base_usage() + "]";
-}
-
-template <>
-std::string Arg<ArgumentType::FLAG>::format_base_usage() const noexcept {
-  auto const dashes = name.length() > 1 ? "--" : "-";
   return fmt::format("{}{}", dashes, name);
 }
 
-template <>
-std::string Arg<ArgumentType::FLAG>::format_for_help_description() const noexcept {
+std::string Arg::format_for_help_description() const noexcept {
   std::string format(description);
   if (has_set() || has_default()) {
     format += " (";
@@ -142,21 +83,31 @@ std::string Arg<ArgumentType::FLAG>::format_for_help_description() const noexcep
   return format;
 }
 
-template <>
-std::string Arg<ArgumentType::FLAG>::format_for_help_index() const noexcept {
+std::string Arg::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
+
+  if (type == ArgumentType::POSITIONAL)
+    return base_usage;
+
   if (has_abbrev())
     return fmt::format("-{}, {}", abbrev, base_usage);
+
   if (name.length() == 1)
     return base_usage;
-  return fmt::format("    {}", format_base_usage());
+
+  return fmt::format("    {}", base_usage);
 }
 
-template <>
-std::string Arg<ArgumentType::FLAG>::format_for_usage_summary() const noexcept {
-  if (is_required)
-    return format_base_usage();
-  return "[" + format_base_usage() + "]";
+std::string Arg::format_for_usage_summary() const noexcept {
+  auto format = format_base_usage();
+
+  if (type == ArgumentType::POSITIONAL)
+    format = "<" + format + ">";
+
+  if (!is_required)
+    format = "[" + format + "]";
+
+  return format;
 }
 
 std::string Cmd::format_for_help_description() const noexcept { return std::string(program->introduction); }
@@ -203,28 +154,22 @@ Program &Program::add(Cmd cmd) {
   return *this;
 }
 
-Program &Program::add(Flg flg) {
-  if (has_flg(flg.name) || has_opt(flg.name))
-    throw ArgumentAlreadyExists(flg.name);
-  if (flg.has_abbrev() && (has_flg(flg.abbrev) || has_opt(flg.abbrev)))
-    throw ArgumentAlreadyExists(flg.abbrev);
-  _flags.push_back(flg);
-  return *this;
-}
+Program &Program::add(Arg arg) {
+  if (arg.type == ArgumentType::POSITIONAL) {
+    if (has_cmd(arg.name) || has_pos(arg.name))
+      throw ArgumentAlreadyExists(arg.name);
+    _positionals.push_back(arg);
+  } else {
+    if (has_flg(arg.name) || has_opt(arg.name))
+      throw ArgumentAlreadyExists(arg.name);
+    if (arg.has_abbrev() && (has_flg(arg.abbrev) || has_opt(arg.abbrev)))
+      throw ArgumentAlreadyExists(arg.abbrev);
 
-Program &Program::add(Opt opt) {
-  if (has_flg(opt.name) || has_opt(opt.name))
-    throw ArgumentAlreadyExists(opt.name);
-  if (opt.has_abbrev() && (has_flg(opt.abbrev) || has_opt(opt.abbrev)))
-    throw ArgumentAlreadyExists(opt.abbrev);
-  _options.push_back(opt);
-  return *this;
-}
-
-Program &Program::add(Pos pos) {
-  if (has_cmd(pos.name) || has_pos(pos.name))
-    throw ArgumentAlreadyExists(pos.name);
-  _positionals.push_back(pos);
+    if (arg.type == ArgumentType::FLAG)
+      _flags.push_back(arg);
+    else
+      _options.push_back(arg);
+  }
   return *this;
 }
 
@@ -511,9 +456,9 @@ void HelpFormatter::print_long_usage() const noexcept {
 
   auto insert = std::back_inserter(words);
   words.push_back(program_name);
-  transform(positionals, insert, &Pos::format_for_usage_summary);
-  transform(options, insert, &Opt::format_for_usage_summary);
-  transform(flags, insert, &Flg::format_for_usage_summary);
+  transform(positionals, insert, &Arg::format_for_usage_summary);
+  transform(options, insert, &Arg::format_for_usage_summary);
+  transform(flags, insert, &Arg::format_for_usage_summary);
 
   if (cmds.size() == 1) {
     words.push_back(format("{{{}}}", cmds.front().format_for_usage_summary()));
@@ -606,12 +551,12 @@ void print_full_help(Program const &program, std::ostream &ostream) noexcept {
 
 namespace actions {
 
-void print_help(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
+void print_help(Program const &program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
   print_full_help(program);
   std::exit(0);
 }
 
-void print_version(Program const &program, ArgMap &, Flg const &, std::optional<std::string_view> const) {
+void print_version(Program const &program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
   fmt::print("{} {}\n", program.name, program.version);
   std::exit(0);
 }

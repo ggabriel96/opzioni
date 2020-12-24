@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]) {
   auto git = Program("git", "git CLI simulation")
                  .intro("An example to illustrate subcommands via simulation of the git interface")
                  .details("See 'git <command> --help' to read about a specific subcommand.") +
-             Help + Version + Cmd(clone);
+             Help() + Version() + Cmd(clone);
 
   auto const args = git(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);

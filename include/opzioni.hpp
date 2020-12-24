@@ -71,16 +71,9 @@ std::string builtin2str(BuiltinType const &) noexcept;
 // +----------------------+
 enum struct ArgumentType { FLAG, OPTION, POSITIONAL };
 
-struct ArgMap;
-
-template <ArgumentType>
 struct Arg;
-
+struct ArgMap;
 class Program;
-
-using Flg = Arg<ArgumentType::FLAG>;
-using Opt = Arg<ArgumentType::OPTION>;
-using Pos = Arg<ArgumentType::POSITIONAL>;
 
 // +----------------+
 // | error handlers |
@@ -92,33 +85,20 @@ int print_error_and_usage(Program const &, UserError const &) noexcept;
 
 namespace actions {
 
-template <ArgumentType type>
-using signature = void (*)(Program const &, ArgMap &, Arg<type> const &, std::optional<std::string_view> const);
+using signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <typename T>
-void assign(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
-
-template <typename T>
-void assign(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
-
-template <typename T>
-void assign(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
+void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <typename Elem>
-void append(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
-template <typename Elem>
-void append(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
-template <typename Elem>
-void append(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
+void append(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <typename T>
-void csv(Program const &, ArgMap &, Opt const &, std::optional<std::string_view> const);
-template <typename T>
-void csv(Program const &, ArgMap &, Pos const &, std::optional<std::string_view> const);
+void csv(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-void print_help(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
+void print_help(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-void print_version(Program const &, ArgMap &, Flg const &, std::optional<std::string_view> const);
+void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 } // namespace actions
 
@@ -206,47 +186,26 @@ void set_empty_vector(ArgValue &arg) noexcept {
 
 using DefaultValueSetter = void (*)(ArgValue &);
 
-template <ArgumentType type>
-class Arg {
-public:
+struct Arg {
+  ArgumentType type = ArgumentType::POSITIONAL;
   std::string_view name{};
-  std::conditional_t<type != ArgumentType::POSITIONAL, std::string_view, std::monostate> abbrev{};
+  std::string_view abbrev{};
   std::string_view description{};
   bool is_required = false;
   BuiltinType default_value{};
-  std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
-  actions::signature<type> action_fn = actions::assign<std::string_view>;
-  std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_info{};
+  BuiltinType set_value{};
+  actions::signature action_fn = actions::assign<std::string_view>;
+  GatherAmount gather_info{};
   DefaultValueSetter default_setter = nullptr;
 
-  consteval Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
-
-  consteval Arg(std::string_view name, std::string_view abbrev) requires(type == ArgumentType::FLAG)
-      : name(name), abbrev(abbrev), set_value(true), action_fn(actions::assign<bool>) {
-    if (!abbrev.empty() && abbrev.length() != 1) {
-      throw "abbreviations must be a single letter"; // placeholder
-    }
-  }
-
-  consteval Arg(std::string_view name) requires(type == ArgumentType::OPTION) : Arg(name, {}) {}
-
-  consteval Arg(std::string_view name, std::string_view abbrev) requires(type == ArgumentType::OPTION)
-      : name(name), abbrev(abbrev) {
-    if (!abbrev.empty() && abbrev.length() != 1) {
-      throw "abbreviations must be a single letter"; // placeholder
-    }
-  }
-
-  consteval Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
-
-  consteval Arg<type> action(actions::signature<type> action_fn) const noexcept {
+  consteval Arg action(actions::signature action_fn) const noexcept {
     auto arg = *this;
     arg.action_fn = action_fn;
     return arg;
   }
 
   template <typename T>
-  consteval Arg<type> append() const noexcept {
+  consteval Arg append() const noexcept {
     auto arg = *this;
     arg.action_fn = actions::append<T>;
     arg.default_setter = set_empty_vector<T>;
@@ -254,7 +213,7 @@ public:
   }
 
   template <typename T>
-  consteval Arg<type> csv_of() const noexcept {
+  consteval Arg csv_of() const noexcept {
     auto arg = *this;
     arg.action_fn = actions::csv<T>;
     arg.default_setter = set_empty_vector<T>;
@@ -262,7 +221,9 @@ public:
   }
 
   template <typename T = std::string_view>
-  consteval Arg<type> gather(std::size_t amount) const noexcept requires(type != ArgumentType::FLAG) {
+  consteval Arg gather(std::size_t amount) const noexcept {
+    if (this->type == ArgumentType::FLAG)
+      throw "cannot be flag";
     auto arg = *this;
     arg.gather_info.amount = amount;
     arg.action_fn = actions::append<T>;
@@ -272,55 +233,55 @@ public:
   }
 
   template <typename T = std::string_view>
-  consteval Arg<type> gather() const noexcept requires(type != ArgumentType::FLAG) {
+  consteval Arg gather() const noexcept {
     return gather<T>(0);
   }
 
-  consteval Arg<type> help(std::string_view description) const noexcept {
+  consteval Arg help(std::string_view description) const noexcept {
     auto arg = *this;
     arg.description = description;
     return arg;
   }
 
   template <typename T>
-  consteval Arg<type> of() const noexcept {
+  consteval Arg of() const noexcept {
     auto arg = *this;
     arg.action_fn = actions::assign<T>;
     return arg;
   }
 
   template <typename T>
-  consteval Arg<type> otherwise(T value) const noexcept {
-    Arg<type> arg(*this, value, this->set_value);
+  consteval Arg otherwise(T value) const noexcept {
+    auto arg = Arg::With(*this, value, this->set_value);
     arg.action_fn = actions::assign<T>;
     arg.is_required = false;
     return arg;
   }
 
-  consteval Arg<type> otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
+  consteval Arg otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
 
-  consteval Arg<type> required() const noexcept {
+  consteval Arg required() const noexcept {
     auto arg = *this;
     arg.is_required = true;
     return arg;
   }
 
   template <typename T>
-  consteval Arg<type> set(T value) const noexcept requires(type != ArgumentType::POSITIONAL) {
-    Arg<type> arg(*this, this->default_value, value);
+  consteval Arg set(T value) const noexcept {
+    if (this->type == ArgumentType::POSITIONAL)
+      throw "cannot be positional";
+    auto arg = Arg::With(*this, this->default_value, value);
     arg.action_fn = actions::assign<T>;
     return arg;
   }
 
-  consteval Arg<type> set(char const *value) const noexcept requires(type != ArgumentType::POSITIONAL) {
-    return set(std::string_view(value));
-  }
+  consteval Arg set(char const *value) const noexcept { return set(std::string_view(value)); }
 
-  bool has_abbrev() const noexcept requires(type != ArgumentType::POSITIONAL) { return !abbrev.empty(); }
+  bool has_abbrev() const noexcept { return !abbrev.empty(); }
   bool has_default() const noexcept { return default_value.index() != 0; }
   bool has_set() const noexcept { return set_value.index() != 0; }
 
-  void set_default_to(ArgValue &arg) const noexcept requires(type != ArgumentType::FLAG) {
+  void set_default_to(ArgValue &arg) const noexcept {
     if (default_setter != nullptr) {
       default_setter(arg);
     } else if (has_default()) {
@@ -329,34 +290,70 @@ public:
     }
   }
 
-  void set_default_to(ArgValue &arg) const noexcept requires(type == ArgumentType::FLAG) {
-    ArgValueSetter setter(arg);
-    std::visit(setter, default_value);
-  }
-
   std::string format_base_usage() const noexcept;
   std::string format_for_help_description() const noexcept;
   std::string format_for_help_index() const noexcept;
   std::string format_for_usage_summary() const noexcept;
 
-private:
   // workaround for not being able to change the value of a variant after it's been constructed
   template <typename Default, typename Set>
-  consteval Arg(Arg<type> const &other, Default d, Set s)
-      : name(other.name), abbrev(other.abbrev), description(other.description), is_required(other.is_required),
-        default_value(d), set_value(s), action_fn(other.action_fn), gather_info(other.gather_info),
-        default_setter(other.default_setter) {}
+  static consteval Arg With(Arg const &other, Default d, Set s) noexcept {
+    return Arg{.type = other.type,
+               .name = other.name,
+               .abbrev = other.abbrev,
+               .description = other.description,
+               .is_required = other.is_required,
+               .default_value = d,
+               .set_value = s,
+               .action_fn = other.action_fn,
+               .gather_info = other.gather_info,
+               .default_setter = other.default_setter};
+  }
 };
 
-constexpr auto Help = Flg("help", "h").help("Display this information").action(actions::print_help);
-constexpr auto Version = Flg("version", "V").help("Display the software version").action(actions::print_version);
-
-template <ArgumentType type>
-bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
+bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
+  // if (lhs.type != rhs.type)
+  //   return lhs.type < rhs.type;
   if (lhs.is_required == rhs.is_required)
     return lhs.name < rhs.name;
   return lhs.is_required && !rhs.is_required;
 }
+
+consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
+  if (!abbrev.empty() && abbrev.length() != 1)
+    throw "abbreviations must be a single letter"; // placeholder
+  return Arg{.type = ArgumentType::FLAG,
+             .name = name,
+             .abbrev = abbrev,
+             .set_value = true,
+             .action_fn = actions::assign<bool>};
+}
+
+consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
+
+consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
+  if (!abbrev.empty() && abbrev.length() != 1)
+    throw "abbreviations must be a single letter"; // placeholder
+  return Arg{.type = ArgumentType::OPTION, .name = name, .abbrev = abbrev};
+}
+
+consteval Arg Opt(std::string_view name) noexcept { return Opt(name, {}); }
+
+consteval Arg Pos(std::string_view name) noexcept {
+  return Arg{.type = ArgumentType::POSITIONAL, .name = name, .is_required = true};
+}
+
+consteval Arg Help(std::string_view description) noexcept {
+  return Flg("help", "h").help(description).action(actions::print_help);
+}
+
+consteval Arg Help() noexcept { return Help("Display this information"); }
+
+consteval Arg Version(std::string_view description) noexcept {
+  return Flg("version", "V").help(description).action(actions::print_version);
+}
+
+consteval Arg Version() noexcept { return Version("Display the software version"); }
 
 class Cmd {
 public:
@@ -414,9 +411,9 @@ public:
   }
 
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
-  std::vector<Flg> const &flags() const noexcept { return _flags; }
-  std::vector<Opt> const &options() const noexcept { return _options; }
-  std::vector<Pos> const &positionals() const noexcept { return _positionals; }
+  std::vector<Arg> const &flags() const noexcept { return _flags; }
+  std::vector<Arg> const &options() const noexcept { return _options; }
+  std::vector<Arg> const &positionals() const noexcept { return _positionals; }
 
   auto find_cmd(std::string_view name) const noexcept {
     return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->name; });
@@ -444,14 +441,12 @@ public:
 
 private:
   std::vector<Cmd> _cmds;
-  std::vector<Flg> _flags;
-  std::vector<Opt> _options;
-  std::vector<Pos> _positionals;
+  std::vector<Arg> _flags;
+  std::vector<Arg> _options;
+  std::vector<Arg> _positionals;
 
+  Program &add(Arg);
   Program &add(Cmd);
-  Program &add(Flg);
-  Program &add(Opt);
-  Program &add(Pos);
 
   ArgMap parse(std::span<char const *>) const;
   void check_contains_required(ArgMap const &) const;
@@ -503,9 +498,9 @@ private:
   std::string const program_introduction;
   std::string const program_description;
   std::vector<Cmd> cmds;
-  std::vector<Flg> flags;
-  std::vector<Opt> options;
-  std::vector<Pos> positionals;
+  std::vector<Arg> flags;
+  std::vector<Arg> options;
+  std::vector<Arg> positionals;
 
   void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
     using std::views::drop;
@@ -540,21 +535,11 @@ void assign_to(ArgMap &map, std::string_view const name, T value) {
 }
 
 template <typename T>
-void assign(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
-  assign_to(map, arg.name, std::get<T>(arg.set_value));
-}
-
-template <typename T>
-void assign(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
-  if (parsed_value)
+void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+  if (arg.type != ArgumentType::FLAG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
     assign_to(map, arg.name, std::get<T>(arg.set_value));
-}
-
-template <typename T>
-void assign(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
-  assign_to(map, arg.name, convert<T>(*parsed_value));
 }
 
 // +--------+
@@ -571,21 +556,11 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
 }
 
 template <typename Elem>
-void append(Program const &, ArgMap &map, Flg const &arg, std::optional<std::string_view> const parsed_value) {
-  append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
-}
-
-template <typename Elem>
-void append(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
-  if (parsed_value)
+void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+  if (arg.type != ArgumentType::FLAG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
     append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
-}
-
-template <typename Elem>
-void append(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
-  append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
 }
 
 // +-----+
@@ -593,12 +568,7 @@ void append(Program const &, ArgMap &map, Pos const &arg, std::optional<std::str
 // +-----+
 
 template <typename T>
-void csv(Program const &, ArgMap &map, Opt const &arg, std::optional<std::string_view> const parsed_value) {
-  assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
-}
-
-template <typename T>
-void csv(Program const &, ArgMap &map, Pos const &arg, std::optional<std::string_view> const parsed_value) {
+void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
 }
 

@@ -17,7 +17,7 @@ int main(int argc, char const *argv[]) {
           .intro("A short example illustrating opzioni's simpler features")
           .details("This example only covers simple positionals, options, and flags. For examples of more"
                    " complicated parse actions or subcommands, please take a look at the other examples.") +
-      Help + Version + Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
+      Help() + Version() + Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
       Opt("last-name").help("Your last name") +
       Opt("o").help("We also support options with only short names").otherwise("oh") +
       Opt("num", "n").append<int>().help("Creates a vector of numbers with each appearence of this argument") +
