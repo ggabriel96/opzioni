@@ -75,6 +75,11 @@ struct Arg;
 struct ArgMap;
 class Program;
 
+consteval void validate_arg(Arg const &) noexcept;
+
+template <std::size_t N>
+consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
+
 // +----------------+
 // | error handlers |
 // +----------------+
@@ -83,6 +88,9 @@ using error_handler = int (*)(Program const &, UserError const &) noexcept;
 int print_error(Program const &, UserError const &) noexcept;
 int print_error_and_usage(Program const &, UserError const &) noexcept;
 
+// +---------+
+// | actions |
+// +---------+
 namespace actions {
 
 using signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
@@ -179,12 +187,16 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
+using DefaultValueSetter = void (*)(ArgValue &);
+
 template <typename T>
 void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
 
-using DefaultValueSetter = void (*)(ArgValue &);
+// +-----+
+// | Arg |
+// +-----+
 
 struct Arg {
   ArgumentType type = ArgumentType::POSITIONAL;
@@ -277,13 +289,6 @@ struct Arg {
 
   consteval Arg set(char const *value) const noexcept { return set(std::string_view(value)); }
 
-  consteval void validate() const noexcept {
-    if (is_required && has_default())
-      throw "A required argument cannot have a default value";
-    if (has_default() && has_set() && default_value.index() != set_value.index())
-      throw "The default and set values must be of the same type";
-  }
-
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0; }
   constexpr bool has_set() const noexcept { return set_value.index() != 0; }
@@ -327,25 +332,43 @@ bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
 }
 
 consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
-  lhs.validate();
-  rhs.validate();
+  validate_arg(lhs);
+  validate_arg(rhs);
   return std::array<Arg, 2>{lhs, rhs};
 }
 
 template <std::size_t N>
 consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcept {
-  other.validate();
-  if (std::find_if(args.begin(), args.end(), [&other](auto const &arg) {
-        return arg.name == other.name || (arg.has_abbrev() && other.has_abbrev() && arg.abbrev == other.abbrev);
-      }) != args.end()) {
-    throw "Trying to add argument with a duplicate name";
-  }
+  validate_arg(other);
+  validate_args(args, other);
 
   std::array<Arg, N + 1> newargs;
   std::copy_n(args.begin(), N, newargs.begin());
   newargs[N] = other;
   return newargs;
 }
+
+consteval void validate_arg(Arg const &arg) noexcept {
+  if (arg.is_required && arg.has_default())
+    throw "A required argument cannot have a default value";
+  if (arg.has_default() && arg.has_set() && arg.default_value.index() != arg.set_value.index())
+    throw "The default and set values must be of the same type";
+}
+
+template <std::size_t N>
+consteval void validate_args(std::array<Arg, N> const &args, Arg const &other) noexcept {
+  if (std::find_if(args.begin(), args.end(), [&other](auto const &arg) {
+        auto const same_name = arg.name == other.name;
+        auto const same_abbrev = arg.has_abbrev() && other.has_abbrev() && arg.abbrev == other.abbrev;
+        return same_name || same_abbrev;
+      }) != args.end()) {
+    throw "Trying to add argument with a duplicate name";
+  }
+}
+
+// +----------------------+
+// | Arg creation helpers |
+// +----------------------+
 
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
@@ -406,6 +429,10 @@ struct ParsedOption {
 };
 
 ParsedOption parse_option(std::string_view const) noexcept;
+
+// +---------+
+// | Program |
+// +---------+
 
 class Program {
 public:
