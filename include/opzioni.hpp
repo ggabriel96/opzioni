@@ -69,7 +69,7 @@ std::string builtin2str(BuiltinType const &) noexcept;
 // +----------------------+
 // | forward declarations |
 // +----------------------+
-enum struct ArgType { POSITIONAL, OPTION, FLAG  };
+enum struct ArgType { POS, OPT, FLG };
 
 struct Arg;
 struct ArgMap;
@@ -199,7 +199,7 @@ void set_empty_vector(ArgValue &arg) noexcept {
 // +-----+
 
 struct Arg {
-  ArgType type = ArgType::POSITIONAL;
+  ArgType type = ArgType::POS;
   std::string_view name{};
   std::string_view abbrev{};
   std::string_view description{};
@@ -234,7 +234,7 @@ struct Arg {
 
   template <typename T = std::string_view>
   consteval Arg gather(std::size_t amount) const noexcept {
-    if (this->type == ArgType::FLAG)
+    if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
     auto arg = *this;
     arg.gather_info.amount = amount;
@@ -280,7 +280,7 @@ struct Arg {
 
   template <typename T>
   consteval Arg set(T value) const noexcept {
-    if (this->type == ArgType::POSITIONAL)
+    if (this->type == ArgType::POS)
       throw "Positionals cannot use set value because they always take a value from the command-line";
     auto arg = Arg::With(*this, this->default_value, value);
     arg.action_fn = actions::assign<T>;
@@ -376,11 +376,8 @@ consteval void validate_args(std::array<Arg, N> const &args, Arg const &other) n
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
     throw "Abbreviations must be a single letter";
-  return Arg{.type = ArgType::FLAG,
-             .name = name,
-             .abbrev = abbrev,
-             .set_value = true,
-             .action_fn = actions::assign<bool>};
+  return Arg{
+      .type = ArgType::FLG, .name = name, .abbrev = abbrev, .set_value = true, .action_fn = actions::assign<bool>};
 }
 
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
@@ -388,13 +385,13 @@ consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
     throw "Abbreviations must be a single letter";
-  return Arg{.type = ArgType::OPTION, .name = name, .abbrev = abbrev};
+  return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev};
 }
 
 consteval Arg Opt(std::string_view name) noexcept { return Opt(name, {}); }
 
 consteval Arg Pos(std::string_view name) noexcept {
-  return Arg{.type = ArgType::POSITIONAL, .name = name, .is_required = true};
+  return Arg{.type = ArgType::POS, .name = name, .is_required = true};
 }
 
 consteval Arg Help(std::string_view description) noexcept {
@@ -600,7 +597,7 @@ void assign_to(ArgMap &map, std::string_view const name, T value) {
 
 template <typename T>
 void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
-  if (arg.type != ArgType::FLAG && parsed_value)
+  if (arg.type != ArgType::FLG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
     assign_to(map, arg.name, std::get<T>(arg.set_value));
@@ -621,7 +618,7 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
 
 template <typename Elem>
 void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
-  if (arg.type != ArgType::FLAG && parsed_value)
+  if (arg.type != ArgType::FLG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
     append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
