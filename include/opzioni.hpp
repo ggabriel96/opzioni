@@ -204,7 +204,7 @@ void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
 
-using default_value_setter = void (*)(ArgValue &);
+using DefaultValueSetter = void (*)(ArgValue &);
 
 template <ArgumentType type>
 class Arg {
@@ -217,7 +217,7 @@ public:
   std::conditional_t<type != ArgumentType::POSITIONAL, BuiltinType, std::monostate> set_value{};
   actions::signature<type> action_fn = actions::assign<std::string_view>;
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_info{};
-  default_value_setter default_setter = nullptr;
+  DefaultValueSetter default_setter = nullptr;
 
   consteval Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
 
