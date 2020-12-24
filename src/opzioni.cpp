@@ -155,21 +155,12 @@ Program &Program::add(Cmd cmd) {
 }
 
 Program &Program::add(Arg arg) {
-  if (arg.type == ArgumentType::POSITIONAL) {
-    if (has_cmd(arg.name) || has_pos(arg.name))
-      throw ArgumentAlreadyExists(arg.name);
+  if (arg.type == ArgumentType::POSITIONAL)
     _positionals.push_back(arg);
-  } else {
-    if (has_flg(arg.name) || has_opt(arg.name))
-      throw ArgumentAlreadyExists(arg.name);
-    if (arg.has_abbrev() && (has_flg(arg.abbrev) || has_opt(arg.abbrev)))
-      throw ArgumentAlreadyExists(arg.abbrev);
-
-    if (arg.type == ArgumentType::FLAG)
-      _flags.push_back(arg);
-    else
-      _options.push_back(arg);
-  }
+  else if (arg.type == ArgumentType::OPTION)
+    _options.push_back(arg);
+  else
+    _flags.push_back(arg);
   return *this;
 }
 

@@ -335,6 +335,11 @@ consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
 template <std::size_t N>
 consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcept {
   other.validate();
+  if (std::find_if(args.begin(), args.end(), [&other](auto const &arg) {
+        return arg.name == other.name || (arg.has_abbrev() && other.has_abbrev() && arg.abbrev == other.abbrev);
+      }) != args.end()) {
+    throw "Trying to add argument with a duplicate name";
+  }
 
   std::array<Arg, N + 1> newargs;
   std::copy_n(args.begin(), N, newargs.begin());
