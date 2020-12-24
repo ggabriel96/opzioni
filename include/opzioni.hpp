@@ -326,8 +326,10 @@ struct Arg {
 bool constexpr operator<(Arg const &lhs, Arg const &rhs) noexcept {
   if (lhs.type != rhs.type)
     return lhs.type < rhs.type;
+
   if (lhs.is_required == rhs.is_required)
     return lhs.name < rhs.name;
+
   return lhs.is_required && !rhs.is_required;
 }
 
