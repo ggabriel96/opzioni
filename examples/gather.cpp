@@ -6,10 +6,11 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
+  using opzioni::Help, opzioni::Version;
   using opzioni::Program, opzioni::Pos, opzioni::Opt;
 
   auto program =
-      Program("gather").auto_version("1.0").intro("A short example file to illustrate the gather feature").auto_help() +
+      Program("gather").intro("A short example file to illustrate the gather feature") + Help + Version +
       Pos("gather-all")
           .help("This is the equivalent of Python's argparse `nargs` with `+`: it requires at least one value and "
                 "consumes all of them into a vector. Note that precisely this type of argument is somewhat limiting "

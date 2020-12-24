@@ -4,10 +4,11 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
+  using opzioni::Help, opzioni::Version;
   using opzioni::Program, opzioni::Pos, opzioni::Cmd;
 
   auto clone =
-      Program("clone").intro("Clone a repository into a new directory").auto_help() +
+      Program("clone").intro("Clone a repository into a new directory") +
       Pos("repository")
           .help("The (possibly remote) repository to clone from."
                 " See the GIT URLS section below for more information on specifying repositories.") +
@@ -19,11 +20,9 @@ int main(int argc, char const *argv[]) {
           .otherwise("");
 
   auto git = Program("git", "git CLI simulation")
-                 .auto_version("0.1")
                  .intro("An example to illustrate subcommands via simulation of the git interface")
-                 .details("See 'git <command> --help' to read about a specific subcommand.")
-                 .auto_help() +
-             Cmd(clone);
+                 .details("See 'git <command> --help' to read about a specific subcommand.") +
+             Help + Version + Cmd(clone);
 
   auto const args = git(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);

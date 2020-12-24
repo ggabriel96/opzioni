@@ -196,24 +196,6 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
   return *this;
 }
 
-Program &Program::auto_help() noexcept { return this->auto_help(actions::print_help); }
-
-Program &Program::auto_help(actions::signature<ArgumentType::FLAG> action) noexcept {
-  this->add(Flg("help", "h").help("Display this information").action(action));
-  this->has_auto_help = true;
-  return *this;
-}
-
-Program &Program::auto_version(std::string_view version) noexcept {
-  return this->auto_version(version, actions::print_version);
-}
-
-Program &Program::auto_version(std::string_view version, actions::signature<ArgumentType::FLAG> action) noexcept {
-  this->version = version;
-  this->add(Flg("version", "V").help("Display the software version").action(action));
-  return *this;
-}
-
 Program &Program::add(Cmd cmd) {
   if (has_cmd(cmd.program->name) || has_pos(cmd.program->name))
     throw ArgumentAlreadyExists(cmd.program->name);

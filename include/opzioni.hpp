@@ -219,83 +219,100 @@ public:
   std::conditional_t<type != ArgumentType::FLAG, GatherAmount, std::monostate> gather_info{};
   default_value_setter default_setter = nullptr;
 
-  Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
-  Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::FLAG)
-      : name(name), abbrev(abbrev), set_value(true), action_fn(actions::assign<bool>) {}
+  consteval Arg(std::string_view name) requires(type == ArgumentType::FLAG) : Arg(name, {}) {}
 
-  Arg(std::string_view name) requires(type == ArgumentType::OPTION) : Arg(name, {}) {}
-  Arg(std::string_view name, char const (&abbrev)[2]) requires(type == ArgumentType::OPTION)
-      : name(name), abbrev(abbrev) {}
+  consteval Arg(std::string_view name, std::string_view abbrev) requires(type == ArgumentType::FLAG)
+      : name(name), abbrev(abbrev), set_value(true), action_fn(actions::assign<bool>) {
+    if (!abbrev.empty() && abbrev.length() != 1) {
+      throw "abbreviations must be a single letter"; // placeholder
+    }
+  }
 
-  Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
+  consteval Arg(std::string_view name) requires(type == ArgumentType::OPTION) : Arg(name, {}) {}
 
-  Arg<type> &action(actions::signature<type> action_fn) noexcept {
-    this->action_fn = action_fn;
-    return *this;
+  consteval Arg(std::string_view name, std::string_view abbrev) requires(type == ArgumentType::OPTION)
+      : name(name), abbrev(abbrev) {
+    if (!abbrev.empty() && abbrev.length() != 1) {
+      throw "abbreviations must be a single letter"; // placeholder
+    }
+  }
+
+  consteval Arg(std::string_view name) requires(type == ArgumentType::POSITIONAL) : name(name), is_required(true) {}
+
+  consteval Arg<type> action(actions::signature<type> action_fn) const noexcept {
+    auto arg = *this;
+    arg.action_fn = action_fn;
+    return arg;
   }
 
   template <typename T>
-  Arg<type> &append() noexcept {
-    this->action_fn = actions::append<T>;
-    this->default_setter = set_empty_vector<T>;
-    return *this;
+  consteval Arg<type> append() const noexcept {
+    auto arg = *this;
+    arg.action_fn = actions::append<T>;
+    arg.default_setter = set_empty_vector<T>;
+    return arg;
   }
 
   template <typename T>
-  Arg<type> &csv_of() noexcept {
-    this->action_fn = actions::csv<T>;
-    this->default_setter = set_empty_vector<T>;
-    return *this;
+  consteval Arg<type> csv_of() const noexcept {
+    auto arg = *this;
+    arg.action_fn = actions::csv<T>;
+    arg.default_setter = set_empty_vector<T>;
+    return arg;
   }
 
   template <typename T = std::string_view>
-  Arg<type> &gather() noexcept requires(type != ArgumentType::FLAG) {
+  consteval Arg<type> gather(std::size_t amount) const noexcept requires(type != ArgumentType::FLAG) {
+    auto arg = *this;
+    arg.gather_info.amount = amount;
+    arg.action_fn = actions::append<T>;
+    if (amount != 1)
+      arg.default_setter = set_empty_vector<T>;
+    return arg;
+  }
+
+  template <typename T = std::string_view>
+  consteval Arg<type> gather() const noexcept requires(type != ArgumentType::FLAG) {
     return gather<T>(0);
   }
 
-  template <typename T = std::string_view>
-  Arg<type> &gather(std::size_t amount) noexcept requires(type != ArgumentType::FLAG) {
-    this->gather_info.amount = amount;
-    if (amount != 1)
-      default_setter = set_empty_vector<T>;
-    action_fn = actions::append<T>;
-    return *this;
-  }
-
-  Arg<type> &help(std::string_view description) noexcept {
-    this->description = description;
-    return *this;
+  consteval Arg<type> help(std::string_view description) const noexcept {
+    auto arg = *this;
+    arg.description = description;
+    return arg;
   }
 
   template <typename T>
-  Arg<type> &of() noexcept {
-    this->action_fn = actions::assign<T>;
-    return *this;
+  consteval Arg<type> of() const noexcept {
+    auto arg = *this;
+    arg.action_fn = actions::assign<T>;
+    return arg;
   }
 
   template <typename T>
-  Arg<type> &otherwise(T value) noexcept {
-    default_value = std::move(value);
-    action_fn = actions::assign<T>;
-    is_required = false;
-    return *this;
+  consteval Arg<type> otherwise(T value) const noexcept {
+    Arg<type> arg(*this, value, this->set_value);
+    arg.action_fn = actions::assign<T>;
+    arg.is_required = false;
+    return arg;
   }
 
-  Arg<type> &otherwise(char const *value) noexcept { return otherwise(std::string_view(value)); }
+  consteval Arg<type> otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
 
-  Arg<type> &required() noexcept {
-    this->is_required = true;
-    return *this;
+  consteval Arg<type> required() const noexcept {
+    auto arg = *this;
+    arg.is_required = true;
+    return arg;
   }
 
   template <typename T>
-  Arg<type> &set(T value) noexcept requires(type != ArgumentType::POSITIONAL) {
-    set_value = std::move(value);
-    action_fn = actions::assign<T>;
-    return *this;
+  consteval Arg<type> set(T value) const noexcept requires(type != ArgumentType::POSITIONAL) {
+    Arg<type> arg(*this, this->default_value, value);
+    arg.action_fn = actions::assign<T>;
+    return arg;
   }
 
-  Arg<type> &set(char const *value) noexcept requires(type != ArgumentType::POSITIONAL) {
+  consteval Arg<type> set(char const *value) const noexcept requires(type != ArgumentType::POSITIONAL) {
     return set(std::string_view(value));
   }
 
@@ -323,7 +340,16 @@ public:
   std::string format_for_usage_summary() const noexcept;
 
 private:
+  // workaround for not being able to change the value of a variant after it's been constructed
+  template <typename Default, typename Set>
+  consteval Arg(Arg<type> const &other, Default d, Set s)
+      : name(other.name), abbrev(other.abbrev), description(other.description), is_required(other.is_required),
+        default_value(d), set_value(s), action_fn(other.action_fn), gather_info(other.gather_info),
+        default_setter(other.default_setter) {}
 };
+
+constexpr auto Help = Flg("help", "h").help("Display this information").action(actions::print_help);
+constexpr auto Version = Flg("version", "V").help("Display the software version").action(actions::print_version);
 
 template <ArgumentType type>
 bool operator<(Arg<type> const &lhs, Arg<type> const &rhs) noexcept {
@@ -378,10 +404,6 @@ public:
 
   Program &max_width(std::size_t) noexcept;
   Program &on_error(opzioni::error_handler) noexcept;
-  Program &auto_help() noexcept;
-  Program &auto_help(actions::signature<ArgumentType::FLAG>) noexcept;
-  Program &auto_version(std::string_view) noexcept;
-  Program &auto_version(std::string_view, actions::signature<ArgumentType::FLAG>) noexcept;
 
   ArgMap operator()(int, char const *[]) const;
   ArgMap operator()(std::span<char const *>) const;

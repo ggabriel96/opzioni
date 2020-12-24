@@ -8,16 +8,16 @@
 
 int main(int argc, char const *argv[]) {
   using fmt::print;
+  using opzioni::Help, opzioni::Version;
   using opzioni::Program, opzioni::Flg, opzioni::Opt, opzioni::Pos;
 
   auto program =
       Program("main")
-          .auto_version("1.0")
+          .v("1.0")
           .intro("A short example illustrating opzioni's simpler features")
           .details("This example only covers simple positionals, options, and flags. For examples of more"
-                   " complicated parse actions or subcommands, please take a look at the other examples.")
-          .auto_help() +
-      Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
+                   " complicated parse actions or subcommands, please take a look at the other examples.") +
+      Help + Version + Pos("name").help("Your first name") + Opt("double", "d").help("A double").otherwise(7.11) +
       Opt("last-name").help("Your last name") +
       Opt("o").help("We also support options with only short names").otherwise("oh") +
       Opt("num", "n").append<int>().help("Creates a vector of numbers with each appearence of this argument") +
