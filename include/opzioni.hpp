@@ -438,7 +438,7 @@ public:
 
   std::size_t msg_width = 100;
   opzioni::error_handler error_handler = print_error;
-  bool has_auto_help{false};
+  // bool has_auto_help{false};
   std::size_t positionals_amount = 0;
 
   Program() = default;
