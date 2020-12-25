@@ -8,7 +8,8 @@ int main(int argc, char const *argv[]) {
   using opzioni::Program, opzioni::Pos, opzioni::Cmd;
 
   auto clone = Program("clone").intro("Clone a repository into a new directory") +
-               Pos("repository")
+               Help() *
+                   Pos("repository")
                        .help("The (possibly remote) repository to clone from."
                              " See the GIT URLS section below for more information on specifying repositories.") *
                    Pos("directory")
