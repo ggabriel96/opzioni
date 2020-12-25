@@ -452,12 +452,7 @@ public:
   Program &max_width(std::size_t) noexcept;
   Program &on_error(opzioni::error_handler) noexcept;
 
-  ArgMap operator()(int, char const *[]) const;
-  ArgMap operator()(std::span<char const *>) const;
-
   Program &operator+(Cmd cmd) { return add(cmd); }
-
-  // Program &operator+(Arg arg) { return add(arg); }
 
   template <std::size_t N>
   Program &operator+(std::array<Arg, N> args) {
@@ -471,6 +466,9 @@ public:
     std::stable_sort(std::next(_args.begin(), positionals_amount), _args.end());
     return *this;
   }
+
+  ArgMap operator()(int, char const *[]) const;
+  ArgMap operator()(std::span<char const *>) const;
 
   std::vector<Arg> const &args() const noexcept { return _args; }
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }

@@ -147,16 +147,16 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
   return *this;
 }
 
+Program &Program::add(Arg arg) {
+  _args.push_back(arg);
+  positionals_amount += (arg.type == ArgType::POS);
+  return *this;
+}
+
 Program &Program::add(Cmd cmd) {
   if (has_cmd(cmd.program->name))
     throw ArgumentAlreadyExists(cmd.program->name);
   _cmds.push_back(cmd);
-  return *this;
-}
-
-Program &Program::add(Arg arg) {
-  _args.push_back(arg);
-  positionals_amount += (arg.type == ArgType::POS);
   return *this;
 }
 
