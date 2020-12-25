@@ -239,8 +239,10 @@ struct Arg {
     auto arg = *this;
     arg.gather_info.amount = amount;
     arg.action_fn = actions::append<T>;
-    if (amount != 1)
+    if (amount != 1) {
+      arg.is_required = false;
       arg.default_setter = set_empty_vector<T>;
+    }
     return arg;
   }
 
