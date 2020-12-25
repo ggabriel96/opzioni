@@ -360,6 +360,8 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 }
 
 consteval void validate_arg(Arg const &arg) noexcept {
+  if (arg.has_abbrev() && arg.abbrev.length() != 1)
+    throw "Abbreviations must be a single letter";
   if (arg.is_required && arg.has_default())
     throw "A required argument cannot have a default value";
   if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
@@ -378,8 +380,6 @@ consteval void validate_args(std::array<Arg, N> const &args, Arg const &other) n
 // +----------------------+
 
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
-  if (!abbrev.empty() && abbrev.length() != 1)
-    throw "Abbreviations must be a single letter";
   return Arg{
       .type = ArgType::FLG, .name = name, .abbrev = abbrev, .set_value = true, .action_fn = actions::assign<bool>};
 }
@@ -387,8 +387,6 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
-  if (!abbrev.empty() && abbrev.length() != 1)
-    throw "Abbreviations must be a single letter";
   return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev};
 }
 
