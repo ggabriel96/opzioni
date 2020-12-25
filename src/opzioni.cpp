@@ -148,7 +148,7 @@ Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
 }
 
 Program &Program::add(Cmd cmd) {
-  if (has_cmd(cmd.program->name) || has_pos(cmd.program->name))
+  if (has_cmd(cmd.program->name))
     throw ArgumentAlreadyExists(cmd.program->name);
   _cmds.push_back(cmd);
   return *this;
