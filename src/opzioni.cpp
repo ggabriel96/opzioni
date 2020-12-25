@@ -208,7 +208,7 @@ void Program::check_contains_required(ArgMap const &map) const {
 void Program::set_defaults(ArgMap &map) const noexcept {
   using std::views::filter;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  for (auto const &arg : _args | filter(wasnt_parsed))
+  for (auto const &arg : _args | filter(wasnt_parsed) | filter(&Arg::has_default))
     arg.set_default_to(map.args[arg.name]);
 }
 
