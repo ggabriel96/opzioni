@@ -358,10 +358,18 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 }
 
 consteval void validate_arg(Arg const &arg) noexcept {
+  if (arg.type == ArgType::POS && arg.has_set())
+    throw "Positionals cannot use set value because they always take a value from the command-line";
+
+  if (arg.type == ArgType::FLG && arg.gather_amount != 1) // 1 is the default
+    throw "Flags cannot use gather because they do not take values from the command-line";
+
   if (arg.has_abbrev() && arg.abbrev.length() != 1)
     throw "Abbreviations must be a single letter";
+
   if (arg.is_required && arg.has_default())
     throw "A required argument cannot have a default value";
+
   if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
       arg.default_value.index() != arg.set_value.index())
     throw "The default and set values must be of the same type";
