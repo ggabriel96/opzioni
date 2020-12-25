@@ -290,13 +290,13 @@ struct Arg {
   consteval Arg set(char const *value) const noexcept { return set(std::string_view(value)); }
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
-  constexpr bool has_default() const noexcept { return default_value.index() != 0; }
+  constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
   constexpr bool has_set() const noexcept { return set_value.index() != 0; }
 
   void set_default_to(ArgValue &arg) const noexcept {
     if (default_setter != nullptr) {
       default_setter(arg);
-    } else if (has_default()) {
+    } else if (default_value.index() != 0) {
       ArgValueSetter setter(arg);
       std::visit(setter, default_value);
     }
@@ -353,7 +353,8 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 consteval void validate_arg(Arg const &arg) noexcept {
   if (arg.is_required && arg.has_default())
     throw "A required argument cannot have a default value";
-  if (arg.has_default() && arg.has_set() && arg.default_value.index() != arg.set_value.index())
+  if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
+      arg.default_value.index() != arg.set_value.index())
     throw "The default and set values must be of the same type";
 }
 
