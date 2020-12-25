@@ -277,7 +277,7 @@ std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args
   }
   auto const arg = _args[positional_idx];
   // if gather amount is 0, we gather everything else
-  auto const gather_amount = arg.gather_info.amount == 0 ? args.size() : arg.gather_info.amount;
+  auto const gather_amount = arg.gather_amount == 0 ? args.size() : arg.gather_amount;
   if (gather_amount > args.size()) {
     throw MissingValue(arg.name, gather_amount, args.size());
   }
@@ -302,7 +302,7 @@ std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
 
 std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
   auto const &arg = *find_arg(option.name, ArgType::OPT);
-  auto const gather_amount = arg.gather_info.amount == 0 ? args.size() - 1 : arg.gather_info.amount;
+  auto const gather_amount = arg.gather_amount == 0 ? args.size() - 1 : arg.gather_amount;
   if (option.value) {
     if (gather_amount != 1) {
       throw MissingValue(arg.name, gather_amount, 1);

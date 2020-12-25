@@ -114,10 +114,6 @@ void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::st
 // | arguments |
 // +-----------+
 
-struct GatherAmount {
-  std::size_t amount = 1;
-};
-
 struct ArgValue {
   ExternalType value{};
 
@@ -207,7 +203,7 @@ struct Arg {
   BuiltinType default_value{};
   BuiltinType set_value{};
   actions::signature action_fn = actions::assign<std::string_view>;
-  GatherAmount gather_info{};
+  std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
 
   consteval Arg action(actions::signature action_fn) const noexcept {
@@ -237,7 +233,7 @@ struct Arg {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
     auto arg = *this;
-    arg.gather_info.amount = amount;
+    arg.gather_amount = amount;
     arg.action_fn = actions::append<T>;
     if (amount != 1) {
       arg.is_required = false;
@@ -327,7 +323,7 @@ struct Arg {
                .default_value = d,
                .set_value = s,
                .action_fn = other.action_fn,
-               .gather_info = other.gather_info,
+               .gather_amount = other.gather_amount,
                .default_setter = other.default_setter};
   }
 };
