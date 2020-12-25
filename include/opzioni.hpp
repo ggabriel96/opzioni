@@ -461,6 +461,7 @@ public:
 
   template <std::size_t N>
   Program &operator+(std::array<Arg, N> args) {
+    _args.reserve(N);
     for (auto &&arg : args)
       add(arg);
 
