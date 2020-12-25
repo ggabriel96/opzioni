@@ -387,7 +387,6 @@ HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
       program_description(program.description), positionals_amount(program.positionals_amount), cmds(program.cmds()),
       args(program.args()) {
   std::sort(cmds.begin(), cmds.end());
-  std::sort(args.begin(), args.end()); // @TODO: should not sort positionals!
 }
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {

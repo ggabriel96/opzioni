@@ -323,15 +323,7 @@ struct Arg {
   }
 };
 
-bool constexpr operator<(Arg const &lhs, Arg const &rhs) noexcept {
-  if (lhs.type != rhs.type)
-    return lhs.type < rhs.type;
-
-  if (lhs.is_required == rhs.is_required)
-    return lhs.name < rhs.name;
-
-  return lhs.is_required && !rhs.is_required;
-}
+bool constexpr operator<(Arg const &lhs, Arg const &rhs) noexcept { return lhs.name < rhs.name; }
 
 bool constexpr operator==(Arg const &lhs, Arg const &rhs) noexcept {
   auto const same_name = lhs.name == rhs.name;
@@ -471,6 +463,11 @@ public:
   Program &operator+(std::array<Arg, N> args) {
     for (auto &&arg : args)
       add(arg);
+
+    // putting all positionals first without changing their relative order, then sorting all other args.
+    // We wouldn't need the following sort, but then it's already done if we end up printing the help text.
+    std::ranges::stable_partition(_args, [](auto const &arg) { return arg.type == ArgType::POS; });
+    std::stable_sort(std::next(_args.begin(), positionals_amount), _args.end());
     return *this;
   }
 
