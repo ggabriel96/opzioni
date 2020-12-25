@@ -332,9 +332,9 @@ struct Arg {
   }
 };
 
-bool constexpr operator<(Arg const &lhs, Arg const &rhs) noexcept { return lhs.name < rhs.name; }
+constexpr bool operator<(Arg const &lhs, Arg const &rhs) noexcept { return lhs.name < rhs.name; }
 
-bool constexpr operator==(Arg const &lhs, Arg const &rhs) noexcept {
+constexpr bool operator==(Arg const &lhs, Arg const &rhs) noexcept {
   auto const same_name = lhs.name == rhs.name;
   auto const same_abbrev = lhs.has_abbrev() && rhs.has_abbrev() && lhs.abbrev == rhs.abbrev;
   return same_name || same_abbrev;
