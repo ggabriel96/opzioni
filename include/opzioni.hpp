@@ -222,6 +222,8 @@ struct Arg {
 
   template <typename T>
   consteval Arg csv_of() const noexcept {
+    if (this->type == ArgType::FLG)
+      throw "Flags cannot use the csv action because they do not take values from the command-line";
     auto arg = *this;
     arg.action_fn = actions::csv<T>;
     arg.default_setter = set_empty_vector<T>;
