@@ -67,21 +67,7 @@ std::string Arg::format_base_usage() const noexcept {
   return fmt::format("{}{}", dashes, name);
 }
 
-std::string Arg::format_for_help_description() const noexcept {
-  std::string format(description);
-  if (has_set() || has_default()) {
-    format += " (";
-    if (has_set())
-      format += fmt::format("sets: {}", builtin2str(set_value));
-    if (has_default()) {
-      if (has_set())
-        format += ", ";
-      format += fmt::format("default: {}", builtin2str(default_value));
-    }
-    format += ")";
-  }
-  return format;
-}
+std::string Arg::format_for_help_description() const noexcept { return std::string(description); }
 
 std::string Arg::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
