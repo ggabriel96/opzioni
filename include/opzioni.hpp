@@ -286,6 +286,8 @@ struct Arg {
   }
 
   consteval Arg required() const noexcept {
+    if (this->has_default())
+      throw "A required argument cannot have a default value";
     auto arg = *this;
     arg.is_required = true;
     return arg;
