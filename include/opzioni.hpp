@@ -366,6 +366,9 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 }
 
 consteval void validate_arg(Arg const &arg) noexcept {
+  if (arg.type == ArgType::POS && arg.has_abbrev())
+    throw "Positionals cannot have abbreviations";
+
   if (arg.type == ArgType::POS && arg.has_set())
     throw "Positionals cannot use set value because they always take a value from the command-line";
 
