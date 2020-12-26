@@ -214,7 +214,8 @@ struct Arg {
 
   template <typename T>
   consteval Arg append() const noexcept {
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    arg.is_required = false;
     arg.action_fn = actions::append<T>;
     arg.default_setter = set_empty_vector<T>;
     return arg;
@@ -224,7 +225,8 @@ struct Arg {
   consteval Arg csv_of() const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    arg.is_required = false;
     arg.action_fn = actions::csv<T>;
     arg.default_setter = set_empty_vector<T>;
     return arg;
@@ -234,13 +236,17 @@ struct Arg {
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
+    if (amount != 1) {
+      auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+      arg.is_required = false;
+      arg.gather_amount = amount;
+      arg.action_fn = actions::append<T>;
+      arg.default_setter = set_empty_vector<T>;
+      return arg;
+    }
     auto arg = *this;
     arg.gather_amount = amount;
     arg.action_fn = actions::append<T>;
-    if (amount != 1) {
-      arg.is_required = false;
-      arg.default_setter = set_empty_vector<T>;
-    }
     return arg;
   }
 
@@ -386,8 +392,12 @@ consteval void validate_args(std::array<Arg, N> const &args, Arg const &other) n
 // +----------------------+
 
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
-  return Arg{
-      .type = ArgType::FLG, .name = name, .abbrev = abbrev, .set_value = true, .action_fn = actions::assign<bool>};
+  return Arg{.type = ArgType::FLG,
+             .name = name,
+             .abbrev = abbrev,
+             .default_value = false,
+             .set_value = true,
+             .action_fn = actions::assign<bool>};
 }
 
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
