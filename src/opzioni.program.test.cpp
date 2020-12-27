@@ -31,7 +31,7 @@ SCENARIO("adding arguments", "[Program]") {
 
       REQUIRE(program.args().size() == 2);
       THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 2); }
-      THEN("they should be added as first arguments") {
+      THEN("they should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos1");
         REQUIRE(program.args()[1].name == "pos2");
       }
@@ -42,7 +42,7 @@ SCENARIO("adding arguments", "[Program]") {
 
       REQUIRE(program.args().size() == 5);
       THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 5); }
-      THEN("they should be added as first arguments") {
+      THEN("they should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos5");
         REQUIRE(program.args()[1].name == "pos2");
         REQUIRE(program.args()[2].name == "pos4");
