@@ -288,6 +288,43 @@ SCENARIO("adding commands", "[Program][cmds]") {
         REQUIRE(cmd.cmds().size() == 0);
         REQUIRE(cmd.positionals_amount == 0);
       }
+
+      AND_GIVEN("another command, cmd2") {
+        auto const cmd2_name = "cmd2";
+        Program cmd2(cmd2_name);
+
+        THEN("cmd2 should initially have no arguments") {
+          REQUIRE(cmd2.args().size() == 0);
+          REQUIRE(cmd2.cmds().size() == 0);
+          REQUIRE(cmd2.positionals_amount == 0);
+        }
+
+        WHEN("cmd2 is added as command of program") {
+          program + Cmd(cmd2);
+
+          THEN("cmd2 should be added as second command of program") {
+            REQUIRE(program.cmds().size() == 2);
+            REQUIRE(program.cmds()[0].program == &cmd);
+            REQUIRE(program.cmds()[1].program == &cmd2);
+          }
+          THEN("program's args should not be changed") {
+            REQUIRE(program.args().size() == 0);
+            REQUIRE(program.positionals_amount == 0);
+          }
+          THEN("cmd should not be changed") {
+            REQUIRE(cmd.name == cmd_name);
+            REQUIRE(cmd.args().size() == 0);
+            REQUIRE(cmd.cmds().size() == 0);
+            REQUIRE(cmd.positionals_amount == 0);
+          }
+          THEN("cmd2 should not be changed") {
+            REQUIRE(cmd2.name == cmd2_name);
+            REQUIRE(cmd2.args().size() == 0);
+            REQUIRE(cmd2.cmds().size() == 0);
+            REQUIRE(cmd2.positionals_amount == 0);
+          }
+        }
+      }
     }
   }
 }
