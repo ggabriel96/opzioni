@@ -92,6 +92,57 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
         REQUIRE(program.cmds().size() == 0);
       }
     }
+
+    WHEN("max_width is called") {
+      program.max_width(80);
+
+      THEN("only the msg_width should have changed") {
+        REQUIRE(program.msg_width == 80);
+        REQUIRE(program.name.empty());
+        REQUIRE(program.version.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.introduction.empty());
+        REQUIRE(program.description.empty());
+        REQUIRE(program.error_handler == print_error);
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
+
+    WHEN("on_error is called") {
+      program.on_error(nullptr);
+
+      THEN("only the error_handler should have changed") {
+        REQUIRE(program.error_handler == nullptr);
+        REQUIRE(program.name.empty());
+        REQUIRE(program.version.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.introduction.empty());
+        REQUIRE(program.description.empty());
+        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
+
+    WHEN("intro, details, v, max_width, and on_error are called") {
+      program.intro("intro").details("details").v("1.0").max_width(80).on_error(nullptr);
+
+      THEN("all five should have changed") {
+        REQUIRE(program.introduction == "intro");
+        REQUIRE(program.description == "details");
+        REQUIRE(program.version == "1.0");
+        REQUIRE(program.msg_width == 80);
+        REQUIRE(program.error_handler == nullptr);
+        REQUIRE(program.name.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
   }
 
   GIVEN("a Program initialized with a name") {
