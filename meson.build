@@ -5,8 +5,6 @@ project(
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
 
-include_dir = include_directories('include/')
-
 # +--------------+
 # | Dependencies |
 # +--------------+
@@ -15,6 +13,7 @@ fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
 # +--------------------+
 # | Library definition |
 # +--------------------+
+include_dir = include_directories('include/')
 opzioni_lib = library(
     'opzioni',
     ['src/converters.cpp', 'src/opzioni.cpp', 'src/string.cpp'],
