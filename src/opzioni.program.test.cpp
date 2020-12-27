@@ -14,6 +14,7 @@ SCENARIO("adding arguments", "[Program]") {
 
     THEN("it should initially have no arguments") {
       REQUIRE(program.args().size() == 0);
+      REQUIRE(program.cmds().size() == 0);
       REQUIRE(program.positionals_amount == 0);
     }
 
@@ -21,7 +22,7 @@ SCENARIO("adding arguments", "[Program]") {
       program + std::array{Pos("pos")};
 
       REQUIRE(program.args().size() == 1);
-
+      THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 1); }
       THEN("it should be added as first argument") { REQUIRE(program.args()[0].name == "pos"); }
     }
@@ -30,6 +31,7 @@ SCENARIO("adding arguments", "[Program]") {
       program + Pos("pos1") * Pos("pos2");
 
       REQUIRE(program.args().size() == 2);
+      THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 2); }
       THEN("they should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos1");
@@ -41,6 +43,7 @@ SCENARIO("adding arguments", "[Program]") {
       program + Pos("pos5") * Pos("pos2") * Pos("pos4") * Pos("pos1") * Pos("pos3");
 
       REQUIRE(program.args().size() == 5);
+      THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 5); }
       THEN("they should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos5");
@@ -55,6 +58,7 @@ SCENARIO("adding arguments", "[Program]") {
       program + Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") * Pos("pos2") * Opt("opt1") * Flg("flg2");
 
       REQUIRE(program.args().size() == 7);
+      THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 3); }
       THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos3");
