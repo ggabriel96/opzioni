@@ -28,7 +28,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("intro is called") {
       program.intro("intro");
 
-      THEN("only the introduction should have changed") {
+      THEN("only the introduction should be changed") {
         REQUIRE(program.introduction == "intro");
         REQUIRE(program.name.empty());
         REQUIRE(program.version.empty());
@@ -45,7 +45,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("details is called") {
       program.details("details");
 
-      THEN("only the description should have changed") {
+      THEN("only the description should be changed") {
         REQUIRE(program.description == "details");
         REQUIRE(program.name.empty());
         REQUIRE(program.version.empty());
@@ -62,7 +62,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("v is called") {
       program.v("1.0");
 
-      THEN("only the version should have changed") {
+      THEN("only the version should be changed") {
         REQUIRE(program.version == "1.0");
         REQUIRE(program.name.empty());
         REQUIRE(program.title.empty());
@@ -79,7 +79,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("intro, details, and v are called") {
       program.intro("intro").details("details").v("1.0");
 
-      THEN("all three should have changed") {
+      THEN("all three should be changed") {
         REQUIRE(program.introduction == "intro");
         REQUIRE(program.description == "details");
         REQUIRE(program.version == "1.0");
@@ -96,7 +96,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("max_width is called") {
       program.max_width(80);
 
-      THEN("only the msg_width should have changed") {
+      THEN("only the msg_width should be changed") {
         REQUIRE(program.msg_width == 80);
         REQUIRE(program.name.empty());
         REQUIRE(program.version.empty());
@@ -113,7 +113,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("on_error is called") {
       program.on_error(nullptr);
 
-      THEN("only the error_handler should have changed") {
+      THEN("only the error_handler should be changed") {
         REQUIRE(program.error_handler == nullptr);
         REQUIRE(program.name.empty());
         REQUIRE(program.version.empty());
@@ -130,7 +130,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     WHEN("intro, details, v, max_width, and on_error are called") {
       program.intro("intro").details("details").v("1.0").max_width(80).on_error(nullptr);
 
-      THEN("all five should have changed") {
+      THEN("all five should be changed") {
         REQUIRE(program.introduction == "intro");
         REQUIRE(program.description == "details");
         REQUIRE(program.version == "1.0");
@@ -282,7 +282,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.positionals_amount == 0);
       }
-      THEN("cmd should not have changed") {
+      THEN("cmd should not be changed") {
         REQUIRE(cmd.name == cmd_name);
         REQUIRE(cmd.args().size() == 0);
         REQUIRE(cmd.cmds().size() == 0);
