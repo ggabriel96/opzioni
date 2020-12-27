@@ -180,7 +180,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   }
 }
 
-SCENARIO("adding arguments", "[Program]") {
+SCENARIO("adding arguments", "[Program][args]") {
   using namespace opzioni;
   using namespace std::string_view_literals;
 
