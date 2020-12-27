@@ -5,6 +5,130 @@
 
 #include "opzioni.hpp"
 
+SCENARIO("setting general information", "[Program][defaults][info][setters]") {
+  using namespace opzioni;
+  using namespace std::string_view_literals;
+
+  GIVEN("a default-initialized Program") {
+    Program program;
+
+    THEN("all member variables should have their defaults") {
+      REQUIRE(program.name.empty());
+      REQUIRE(program.version.empty());
+      REQUIRE(program.title.empty());
+      REQUIRE(program.introduction.empty());
+      REQUIRE(program.description.empty());
+      REQUIRE(program.msg_width == 100);
+      REQUIRE(program.error_handler == print_error);
+      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.args().size() == 0);
+      REQUIRE(program.cmds().size() == 0);
+    }
+
+    WHEN("intro is called") {
+      program.intro("intro");
+
+      THEN("only the introduction should have changed") {
+        REQUIRE(program.introduction == "intro");
+        REQUIRE(program.name.empty());
+        REQUIRE(program.version.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.description.empty());
+        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.error_handler == print_error);
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
+
+    WHEN("details is called") {
+      program.details("details");
+
+      THEN("only the description should have changed") {
+        REQUIRE(program.description == "details");
+        REQUIRE(program.name.empty());
+        REQUIRE(program.version.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.introduction.empty());
+        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.error_handler == print_error);
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
+
+    WHEN("v is called") {
+      program.v("1.0");
+
+      THEN("only the version should have changed") {
+        REQUIRE(program.version == "1.0");
+        REQUIRE(program.name.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.introduction.empty());
+        REQUIRE(program.description.empty());
+        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.error_handler == print_error);
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
+
+    WHEN("intro, details, and v are called") {
+      program.intro("intro").details("details").v("1.0");
+
+      THEN("all three should have changed") {
+        REQUIRE(program.introduction == "intro");
+        REQUIRE(program.description == "details");
+        REQUIRE(program.version == "1.0");
+        REQUIRE(program.name.empty());
+        REQUIRE(program.title.empty());
+        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.error_handler == print_error);
+        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.cmds().size() == 0);
+      }
+    }
+  }
+
+  GIVEN("a Program initialized with a name") {
+    Program program("program");
+
+    THEN("only the name should not have its default value") {
+      REQUIRE(program.name == "program");
+      REQUIRE(program.version.empty());
+      REQUIRE(program.title.empty());
+      REQUIRE(program.introduction.empty());
+      REQUIRE(program.description.empty());
+      REQUIRE(program.msg_width == 100);
+      REQUIRE(program.error_handler == print_error);
+      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.args().size() == 0);
+      REQUIRE(program.cmds().size() == 0);
+    }
+  }
+
+  GIVEN("a Program initialized with a name and title") {
+    Program program("program", "title");
+
+    THEN("only name and title should not have their default values") {
+      REQUIRE(program.name == "program");
+      REQUIRE(program.title == "title");
+      REQUIRE(program.version.empty());
+      REQUIRE(program.introduction.empty());
+      REQUIRE(program.description.empty());
+      REQUIRE(program.msg_width == 100);
+      REQUIRE(program.error_handler == print_error);
+      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.args().size() == 0);
+      REQUIRE(program.cmds().size() == 0);
+    }
+  }
+}
+
 SCENARIO("adding arguments", "[Program]") {
   using namespace opzioni;
   using namespace std::string_view_literals;
