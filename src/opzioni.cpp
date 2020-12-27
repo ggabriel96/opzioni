@@ -157,6 +157,8 @@ ArgMap Program::operator()(std::span<char const *> args) const {
     set_defaults(map);
     return map;
   } catch (UserError const &err) {
+    if (this->error_handler == nullptr)
+      std::exit(-1);
     std::exit(this->error_handler(*this, err));
   }
 }
