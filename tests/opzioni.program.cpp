@@ -251,3 +251,43 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
   }
 }
+
+SCENARIO("adding commands", "[Program][cmds]") {
+  using namespace opzioni;
+  using namespace std::string_view_literals;
+
+  GIVEN("program and cmd") {
+    auto const cmd_name = "cmd"sv;
+    Program program;
+    Program cmd(cmd_name);
+
+    THEN("they should initially have no arguments") {
+      REQUIRE(program.args().size() == 0);
+      REQUIRE(program.cmds().size() == 0);
+      REQUIRE(program.positionals_amount == 0);
+
+      REQUIRE(cmd.args().size() == 0);
+      REQUIRE(cmd.cmds().size() == 0);
+      REQUIRE(cmd.positionals_amount == 0);
+    }
+
+    WHEN("cmd is added as command of program") {
+      program + Cmd(cmd);
+
+      THEN("cmd should be added as only command of program") {
+        REQUIRE(program.cmds().size() == 1);
+        REQUIRE(program.cmds()[0].program == &cmd);
+      }
+      THEN("program's args should not be changed") {
+        REQUIRE(program.args().size() == 0);
+        REQUIRE(program.positionals_amount == 0);
+      }
+      THEN("cmd should not have changed") {
+        REQUIRE(cmd.name == cmd_name);
+        REQUIRE(cmd.args().size() == 0);
+        REQUIRE(cmd.cmds().size() == 0);
+        REQUIRE(cmd.positionals_amount == 0);
+      }
+    }
+  }
+}
