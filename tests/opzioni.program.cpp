@@ -251,6 +251,30 @@ SCENARIO("adding arguments", "[Program][args]") {
       }
     }
   }
+
+  WHEN("adding arguments directly to a new Program") {
+    auto const program =
+        Program() + Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") * Pos("pos2") * Opt("opt1") * Flg("flg2");
+
+    THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 7); }
+    THEN("cmds should be empty") { REQUIRE(program.cmds().size() == 0); }
+    THEN("positionals_amount should match the number of positionals added") {
+      REQUIRE(program.positionals_amount == 3);
+    }
+    THEN("positionals should be added as first arguments, but preserving the order of insertion") {
+      REQUIRE(program.args()[0].name == "pos3");
+      REQUIRE(program.args()[1].name == "pos1");
+      REQUIRE(program.args()[2].name == "pos2");
+    }
+    THEN("the rest of the arguments should be sorted lexicographically by name") {
+      // also using is_sorted to check `operator<`
+      REQUIRE(std::is_sorted(std::next(program.args().begin(), program.positionals_amount), program.args().end()));
+      REQUIRE(program.args()[3].name == "flg1");
+      REQUIRE(program.args()[4].name == "flg2");
+      REQUIRE(program.args()[5].name == "opt1");
+      REQUIRE(program.args()[6].name == "opt2");
+    }
+  }
 }
 
 SCENARIO("adding commands", "[Program][cmds]") {
