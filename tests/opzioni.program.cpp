@@ -509,4 +509,62 @@ SCENARIO("parsing", "[Program][parsing]") {
       }
     }
   }
+
+  GIVEN("a program with all kinds of arguments and a command") {
+    constexpr auto cmd_args = Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l");
+    auto const cmd = Program("cmd").on_error(rethrow) + cmd_args;
+
+    constexpr auto args = Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") * Pos("pos1") *
+                          Flg("glf", "g") * Flg("f") * Opt("o");
+    auto const program = Program().on_error(rethrow) + args + cmd;
+
+    WHEN("an empty argv is parsed") {
+      std::array<char const *, 0> argv;
+
+      THEN("we should throw an error because of missing required arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with only 1 element is parsed") {
+      auto argv = std::array{"./program"};
+
+      THEN("we should throw an error because of missing required arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("all arguments are parsed, all long names, positionals given last") {
+      auto argv =
+          std::array{"./program", "--long", "long-val", "--flg", "--longer-opt", "longer-opt-val", "--glf", "-f", "-o",
+                     "o-val",     "a",      "b",        "cmd",   "--long",       "long-val",       "-f",    "aa", "bb"};
+
+      auto const map = program(std::span(argv));
+
+      THEN("exec_path should be set") { REQUIRE(map.exec_path == std::string_view(argv[0])); }
+
+      AND_THEN("args should have all the arguments of the main program") {
+        REQUIRE(map.args.size() == args.size());
+        REQUIRE(map.as<std::string_view>("long") == std::string_view(argv[2]));
+        REQUIRE(map.as<bool>("flg") == true);
+        REQUIRE(map.as<std::string_view>("longer-opt") == std::string_view(argv[5]));
+        REQUIRE(map.as<bool>("glf") == true);
+        REQUIRE(map.as<bool>("f") == true);
+        REQUIRE(map.as<std::string_view>("o") == std::string_view(argv[9]));
+        REQUIRE(map.as<std::string_view>("pos2") == std::string_view(argv[10]));
+        REQUIRE(map.as<std::string_view>("pos1") == std::string_view(argv[11]));
+      }
+
+      AND_THEN("cmd_name should be set") { REQUIRE(map.cmd_name == cmd.name); }
+      AND_THEN("cmd_args should have all the arguments of the command") {
+        REQUIRE(map.cmd_args != nullptr);
+
+        auto const &cmd_args = *map.cmd_args;
+        REQUIRE(cmd_args.as<std::string_view>("long") == std::string_view(argv[14]));
+        REQUIRE(cmd_args.as<bool>("f") == true);
+        REQUIRE(cmd_args.as<std::string_view>("pos1") == std::string_view(argv[16]));
+        REQUIRE(cmd_args.as<std::string_view>("cmd-pos") == std::string_view(argv[17]));
+      }
+    }
+  }
 }
