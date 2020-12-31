@@ -1,21 +1,19 @@
 project(
     'opzioni', 'cpp',
-    version: '0.41.0',
+    version: '0.41.1',
     license: 'BSL-1.0',
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
-
-include_dir = include_directories('include/')
 
 # +--------------+
 # | Dependencies |
 # +--------------+
 fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
-catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 
 # +--------------------+
 # | Library definition |
 # +--------------------+
+include_dir = include_directories('include/')
 opzioni_lib = library(
     'opzioni',
     ['src/converters.cpp', 'src/opzioni.cpp', 'src/string.cpp'],
@@ -33,13 +31,7 @@ opzioni_dep = declare_dependency(
 # +-------+
 # | Tests |
 # +-------+
-test_deps = [opzioni_dep, catch2_dep]
-converters_test = executable(
-    'converters',
-    ['src/catch2_main.cpp', 'src/converters.test.cpp'],
-    dependencies: test_deps
-)
-test('converters', converters_test)
+subdir('tests/')
 
 # +----------+
 # | Examples |

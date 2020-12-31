@@ -11,7 +11,7 @@ int main(int argc, char const *argv[]) {
   using opzioni::Help, opzioni::Version;
   using opzioni::Program, opzioni::Flg, opzioni::Opt, opzioni::Pos;
 
-  auto program =
+  auto const program =
       Program("main")
           .v("1.0")
           .intro("A short example illustrating opzioni's simpler features")
@@ -50,7 +50,6 @@ int main(int argc, char const *argv[]) {
   print("csv: {}\n", args.as<std::vector<int>>("csv"));
   print("verbose: {}\n", args.as<int>("verbose"));
 
-  print("{}\n", args.has("append"));
   print("append: {}\n", args.has("append") ? args.as<std::vector<int>>("append") : std::vector<int>{});
   print("flag: {}\n", args.as<std::string_view>("flag"));
   print("t: {}\n", args.as<bool>("t"));

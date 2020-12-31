@@ -48,6 +48,8 @@ int print_error_and_usage(Program const &program, UserError const &err) noexcept
   return -1;
 }
 
+int rethrow(Program const &, UserError const &ue) { throw ue; }
+
 // +-----+
 // | Arg |
 // +-----+
@@ -157,36 +159,40 @@ ArgMap Program::operator()(std::span<char const *> args) const {
     set_defaults(map);
     return map;
   } catch (UserError const &err) {
+    if (this->error_handler == nullptr)
+      std::exit(-1);
     std::exit(this->error_handler(*this, err));
   }
 }
 
 ArgMap Program::parse(std::span<char const *> args) const {
   ArgMap map;
-  map.exec_path = std::string(args[0]);
-  std::size_t current_positional_idx = 0;
-  for (std::size_t index = 1; index < args.size();) {
-    auto const arg = std::string_view(args[index]);
-    if (is_dash_dash(arg)) {
-      // +1 to ignore the dash-dash
-      for (std::size_t offset = index + 1; offset < args.size();) {
-        offset += assign_positional(map, args.subspan(offset), current_positional_idx);
+  if (args.size() > 0) {
+    map.exec_path = std::string(args[0]);
+    std::size_t current_positional_idx = 0;
+    for (std::size_t index = 1; index < args.size();) {
+      auto const arg = std::string_view(args[index]);
+      if (is_dash_dash(arg)) {
+        // +1 to ignore the dash-dash
+        for (std::size_t offset = index + 1; offset < args.size();) {
+          offset += assign_positional(map, args.subspan(offset), current_positional_idx);
+          ++current_positional_idx;
+        }
+        index = args.size();
+      } else if (auto cmd = is_command(arg); cmd != nullptr) {
+        index += assign_command(map, args.subspan(index), *cmd);
+      } else if (looks_positional(arg)) {
+        index += assign_positional(map, args.subspan(index), current_positional_idx);
         ++current_positional_idx;
+      } else if (auto const flags = is_short_flags(arg); !flags.empty()) {
+        index += assign_many_flags(map, flags);
+      } else if (auto const flag = is_long_flag(arg); !flag.empty()) {
+        index += assign_flag(map, flag);
+      } else if (auto const option = is_option(arg); option.has_value()) {
+        index += assign_option(map, args.subspan(index), *option);
+      } else {
+        throw UnknownArgument(arg);
       }
-      index = args.size();
-    } else if (auto cmd = is_command(arg); cmd != nullptr) {
-      index += assign_command(map, args.subspan(index), *cmd);
-    } else if (looks_positional(arg)) {
-      index += assign_positional(map, args.subspan(index), current_positional_idx);
-      ++current_positional_idx;
-    } else if (auto const flags = is_short_flags(arg); !flags.empty()) {
-      index += assign_many_flags(map, flags);
-    } else if (auto const flag = is_long_flag(arg); !flag.empty()) {
-      index += assign_flag(map, flag);
-    } else if (auto const option = is_option(arg); option.has_value()) {
-      index += assign_option(map, args.subspan(index), *option);
-    } else {
-      throw UnknownArgument(arg);
     }
   }
   return map;

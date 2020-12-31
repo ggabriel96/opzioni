@@ -12,7 +12,7 @@ build:
 	meson compile -C build/
 
 test:
-	meson test -C build/
+	meson test -C build/ --print-errorlogs
 
 format:
 	clang-format --verbose -i $(shell find . -name '*.cpp') $(shell find . -name '*.hpp')

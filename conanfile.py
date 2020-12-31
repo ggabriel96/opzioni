@@ -29,7 +29,7 @@ class OpzioniConan(ConanFile):
     generators = "pkg_config"
     requires = "fmt/[>=7.0.3 <8.0.0]"
     build_requires = "catch2/[>=2.13.0 <3.0.0]"
-    exports_sources = ["meson.build", "meson_options.txt", "include/*", "src/*"]
+    exports_sources = ["meson.build", "meson_options.txt", "include/*", "src/*", "tests/*"]
 
     __meson_build_dir = "build"
 

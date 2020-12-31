@@ -83,10 +83,11 @@ consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
 // +----------------+
 // | error handlers |
 // +----------------+
-using error_handler = int (*)(Program const &, UserError const &) noexcept;
+using error_handler = int (*)(Program const &, UserError const &);
 
 int print_error(Program const &, UserError const &) noexcept;
 int print_error_and_usage(Program const &, UserError const &) noexcept;
+int rethrow(Program const &, UserError const &);
 
 // +---------+
 // | actions |
@@ -436,9 +437,9 @@ consteval Arg Version() noexcept { return Version("Display the software version"
 class Cmd {
 public:
   // just a helper to encapsulate the pointer indirection
-  Program *program;
+  Program const *program;
 
-  Cmd(Program &program) : program(&program) {}
+  Cmd(Program const &program) : program(&program) {}
 
   std::string format_for_help_description() const noexcept;
   std::string format_for_help_index() const noexcept;
