@@ -393,8 +393,8 @@ SCENARIO("adding commands", "[Program][cmds]") {
 SCENARIO("parsing", "[Program][parsing]") {
   using namespace opzioni;
 
-  GIVEN("a default-initialized Program") {
-    Program program;
+  GIVEN("an empty Program") {
+    auto const program = Program().on_error(rethrow);
 
     WHEN("an empty argv is parsed") {
       std::array<char const *, 0> argv;
@@ -424,7 +424,6 @@ SCENARIO("parsing", "[Program][parsing]") {
 
     AND_WHEN("an argv with extra positional arguments is parsed") {
       auto argv = std::array{"./program", "pos-arg"};
-      program.on_error(rethrow);
 
       THEN("we should throw an error because of unexpected positionals") {
         REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
