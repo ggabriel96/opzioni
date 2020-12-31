@@ -408,5 +408,27 @@ SCENARIO("parsing", "[Program][parsing]") {
         REQUIRE(map.args.size() == 0);
       }
     }
+
+    AND_WHEN("an argv with only 1 element is parsed") {
+      auto argv = std::array{"./program"};
+
+      auto const map = program(std::span(argv));
+
+      THEN("exec_path should be set") { REQUIRE(map.exec_path == std::string_view(argv[0])); }
+      AND_THEN("nothing else should be parsed") {
+        REQUIRE(map.cmd_name == "");
+        REQUIRE(map.cmd_args == nullptr);
+        REQUIRE(map.args.size() == 0);
+      }
+    }
+
+    AND_WHEN("an argv with extra positional arguments is parsed") {
+      auto argv = std::array{"./program", "pos-arg"};
+      program.on_error(rethrow);
+
+      THEN("we should throw an error because of unexpected positionals") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
   }
 }
