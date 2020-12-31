@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <span>
 
 #include <catch2/catch.hpp>
 
@@ -384,6 +385,27 @@ SCENARIO("adding commands", "[Program][cmds]") {
         REQUIRE(cmd2.args().size() == 0);
         REQUIRE(cmd2.cmds().size() == 0);
         REQUIRE(cmd2.positionals_amount == 0);
+      }
+    }
+  }
+}
+
+SCENARIO("parsing", "[Program][parsing]") {
+  using namespace opzioni;
+
+  GIVEN("a default-initialized Program") {
+    Program program;
+
+    WHEN("an empty argv is parsed") {
+      std::array<char const *, 0> argv;
+
+      auto const map = program(std::span(argv));
+
+      THEN("nothing is parsed") {
+        REQUIRE(map.exec_path == "");
+        REQUIRE(map.cmd_name == "");
+        REQUIRE(map.cmd_args == nullptr);
+        REQUIRE(map.args.size() == 0);
       }
     }
   }
