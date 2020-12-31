@@ -87,6 +87,7 @@ using error_handler = int (*)(Program const &, UserError const &);
 
 int print_error(Program const &, UserError const &) noexcept;
 int print_error_and_usage(Program const &, UserError const &) noexcept;
+int rethrow(Program const &, UserError const &);
 
 // +---------+
 // | actions |

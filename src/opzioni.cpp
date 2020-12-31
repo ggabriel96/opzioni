@@ -48,6 +48,10 @@ int print_error_and_usage(Program const &program, UserError const &err) noexcept
   return -1;
 }
 
+int rethrow(Program const &, UserError const &ue) {
+  throw ue;
+}
+
 // +-----+
 // | Arg |
 // +-----+
