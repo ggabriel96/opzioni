@@ -289,6 +289,14 @@ SCENARIO("adding commands", "[Program][cmds]") {
         REQUIRE(cmd.positionals_amount == 0);
       }
 
+      AND_WHEN("another command with the same name is added to program") {
+        Program other_cmd("cmd");
+
+        THEN("we should thow an error because of duplicate name") {
+          REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(other_cmd), opzioni::ArgumentAlreadyExists);
+        }
+      }
+
       AND_GIVEN("another command, cmd2") {
         auto const cmd2_name = "cmd2";
         Program cmd2(cmd2_name);
