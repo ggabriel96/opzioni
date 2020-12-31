@@ -31,7 +31,9 @@ opzioni_dep = declare_dependency(
 # +-------+
 # | Tests |
 # +-------+
-subdir('tests/')
+if get_option('buildtype') != 'release'
+    subdir('tests/')
+endif
 
 # +----------+
 # | Examples |
