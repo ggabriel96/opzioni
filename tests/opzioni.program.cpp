@@ -197,19 +197,23 @@ SCENARIO("adding arguments", "[Program][args]") {
     WHEN("a positional is added") {
       program + std::array{Pos("pos")};
 
-      REQUIRE(program.args().size() == 1);
+      THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 1); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
-      THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 1); }
-      THEN("it should be added as first argument") { REQUIRE(program.args()[0].name == "pos"); }
+      THEN("positionals_amount should match the number of positionals added") {
+        REQUIRE(program.positionals_amount == 1);
+      }
+      THEN("the positional should be added as first argument") { REQUIRE(program.args()[0].name == "pos"); }
     }
 
     WHEN("two positionals are added") {
       program + Pos("pos1") * Pos("pos2");
 
-      REQUIRE(program.args().size() == 2);
+      THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 2); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
-      THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 2); }
-      THEN("they should be added as first arguments, but preserving the order of insertion") {
+      THEN("positionals_amount should match the number of positionals added") {
+        REQUIRE(program.positionals_amount == 2);
+      }
+      THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos1");
         REQUIRE(program.args()[1].name == "pos2");
       }
@@ -218,10 +222,12 @@ SCENARIO("adding arguments", "[Program][args]") {
     WHEN("multiple positionals are added") {
       program + Pos("pos5") * Pos("pos2") * Pos("pos4") * Pos("pos1") * Pos("pos3");
 
-      REQUIRE(program.args().size() == 5);
+      THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 5); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
-      THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 5); }
-      THEN("they should be added as first arguments, but preserving the order of insertion") {
+      THEN("positionals_amount should match the number of positionals added") {
+        REQUIRE(program.positionals_amount == 5);
+      }
+      THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos5");
         REQUIRE(program.args()[1].name == "pos2");
         REQUIRE(program.args()[2].name == "pos4");
@@ -233,9 +239,11 @@ SCENARIO("adding arguments", "[Program][args]") {
     WHEN("other arguments are added before positionals") {
       program + Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") * Pos("pos2") * Opt("opt1") * Flg("flg2");
 
-      REQUIRE(program.args().size() == 7);
+      THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 7); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
-      THEN("positionals_amount should be incremented") { REQUIRE(program.positionals_amount == 3); }
+      THEN("positionals_amount should match the number of positionals added") {
+        REQUIRE(program.positionals_amount == 3);
+      }
       THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos3");
         REQUIRE(program.args()[1].name == "pos1");
