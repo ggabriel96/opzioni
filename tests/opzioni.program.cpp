@@ -259,8 +259,8 @@ SCENARIO("adding commands", "[Program][cmds]") {
 
   GIVEN("program and cmd") {
     auto const cmd_name = "cmd"sv;
+    Program const cmd(cmd_name);
     Program program;
-    Program cmd(cmd_name);
 
     THEN("they should initially have no arguments") {
       REQUIRE(program.args().size() == 0);
@@ -283,12 +283,6 @@ SCENARIO("adding commands", "[Program][cmds]") {
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.positionals_amount == 0);
       }
-      THEN("cmd should not be changed") {
-        REQUIRE(cmd.name == cmd_name);
-        REQUIRE(cmd.args().size() == 0);
-        REQUIRE(cmd.cmds().size() == 0);
-        REQUIRE(cmd.positionals_amount == 0);
-      }
 
       AND_WHEN("another command with the same name is added to program") {
         Program other_cmd("cmd");
@@ -300,7 +294,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
 
       AND_GIVEN("another command, cmd2") {
         auto const cmd2_name = "cmd2";
-        Program cmd2(cmd2_name);
+        Program const cmd2(cmd2_name);
 
         THEN("cmd2 should initially have no arguments") {
           REQUIRE(cmd2.args().size() == 0);
@@ -320,18 +314,6 @@ SCENARIO("adding commands", "[Program][cmds]") {
             REQUIRE(program.args().size() == 0);
             REQUIRE(program.positionals_amount == 0);
           }
-          THEN("cmd should not be changed") {
-            REQUIRE(cmd.name == cmd_name);
-            REQUIRE(cmd.args().size() == 0);
-            REQUIRE(cmd.cmds().size() == 0);
-            REQUIRE(cmd.positionals_amount == 0);
-          }
-          THEN("cmd2 should not be changed") {
-            REQUIRE(cmd2.name == cmd2_name);
-            REQUIRE(cmd2.args().size() == 0);
-            REQUIRE(cmd2.cmds().size() == 0);
-            REQUIRE(cmd2.positionals_amount == 0);
-          }
         }
       }
     }
@@ -345,9 +327,9 @@ SCENARIO("adding commands", "[Program][cmds]") {
 
   GIVEN("program, cmd1, and cmd2") {
     auto const cmd1_name = "cmd1"sv, cmd2_name = "cmd2"sv;
+    Program const cmd1(cmd1_name);
+    Program const cmd2(cmd2_name);
     Program program;
-    Program cmd1(cmd1_name);
-    Program cmd2(cmd2_name);
 
     THEN("they should initially have no arguments") {
       REQUIRE(program.args().size() == 0);
@@ -374,17 +356,6 @@ SCENARIO("adding commands", "[Program][cmds]") {
       THEN("program's args should not be changed") {
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.positionals_amount == 0);
-      }
-      THEN("both cmd1 and cmd2 should not be changed") {
-        REQUIRE(cmd1.name == cmd1_name);
-        REQUIRE(cmd1.args().size() == 0);
-        REQUIRE(cmd1.cmds().size() == 0);
-        REQUIRE(cmd1.positionals_amount == 0);
-
-        REQUIRE(cmd2.name == cmd2_name);
-        REQUIRE(cmd2.args().size() == 0);
-        REQUIRE(cmd2.cmds().size() == 0);
-        REQUIRE(cmd2.positionals_amount == 0);
       }
     }
   }
