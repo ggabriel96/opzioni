@@ -401,7 +401,7 @@ SCENARIO("parsing", "[Program][parsing]") {
 
       auto const map = program(std::span(argv));
 
-      THEN("nothing is parsed") {
+      THEN("nothing should be parsed") {
         REQUIRE(map.exec_path == "");
         REQUIRE(map.cmd_name == "");
         REQUIRE(map.cmd_args == nullptr);
