@@ -8,7 +8,6 @@
 
 SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   using namespace opzioni;
-  using namespace std::string_view_literals;
 
   GIVEN("a default-initialized Program") {
     Program program;
