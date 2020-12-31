@@ -294,7 +294,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
         Program other_cmd("cmd");
 
         THEN("we should thow an error because of duplicate name") {
-          REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(other_cmd), opzioni::ArgumentAlreadyExists);
+          REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(other_cmd), ArgumentAlreadyExists);
         }
       }
 
@@ -338,7 +338,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
 
     AND_WHEN("cmd is added as command of program twice") {
       THEN("we should thow an error because of duplicate name") {
-        REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(cmd), opzioni::ArgumentAlreadyExists);
+        REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(cmd), ArgumentAlreadyExists);
       }
     }
   }
