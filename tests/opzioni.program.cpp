@@ -424,10 +424,87 @@ SCENARIO("parsing", "[Program][parsing]") {
       }
     }
 
-    AND_WHEN("an argv with extra positional arguments is parsed") {
-      auto argv = std::array{"./program", "pos-arg"};
+    AND_WHEN("an argv with only dash-dash is parsed") {
+      auto argv = std::array{"./program", "--"};
+
+      auto const map = program(std::span(argv));
+
+      THEN("exec_path should be set") { REQUIRE(map.exec_path == std::string_view(argv[0])); }
+      AND_THEN("nothing else should be parsed") {
+        REQUIRE(map.cmd_name == "");
+        REQUIRE(map.cmd_args == nullptr);
+        REQUIRE(map.args.size() == 0);
+      }
+    }
+
+    AND_WHEN("an argv with only a single dash") {
+      auto argv = std::array{"./program", "-"};
 
       THEN("we should throw an error because of unexpected positionals") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra positional arguments is parsed") {
+      auto argv = std::array{"./program", "pos"};
+
+      THEN("we should throw an error because of unexpected positionals") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra options is parsed (1)") {
+      auto argv = std::array{"./program", "--opt=val"};
+
+      THEN("we should throw an error because of unknown arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra options is parsed (2)") {
+      auto argv = std::array{"./program", "--opt", "val"};
+
+      THEN("we should throw an error because of unknown arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra options is parsed (3)") {
+      auto argv = std::array{"./program", "-o=val"};
+
+      THEN("we should throw an error because of unknown arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra options is parsed (3)") {
+      auto argv = std::array{"./program", "-o", "val"};
+
+      THEN("we should throw an error because of unknown arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra options is parsed (4)") {
+      auto argv = std::array{"./program", "-oval"}; // also acts like multiple short flags
+
+      THEN("we should throw an error because of unknown arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra flags is parsed (1)") {
+      auto argv = std::array{"./program", "--flag"};
+
+      THEN("we should throw an error because of unknown arguments") {
+        REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+      }
+    }
+
+    AND_WHEN("an argv with extra flags is parsed (2)") {
+      auto argv = std::array{"./program", "-f"};
+
+      THEN("we should throw an error because of unknown arguments") {
         REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
       }
     }
