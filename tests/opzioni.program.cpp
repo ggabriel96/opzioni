@@ -146,7 +146,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   }
 
   GIVEN("a Program initialized with a name") {
-    Program program("program");
+    Program const program("program");
 
     THEN("only the name should not have its default value") {
       REQUIRE(program.name == "program");
@@ -163,7 +163,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   }
 
   GIVEN("a Program initialized with a name and title") {
-    Program program("program", "title");
+    Program const program("program", "title");
 
     THEN("only name and title should not have their default values") {
       REQUIRE(program.name == "program");
