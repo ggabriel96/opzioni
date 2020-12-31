@@ -326,6 +326,12 @@ SCENARIO("adding commands", "[Program][cmds]") {
         }
       }
     }
+
+    AND_WHEN("cmd is added as command of program twice") {
+      THEN("we should thow an error because of duplicate name") {
+        REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(cmd), opzioni::ArgumentAlreadyExists);
+      }
+    }
   }
 
   GIVEN("program, cmd1, and cmd2") {
