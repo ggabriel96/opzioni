@@ -7,23 +7,24 @@ int main(int argc, char const *argv[]) {
   using opzioni::Help, opzioni::Version;
   using opzioni::Program, opzioni::Pos, opzioni::Cmd;
 
-  auto clone = Program("clone").intro("Clone a repository into a new directory") +
-               Help() *
-                   Pos("repository")
-                       .help("The (possibly remote) repository to clone from."
-                             " See the GIT URLS section below for more information on specifying repositories.") *
-                   Pos("directory")
-                       .help("The name of a new directory to clone into. The \"humanish\" part of the source "
-                             "repository is used if no "
-                             "directory is explicitly given (repo for /path/to/repo.git and foo for host.xz:foo/.git). "
-                             "Cloning into "
-                             "an existing directory is only allowed if the directory is empty.")
-                       .otherwise("");
+  auto const clone =
+      Program("clone").intro("Clone a repository into a new directory") +
+      Help() *
+          Pos("repository")
+              .help("The (possibly remote) repository to clone from."
+                    " See the GIT URLS section below for more information on specifying repositories.") *
+          Pos("directory")
+              .help("The name of a new directory to clone into. The \"humanish\" part of the source "
+                    "repository is used if no "
+                    "directory is explicitly given (repo for /path/to/repo.git and foo for host.xz:foo/.git). "
+                    "Cloning into "
+                    "an existing directory is only allowed if the directory is empty.")
+              .otherwise("");
 
-  auto git = Program("git", "git CLI simulation")
-                 .intro("An example to illustrate subcommands via simulation of the git interface")
-                 .details("See 'git <command> --help' to read about a specific subcommand.") +
-             Help() * Version() + Cmd(clone);
+  auto const git = Program("git", "git CLI simulation")
+                       .intro("An example to illustrate subcommands via simulation of the git interface")
+                       .details("See 'git <command> --help' to read about a specific subcommand.") +
+                   Help() * Version() + Cmd(clone);
 
   auto const args = git(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);
