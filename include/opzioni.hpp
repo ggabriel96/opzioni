@@ -371,7 +371,7 @@ consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
     throw "Abbreviations must be a single letter";
-  return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev};
+  return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
 }
 
 consteval Arg Opt(std::string_view name) noexcept { return Opt(name, {}); }
