@@ -1,0 +1,62 @@
+#include <string_view>
+
+#include <fmt/format.h>
+
+#include "opzioni.hpp"
+
+/**
+ * This is a simple simulation of a subset of the docker command line interface using opzioni.
+ * It has no affiliation with the Docker project. I just ran `docker --help` and copied the arguments.
+ * Hence, none of the docker CLI is my work, I just copied the help text.
+ * Also, note that it is not *identical* to the real CLI.
+ * ---
+ * Almost all arguments are sorted because the actual CLI has them ordered and I copied them in that order.
+ * But help and version are added first and opzioni re-arranges the arguments (don't worry about positionals,
+ * their relative order is preserved). By the way, in the actual CLI, the `version` flag uses lowercase `-v`.
+ */
+int main(int argc, char const *argv[]) {
+  using fmt::print;
+  using namespace opzioni;
+
+  auto const exec = Program("exec").intro("Run a command in a running container") +
+                    Help() * Flg("detach", "d").help("Detached mode: run command in the background") *
+                        Opt("detach-keys").help("Override the key sequence for detaching a container") *
+                        Opt("env", "e").help("Set environment variables") *
+                        Opt("env-file").help("Read in a file of environment variables").append() *
+                        Flg("interactive", "i").help("Keep STDIN open even if not attached") *
+                        Flg("privileged").help("Give extended privileges to the command") *
+                        Flg("tty", "t").help("Allocate a pseudo-TTY") *
+                        Opt("user", "u").help("Username or UID (format: <name|uid>[:<group|gid>])") *
+                        Opt("workdir", "w").help("Working directory inside the container") *
+                        Pos("container").help("Name of the target container") *
+                        Pos("command").help("The command to run in the container").gather();
+
+  auto const pull = Program("pull").intro("Pull an image or a repository from a registry") +
+                    Help() * Pos("name").help("The name of the image or repository to pull") *
+                        Flg("all-tags", "a").help("Download all tagged images in the repository") *
+                        Flg("disable-content-trust").help("Skip image verification") *
+                        Opt("platform").help("Set platform if server is multi-platform capable") *
+                        Flg("quiet", "q").help("Supress verbose output");
+
+  auto const docker =
+      Program("docker")
+          .v("version 20.10.1, build 831ebea")
+          .intro("A self-sufficient runtime for containers")
+          .details("Run 'docker COMMAND --help' for more information on a command.") +
+      Help() * Version() * Opt("config").help("Location of client config files (default \"~/.docker\")") *
+          Opt("context", "c")
+              .help("Name of the context to use to connect to the daemon (overrides DOCKER_HOST env var and default "
+                    "context set with \"docker context use\")") *
+          Flg("debug", "D").help("Enable debug mode") *
+          Opt("host", "H").help("Daemon socket(s) to connect to").append() *
+          Opt("log-leve", "l")
+              .help("Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")") *
+          Flg("tls").help("Use TLS; implied by --tlsverify") *
+          Opt("tlscacert").help("Trust certs signed only by this CA (default \"~/.docker/ca.pem\")") *
+          Opt("tlscert").help("Path to TLS certificate file (default \"~/.docker/cert.pem\")") *
+          Opt("tlskey").help("Path to TLS key file (default \"~/.docker/key.pem\")") *
+          Flg("tlsverify").help("Use TLS and verify the remote") +
+      Cmd(exec) + Cmd(pull);
+
+  auto const args = docker(argc, argv);
+}

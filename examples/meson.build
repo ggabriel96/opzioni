@@ -10,7 +10,7 @@ gather = executable(
     'gather', 'gather.cpp',
     dependencies: [fmt_dep, opzioni_dep]
 )
-git = executable(
-    'git', 'git.cpp',
+docker = executable(
+    'docker', 'docker.cpp',
     dependencies: [fmt_dep, opzioni_dep]
 )
