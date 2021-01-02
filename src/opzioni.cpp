@@ -130,7 +130,7 @@ Program &Program::max_width(std::size_t msg_width) noexcept {
   return *this;
 }
 
-Program &Program::on_error(opzioni::error_handler error_handler) noexcept {
+Program &Program::on_error(ErrorHandler error_handler) noexcept {
   this->error_handler = error_handler;
   return *this;
 }
