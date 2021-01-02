@@ -228,7 +228,7 @@ struct Arg {
     return arg;
   }
 
-  template <typename T>
+  template <BuiltinType T>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
@@ -237,7 +237,7 @@ struct Arg {
     return arg;
   }
 
-  template <typename T>
+  template <BuiltinType T>
   consteval Arg csv_of() const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
@@ -248,7 +248,7 @@ struct Arg {
     return arg;
   }
 
-  template <typename T = std::string_view>
+  template <BuiltinType T = std::string_view>
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
@@ -266,7 +266,7 @@ struct Arg {
     return arg;
   }
 
-  template <typename T = std::string_view>
+  template <BuiltinType T = std::string_view>
   consteval Arg gather() const noexcept {
     return gather<T>(0);
   }
@@ -277,14 +277,14 @@ struct Arg {
     return arg;
   }
 
-  template <typename T>
+  template <BuiltinType T>
   consteval Arg of() const noexcept {
     auto arg = *this;
     arg.action_fn = actions::assign<T>;
     return arg;
   }
 
-  template <typename T>
+  template <BuiltinType T>
   consteval Arg otherwise(T value) const noexcept {
     auto arg = Arg::With(*this, value, this->set_value);
     arg.action_fn = actions::assign<T>;
@@ -309,7 +309,7 @@ struct Arg {
     return arg;
   }
 
-  template <typename T>
+  template <BuiltinType T>
   consteval Arg set(T value) const noexcept {
     if (this->type == ArgType::POS)
       throw "Positionals cannot use set value because they always take a value from the command-line";
