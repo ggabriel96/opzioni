@@ -111,13 +111,13 @@ namespace actions {
 
 using Signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <typename T>
+template <BuiltinType T>
 void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <typename Elem>
+template <BuiltinType Elem>
 void append(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <typename T>
+template <BuiltinType T>
 void csv(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 void print_help(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
@@ -624,14 +624,14 @@ namespace actions {
 // | assign |
 // +--------+
 
-template <typename T>
+template <ExternalType T>
 void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
     throw DuplicateAssignment(name);
 }
 
-template <typename T>
+template <BuiltinType T>
 void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
@@ -643,7 +643,7 @@ void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // | append |
 // +--------+
 
-template <typename Elem>
+template <BuiltinType Elem>
 void append_to(ArgMap &map, std::string_view const name, Elem value) {
   if (auto list = map.args.find(name); list != map.args.end()) {
     std::get<std::vector<Elem>>(list->second.value).emplace_back(std::move(value));
@@ -652,7 +652,7 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
   }
 }
 
-template <typename Elem>
+template <BuiltinType Elem>
 void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
@@ -664,7 +664,7 @@ void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // | csv |
 // +-----+
 
-template <typename T>
+template <BuiltinType T>
 void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
 }
