@@ -49,7 +49,7 @@ int main(int argc, char const *argv[]) {
                     "context set with \"docker context use\")") *
           Flg("debug", "D").help("Enable debug mode") *
           Opt("host", "H").help("Daemon socket(s) to connect to").append() *
-          Opt("log-leve", "l")
+          Opt("log-level", "l")
               .help("Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")") *
           Flg("tls").help("Use TLS; implied by --tlsverify") *
           Opt("tlscacert").help("Trust certs signed only by this CA (default \"~/.docker/ca.pem\")") *
