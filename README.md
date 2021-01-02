@@ -35,3 +35,110 @@ These goals ought to be discussed in further detail in a separate document.
     Another example is the names of the `namespaces` and what is in them.
 
 - There is *a lot* of polish and optimization work to do.
+
+# Hands-on
+
+The code below is a fully working example, taken from [`examples/hello.cpp`](examples/hello.cpp), only reformatted and with quotes changed to angle brackets in the `#include`.
+
+```cpp
+#include <iostream>
+#include <string_view>
+
+#include <opzioni.hpp>
+
+int main(int argc, char const *argv[]) {
+  using namespace opzioni;
+
+  auto const hello =
+      Program("hello")
+          .v("0.1")
+          .intro("Greeting people since the dawn of computing") +
+      Help() *
+      Version() *
+      Pos("name").help("Your name please, so I can greet you");
+
+  auto const args = hello(argc, argv);
+  std::string_view const name = args["name"];
+  std::cout << "Hello, " << name << "!\n";
+}
+```
+
+### That gives us:
+
+1. Automatic help with `--help` or `-h`
+
+    ```
+    $ ./build/examples/hello -h
+    hello 0.1
+
+    Greeting people since the dawn of computing
+
+    Usage:
+        hello <name> [--help] [--version]
+
+    Positionals:
+        name                       Your name please, so I can greet you
+
+    Options & Flags:
+        -h, --help                 Display this information
+        -V, --version              Display the software version
+    ```
+
+1. Automatic version with `--version` or `-V`
+
+    ```sh
+    $ ./build/examples/hello -V # or --version
+    hello 0.1
+    ```
+
+1. Automatic error handling
+
+    ```
+    $ ./build/examples/hello 
+    Missing required arguments: `name`
+
+    $ ./build/examples/hello Gabriel Galli
+    Unexpected positional argument `Galli`. This program expects 1 positional arguments
+    ```
+
+1. And finally:
+
+    ```
+    $ ./build/examples/hello "Gabriel Galli"
+    Hello, Gabriel Galli!
+    ```
+
+### Let's examine this code step by step:
+
+1. First, include opzioni with `#include <opzioni.hpp>`.
+
+1. To gain easy access to opzioni's types and functions, add `using namespace opzioni;`.
+
+    But that's a strong statement, so each name can be pulled into the current namespace too:
+
+    ```cpp
+    using opzioni::Program, opzioni::Help, opzioni::Version; // etc.
+    ```
+
+1. An instance of `Program` is created.
+
+    It is given the name `hello`, version `0.1`, and a short introduction.
+
+1. Arguments are added to `Program`.
+
+    The built-in help and version and a positional called `name`.
+    Note that there is an `operator*` between each argument and an `operator+` between the program and its arguments. This is better explained later.
+
+1. The command line arguments are parsed.
+
+    As simple as calling a function with `argc` and `argv` and returns a map of the results.
+
+1. The parsed name is extracted from the resulting map and printed to `stdout`.
+
+    It could also be used directly in `std::cout`:
+    ```cpp
+    std::cout << args.as<std::string_view>("name") << '\n'; // 1
+    std::cout << args["name"].as<std::string_view>() << '\n'; // 2
+    ```
+
+### There are more complex examples in the [`examples/`](examples/) directory.
