@@ -133,12 +133,12 @@ void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::st
 struct ArgValue {
   ExternalVariant value{};
 
-  template <typename T>
+  template <ExternalType T>
   T as() const {
     return std::get<T>(value);
   }
 
-  template <typename T>
+  template <ExternalType T>
   operator T() const {
     return as<T>();
   }
@@ -148,7 +148,7 @@ class ArgValueSetter {
 public:
   ArgValueSetter(ArgValue &arg) : arg(arg) {}
 
-  template <typename T>
+  template <ExternalType T>
   auto operator()(T value) {
     this->arg.value = value;
   }
@@ -164,7 +164,7 @@ struct ArgMap {
     return args.at(name);
   }
 
-  template <typename T>
+  template <ExternalType T>
   T as(std::string_view name) const {
     auto const arg = (*this)[name];
     return arg.as<T>();
@@ -201,7 +201,7 @@ struct ArgMap {
 
 using DefaultValueSetter = void (*)(ArgValue &);
 
-template <typename T>
+template <BuiltinType T>
 void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
