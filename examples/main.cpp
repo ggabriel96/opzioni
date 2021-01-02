@@ -19,18 +19,15 @@ int main(int argc, char const *argv[]) {
       Help() * Version() * Pos("name").help("Your first name") *
           Opt("double", "d").help("A double")[assign(cli, 7.11)] * Opt("last-name").help("Your last name") *
           Opt("o").help("We also support options with only short names")[assign(cli, "oh")] *
-          Opt("num", "n").append<int>().help("Creates a vector of numbers with each appearence of this argument") *
+          Opt("num", "n").help("Creates a vector of numbers with each appearence of this argument")[append<int>()] *
           Opt("csv").csv_of<int>().help("In contrast to `append`, this will create a vector of numbers from a single "
                                         "comma-separated list of values") *
           Opt("verbose", "v").help("Level of verbosity")[assign(1).otherwise(0)] *
-          Flg("append", "a")
-              .set(1)
-              .append<int>()
-              .help("The equivalent of Python's argparse `append_const`:"
-                    " will append the defined value every time it appears in the CLI") *
-          Flg("flag", "f")
-              .help("The equivalent of Python's argparse `store_const`: will store the defined value if it appears in "
-                    "the CLI")[assign("do something!").otherwise("nope")] *
+          Flg("append", "a")[append(1)].help("The equivalent of Python's argparse `append_const`: "
+                                             "will append the defined value every time it appears in the CLI") *
+          Flg("flag", "f")[assign("do something!").otherwise("nope")].help(
+              "The equivalent of Python's argparse `store_const`: "
+              "will store the defined value if it appears in the CLI") *
           Flg("t").help("We also support flags with only short names").otherwise(false);
 
   auto const args = program(argc, argv);

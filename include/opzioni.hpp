@@ -98,6 +98,9 @@ consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
 
 using DefaultValueSetter = void (*)(ArgValue &);
 
+template <typename T>
+void set_empty_vector(ArgValue &) noexcept;
+
 // +----------------+
 // | error handlers |
 // +----------------+
@@ -178,6 +181,36 @@ private:
 
 assign(char const *)->assign<std::string_view>;
 assign(FromCLI, char const *)->assign<std::string_view>;
+
+template <typename T = std::string_view>
+requires(IsScalarType<T>::value) class append {
+public:
+  using value_type = T;
+
+  consteval append() = default;
+  consteval append(T set_value) : set_value(set_value) {}
+
+  consteval actions::Signature get_action_fn() const noexcept { return actions::append<T>; }
+
+  consteval BuiltinType get_set() const noexcept { return set_value; }
+
+  consteval append otherwise(DefaultValueSetter default_setter) const noexcept {
+    return append(this->set_value, std::monostate{}, default_setter);
+  }
+  consteval BuiltinType get_default() const noexcept { return default_value; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return default_setter; }
+
+private:
+  consteval append(BuiltinType set_value, BuiltinType default_value, DefaultValueSetter default_setter)
+      : set_value(set_value), default_value(default_value), default_setter(default_setter) {}
+
+  BuiltinType set_value{};
+  BuiltinType default_value{};
+  DefaultValueSetter default_setter = set_empty_vector<T>;
+};
+
+append(char const *)->append<std::string_view>;
+append(FromCLI, char const *)->append<std::string_view>;
 
 // +-----------+
 // | arguments |
@@ -375,6 +408,7 @@ struct Arg {
     auto arg = Arg::With(*this, action.get_default(), action.get_set());
     arg.action_fn = action.get_action_fn();
     arg.default_setter = action.get_default_setter();
+    arg.is_required = !arg.has_default();
     return arg;
   }
 
