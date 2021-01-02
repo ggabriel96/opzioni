@@ -94,7 +94,7 @@ int rethrow(Program const &, UserError const &);
 // +---------+
 namespace actions {
 
-using signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+using Signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <typename T>
 void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
@@ -203,11 +203,11 @@ struct Arg {
   bool is_required = false;
   BuiltinType default_value{};
   BuiltinType set_value{};
-  actions::signature action_fn = actions::assign<std::string_view>;
+  actions::Signature action_fn = actions::assign<std::string_view>;
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
 
-  consteval Arg action(actions::signature action_fn) const noexcept {
+  consteval Arg action(actions::Signature action_fn) const noexcept {
     auto arg = *this;
     arg.action_fn = action_fn;
     return arg;
