@@ -210,7 +210,6 @@ private:
 };
 
 append(char const *)->append<std::string_view>;
-append(FromCLI, char const *)->append<std::string_view>;
 
 template <typename T = std::string_view>
 requires(IsScalarType<T>::value) class csv {
@@ -237,9 +236,6 @@ private:
   BuiltinType default_value{};
   DefaultValueSetter default_setter = set_empty_vector<T>;
 };
-
-csv(char const *)->csv<std::string_view>;
-csv(FromCLI, char const *)->csv<std::string_view>;
 
 // +-----------+
 // | arguments |
