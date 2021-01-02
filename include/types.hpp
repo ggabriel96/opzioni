@@ -3,10 +3,10 @@
 
 #include <concepts>
 #include <ranges>
+#include <string_view>
 #include <type_traits>
 #include <variant>
 #include <vector>
-#include <string_view>
 
 namespace opzioni {
 
