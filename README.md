@@ -87,7 +87,7 @@ int main(int argc, char const *argv[]) {
 1. Automatic version with `--version` or `-V`
 
     ```sh
-    $ ./build/examples/hello -V # or --version
+    $ ./build/examples/hello -V
     hello 0.1
     ```
 
