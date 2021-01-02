@@ -63,7 +63,7 @@ void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_vi
 template <concepts::BuiltinType Elem>
 void append(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <concepts::BuiltinType T>
+template <concepts::BuiltinType Elem>
 void csv(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 void print_help(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
@@ -176,27 +176,27 @@ struct Arg {
     return arg;
   }
 
-  template <concepts::BuiltinType T>
+  template <concepts::BuiltinType Elem>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
-    arg.action_fn = actions::append<T>;
-    arg.default_setter = set_empty_vector<T>;
+    arg.action_fn = actions::append<Elem>;
+    arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
-  template <concepts::BuiltinType T>
+  template <concepts::BuiltinType Elem>
   consteval Arg csv_of() const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
-    arg.action_fn = actions::csv<T>;
-    arg.default_setter = set_empty_vector<T>;
+    arg.action_fn = actions::csv<Elem>;
+    arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
-  template <concepts::BuiltinType T = std::string_view>
+  template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
@@ -204,19 +204,19 @@ struct Arg {
       auto arg = Arg::With(*this, std::monostate{}, this->set_value);
       arg.is_required = false;
       arg.gather_amount = amount;
-      arg.action_fn = actions::append<T>;
-      arg.default_setter = set_empty_vector<T>;
+      arg.action_fn = actions::append<Elem>;
+      arg.default_setter = set_empty_vector<Elem>;
       return arg;
     }
     auto arg = *this;
     arg.gather_amount = amount;
-    arg.action_fn = actions::append<T>;
+    arg.action_fn = actions::append<Elem>;
     return arg;
   }
 
-  template <concepts::BuiltinType T = std::string_view>
+  template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg gather() const noexcept {
-    return gather<T>(0);
+    return gather<Elem>(0);
   }
 
   consteval Arg help(std::string_view description) const noexcept {
@@ -611,9 +611,9 @@ void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // | csv |
 // +-----+
 
-template <concepts::BuiltinType T>
+template <concepts::BuiltinType Elem>
 void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
-  assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
+  assign_to(map, arg.name, convert<std::vector<Elem>>(*parsed_value));
 }
 
 } // namespace actions
