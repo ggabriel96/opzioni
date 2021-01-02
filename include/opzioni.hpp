@@ -56,6 +56,15 @@ struct VectorOf<TypeList<Ts...>> {
   using type = TypeList<std::vector<Ts>...>;
 };
 
+template <typename...>
+struct InList : std::false_type {};
+
+template <typename T, typename... Ts>
+struct InList<T, TypeList<T, Ts...>> : std::true_type {};
+
+template <typename T, typename U, typename... Ts>
+struct InList<T, TypeList<U, Ts...>> : InList<T, TypeList<Ts...>> {};
+
 // types that may be used as default_value and set_value
 using ScalarTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
 using BuiltinType = VariantOf<ScalarTypes>::type;
@@ -63,6 +72,12 @@ using BuiltinType = VariantOf<ScalarTypes>::type;
 // types that may be the result of parsing the CLI
 using ExternalTypes = Concat<ScalarTypes, VectorOf<ScalarTypes>::type>::type;
 using ExternalType = VariantOf<ExternalTypes>::type;
+
+template <typename T>
+struct IsScalarType : InList<T, ScalarTypes> {};
+
+struct FromCLI {};
+constexpr auto cli = FromCLI{};
 
 std::string builtin2str(BuiltinType const &) noexcept;
 
@@ -124,6 +139,34 @@ concept Action = requires(A action) {
   { action.get_set() }
   noexcept->std::same_as<BuiltinType>;
 };
+
+template <typename T = std::string_view>
+requires(IsScalarType<T>::value) class assign {
+public:
+  using value_type = T;
+
+  consteval assign() = default;
+  consteval assign(T set_value) : set_value(set_value) {}
+  consteval assign(FromCLI, T default_value) : default_value(default_value) {}
+
+  consteval actions::Signature get_action_fn() const noexcept { return actions::assign<T>; }
+
+  consteval assign set(T set_value) const noexcept { return assign(set_value, this->default_value); }
+  consteval BuiltinType get_set() const noexcept { return set_value; }
+
+  consteval assign otherwise(T default_value) const noexcept { return assign(this->set_value, default_value); }
+  consteval BuiltinType get_default() const noexcept { return default_value; }
+
+private:
+  consteval assign(BuiltinType set_value, BuiltinType default_value)
+      : set_value(set_value), default_value(default_value) {}
+
+  BuiltinType set_value{};
+  BuiltinType default_value{};
+};
+
+assign(char const *)->assign<std::string_view>;
+assign(FromCLI, char const *)->assign<std::string_view>;
 
 // +-----------+
 // | arguments |
@@ -318,6 +361,12 @@ struct Arg {
   }
 
   consteval Arg set(char const *value) const noexcept { return set(std::string_view(value)); }
+
+  consteval Arg operator[](Action auto action) const noexcept {
+    auto arg = Arg::With(*this, action.get_default(), action.get_set());
+    arg.action_fn = action.get_action_fn();
+    return arg;
+  }
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
