@@ -18,6 +18,15 @@ Its goals are, in order of importance:
 
 These goals ought to be discussed in further detail in a separate document.
 
+# Table of contents
+
+1. [Disclaimer](#disclaimer)
+1. [Hands-on](#hands-on)
+1. [Getting started](#getting-started)
+    1. [TLDR](#tldr)
+    1. [Dependencies](#dependencies)
+1. [License](#license)
+
 # Disclaimer
 
 ### I would say this is a hobby project to be used in other hobby projects:
