@@ -287,15 +287,14 @@ struct Arg {
   std::string format_for_usage_summary() const noexcept;
 
   // workaround for not being able to change the value of a variant after it's been constructed
-  template <typename Default, typename Set>
-  static consteval Arg With(Arg const &other, Default d, Set s) noexcept {
+  static consteval Arg With(Arg const &other, BuiltinVariant default_value, BuiltinVariant set_value) noexcept {
     return Arg{.type = other.type,
                .name = other.name,
                .abbrev = other.abbrev,
                .description = other.description,
                .is_required = other.is_required,
-               .default_value = d,
-               .set_value = s,
+               .default_value = default_value,
+               .set_value = set_value,
                .action_fn = other.action_fn,
                .gather_amount = other.gather_amount,
                .default_setter = other.default_setter};
