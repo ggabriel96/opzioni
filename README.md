@@ -45,6 +45,8 @@ These goals ought to be discussed in further detail in a separate document.
 
 - There is *a lot* of polish and optimization work to do.
 
+- There is a whole documentation to write.
+
 # Hands-on
 
 The code below is a fully working example, taken from [`examples/hello.cpp`](examples/hello.cpp), only reformatted and with quotes changed to angle brackets in the `#include`.
