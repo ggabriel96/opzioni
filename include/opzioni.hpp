@@ -4,6 +4,7 @@
 #include "converters.hpp"
 #include "exceptions.hpp"
 #include "string.hpp"
+#include "types.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -24,60 +25,6 @@
 #include <fmt/ranges.h>
 
 namespace opzioni {
-
-// +----------------------------------------+
-// | related to type list and builtin types |
-// +----------------------------------------+
-
-template <typename...>
-struct TypeList;
-
-template <typename...>
-struct InList : std::false_type {};
-
-template <typename T, typename... Ts>
-struct InList<T, TypeList<T, Ts...>> : std::true_type {};
-
-template <typename T, typename U, typename... Ts>
-struct InList<T, TypeList<U, Ts...>> : InList<T, TypeList<Ts...>> {};
-
-template <typename...>
-struct Concat;
-
-template <typename... Lhs, typename... Rhs>
-struct Concat<TypeList<Lhs...>, TypeList<Rhs...>> {
-  using type = TypeList<Lhs..., Rhs...>;
-};
-
-template <typename...>
-struct VariantOf;
-
-template <typename... Ts>
-struct VariantOf<TypeList<Ts...>> {
-  using type = std::variant<Ts...>;
-};
-
-template <typename...>
-struct VectorOf;
-
-template <typename... Ts>
-struct VectorOf<TypeList<Ts...>> {
-  using type = TypeList<std::vector<Ts>...>;
-};
-
-// types that may be used as default_value and set_value
-using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
-using BuiltinVariant = VariantOf<BuiltinTypes>::type;
-
-// types that may be the result of parsing the CLI
-using ExternalTypes = Concat<BuiltinTypes, VectorOf<BuiltinTypes>::type>::type;
-using ExternalVariant = VariantOf<ExternalTypes>::type;
-
-template <typename T>
-concept BuiltinType = InList<T, BuiltinTypes>::value;
-
-template <typename T>
-concept ExternalType = InList<T, ExternalTypes>::value;
 
 std::string builtin2str(BuiltinVariant const &) noexcept;
 
@@ -111,13 +58,13 @@ namespace actions {
 
 using Signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <BuiltinType T>
+template <concepts::BuiltinType T>
 void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <BuiltinType Elem>
+template <concepts::BuiltinType Elem>
 void append(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-template <BuiltinType T>
+template <concepts::BuiltinType T>
 void csv(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 void print_help(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
@@ -133,12 +80,12 @@ void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::st
 struct ArgValue {
   ExternalVariant value{};
 
-  template <ExternalType T>
+  template <concepts::ExternalType T>
   T as() const {
     return std::get<T>(value);
   }
 
-  template <ExternalType T>
+  template <concepts::ExternalType T>
   operator T() const {
     return as<T>();
   }
@@ -148,7 +95,7 @@ class ArgValueSetter {
 public:
   ArgValueSetter(ArgValue &arg) : arg(arg) {}
 
-  template <ExternalType T>
+  template <concepts::ExternalType T>
   auto operator()(T value) {
     this->arg.value = value;
   }
@@ -164,7 +111,7 @@ struct ArgMap {
     return args.at(name);
   }
 
-  template <ExternalType T>
+  template <concepts::ExternalType T>
   T as(std::string_view name) const {
     auto const arg = (*this)[name];
     return arg.as<T>();
@@ -201,7 +148,7 @@ struct ArgMap {
 
 using DefaultValueSetter = void (*)(ArgValue &);
 
-template <BuiltinType T>
+template <concepts::BuiltinType T>
 void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
@@ -228,7 +175,7 @@ struct Arg {
     return arg;
   }
 
-  template <BuiltinType T>
+  template <concepts::BuiltinType T>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
@@ -237,7 +184,7 @@ struct Arg {
     return arg;
   }
 
-  template <BuiltinType T>
+  template <concepts::BuiltinType T>
   consteval Arg csv_of() const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
@@ -248,7 +195,7 @@ struct Arg {
     return arg;
   }
 
-  template <BuiltinType T = std::string_view>
+  template <concepts::BuiltinType T = std::string_view>
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
@@ -266,7 +213,7 @@ struct Arg {
     return arg;
   }
 
-  template <BuiltinType T = std::string_view>
+  template <concepts::BuiltinType T = std::string_view>
   consteval Arg gather() const noexcept {
     return gather<T>(0);
   }
@@ -277,14 +224,14 @@ struct Arg {
     return arg;
   }
 
-  template <BuiltinType T>
+  template <concepts::BuiltinType T>
   consteval Arg of() const noexcept {
     auto arg = *this;
     arg.action_fn = actions::assign<T>;
     return arg;
   }
 
-  template <BuiltinType T>
+  template <concepts::BuiltinType T>
   consteval Arg otherwise(T value) const noexcept {
     auto arg = Arg::With(*this, value, this->set_value);
     arg.action_fn = actions::assign<T>;
@@ -309,7 +256,7 @@ struct Arg {
     return arg;
   }
 
-  template <BuiltinType T>
+  template <concepts::BuiltinType T>
   consteval Arg set(T value) const noexcept {
     if (this->type == ArgType::POS)
       throw "Positionals cannot use set value because they always take a value from the command-line";
@@ -624,14 +571,14 @@ namespace actions {
 // | assign |
 // +--------+
 
-template <ExternalType T>
+template <concepts::ExternalType T>
 void assign_to(ArgMap &map, std::string_view const name, T value) {
   auto [it, inserted] = map.args.try_emplace(name, value);
   if (!inserted)
     throw DuplicateAssignment(name);
 }
 
-template <BuiltinType T>
+template <concepts::BuiltinType T>
 void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
@@ -643,7 +590,7 @@ void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // | append |
 // +--------+
 
-template <BuiltinType Elem>
+template <concepts::BuiltinType Elem>
 void append_to(ArgMap &map, std::string_view const name, Elem value) {
   if (auto list = map.args.find(name); list != map.args.end()) {
     std::get<std::vector<Elem>>(list->second.value).emplace_back(std::move(value));
@@ -652,7 +599,7 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
   }
 }
 
-template <BuiltinType Elem>
+template <concepts::BuiltinType Elem>
 void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
@@ -664,7 +611,7 @@ void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // | csv |
 // +-----+
 
-template <BuiltinType T>
+template <concepts::BuiltinType T>
 void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<std::vector<T>>(*parsed_value));
 }
