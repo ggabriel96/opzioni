@@ -176,7 +176,7 @@ struct Arg {
     return arg;
   }
 
-  template <concepts::BuiltinType Elem>
+  template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
