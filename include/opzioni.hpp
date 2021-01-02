@@ -181,7 +181,8 @@ struct Arg {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
     arg.action_fn = actions::append<Elem>;
-    arg.default_setter = set_empty_vector<Elem>;
+    if (!this->is_required)
+      arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
@@ -192,7 +193,8 @@ struct Arg {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
     arg.action_fn = actions::csv<Elem>;
-    arg.default_setter = set_empty_vector<Elem>;
+    if (!this->is_required)
+      arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
