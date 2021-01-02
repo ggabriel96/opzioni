@@ -143,6 +143,43 @@ int main(int argc, char const *argv[]) {
 
 ### There are more complex examples in the [`examples/`](examples/) directory.
 
+# Getting started
+
+opzioni is not published anywhere yet.
+The goal is to eventually make it available on:
+
+- [Conan](https://conan.io/)
+- [vcpkg](https://github.com/microsoft/vcpkg)
+- Meson's [Wrap DB](https://wrapdb.mesonbuild.com/)
+- [conda-forge](https://conda-forge.org/)
+- [Spack](https://spack.io/)
+
+Meanwhile, there are a few options to build and try it out. See the TLDR below.
+
+## TLDR
+
+There are few options to get up to speed on building opzioni:
+
+- If you're familiar with Docker, there is a `Dockerfile` and a `docker-compose.yml` in [`.devcontainer/`](.devcontainer/).
+    Also, the project is already configured to work with [VS Code Remote Containers](https://code.visualstudio.com/docs/remote/containers).
+
+- If you're familiar with [NixOS](https://nixos.org/), there is a [`shell.nix`](shell.nix) ready to use.
+
+Once in your chosen environment, simply run `make`.
+That should download the build dependencies with Conan and build the whole project with Meson and ninja.
+The [`Makefile`](Makefile) is just a simple helper to avoid having to remember all the commands.
+
+## Dependencies
+
+All dependencies below might still work if on earlier minor versions, but I'm not sure.
+I still gotta pin them (except for `fmt` and `Catch2`, which are somewhat pinned in the build definitions). **I always go for the latest versions.**
+
+- GCC >= 10.2. Concepts and Ranges support is required.
+- [meson](https://mesonbuild.com/) >= 0.50 (gotta check that)
+- [ninja](https://ninja-build.org/) >= 1.10
+- [fmt](https://fmt.dev/) >= 7.0.3
+- [Catch2](https://github.com/catchorg/Catch2/) >= 2.13.0
+
 # License
 
 opzioni's license is the [Boost Software License (BSL) 1.0](LICENSE/).
