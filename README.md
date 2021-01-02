@@ -114,7 +114,7 @@ int main(int argc, char const *argv[]) {
 
 1. To gain easy access to opzioni's types and functions, add `using namespace opzioni;`.
 
-    But that's a strong statement, so each name can be pulled into the current namespace too:
+    But that's a strong statement, so each name can be individually pulled into the current namespace too:
 
     ```cpp
     using opzioni::Program, opzioni::Help, opzioni::Version; // etc.
