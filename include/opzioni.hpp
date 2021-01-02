@@ -33,6 +33,15 @@ template <typename...>
 struct TypeList;
 
 template <typename...>
+struct InList : std::false_type {};
+
+template <typename T, typename... Ts>
+struct InList<T, TypeList<T, Ts...>> : std::true_type {};
+
+template <typename T, typename U, typename... Ts>
+struct InList<T, TypeList<U, Ts...>> : InList<T, TypeList<Ts...>> {};
+
+template <typename...>
 struct Concat;
 
 template <typename... Lhs, typename... Rhs>
