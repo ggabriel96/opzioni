@@ -21,7 +21,7 @@ These goals ought to be discussed in further detail in a separate document.
 # Table of contents
 
 1. [Disclaimer](#disclaimer)
-1. [Hands-on](#hands-on)
+1. [Sneak peek](#sneak-peek)
 1. [Getting started](#getting-started)
     1. [TLDR](#tldr)
     1. [Dependencies](#dependencies)
@@ -47,7 +47,7 @@ These goals ought to be discussed in further detail in a separate document.
 
 - There is a whole documentation to write.
 
-# Hands-on
+# Sneak peek
 
 The code below is a fully working example, taken from [`examples/hello.cpp`](examples/hello.cpp), only reformatted and with quotes changed to angle brackets in the `#include`.
 
