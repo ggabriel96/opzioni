@@ -73,6 +73,12 @@ using BuiltinVariant = VariantOf<BuiltinTypes>::type;
 using ExternalTypes = Concat<BuiltinTypes, VectorOf<BuiltinTypes>::type>::type;
 using ExternalVariant = VariantOf<ExternalTypes>::type;
 
+template <typename T>
+concept BuiltinType = InList<T, BuiltinTypes>::value;
+
+template <typename T>
+concept ExternalType = InList<T, ExternalTypes>::value;
+
 std::string builtin2str(BuiltinVariant const &) noexcept;
 
 // +----------------------+
