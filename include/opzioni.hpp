@@ -111,6 +111,20 @@ void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::st
 
 } // namespace actions
 
+template <typename A>
+concept Action = requires(A action) {
+  typename A::value_type;
+
+  { action.get_action_fn() }
+  noexcept->std::same_as<actions::Signature>;
+
+  { action.get_default() }
+  noexcept->std::same_as<BuiltinType>;
+
+  { action.get_set() }
+  noexcept->std::same_as<BuiltinType>;
+};
+
 // +-----------+
 // | arguments |
 // +-----------+
