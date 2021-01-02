@@ -237,7 +237,7 @@ struct Arg {
   consteval Arg otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
 
   consteval Arg otherwise(DefaultValueSetter setter) const noexcept {
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.default_setter = setter;
     arg.is_required = false;
     return arg;
