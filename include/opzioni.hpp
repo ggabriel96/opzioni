@@ -31,7 +31,6 @@ std::string builtin2str(BuiltinVariant const &) noexcept;
 // +----------------------+
 // | forward declarations |
 // +----------------------+
-enum struct ArgType { POS, OPT, FLG };
 
 struct Arg;
 struct ArgMap;
@@ -156,6 +155,8 @@ void set_empty_vector(ArgValue &arg) noexcept {
 // +-----+
 // | Arg |
 // +-----+
+
+enum struct ArgType { POS, OPT, FLG };
 
 struct Arg {
   ArgType type = ArgType::POS;
