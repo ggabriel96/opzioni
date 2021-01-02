@@ -20,8 +20,8 @@ int main(int argc, char const *argv[]) {
           Opt("double", "d").help("A double")[assign(cli, 7.11)] * Opt("last-name").help("Your last name") *
           Opt("o").help("We also support options with only short names")[assign(cli, "oh")] *
           Opt("num", "n").help("Creates a vector of numbers with each appearence of this argument")[append<int>()] *
-          Opt("csv").csv_of<int>().help("In contrast to `append`, this will create a vector of numbers from a single "
-                                        "comma-separated list of values") *
+          Opt("csv")[csv<int>()].help("In contrast to `append`, this will create a vector of numbers from a single "
+                                      "comma-separated list of values") *
           Opt("verbose", "v").help("Level of verbosity")[assign(1).otherwise(0)] *
           Flg("append", "a")[append(1)].help("The equivalent of Python's argparse `append_const`: "
                                              "will append the defined value every time it appears in the CLI") *

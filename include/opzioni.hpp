@@ -212,6 +212,35 @@ private:
 append(char const *)->append<std::string_view>;
 append(FromCLI, char const *)->append<std::string_view>;
 
+template <typename T = std::string_view>
+requires(IsScalarType<T>::value) class csv {
+public:
+  using value_type = T;
+
+  consteval csv() = default;
+
+  consteval actions::Signature get_action_fn() const noexcept { return actions::csv<T>; }
+
+  consteval BuiltinType get_set() const noexcept { return set_value; }
+
+  consteval csv otherwise(DefaultValueSetter default_setter) const noexcept {
+    return csv(this->set_value, std::monostate{}, default_setter);
+  }
+  consteval BuiltinType get_default() const noexcept { return default_value; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return default_setter; }
+
+private:
+  consteval csv(BuiltinType set_value, BuiltinType default_value, DefaultValueSetter default_setter)
+      : set_value(set_value), default_value(default_value), default_setter(default_setter) {}
+
+  BuiltinType set_value{};
+  BuiltinType default_value{};
+  DefaultValueSetter default_setter = set_empty_vector<T>;
+};
+
+csv(char const *)->csv<std::string_view>;
+csv(FromCLI, char const *)->csv<std::string_view>;
+
 // +-----------+
 // | arguments |
 // +-----------+
