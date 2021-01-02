@@ -1,5 +1,5 @@
-#ifndef OPZIONI_CONCEPTS_H
-#define OPZIONI_CONCEPTS_H
+#ifndef OPZIONI_TYPES_H
+#define OPZIONI_TYPES_H
 
 #include <concepts>
 #include <ranges>
@@ -83,4 +83,4 @@ concept Container = std::ranges::range<T> &&std::is_default_constructible_v<T> &
 } // namespace concepts
 } // namespace opzioni
 
-#endif // OPZIONI_CONCEPTS_H
+#endif // OPZIONI_TYPES_H
