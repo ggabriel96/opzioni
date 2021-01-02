@@ -87,6 +87,7 @@ std::string builtin2str(BuiltinType const &) noexcept;
 enum struct ArgType { POS, OPT, FLG };
 
 struct Arg;
+struct ArgValue;
 struct ArgMap;
 class Program;
 
@@ -94,6 +95,8 @@ consteval void validate_arg(Arg const &) noexcept;
 
 template <std::size_t N>
 consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
+
+using DefaultValueSetter = void (*)(ArgValue &);
 
 // +----------------+
 // | error handlers |
@@ -136,6 +139,9 @@ concept Action = requires(A action) {
   { action.get_default() }
   noexcept->std::same_as<BuiltinType>;
 
+  { action.get_default_setter() }
+  noexcept->std::same_as<DefaultValueSetter>;
+
   { action.get_set() }
   noexcept->std::same_as<BuiltinType>;
 };
@@ -154,15 +160,20 @@ public:
   consteval assign set(T set_value) const noexcept { return assign(set_value, this->default_value); }
   consteval BuiltinType get_set() const noexcept { return set_value; }
 
-  consteval assign otherwise(T default_value) const noexcept { return assign(this->set_value, default_value); }
+  consteval assign otherwise(T default_value) const noexcept { return assign(this->set_value, default_value, nullptr); }
+  consteval assign otherwise(DefaultValueSetter default_setter) const noexcept {
+    return assign(this->set_value, std::monostate{}, default_setter);
+  }
   consteval BuiltinType get_default() const noexcept { return default_value; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return default_setter; }
 
 private:
-  consteval assign(BuiltinType set_value, BuiltinType default_value)
-      : set_value(set_value), default_value(default_value) {}
+  consteval assign(BuiltinType set_value, BuiltinType default_value, DefaultValueSetter default_setter)
+      : set_value(set_value), default_value(default_value), default_setter(default_setter) {}
 
   BuiltinType set_value{};
   BuiltinType default_value{};
+  DefaultValueSetter default_setter = nullptr;
 };
 
 assign(char const *)->assign<std::string_view>;
@@ -241,16 +252,14 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
-using DefaultValueSetter = void (*)(ArgValue &);
+// +-----+
+// | Arg |
+// +-----+
 
 template <typename T>
 void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
-
-// +-----+
-// | Arg |
-// +-----+
 
 struct Arg {
   ArgType type = ArgType::POS;
@@ -365,6 +374,7 @@ struct Arg {
   consteval Arg operator[](Action auto action) const noexcept {
     auto arg = Arg::With(*this, action.get_default(), action.get_set());
     arg.action_fn = action.get_action_fn();
+    arg.default_setter = action.get_default_setter();
     return arg;
   }
 
