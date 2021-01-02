@@ -618,4 +618,11 @@ void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string
 
 } // namespace opzioni
 
+// +-----------------------------------------------+
+// | forward declarations of our `fmt::formatter`s |
+// +-----------------------------------------------+
+
+template <>
+struct fmt::formatter<std::monostate>;
+
 #endif // OPZIONI_H
