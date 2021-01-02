@@ -1,8 +1,14 @@
 #include <string_view>
+#include <vector>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include "opzioni.hpp"
+
+using strv = std::string_view;
+template <typename T>
+using vec = std::vector<T>;
 
 /**
  * This is a simple simulation of a subset of the docker command line interface using opzioni.
@@ -15,7 +21,6 @@
  * their relative order is preserved). By the way, in the actual CLI, the `version` flag uses lowercase `-v`.
  */
 int main(int argc, char const *argv[]) {
-  using fmt::print;
   using namespace opzioni;
 
   auto const exec = Program("exec").intro("Run a command in a running container") +
@@ -59,4 +64,16 @@ int main(int argc, char const *argv[]) {
       Cmd(exec) + Cmd(pull);
 
   auto const args = docker(argc, argv);
+
+  fmt::print("docker args:\n");
+  fmt::print("- config: {}\n", args.as<strv>("config"));
+  fmt::print("- context: {}\n", args.as<strv>("context"));
+  fmt::print("- debug: {}\n", args.as<bool>("debug"));
+  fmt::print("- host: {}\n", args.as<vec<strv>>("host"));
+  fmt::print("- log-level: {}\n", args.as<strv>("log-level"));
+  fmt::print("- tls: {}\n", args.as<bool>("tls"));
+  fmt::print("- tlscacert: {}\n", args.as<strv>("tlscacert"));
+  fmt::print("- tlscert: {}\n", args.as<strv>("tlscert"));
+  fmt::print("- tlskey: {}\n", args.as<strv>("tlskey"));
+  fmt::print("- tlsverify: {}\n", args.as<bool>("tlsverify"));
 }
