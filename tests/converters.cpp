@@ -6,7 +6,7 @@
 
 #include "converters.hpp"
 
-SCENARIO("bool", "[BuiltinType]") {
+SCENARIO("bool", "[BuiltinTypes]") {
   using type = bool;
   using namespace std::string_view_literals;
 

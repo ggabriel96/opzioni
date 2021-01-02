@@ -26,7 +26,7 @@ struct fmt::formatter<std::monostate> {
 
 namespace opzioni {
 
-std::string builtin2str(BuiltinType const &variant) noexcept {
+std::string builtin2str(BuiltinVariant const &variant) noexcept {
   auto const _2str = [](auto const &val) { return fmt::to_string(val); };
   return std::visit(_2str, variant);
 }

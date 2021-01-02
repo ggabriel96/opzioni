@@ -57,14 +57,14 @@ struct VectorOf<TypeList<Ts...>> {
 };
 
 // types that may be used as default_value and set_value
-using ScalarTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
-using BuiltinType = VariantOf<ScalarTypes>::type;
+using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
+using BuiltinVariant = VariantOf<BuiltinTypes>::type;
 
 // types that may be the result of parsing the CLI
-using ExternalTypes = Concat<ScalarTypes, VectorOf<ScalarTypes>::type>::type;
-using ExternalType = VariantOf<ExternalTypes>::type;
+using ExternalTypes = Concat<BuiltinTypes, VectorOf<BuiltinTypes>::type>::type;
+using ExternalVariant = VariantOf<ExternalTypes>::type;
 
-std::string builtin2str(BuiltinType const &) noexcept;
+std::string builtin2str(BuiltinVariant const &) noexcept;
 
 // +----------------------+
 // | forward declarations |
@@ -116,7 +116,7 @@ void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::st
 // +-----------+
 
 struct ArgValue {
-  ExternalType value{};
+  ExternalVariant value{};
 
   template <typename T>
   T as() const {
@@ -201,8 +201,8 @@ struct Arg {
   std::string_view abbrev{};
   std::string_view description{};
   bool is_required = false;
-  BuiltinType default_value{};
-  BuiltinType set_value{};
+  BuiltinVariant default_value{};
+  BuiltinVariant set_value{};
   actions::Signature action_fn = actions::assign<std::string_view>;
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
