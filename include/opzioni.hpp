@@ -200,17 +200,11 @@ struct Arg {
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
-    if (amount != 1) {
-      auto arg = Arg::With(*this, std::monostate{}, this->set_value);
-      arg.is_required = false;
-      arg.gather_amount = amount;
-      arg.action_fn = actions::append<Elem>;
-      arg.default_setter = set_empty_vector<Elem>;
-      return arg;
-    }
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.gather_amount = amount;
     arg.action_fn = actions::append<Elem>;
+    if (!this->is_required)
+      arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
