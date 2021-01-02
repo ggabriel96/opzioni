@@ -142,3 +142,13 @@ int main(int argc, char const *argv[]) {
     ```
 
 ### There are more complex examples in the [`examples/`](examples/) directory.
+
+# License
+
+opzioni's license is the [Boost Software License (BSL) 1.0](LICENSE/).
+
+This means you are **free to use** this library **as you wish** and see fit.
+
+It is only needed to provide a copy of the license if the source is also being distributed.
+
+In other words, **there is no need to bundle opzioni's license with your binary**.
