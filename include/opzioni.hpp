@@ -104,7 +104,7 @@ void set_empty_vector(ArgValue &) noexcept;
 // +----------------+
 // | error handlers |
 // +----------------+
-using error_handler = int (*)(Program const &, UserError const &);
+using ErrorHandler = int (*)(Program const &, UserError const &);
 
 int print_error(Program const &, UserError const &) noexcept;
 int print_error_and_usage(Program const &, UserError const &) noexcept;
@@ -603,7 +603,7 @@ public:
   std::string_view description{};
 
   std::size_t msg_width = 100;
-  opzioni::error_handler error_handler = print_error;
+  ErrorHandler error_handler = print_error;
   // bool has_auto_help{false};
   std::size_t positionals_amount = 0;
 
@@ -616,7 +616,7 @@ public:
   Program &v(std::string_view) noexcept; // I don't know what else to call this
 
   Program &max_width(std::size_t) noexcept;
-  Program &on_error(opzioni::error_handler) noexcept;
+  Program &on_error(ErrorHandler) noexcept;
 
   Program &operator+(Cmd cmd) { return add(cmd); }
 
