@@ -375,15 +375,10 @@ HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
-  auto const get_name = [](auto const &arg) -> std::string_view { return arg.name; };
-  std::size_t max_name_length = 0;
-  if (!args.empty())
-    max_name_length = std::ranges::max(args | transform(get_name) | transform(&std::string_view::length));
-  // +8 because of left margin (4 of indentation, 4 of alignment)
-  // *2 because maximum length is twice the length of the name if has no abbreviation
-  // +5 because of formatting artifacts from arguments (e.g. <>)
-  // +3 to give it 4 spaces between usage and description (not +4 because `print_arg_help` puts a space between them)
-  return 8 + 2 * max_name_length + 5 + 3;
+  auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_help_index().length(); };
+  std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
+  std::size_t const required_length_cmds = cmds.empty() ? 0 : std::ranges::max(cmds | transform(required_length));
+  return std::max(required_length_args, required_length_cmds);
 }
 
 void HelpFormatter::print_title() const noexcept {
@@ -434,12 +429,13 @@ void HelpFormatter::print_long_usage() const noexcept {
 
 void HelpFormatter::print_help() const noexcept {
   std::string_view pending_nl = "";
-  auto const padding = std::string(help_padding_size(), ' ');
+  // using same padding size for all arguments so they stay aligned
+  auto const padding_size = help_padding_size();
 
   if (positionals_amount > 0) {
     out << "Positionals:\n";
     for (auto const &arg : args | std::views::take(positionals_amount)) {
-      print_arg_help(arg, padding);
+      print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
   }
@@ -447,7 +443,7 @@ void HelpFormatter::print_help() const noexcept {
   if (args.size() > positionals_amount) {
     out << pending_nl << "Options & Flags:\n";
     for (auto const &arg : args | std::views::drop(positionals_amount)) {
-      print_arg_help(arg, padding);
+      print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
   } else {
@@ -457,7 +453,7 @@ void HelpFormatter::print_help() const noexcept {
   if (!cmds.empty()) {
     out << pending_nl << "Commands:\n";
     for (auto const &arg : cmds) {
-      print_arg_help(arg, padding);
+      print_arg_help(arg, padding_size);
     }
   }
 }

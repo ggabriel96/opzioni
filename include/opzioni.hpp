@@ -544,17 +544,19 @@ private:
   std::vector<Cmd> cmds;
   std::vector<Arg> args;
 
-  void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
+  void print_arg_help(auto const &arg, std::size_t const padding_size) const noexcept {
     using std::views::drop;
     auto const description = arg.format_for_help_description();
-    // -8 because we'll later print a left margin of 8 spaces (4 of indentation, 4 of alignment)
-    auto const description_lines = limit_within(description, max_width - padding.size() - 8);
-    // -4 again because we'll shift it 4 spaces into the padding, invading it,
-    // so we can have the possible following lines indented
-    out << fmt::format("    {:<{}} {}\n", arg.format_for_help_index(), padding.size() - 4,
+    // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
+    // then -4 again because we add 4 spaces between the arg usage and description
+    auto const description_lines = limit_within(description, max_width - padding_size - 8 - 4);
+
+    out << fmt::format("    {:<{}}    {}\n", arg.format_for_help_index(), padding_size,
                        fmt::join(description_lines.front(), " "));
+
     for (auto const &line : description_lines | drop(1)) {
-      out << fmt::format("    {} {}\n", padding, fmt::join(line, " "));
+      // the same 4 spaces of left margin, then additional 4 spaces of indentation
+      out << fmt::format("    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
     };
   }
 };
