@@ -96,5 +96,12 @@ int main(int argc, char const *argv[]) {
     fmt::print("- tty: {}\n", exec_args->as<bool>("tty"));
     fmt::print("- user: {}\n", exec_args->as<strv>("user"));
     fmt::print("- workdir: {}\n", exec_args->as<strv>("workdir"));
+  } else if (auto const pull_args = args.cmd("pull")) {
+    fmt::print("\npull args:\n");
+    fmt::print("- name: {}\n", pull_args->as<strv>("name"));
+    fmt::print("- all-tags: {}\n", pull_args->as<bool>("all-tags"));
+    fmt::print("- disable-content-trust: {}\n", pull_args->as<bool>("disable-content-trust"));
+    fmt::print("- platform: {}\n", pull_args->as<strv>("platform"));
+    fmt::print("- quiet: {}\n", pull_args->as<bool>("quiet"));
   }
 }
