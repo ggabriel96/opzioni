@@ -1,7 +1,20 @@
 # opzioni
 
 opzioni is a command line arguments parser library for C++.
-Its goals are, in order of importance:
+
+# Table of contents
+
+1. [Goals](#goals)
+1. [Disclaimer](#disclaimer)
+1. [Sneak peek](#sneak-peek)
+1. [Getting started](#getting-started)
+    1. [TLDR](#tldr)
+    1. [Dependencies](#dependencies)
+1. [License](#license)
+
+# Goals
+
+The goals of this library, in order of importance, are:
 
 1. **Be as simple and enjoyable as possible.**
 
@@ -12,20 +25,33 @@ Its goals are, in order of importance:
     That's utopic, but that's what is being strived for.
     Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.
 
+1. **_Try_ not to repeat yourself**.
+
+    I like to think about command-line parsers as follows.
+    First, there is a CLI specification, say, with names, descriptions, types, default values, etc.
+    Then, parsing is done and a result is returned with which one would *simply access* the information the user provided in
+    the command-line or they themselves provided in the specification.
+    By "simply access" I mean: if a `name` argument is defined in the specification, I would like to access its value in the
+    result with a syntax similar to `args.name` or `args["name"]`.
+
+    However, in C++, one thing that really bothers me is having to state the type of the argument *both* in the CLI specification
+    *and* when accessing it in the parse result.
+    Unfortunately, that is pretty much unavoidable, at least when accessing the result.
+    On one hand, the result depends on runtime information (that comes from the command-line), so some things *cannot* be `constexpr`.
+    On the other hand, I'm not yet capable of "propagating" the type information of each argument all the way from the
+    specification to the result (if that's even possible).
+    That means that it's impossible to write `auto name = args["name"]` if `args` is not `constexpr` and holds `std::variant`s.
+    Boost.Hana makes me think there is a way, but I don't know how.
+    See also https://github.com/ggabriel96/opzioni/issues/5, at "The problem".
+
+    Finally, I decided to at least *try* to avoid asking the user to actually write the type of each argument,
+    since they'll eventually have to do that when accessing their values.
+    In order to accomplish this, a lot of template argument deduction is used, together with the provided defaults and a lot of guessing.
+    One place that didn't quite fully work though was with actions.
+
 1. **Be bleeding-edge.**
 
     This library requires C++20. That limits a lot its potential users, but also allows for the use of the new and powerful features of C++. It also helps to accomplish the previous goals.
-
-These goals ought to be discussed in further detail in a separate document.
-
-# Table of contents
-
-1. [Disclaimer](#disclaimer)
-1. [Sneak peek](#sneak-peek)
-1. [Getting started](#getting-started)
-    1. [TLDR](#tldr)
-    1. [Dependencies](#dependencies)
-1. [License](#license)
 
 # Disclaimer
 
