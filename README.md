@@ -42,7 +42,7 @@ The goals of this library, in order of importance, are:
     specification to the result (if that's even possible).
     That means that it's impossible to write `auto name = args["name"]` if `args` is not `constexpr` and holds `std::variant`s.
     Boost.Hana makes me think there is a way, but I don't know how.
-    See also https://github.com/ggabriel96/opzioni/issues/5, at "The problem".
+    See also [The return of templated Arg?](https://github.com/ggabriel96/opzioni/issues/5), at "The problem".
 
     Finally, I decided to at least *try* to avoid asking the user to actually write the type of each argument,
     since they'll eventually have to do that when accessing their values.
@@ -188,7 +188,7 @@ be possible if only looking at each argument individually, e.g. finding duplicat
 
 Unfortunately, `Program` itself is not `constexpr`-enabled.
 The TLDR reason is that it is too hard to make it work and clumsy to use.
-More details in https://github.com/ggabriel96/opzioni/pull/43.
+More details in the [Constexpr Arg](https://github.com/ggabriel96/opzioni/pull/43) PR.
 
 # Getting started
 
