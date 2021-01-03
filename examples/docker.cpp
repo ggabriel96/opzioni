@@ -82,4 +82,19 @@ int main(int argc, char const *argv[]) {
   fmt::print("- tlscert: {}\n", args.as<strv>("tlscert"));
   fmt::print("- tlskey: {}\n", args.as<strv>("tlskey"));
   fmt::print("- tlsverify: {}\n", args.as<bool>("tlsverify"));
+
+  if (auto const exec_args = args.cmd("exec")) {
+    fmt::print("\nexec args:\n");
+    fmt::print("- container: {}\n", exec_args->as<strv>("container"));
+    fmt::print("- command: {}\n", exec_args->as<vec<strv>>("command"));
+    fmt::print("- detach: {}\n", exec_args->as<bool>("detach"));
+    fmt::print("- detach-keys: {}\n", exec_args->as<strv>("detach-keys"));
+    fmt::print("- env: {}\n", exec_args->as<vec<strv>>("env"));
+    fmt::print("- env-file: {}\n", exec_args->as<vec<strv>>("env-file"));
+    fmt::print("- interactive: {}\n", exec_args->as<bool>("interactive"));
+    fmt::print("- privileged: {}\n", exec_args->as<bool>("privileged"));
+    fmt::print("- tty: {}\n", exec_args->as<bool>("tty"));
+    fmt::print("- user: {}\n", exec_args->as<strv>("user"));
+    fmt::print("- workdir: {}\n", exec_args->as<strv>("workdir"));
+  }
 }
