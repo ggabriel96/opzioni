@@ -7,23 +7,6 @@
 #include <tuple>
 #include <variant>
 
-template <>
-struct fmt::formatter<std::monostate> {
-  constexpr auto parse(format_parse_context &ctx) {
-    auto it = ctx.begin() + 1, end = ctx.end();
-    // We have nothing to parse for std::monostate
-    if (it != end && *it != '}')
-      throw format_error("std::monostate does not take any format specifier");
-    return end;
-  }
-
-  template <typename FormatContext>
-  auto format(std::monostate const &_, FormatContext &ctx) {
-    // ctx.out() is an output iterator to write to.
-    return format_to(ctx.out(), "_");
-  }
-};
-
 namespace opzioni {
 
 std::string builtin2str(BuiltinVariant const &variant) noexcept {
@@ -517,3 +500,30 @@ void print_version(Program const &program, ArgMap &, Arg const &, std::optional<
 } // namespace actions
 
 } // namespace opzioni
+
+// +-----------------------------------+
+// | specializations of fmt::formatter |
+// +-----------------------------------+
+
+template <>
+struct fmt::formatter<std::monostate> : fmt::formatter<std::string_view> {
+  using fmt::formatter<std::string_view>::parse;
+
+  template <typename FormatContext>
+  auto format(std::monostate const &_, FormatContext &ctx) {
+    return fmt::formatter<std::string_view>::format("", ctx);
+  }
+};
+
+template <>
+struct fmt::formatter<std::vector<bool>> {
+  constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.end(); }
+
+  template <typename FormatContext>
+  auto format(std::vector<bool> const &vec, FormatContext &ctx) {
+    auto out = fmt::format_to(ctx.out(), "{{");
+    for (auto &&elem : vec)
+      out = fmt::format_to(out, "{}", elem);
+    return fmt::format_to(out, "}}");
+  }
+};

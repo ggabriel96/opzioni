@@ -625,4 +625,7 @@ void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string
 template <>
 struct fmt::formatter<std::monostate>;
 
+template <>
+struct fmt::formatter<std::vector<bool>>;
+
 #endif // OPZIONI_H
