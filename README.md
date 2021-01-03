@@ -114,11 +114,11 @@ int main(int argc, char const *argv[]) {
         hello <name> [--help] [--version]
 
     Positionals:
-        name                       Your name please, so I can greet you
+        name             Your name please, so I can greet you
 
     Options & Flags:
-        -h, --help                 Display this information
-        -V, --version              Display the software version
+        -h, --help       Display this information
+        -V, --version    Display the software version
     ```
 
 1. Automatic version with `--version` or `-V`
