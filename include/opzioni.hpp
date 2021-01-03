@@ -132,8 +132,6 @@ struct ArgMap {
 
   auto size() const noexcept { return this->args.size(); }
 
-  auto is_empty() const noexcept { return size() == 0; }
-
   void reset() noexcept {
     args.clear();
     exec_path = "";
