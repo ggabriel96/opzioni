@@ -55,8 +55,6 @@ The goals of this library, in order of importance, are:
 
 # Disclaimer
 
-### I would say this is a hobby project to be used in other hobby projects:
-
 - This is a **personal project** with **no promise of maintainability** for the time being.
 
     I started it to learn more about C++ and its new features.
