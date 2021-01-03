@@ -7,23 +7,6 @@
 #include <tuple>
 #include <variant>
 
-template <>
-struct fmt::formatter<std::monostate> {
-  constexpr auto parse(format_parse_context &ctx) {
-    auto it = ctx.begin() + 1, end = ctx.end();
-    // We have nothing to parse for std::monostate
-    if (it != end && *it != '}')
-      throw format_error("std::monostate does not take any format specifier");
-    return end;
-  }
-
-  template <typename FormatContext>
-  auto format(std::monostate const &_, FormatContext &ctx) {
-    // ctx.out() is an output iterator to write to.
-    return format_to(ctx.out(), "_");
-  }
-};
-
 namespace opzioni {
 
 std::string builtin2str(BuiltinVariant const &variant) noexcept {
@@ -69,7 +52,16 @@ std::string Arg::format_base_usage() const noexcept {
   return fmt::format("{}{}", dashes, name);
 }
 
-std::string Arg::format_for_help_description() const noexcept { return std::string(description); }
+std::string Arg::format_for_help_description() const noexcept {
+  auto const format = [this](auto const &default_value, auto const &set_value) {
+    return fmt::format(description, fmt::arg("name", this->name), fmt::arg("abbrev", this->abbrev),
+                       fmt::arg("default_value", default_value), fmt::arg("set_value", set_value),
+                       fmt::arg("gather_amount", this->gather_amount));
+  };
+  ArgValue default_value{};
+  set_default_to(default_value); // gotta use this because of DefaultValueSetter
+  return std::visit(format, default_value.value, this->set_value);
+}
 
 std::string Arg::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
@@ -383,15 +375,10 @@ HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
-  auto const get_name = [](auto const &arg) -> std::string_view { return arg.name; };
-  std::size_t max_name_length = 0;
-  if (!args.empty())
-    max_name_length = std::ranges::max(args | transform(get_name) | transform(&std::string_view::length));
-  // +8 because of left margin (4 of indentation, 4 of alignment)
-  // *2 because maximum length is twice the length of the name if has no abbreviation
-  // +5 because of formatting artifacts from arguments (e.g. <>)
-  // +3 to give it 4 spaces between usage and description (not +4 because `print_arg_help` puts a space between them)
-  return 8 + 2 * max_name_length + 5 + 3;
+  auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_help_index().length(); };
+  std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
+  std::size_t const required_length_cmds = cmds.empty() ? 0 : std::ranges::max(cmds | transform(required_length));
+  return std::max(required_length_args, required_length_cmds);
 }
 
 void HelpFormatter::print_title() const noexcept {
@@ -442,12 +429,13 @@ void HelpFormatter::print_long_usage() const noexcept {
 
 void HelpFormatter::print_help() const noexcept {
   std::string_view pending_nl = "";
-  auto const padding = std::string(help_padding_size(), ' ');
+  // using same padding size for all arguments so they stay aligned
+  auto const padding_size = help_padding_size();
 
   if (positionals_amount > 0) {
     out << "Positionals:\n";
     for (auto const &arg : args | std::views::take(positionals_amount)) {
-      print_arg_help(arg, padding);
+      print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
   }
@@ -455,7 +443,7 @@ void HelpFormatter::print_help() const noexcept {
   if (args.size() > positionals_amount) {
     out << pending_nl << "Options & Flags:\n";
     for (auto const &arg : args | std::views::drop(positionals_amount)) {
-      print_arg_help(arg, padding);
+      print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
   } else {
@@ -465,7 +453,7 @@ void HelpFormatter::print_help() const noexcept {
   if (!cmds.empty()) {
     out << pending_nl << "Commands:\n";
     for (auto const &arg : cmds) {
-      print_arg_help(arg, padding);
+      print_arg_help(arg, padding_size);
     }
   }
 }
@@ -517,3 +505,30 @@ void print_version(Program const &program, ArgMap &, Arg const &, std::optional<
 } // namespace actions
 
 } // namespace opzioni
+
+// +-----------------------------------+
+// | specializations of fmt::formatter |
+// +-----------------------------------+
+
+template <>
+struct fmt::formatter<std::monostate> : fmt::formatter<std::string_view> {
+  using fmt::formatter<std::string_view>::parse;
+
+  template <typename FormatContext>
+  auto format(std::monostate const &_, FormatContext &ctx) {
+    return fmt::formatter<std::string_view>::format("", ctx);
+  }
+};
+
+template <>
+struct fmt::formatter<std::vector<bool>> {
+  constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.end(); }
+
+  template <typename FormatContext>
+  auto format(std::vector<bool> const &vec, FormatContext &ctx) {
+    auto out = fmt::format_to(ctx.out(), "{{");
+    for (auto &&elem : vec)
+      out = fmt::format_to(out, "{}", elem);
+    return fmt::format_to(out, "}}");
+  }
+};

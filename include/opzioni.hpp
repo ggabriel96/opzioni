@@ -176,12 +176,13 @@ struct Arg {
     return arg;
   }
 
-  template <concepts::BuiltinType Elem>
+  template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
     arg.action_fn = actions::append<Elem>;
-    arg.default_setter = set_empty_vector<Elem>;
+    if (!this->is_required)
+      arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
@@ -192,7 +193,8 @@ struct Arg {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.is_required = false;
     arg.action_fn = actions::csv<Elem>;
-    arg.default_setter = set_empty_vector<Elem>;
+    if (!this->is_required)
+      arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
@@ -200,17 +202,11 @@ struct Arg {
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
-    if (amount != 1) {
-      auto arg = Arg::With(*this, std::monostate{}, this->set_value);
-      arg.is_required = false;
-      arg.gather_amount = amount;
-      arg.action_fn = actions::append<Elem>;
-      arg.default_setter = set_empty_vector<Elem>;
-      return arg;
-    }
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.gather_amount = amount;
     arg.action_fn = actions::append<Elem>;
+    if (!this->is_required)
+      arg.default_setter = set_empty_vector<Elem>;
     return arg;
   }
 
@@ -243,7 +239,7 @@ struct Arg {
   consteval Arg otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
 
   consteval Arg otherwise(DefaultValueSetter setter) const noexcept {
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
     arg.default_setter = setter;
     arg.is_required = false;
     return arg;
@@ -375,7 +371,7 @@ consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
   if (!abbrev.empty() && abbrev.length() != 1)
     throw "Abbreviations must be a single letter";
-  return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev};
+  return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
 }
 
 consteval Arg Opt(std::string_view name) noexcept { return Opt(name, {}); }
@@ -546,17 +542,19 @@ private:
   std::vector<Cmd> cmds;
   std::vector<Arg> args;
 
-  void print_arg_help(auto const &arg, std::string_view const padding) const noexcept {
+  void print_arg_help(auto const &arg, std::size_t const padding_size) const noexcept {
     using std::views::drop;
     auto const description = arg.format_for_help_description();
-    // -8 because we'll later print a left margin of 8 spaces (4 of indentation, 4 of alignment)
-    auto const description_lines = limit_within(description, max_width - padding.size() - 8);
-    // -4 again because we'll shift it 4 spaces into the padding, invading it,
-    // so we can have the possible following lines indented
-    out << fmt::format("    {:<{}} {}\n", arg.format_for_help_index(), padding.size() - 4,
+    // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
+    // then -4 again because we add 4 spaces between the arg usage and description
+    auto const description_lines = limit_within(description, max_width - padding_size - 8 - 4);
+
+    out << fmt::format("    {:<{}}    {}\n", arg.format_for_help_index(), padding_size,
                        fmt::join(description_lines.front(), " "));
+
     for (auto const &line : description_lines | drop(1)) {
-      out << fmt::format("    {} {}\n", padding, fmt::join(line, " "));
+      // the same 4 spaces of left margin, then additional 4 spaces of indentation
+      out << fmt::format("    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
     };
   }
 };
@@ -619,5 +617,15 @@ void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string
 } // namespace actions
 
 } // namespace opzioni
+
+// +-----------------------------------------------+
+// | forward declarations of our `fmt::formatter`s |
+// +-----------------------------------------------+
+
+template <>
+struct fmt::formatter<std::monostate>;
+
+template <>
+struct fmt::formatter<std::vector<bool>>;
 
 #endif // OPZIONI_H

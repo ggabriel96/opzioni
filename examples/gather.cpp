@@ -21,8 +21,8 @@ int main(int argc, char const *argv[]) {
                   "it")
               .gather() *
           Opt("two")
-              .help("This is similar to the previous gather, but it limits the amount of consumed arguments to only 2,"
-                    " hence it is not so problematic")
+              .help("This is similar to the previous gather, but it limits the amount of consumed arguments to only "
+                    "{gather_amount}, hence it is not so problematic. Default: {default_value}")
               .gather<int>(2)
               .otherwise(+[](ArgValue &arg) {
                 arg.value = std::vector{0, 0};
