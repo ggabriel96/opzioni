@@ -25,7 +25,7 @@ The goals of this library, in order of importance, are:
     That's utopic, but that's what is being strived for.
     Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.
 
-1. **_Try_ not to repeat yourself**.
+1. **_Try_ not to repeat yourself.**
 
     I like to think about command-line parsers as follows.
     First, there is a CLI specification, say, with names, descriptions, types, default values, etc.
