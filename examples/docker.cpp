@@ -26,7 +26,7 @@ int main(int argc, char const *argv[]) {
   auto const exec = Program("exec").intro("Run a command in a running container") +
                     Help() * Flg("detach", "d").help("Detached mode: run command in the background") *
                         Opt("detach-keys").help("Override the key sequence for detaching a container") *
-                        Opt("env", "e").help("Set environment variables") *
+                        Opt("env", "e").help("Set environment variables").append() *
                         Opt("env-file").help("Read in a file of environment variables").append() *
                         Flg("interactive", "i").help("Keep STDIN open even if not attached") *
                         Flg("privileged").help("Give extended privileges to the command") *
