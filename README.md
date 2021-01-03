@@ -218,13 +218,15 @@ The [`Makefile`](Makefile) is just a simple helper to avoid having to remember a
 ## Dependencies
 
 All dependencies below might still work if on earlier minor versions, but I'm not sure.
-I still gotta pin them (except for `fmt` and `Catch2`, which are somewhat pinned in the build definitions). **I always go for the latest versions.**
+I still gotta pin them (except for `fmt` and `Catch2`, which are somewhat pinned in the build definitions).
+**I always try to go for the latest versions.**
 
 - GCC >= 10.2. Concepts and Ranges support is required.
 - [meson](https://mesonbuild.com/) >= 0.50 (gotta check that)
 - [ninja](https://ninja-build.org/) >= 1.10
 - [fmt](https://fmt.dev/) >= 7.0.3
 - [Catch2](https://github.com/catchorg/Catch2/) >= 2.13.0
+- ClangFormat 10 if willing to apply the formatting as checked in CI
 
 # License
 
