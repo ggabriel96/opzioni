@@ -50,6 +50,7 @@ These goals ought to be discussed in further detail in a separate document.
 # Sneak peek
 
 The code below is a fully working example, taken from [`examples/hello.cpp`](examples/hello.cpp), only reformatted and with quotes changed to angle brackets in the `#include`.
+Feel free to take a look at the other, more complex, examples in the same directory.
 
 ```cpp
 #include <iostream>
@@ -152,7 +153,16 @@ int main(int argc, char const *argv[]) {
     std::cout << args["name"].as<std::string_view>() << '\n'; // 2
     ```
 
-### There are more complex examples in the [`examples/`](examples/) directory.
+### `Program` is not `constexpr`! Where is the compile-time stuff?
+
+Actually, everything related to the construction of arguments is marked `consteval`.
+Hence, it is mandatory for every argument to be built at compile-time.
+There is also a `consteval` construction of an array of arguments, allowing for more checks than would
+be possible if only looking at each argument individually, e.g. finding duplicate names.
+
+Unfortunately, `Program` itself is not `constexpr`-enabled.
+The TLDR reason is that it is too hard to make it work and clumsy to use.
+More details in https://github.com/ggabriel96/opzioni/pull/43.
 
 # Getting started
 
