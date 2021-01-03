@@ -52,7 +52,16 @@ std::string Arg::format_base_usage() const noexcept {
   return fmt::format("{}{}", dashes, name);
 }
 
-std::string Arg::format_for_help_description() const noexcept { return std::string(description); }
+std::string Arg::format_for_help_description() const noexcept {
+  auto const format = [this](auto const &default_value, auto const &set_value) {
+    return fmt::format(description, fmt::arg("name", this->name), fmt::arg("abbrev", this->abbrev),
+                       fmt::arg("default_value", default_value), fmt::arg("set_value", set_value),
+                       fmt::arg("gather_amount", this->gather_amount));
+  };
+  ArgValue default_value{};
+  set_default_to(default_value); // gotta use this because of DefaultValueSetter
+  return std::visit(format, default_value.value, this->set_value);
+}
 
 std::string Arg::format_for_help_index() const noexcept {
   auto const base_usage = format_base_usage();
