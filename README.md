@@ -59,7 +59,8 @@ The goals of this library, in order of importance, are:
 
     I started it to learn more about C++ and its new features.
 
-- Although it is *not* in *early* development, since I'm working on it for months and iterated over it many times, **I do not consider it stable**.
+- Although it is *not* in *early* development, since I'm working on it for months and iterated over it many times,
+    **it is not stable or production-ready**.
 
 - There are **many unit tests missing**.
 
