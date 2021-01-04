@@ -13,14 +13,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     Program program;
 
     THEN("all member variables should have their defaults") {
-      REQUIRE(program.name.empty());
-      REQUIRE(program.version.empty());
-      REQUIRE(program.title.empty());
-      REQUIRE(program.introduction.empty());
-      REQUIRE(program.description.empty());
-      REQUIRE(program.msg_width == 100);
+      REQUIRE(program.metadata.name.empty());
+      REQUIRE(program.metadata.version.empty());
+      REQUIRE(program.metadata.title.empty());
+      REQUIRE(program.metadata.introduction.empty());
+      REQUIRE(program.metadata.description.empty());
+      REQUIRE(program.metadata.msg_width == 100);
       REQUIRE(program.error_handler == print_error);
-      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.metadata.positionals_amount == 0);
       REQUIRE(program.args().size() == 0);
       REQUIRE(program.cmds().size() == 0);
     }
@@ -29,14 +29,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       program.intro("intro");
 
       THEN("only the introduction should be changed") {
-        REQUIRE(program.introduction == "intro");
-        REQUIRE(program.name.empty());
-        REQUIRE(program.version.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.description.empty());
-        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.metadata.introduction == "intro");
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.error_handler == print_error);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -46,14 +46,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       program.details("details");
 
       THEN("only the description should be changed") {
-        REQUIRE(program.description == "details");
-        REQUIRE(program.name.empty());
-        REQUIRE(program.version.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.introduction.empty());
-        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.metadata.description == "details");
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.error_handler == print_error);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -63,14 +63,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       program.v("1.0");
 
       THEN("only the version should be changed") {
-        REQUIRE(program.version == "1.0");
-        REQUIRE(program.name.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.introduction.empty());
-        REQUIRE(program.description.empty());
-        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.metadata.version == "1.0");
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.error_handler == print_error);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -80,14 +80,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       program.intro("intro").details("details").v("1.0");
 
       THEN("all three should be changed") {
-        REQUIRE(program.introduction == "intro");
-        REQUIRE(program.description == "details");
-        REQUIRE(program.version == "1.0");
-        REQUIRE(program.name.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.msg_width == 100);
+        REQUIRE(program.metadata.introduction == "intro");
+        REQUIRE(program.metadata.description == "details");
+        REQUIRE(program.metadata.version == "1.0");
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.error_handler == print_error);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -97,14 +97,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       program.max_width(80);
 
       THEN("only the msg_width should be changed") {
-        REQUIRE(program.msg_width == 80);
-        REQUIRE(program.name.empty());
-        REQUIRE(program.version.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.introduction.empty());
-        REQUIRE(program.description.empty());
+        REQUIRE(program.metadata.msg_width == 80);
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.description.empty());
         REQUIRE(program.error_handler == print_error);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -115,13 +115,13 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
 
       THEN("only the error_handler should be changed") {
         REQUIRE(program.error_handler == nullptr);
-        REQUIRE(program.name.empty());
-        REQUIRE(program.version.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.introduction.empty());
-        REQUIRE(program.description.empty());
-        REQUIRE(program.msg_width == 100);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.msg_width == 100);
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -131,14 +131,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       program.intro("intro").details("details").v("1.0").max_width(80).on_error(nullptr);
 
       THEN("all five should be changed") {
-        REQUIRE(program.introduction == "intro");
-        REQUIRE(program.description == "details");
-        REQUIRE(program.version == "1.0");
-        REQUIRE(program.msg_width == 80);
+        REQUIRE(program.metadata.introduction == "intro");
+        REQUIRE(program.metadata.description == "details");
+        REQUIRE(program.metadata.version == "1.0");
+        REQUIRE(program.metadata.msg_width == 80);
         REQUIRE(program.error_handler == nullptr);
-        REQUIRE(program.name.empty());
-        REQUIRE(program.title.empty());
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.name.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.positionals_amount == 0);
         REQUIRE(program.args().size() == 0);
         REQUIRE(program.cmds().size() == 0);
       }
@@ -149,14 +149,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     Program const program("program");
 
     THEN("only the name should not have its default value") {
-      REQUIRE(program.name == "program");
-      REQUIRE(program.version.empty());
-      REQUIRE(program.title.empty());
-      REQUIRE(program.introduction.empty());
-      REQUIRE(program.description.empty());
-      REQUIRE(program.msg_width == 100);
+      REQUIRE(program.metadata.name == "program");
+      REQUIRE(program.metadata.version.empty());
+      REQUIRE(program.metadata.title.empty());
+      REQUIRE(program.metadata.introduction.empty());
+      REQUIRE(program.metadata.description.empty());
+      REQUIRE(program.metadata.msg_width == 100);
       REQUIRE(program.error_handler == print_error);
-      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.metadata.positionals_amount == 0);
       REQUIRE(program.args().size() == 0);
       REQUIRE(program.cmds().size() == 0);
     }
@@ -166,14 +166,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     Program const program("program", "title");
 
     THEN("only name and title should not have their default values") {
-      REQUIRE(program.name == "program");
-      REQUIRE(program.title == "title");
-      REQUIRE(program.version.empty());
-      REQUIRE(program.introduction.empty());
-      REQUIRE(program.description.empty());
-      REQUIRE(program.msg_width == 100);
+      REQUIRE(program.metadata.name == "program");
+      REQUIRE(program.metadata.title == "title");
+      REQUIRE(program.metadata.version.empty());
+      REQUIRE(program.metadata.introduction.empty());
+      REQUIRE(program.metadata.description.empty());
+      REQUIRE(program.metadata.msg_width == 100);
       REQUIRE(program.error_handler == print_error);
-      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.metadata.positionals_amount == 0);
       REQUIRE(program.args().size() == 0);
       REQUIRE(program.cmds().size() == 0);
     }
@@ -190,7 +190,7 @@ SCENARIO("adding arguments", "[Program][args]") {
     THEN("it should initially have no arguments") {
       REQUIRE(program.args().size() == 0);
       REQUIRE(program.cmds().size() == 0);
-      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.metadata.positionals_amount == 0);
     }
 
     WHEN("a positional is added") {
@@ -199,7 +199,7 @@ SCENARIO("adding arguments", "[Program][args]") {
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 1); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should match the number of positionals added") {
-        REQUIRE(program.positionals_amount == 1);
+        REQUIRE(program.metadata.positionals_amount == 1);
       }
       THEN("the positional should be added as first argument") { REQUIRE(program.args()[0].name == "pos"); }
     }
@@ -210,7 +210,7 @@ SCENARIO("adding arguments", "[Program][args]") {
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 2); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should match the number of positionals added") {
-        REQUIRE(program.positionals_amount == 2);
+        REQUIRE(program.metadata.positionals_amount == 2);
       }
       THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos1");
@@ -224,7 +224,7 @@ SCENARIO("adding arguments", "[Program][args]") {
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 5); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should match the number of positionals added") {
-        REQUIRE(program.positionals_amount == 5);
+        REQUIRE(program.metadata.positionals_amount == 5);
       }
       THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos5");
@@ -241,7 +241,7 @@ SCENARIO("adding arguments", "[Program][args]") {
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 7); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds().size() == 0); }
       THEN("positionals_amount should match the number of positionals added") {
-        REQUIRE(program.positionals_amount == 3);
+        REQUIRE(program.metadata.positionals_amount == 3);
       }
       THEN("positionals should be added as first arguments, but preserving the order of insertion") {
         REQUIRE(program.args()[0].name == "pos3");
@@ -250,7 +250,8 @@ SCENARIO("adding arguments", "[Program][args]") {
       }
       THEN("the rest of the arguments should be sorted lexicographically by name") {
         // also using is_sorted to check `operator<`
-        REQUIRE(std::is_sorted(std::next(program.args().begin(), program.positionals_amount), program.args().end()));
+        REQUIRE(std::is_sorted(std::next(program.args().begin(), program.metadata.positionals_amount),
+                               program.args().end()));
         REQUIRE(program.args()[3].name == "flg1");
         REQUIRE(program.args()[4].name == "flg2");
         REQUIRE(program.args()[5].name == "opt1");
@@ -266,7 +267,7 @@ SCENARIO("adding arguments", "[Program][args]") {
     THEN("the size of args should match the number of arguments added") { REQUIRE(program.args().size() == 7); }
     THEN("cmds should be empty") { REQUIRE(program.cmds().size() == 0); }
     THEN("positionals_amount should match the number of positionals added") {
-      REQUIRE(program.positionals_amount == 3);
+      REQUIRE(program.metadata.positionals_amount == 3);
     }
     THEN("positionals should be added as first arguments, but preserving the order of insertion") {
       REQUIRE(program.args()[0].name == "pos3");
@@ -275,7 +276,8 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
     THEN("the rest of the arguments should be sorted lexicographically by name") {
       // also using is_sorted to check `operator<`
-      REQUIRE(std::is_sorted(std::next(program.args().begin(), program.positionals_amount), program.args().end()));
+      REQUIRE(
+          std::is_sorted(std::next(program.args().begin(), program.metadata.positionals_amount), program.args().end()));
       REQUIRE(program.args()[3].name == "flg1");
       REQUIRE(program.args()[4].name == "flg2");
       REQUIRE(program.args()[5].name == "opt1");
@@ -296,11 +298,11 @@ SCENARIO("adding commands", "[Program][cmds]") {
     THEN("they should initially have no arguments") {
       REQUIRE(program.args().size() == 0);
       REQUIRE(program.cmds().size() == 0);
-      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.metadata.positionals_amount == 0);
 
       REQUIRE(cmd.args().size() == 0);
       REQUIRE(cmd.cmds().size() == 0);
-      REQUIRE(cmd.positionals_amount == 0);
+      REQUIRE(cmd.metadata.positionals_amount == 0);
     }
 
     WHEN("cmd is added as command of program") {
@@ -312,7 +314,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
       }
       THEN("program's args should not be changed") {
         REQUIRE(program.args().size() == 0);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
       }
 
       AND_WHEN("another command with the same name is added to program") {
@@ -330,7 +332,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
         THEN("cmd2 should initially have no arguments") {
           REQUIRE(cmd2.args().size() == 0);
           REQUIRE(cmd2.cmds().size() == 0);
-          REQUIRE(cmd2.positionals_amount == 0);
+          REQUIRE(cmd2.metadata.positionals_amount == 0);
         }
 
         WHEN("cmd2 is added as command of program") {
@@ -343,7 +345,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
           }
           THEN("program's args should not be changed") {
             REQUIRE(program.args().size() == 0);
-            REQUIRE(program.positionals_amount == 0);
+            REQUIRE(program.metadata.positionals_amount == 0);
           }
         }
       }
@@ -365,15 +367,15 @@ SCENARIO("adding commands", "[Program][cmds]") {
     THEN("they should initially have no arguments") {
       REQUIRE(program.args().size() == 0);
       REQUIRE(program.cmds().size() == 0);
-      REQUIRE(program.positionals_amount == 0);
+      REQUIRE(program.metadata.positionals_amount == 0);
 
       REQUIRE(cmd1.args().size() == 0);
       REQUIRE(cmd1.cmds().size() == 0);
-      REQUIRE(cmd1.positionals_amount == 0);
+      REQUIRE(cmd1.metadata.positionals_amount == 0);
 
       REQUIRE(cmd2.args().size() == 0);
       REQUIRE(cmd2.cmds().size() == 0);
-      REQUIRE(cmd2.positionals_amount == 0);
+      REQUIRE(cmd2.metadata.positionals_amount == 0);
     }
 
     WHEN("both are added as commands of program, but cmd2 first") {
@@ -386,7 +388,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
       }
       THEN("program's args should not be changed") {
         REQUIRE(program.args().size() == 0);
-        REQUIRE(program.positionals_amount == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
       }
     }
   }
@@ -555,7 +557,7 @@ SCENARIO("parsing", "[Program][parsing]") {
         REQUIRE(map.as<std::string_view>("pos1") == std::string_view(argv[11]));
       }
 
-      AND_THEN("cmd_name should be set") { REQUIRE(map.cmd_name == cmd.name); }
+      AND_THEN("cmd_name should be set") { REQUIRE(map.cmd_name == cmd.metadata.name); }
       AND_THEN("cmd_args should have all the arguments of the command") {
         REQUIRE(map.cmd_args != nullptr);
 

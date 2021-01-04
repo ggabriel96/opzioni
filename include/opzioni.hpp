@@ -420,8 +420,7 @@ ParsedOption parse_option(std::string_view const) noexcept;
 // | Program |
 // +---------+
 
-class Program {
-public:
+struct ProgramMetadata {
   std::string_view name{};
   std::string_view version{};
   std::string_view title{};
@@ -429,13 +428,17 @@ public:
   std::string_view description{};
 
   std::size_t msg_width = 100;
-  ErrorHandler error_handler = print_error;
-  // bool has_auto_help{false};
   std::size_t positionals_amount = 0;
+};
+
+class Program {
+public:
+  ProgramMetadata metadata{};
+  ErrorHandler error_handler = print_error;
 
   Program() = default;
   Program(std::string_view name) : Program(name, {}) {}
-  Program(std::string_view name, std::string_view title) : name(name), title(title) {}
+  Program(std::string_view name, std::string_view title) : metadata(name, title) {}
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
@@ -455,7 +458,7 @@ public:
     // putting all positionals first without changing their relative order, then sorting all other args.
     // We wouldn't need the following sort, but then it's already done if we end up printing the help text.
     std::ranges::stable_partition(_args, [](auto const &arg) { return arg.type == ArgType::POS; });
-    std::stable_sort(std::next(_args.begin(), positionals_amount), _args.end());
+    std::stable_sort(std::next(_args.begin(), metadata.positionals_amount), _args.end());
     return *this;
   }
 
@@ -477,7 +480,7 @@ public:
   bool has_pos(std::string_view name) const noexcept { return has_arg(name, ArgType::POS); }
 
   constexpr auto find_cmd(std::string_view name) const noexcept {
-    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->name; });
+    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->metadata.name; });
   }
 
   bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
@@ -508,6 +511,14 @@ private:
   std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
 };
 
+struct ProgramView {
+  ProgramMetadata const metadata;
+  std::span<Arg const> args;
+  std::span<Cmd const> cmds;
+
+  ProgramView(Program const &program) : metadata(program.metadata), args(program.args()), cmds(program.cmds()) {}
+};
+
 // +-----------+
 // | utilities |
 // +-----------+
@@ -520,7 +531,7 @@ void print_full_help(Program const &, std::ostream & = std::cout) noexcept;
 
 class HelpFormatter {
 public:
-  HelpFormatter(Program const &, std::ostream &);
+  HelpFormatter(ProgramView const, std::ostream &);
 
   void print_title() const noexcept;
   void print_intro() const noexcept;
@@ -532,22 +543,14 @@ public:
 
 private:
   std::ostream &out;
-  std::size_t const max_width;
-  std::string const program_name;
-  std::string const program_version;
-  std::string const program_title;
-  std::string const program_introduction;
-  std::string const program_description;
-  std::size_t positionals_amount;
-  std::vector<Cmd> cmds;
-  std::vector<Arg> args;
+  ProgramView const program;
 
   void print_arg_help(auto const &arg, std::size_t const padding_size) const noexcept {
     using std::views::drop;
     auto const description = arg.format_for_help_description();
     // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
     // then -4 again because we add 4 spaces between the arg usage and description
-    auto const description_lines = limit_within(description, max_width - padding_size - 8 - 4);
+    auto const description_lines = limit_within(description, program.metadata.msg_width - padding_size - 8 - 4);
 
     out << fmt::format("    {:<{}}    {}\n", arg.format_for_help_index(), padding_size,
                        fmt::join(description_lines.front(), " "));

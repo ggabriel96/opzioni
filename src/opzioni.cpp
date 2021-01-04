@@ -15,11 +15,7 @@ std::string builtin2str(BuiltinVariant const &variant) noexcept {
 }
 
 int print_error(Program const &program, UserError const &err) noexcept {
-  std::cerr << limit_string_within(err.what(), program.msg_width) << nl;
-  // if (program.has_auto_help) {
-  //   auto const see_help = fmt::format("See `{} --help` for more information", program.name);
-  //   std::cerr << nl << limit_string_within(see_help, program.msg_width) << nl;
-  // }
+  std::cerr << limit_string_within(err.what(), program.metadata.msg_width) << nl;
   return -1;
 }
 
@@ -90,35 +86,37 @@ std::string Arg::format_for_usage_summary() const noexcept {
   return format;
 }
 
-std::string Cmd::format_for_help_description() const noexcept { return std::string(program->introduction); }
+std::string Cmd::format_for_help_description() const noexcept { return std::string(program->metadata.introduction); }
 
 std::string Cmd::format_for_help_index() const noexcept { return format_for_usage_summary(); }
 
-std::string Cmd::format_for_usage_summary() const noexcept { return std::string(program->name); }
+std::string Cmd::format_for_usage_summary() const noexcept { return std::string(program->metadata.name); }
 
-auto Cmd::operator<=>(Cmd const &other) const noexcept { return this->program->name <=> other.program->name; }
+auto Cmd::operator<=>(Cmd const &other) const noexcept {
+  return this->program->metadata.name <=> other.program->metadata.name;
+}
 
 // +---------+
 // | Program |
 // +---------+
 
 Program &Program::intro(std::string_view introduction) noexcept {
-  this->introduction = introduction;
+  this->metadata.introduction = introduction;
   return *this;
 }
 
 Program &Program::details(std::string_view description) noexcept {
-  this->description = description;
+  this->metadata.description = description;
   return *this;
 }
 
 Program &Program::v(std::string_view version) noexcept {
-  this->version = version;
+  this->metadata.version = version;
   return *this;
 }
 
 Program &Program::max_width(std::size_t msg_width) noexcept {
-  this->msg_width = msg_width;
+  this->metadata.msg_width = msg_width;
   return *this;
 }
 
@@ -129,13 +127,13 @@ Program &Program::on_error(ErrorHandler error_handler) noexcept {
 
 Program &Program::add(Arg arg) {
   _args.push_back(arg);
-  positionals_amount += (arg.type == ArgType::POS);
+  metadata.positionals_amount += (arg.type == ArgType::POS);
   return *this;
 }
 
 Program &Program::add(Cmd cmd) {
-  if (has_cmd(cmd.program->name))
-    throw ArgumentAlreadyExists(cmd.program->name);
+  if (has_cmd(cmd.program->metadata.name))
+    throw ArgumentAlreadyExists(cmd.program->metadata.name);
   _cmds.push_back(cmd);
   return *this;
 }
@@ -261,17 +259,17 @@ bool Program::is_flag(std::string_view const name) const noexcept { return has_f
 // +---------------------+
 
 std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) const {
-  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.program->name);
+  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.program->metadata.name);
   args[0] = exec_path.data();
-  map.cmd_name = cmd.program->name;
+  map.cmd_name = cmd.program->metadata.name;
   map.cmd_args = std::make_shared<ArgMap>(std::move((*cmd.program)(args)));
   return args.size();
 }
 
 std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
                                        std::size_t const positional_idx) const {
-  if (positional_idx >= positionals_amount) {
-    throw UnexpectedPositional(args[0], positionals_amount);
+  if (positional_idx >= metadata.positionals_amount) {
+    throw UnexpectedPositional(args[0], metadata.positionals_amount);
   }
   auto const arg = _args[positional_idx];
   // if gather amount is 0, we gather everything else
@@ -365,36 +363,32 @@ ParsedOption parse_option(std::string_view const whole_arg) noexcept {
 // | formatting |
 // +------------+
 
-HelpFormatter::HelpFormatter(Program const &program, std::ostream &out)
-    : out(out), max_width(program.msg_width), program_name(program.name), program_version(program.version),
-      program_title(program.title), program_introduction(program.introduction),
-      program_description(program.description), positionals_amount(program.positionals_amount), cmds(program.cmds()),
-      args(program.args()) {
-  std::sort(cmds.begin(), cmds.end());
-}
+HelpFormatter::HelpFormatter(ProgramView const program, std::ostream &out) : out(out), program(program) {}
 
 std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
   auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_help_index().length(); };
-  std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
-  std::size_t const required_length_cmds = cmds.empty() ? 0 : std::ranges::max(cmds | transform(required_length));
+  std::size_t const required_length_args =
+      program.args.empty() ? 0 : std::ranges::max(program.args | transform(required_length));
+  std::size_t const required_length_cmds =
+      program.cmds.empty() ? 0 : std::ranges::max(program.cmds | transform(required_length));
   return std::max(required_length_args, required_length_cmds);
 }
 
 void HelpFormatter::print_title() const noexcept {
-  out << program_name;
-  if (!program_version.empty())
-    out << ' ' << program_version;
-  if (!program_title.empty())
-    out << " - " << program_title;
+  out << program.metadata.name;
+  if (!program.metadata.version.empty())
+    out << ' ' << program.metadata.version;
+  if (!program.metadata.title.empty())
+    out << " - " << program.metadata.title;
   out << nl;
 }
 
 void HelpFormatter::print_intro() const noexcept {
-  if (program_introduction.length() <= max_width) {
-    out << program_introduction << nl;
+  if (program.metadata.introduction.length() <= program.metadata.msg_width) {
+    out << program.metadata.introduction << nl;
   } else {
-    out << limit_string_within(program_introduction, max_width) << nl;
+    out << limit_string_within(program.metadata.introduction, program.metadata.msg_width) << nl;
   }
 }
 
@@ -404,23 +398,23 @@ void HelpFormatter::print_long_usage() const noexcept {
   using std::views::drop, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + cmds.size() + args.size());
+  words.reserve(1 + program.cmds.size() + program.args.size());
 
   auto insert = std::back_inserter(words);
-  words.push_back(program_name);
-  transform(args, insert, &Arg::format_for_usage_summary);
+  words.push_back(std::string(program.metadata.name));
+  transform(program.args, insert, &Arg::format_for_usage_summary);
 
-  if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().format_for_usage_summary()));
-  } else if (cmds.size() > 1) {
+  if (program.cmds.size() == 1) {
+    words.push_back(format("{{{}}}", program.cmds.front().format_for_usage_summary()));
+  } else if (program.cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().format_for_usage_summary()));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &Cmd::format_for_usage_summary);
-    words.push_back(format("{}}}", cmds.back().format_for_usage_summary()));
+    words.push_back(format("{{{},", program.cmds.front().format_for_usage_summary()));
+    transform(program.cmds | drop(1) | take(program.cmds.size() - 2), insert, &Cmd::format_for_usage_summary);
+    words.push_back(format("{}}}", program.cmds.back().format_for_usage_summary()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
-  auto const split_lines = limit_within(words, max_width - 4);
+  auto const split_lines = limit_within(words, program.metadata.msg_width - 4);
   out << "Usage:\n";
   for (auto const &line : split_lines) {
     out << format("    {}\n", join(line, " "));
@@ -432,17 +426,17 @@ void HelpFormatter::print_help() const noexcept {
   // using same padding size for all arguments so they stay aligned
   auto const padding_size = help_padding_size();
 
-  if (positionals_amount > 0) {
+  if (program.metadata.positionals_amount > 0) {
     out << "Positionals:\n";
-    for (auto const &arg : args | std::views::take(positionals_amount)) {
+    for (auto const &arg : program.args | std::views::take(program.metadata.positionals_amount)) {
       print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
   }
 
-  if (args.size() > positionals_amount) {
+  if (program.args.size() > program.metadata.positionals_amount) {
     out << pending_nl << "Options & Flags:\n";
-    for (auto const &arg : args | std::views::drop(positionals_amount)) {
+    for (auto const &arg : program.args | std::views::drop(program.metadata.positionals_amount)) {
       print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
@@ -450,21 +444,21 @@ void HelpFormatter::print_help() const noexcept {
     pending_nl = "";
   }
 
-  if (!cmds.empty()) {
+  if (!program.cmds.empty()) {
     out << pending_nl << "Commands:\n";
-    for (auto const &arg : cmds) {
+    for (auto const &arg : program.cmds) {
       print_arg_help(arg, padding_size);
     }
   }
 }
 
 void HelpFormatter::print_description() const noexcept {
-  if (program_description.empty())
+  if (program.metadata.description.empty())
     return;
-  if (program_description.length() <= max_width)
-    out << program_description << nl;
+  if (program.metadata.description.length() <= program.metadata.msg_width)
+    out << program.metadata.description << nl;
   else
-    out << limit_string_within(program_description, max_width) << nl;
+    out << limit_string_within(program.metadata.description, program.metadata.msg_width) << nl;
 }
 
 // +-----------+
@@ -474,7 +468,7 @@ void HelpFormatter::print_description() const noexcept {
 void print_full_help(Program const &program, std::ostream &ostream) noexcept {
   HelpFormatter formatter(program, ostream);
   formatter.print_title();
-  if (!program.introduction.empty()) {
+  if (!program.metadata.introduction.empty()) {
     ostream << nl;
     formatter.print_intro();
   }
@@ -498,7 +492,7 @@ void print_help(Program const &program, ArgMap &, Arg const &, std::optional<std
 }
 
 void print_version(Program const &program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
-  fmt::print("{} {}\n", program.name, program.version);
+  fmt::print("{} {}\n", program.metadata.name, program.metadata.version);
   std::exit(0);
 }
 
