@@ -431,6 +431,12 @@ struct ProgramMetadata {
   std::size_t positionals_amount = 0;
 };
 
+struct ProgramView {
+  ProgramMetadata const &metadata;
+  std::span<Arg const> args;
+  std::span<Cmd const> cmds;
+};
+
 class Program {
 public:
   ProgramMetadata metadata{};
@@ -485,6 +491,8 @@ public:
 
   bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
 
+  operator ProgramView() const noexcept { return ProgramView(this->metadata, this->_args, this->_cmds); }
+
 private:
   std::vector<Arg> _args;
   std::vector<Cmd> _cmds;
@@ -509,14 +517,6 @@ private:
   std::size_t assign_many_flags(ArgMap &, std::string_view) const;
   std::size_t assign_flag(ArgMap &, std::string_view) const;
   std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
-};
-
-struct ProgramView {
-  ProgramMetadata const &metadata;
-  std::span<Arg const> args;
-  std::span<Cmd const> cmds;
-
-  ProgramView(Program const &program) : metadata(program.metadata), args(program.args()), cmds(program.cmds()) {}
 };
 
 // +-----------+
