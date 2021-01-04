@@ -512,7 +512,7 @@ private:
 };
 
 struct ProgramView {
-  ProgramMetadata const metadata;
+  ProgramMetadata const &metadata;
   std::span<Arg const> args;
   std::span<Cmd const> cmds;
 
