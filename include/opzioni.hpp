@@ -415,7 +415,7 @@ struct ParsedOption {
   std::optional<std::string_view> value;
 };
 
-ParsedOption parse_option(std::string_view const) noexcept;
+constexpr ParsedOption parse_option(std::string_view const) noexcept;
 
 // +---------+
 // | Program |
@@ -511,13 +511,13 @@ constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcep
 // | parsing helpers |
 // +-----------------+
 
-bool is_dash_dash(std::string_view const) noexcept;
-Cmd const *is_command(ProgramView const, std::string_view const) noexcept;
-bool looks_positional(std::string_view const) noexcept;
-std::string_view is_short_flags(ProgramView const, std::string_view const) noexcept;
-std::string_view is_long_flag(ProgramView const, std::string_view const) noexcept;
-std::optional<ParsedOption> is_option(ProgramView const, std::string_view const) noexcept;
-bool is_flag(ProgramView const, std::string_view const) noexcept;
+constexpr bool is_dash_dash(std::string_view const) noexcept;
+constexpr Cmd const *is_command(ProgramView const, std::string_view const) noexcept;
+constexpr bool looks_positional(std::string_view const) noexcept;
+constexpr std::string_view is_short_flags(ProgramView const, std::string_view const) noexcept;
+constexpr std::string_view is_long_flag(ProgramView const, std::string_view const) noexcept;
+constexpr std::optional<ParsedOption> is_option(ProgramView const, std::string_view const) noexcept;
+constexpr bool is_flag(ProgramView const, std::string_view const) noexcept;
 
 // +-----------+
 // | utilities |

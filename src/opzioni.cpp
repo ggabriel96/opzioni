@@ -243,22 +243,22 @@ constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcep
 // | parsing helpers |
 // +-----------------+
 
-bool is_dash_dash(std::string_view const whole_arg) noexcept {
+constexpr bool is_dash_dash(std::string_view const whole_arg) noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
 }
 
-Cmd const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
+constexpr Cmd const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
   if (auto const cmd = find_cmd(program, whole_arg); cmd != program.cmds.end())
     return &*cmd;
   return nullptr;
 }
 
-bool looks_positional(std::string_view const whole_arg) noexcept {
+constexpr bool looks_positional(std::string_view const whole_arg) noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
 }
 
-std::string_view is_short_flags(ProgramView const program, std::string_view const whole_arg) noexcept {
+constexpr std::string_view is_short_flags(ProgramView const program, std::string_view const whole_arg) noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const flags = whole_arg.substr(1);
   auto const all_short_flags = std::all_of(
@@ -268,7 +268,7 @@ std::string_view is_short_flags(ProgramView const program, std::string_view cons
   return {};
 }
 
-std::string_view is_long_flag(ProgramView const program, std::string_view const whole_arg) noexcept {
+constexpr std::string_view is_long_flag(ProgramView const program, std::string_view const whole_arg) noexcept {
   auto const name = whole_arg.substr(2);
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   if (num_of_dashes == 2 && name.length() >= 2 && is_flag(program, name))
@@ -276,14 +276,16 @@ std::string_view is_long_flag(ProgramView const program, std::string_view const 
   return {};
 }
 
-std::optional<ParsedOption> is_option(ProgramView const program, std::string_view const whole_arg) noexcept {
+constexpr std::optional<ParsedOption> is_option(ProgramView const program, std::string_view const whole_arg) noexcept {
   auto const parsed_option = parse_option(whole_arg);
   if (has_opt(program, parsed_option.name))
     return parsed_option;
   return std::nullopt;
 }
 
-bool is_flag(ProgramView const program, std::string_view const name) noexcept { return has_flg(program, name); }
+constexpr bool is_flag(ProgramView const program, std::string_view const name) noexcept {
+  return has_flg(program, name);
+}
 
 // +---------------------+
 // | parsing assignments |
@@ -354,7 +356,7 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
   }
 }
 
-ParsedOption parse_option(std::string_view const whole_arg) noexcept {
+constexpr ParsedOption parse_option(std::string_view const whole_arg) noexcept {
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
   auto const eq_idx = whole_arg.find('=', num_of_dashes);
   bool const has_equals = eq_idx != std::string_view::npos;
