@@ -179,7 +179,7 @@ ArgMap Program::parse(std::span<char const *> args) const {
       } else if (auto const flag = is_long_flag(*this, arg); !flag.empty()) {
         index += assign_flag(*this, map, flag);
       } else if (auto const option = is_option(*this, arg); option.has_value()) {
-        index += assign_option(map, args.subspan(index), *option);
+        index += assign_option(*this, map, args.subspan(index), *option);
       } else {
         throw UnknownArgument(arg);
       }
@@ -329,14 +329,15 @@ std::size_t assign_flag(ProgramView const program, ArgMap &map, std::string_view
   return 1;
 }
 
-std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, ParsedOption const option) const {
-  auto const &arg = *find_arg(*this, option.name, ArgType::OPT);
+std::size_t assign_option(ProgramView const program, ArgMap &map, std::span<char const *> args,
+                          ParsedOption const option) {
+  auto const &arg = *find_arg(program, option.name, ArgType::OPT);
   auto const gather_amount = arg.gather_amount == 0 ? args.size() - 1 : arg.gather_amount;
   if (option.value) {
     if (gather_amount != 1) {
       throw MissingValue(arg.name, gather_amount, 1);
     }
-    arg.action_fn(*this, map, arg, *option.value);
+    arg.action_fn(program, map, arg, *option.value);
     return 1;
   } else if (gather_amount < args.size() && looks_positional(args[1])) {
     // + 1 everywhere because 0 is the index in `args` that the option is,
@@ -344,12 +345,12 @@ std::size_t Program::assign_option(ArgMap &map, std::span<char const *> args, Pa
     std::size_t count = 0;
     do {
       auto const value = std::string_view(args[count + 1]);
-      arg.action_fn(*this, map, arg, value);
+      arg.action_fn(program, map, arg, value);
       ++count;
     } while (count < gather_amount);
     return gather_amount + 1;
   } else if (arg.has_set()) {
-    arg.action_fn(*this, map, arg, std::nullopt);
+    arg.action_fn(program, map, arg, std::nullopt);
     return 1;
   } else {
     throw MissingValue(arg.name, gather_amount, args.size() - 1);
