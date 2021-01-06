@@ -35,6 +35,7 @@ std::string builtin2str(BuiltinVariant const &) noexcept;
 struct Arg;
 struct ArgMap;
 class Program;
+struct ProgramView;
 
 consteval void validate_arg(Arg const &) noexcept;
 
@@ -44,31 +45,31 @@ consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
 // +----------------+
 // | error handlers |
 // +----------------+
-using ErrorHandler = int (*)(Program const &, UserError const &);
+using ErrorHandler = int (*)(ProgramView const, UserError const &);
 
-int print_error(Program const &, UserError const &) noexcept;
-int print_error_and_usage(Program const &, UserError const &) noexcept;
-int rethrow(Program const &, UserError const &);
+int print_error(ProgramView const, UserError const &) noexcept;
+int print_error_and_usage(ProgramView const, UserError const &) noexcept;
+int rethrow(ProgramView const, UserError const &);
 
 // +---------+
 // | actions |
 // +---------+
 namespace actions {
 
-using Signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <concepts::BuiltinType T>
-void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <concepts::BuiltinType Elem>
-void append(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <concepts::BuiltinType Elem>
-void csv(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-void print_help(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 } // namespace actions
 
@@ -523,7 +524,7 @@ private:
 // | utilities |
 // +-----------+
 
-void print_full_help(Program const &, std::ostream & = std::cout) noexcept;
+void print_full_help(ProgramView const, std::ostream & = std::cout) noexcept;
 
 // +------------+
 // | formatting |
@@ -580,7 +581,7 @@ void assign_to(ArgMap &map, std::string_view const name, T value) {
 }
 
 template <concepts::BuiltinType T>
-void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+void assign(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
@@ -601,7 +602,7 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
 }
 
 template <concepts::BuiltinType Elem>
-void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+void append(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
@@ -613,7 +614,7 @@ void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // +-----+
 
 template <concepts::BuiltinType Elem>
-void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+void csv(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<std::vector<Elem>>(*parsed_value));
 }
 

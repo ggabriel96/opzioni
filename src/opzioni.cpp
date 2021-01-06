@@ -14,12 +14,12 @@ std::string builtin2str(BuiltinVariant const &variant) noexcept {
   return std::visit(_2str, variant);
 }
 
-int print_error(Program const &program, UserError const &err) noexcept {
+int print_error(ProgramView const program, UserError const &err) noexcept {
   std::cerr << limit_string_within(err.what(), program.metadata.msg_width) << nl;
   return -1;
 }
 
-int print_error_and_usage(Program const &program, UserError const &err) noexcept {
+int print_error_and_usage(ProgramView const program, UserError const &err) noexcept {
   print_error(program, err);
   HelpFormatter formatter(program, std::cerr);
   std::cerr << nl;
@@ -27,7 +27,7 @@ int print_error_and_usage(Program const &program, UserError const &err) noexcept
   return -1;
 }
 
-int rethrow(Program const &, UserError const &ue) { throw ue; }
+int rethrow(ProgramView const, UserError const &ue) { throw ue; }
 
 // +-----+
 // | Arg |
@@ -465,7 +465,7 @@ void HelpFormatter::print_description() const noexcept {
 // | utilities |
 // +-----------+
 
-void print_full_help(Program const &program, std::ostream &ostream) noexcept {
+void print_full_help(ProgramView const program, std::ostream &ostream) noexcept {
   HelpFormatter formatter(program, ostream);
   formatter.print_title();
   if (!program.metadata.introduction.empty()) {
@@ -486,12 +486,12 @@ void print_full_help(Program const &program, std::ostream &ostream) noexcept {
 
 namespace actions {
 
-void print_help(Program const &program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
+void print_help(ProgramView const program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
   print_full_help(program);
   std::exit(0);
 }
 
-void print_version(Program const &program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
+void print_version(ProgramView const program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
   fmt::print("{} {}\n", program.metadata.name, program.metadata.version);
   std::exit(0);
 }
