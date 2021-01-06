@@ -324,7 +324,7 @@ SCENARIO("parsing", "[Program][parsing]") {
   using namespace opzioni;
 
   GIVEN("an empty Program") {
-    auto const program = Program().on_error(rethrow);
+    constexpr auto program = Program().on_error(rethrow);
 
     WHEN("an empty argv is parsed") {
       std::array<char const *, 0> argv;
