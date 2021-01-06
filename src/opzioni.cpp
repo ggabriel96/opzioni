@@ -138,16 +138,13 @@ Program &Program::add(Cmd cmd) {
   return *this;
 }
 
-ArgMap Program::operator()(int argc, char const *argv[]) const {
+ArgMap Program::operator()(int argc, char const *argv[]) const noexcept {
   return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
 }
 
-ArgMap Program::operator()(std::span<char const *> args) const {
+ArgMap Program::operator()(std::span<char const *> args) const noexcept {
   try {
-    auto map = parse(*this, args);
-    check_contains_required(*this, map);
-    set_defaults(*this, map);
-    return map;
+    return parse(*this, args);
   } catch (UserError const &err) {
     if (this->metadata.error_handler == nullptr)
       std::exit(-1);
@@ -155,7 +152,7 @@ ArgMap Program::operator()(std::span<char const *> args) const {
   }
 }
 
-ArgMap parse(ProgramView const program, std::span<char const *> args) {
+ArgMap parse_args(ProgramView const program, std::span<char const *> args) {
   ArgMap map;
   if (args.size() > 0) {
     map.exec_path = std::string(args[0]);
@@ -206,6 +203,13 @@ void set_defaults(ProgramView const program, ArgMap &map) noexcept {
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
   for (auto const &arg : program.args | filter(wasnt_parsed) | filter(&Arg::has_default))
     arg.set_default_to(map.args[arg.name]);
+}
+
+ArgMap parse(ProgramView const program, std::span<char const *> args) {
+  auto map = parse_args(program, args);
+  check_contains_required(program, map);
+  set_defaults(program, map);
+  return map;
 }
 
 // +--------------------+

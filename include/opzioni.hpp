@@ -469,8 +469,8 @@ public:
     return *this;
   }
 
-  ArgMap operator()(int, char const *[]) const;
-  ArgMap operator()(std::span<char const *>) const;
+  ArgMap operator()(int, char const *[]) const noexcept;
+  ArgMap operator()(std::span<char const *>) const noexcept;
 
   std::vector<Arg> const &args() const noexcept { return _args; }
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
@@ -485,9 +485,7 @@ private:
   Program &add(Cmd);
 };
 
-ArgMap parse(ProgramView const, std::span<char const *>);
-void check_contains_required(ProgramView const, ArgMap const &);
-void set_defaults(ProgramView const, ArgMap &) noexcept;
+ArgMap parse(ProgramView const program, std::span<char const *> args);
 
 // +--------------------+
 // | arg and cmd search |
