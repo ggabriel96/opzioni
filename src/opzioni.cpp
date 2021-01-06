@@ -98,62 +98,6 @@ std::string ProgramView::format_for_help_index() const noexcept { return this->f
 
 std::string ProgramView::format_for_usage_summary() const noexcept { return std::string(this->metadata.name); }
 
-auto ProgramView::operator<=>(ProgramView const &other) const noexcept {
-  return this->metadata.name <=> other.metadata.name;
-}
-
-Program &Program::intro(std::string_view introduction) noexcept {
-  this->metadata.introduction = introduction;
-  return *this;
-}
-
-Program &Program::details(std::string_view description) noexcept {
-  this->metadata.description = description;
-  return *this;
-}
-
-Program &Program::version(std::string_view version) noexcept {
-  this->metadata.version = version;
-  return *this;
-}
-
-Program &Program::max_width(std::size_t msg_width) noexcept {
-  this->metadata.msg_width = msg_width;
-  return *this;
-}
-
-Program &Program::on_error(ErrorHandler error_handler) noexcept {
-  this->metadata.error_handler = error_handler;
-  return *this;
-}
-
-Program &Program::add(Arg arg) {
-  _args.push_back(arg);
-  metadata.positionals_amount += (arg.type == ArgType::POS);
-  return *this;
-}
-
-Program &Program::add(ProgramView cmd) {
-  if (has_cmd(*this, cmd.metadata.name))
-    throw ArgumentAlreadyExists(cmd.metadata.name);
-  _cmds.push_back(cmd);
-  return *this;
-}
-
-ArgMap Program::operator()(int argc, char const *argv[]) const noexcept {
-  return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
-}
-
-ArgMap Program::operator()(std::span<char const *> args) const noexcept {
-  try {
-    return parse(*this, args);
-  } catch (UserError const &err) {
-    if (this->metadata.error_handler == nullptr)
-      std::exit(-1);
-    std::exit(this->metadata.error_handler(*this, err));
-  }
-}
-
 ArgMap parse_args(ProgramView const program, std::span<char const *> args) {
   ArgMap map;
   if (args.size() > 0) {

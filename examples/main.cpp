@@ -11,7 +11,7 @@ int main(int argc, char const *argv[]) {
   using opzioni::Help, opzioni::Version;
   using opzioni::Program, opzioni::Flg, opzioni::Opt, opzioni::Pos;
 
-  auto const program =
+  constexpr auto program =
       Program("main")
           .version("1.0")
           .intro("A short example illustrating opzioni's simpler features")

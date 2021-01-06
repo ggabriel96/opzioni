@@ -34,8 +34,10 @@ std::string builtin2str(BuiltinVariant const &) noexcept;
 
 struct Arg;
 struct ArgMap;
-class Program;
 struct ProgramView;
+
+template <std::size_t ArgsSize = 0, std::size_t CmdsSize = 0>
+class Program;
 
 consteval void validate_arg(Arg const &) noexcept;
 
@@ -268,6 +270,7 @@ struct Arg {
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
   constexpr bool has_set() const noexcept { return set_value.index() != 0; }
+  constexpr bool is_positional() const noexcept { return type == ArgType::POS; }
 
   void set_default_to(ArgValue &arg) const noexcept {
     if (default_setter != nullptr) {
@@ -405,6 +408,8 @@ constexpr ParsedOption parse_option(std::string_view const) noexcept;
 // | Program |
 // +---------+
 
+ArgMap parse(ProgramView const program, std::span<char const *> args);
+
 struct ProgramMetadata {
   std::string_view name{};
   std::string_view version{};
@@ -416,11 +421,11 @@ struct ProgramMetadata {
   std::size_t positionals_amount = 0;
   ErrorHandler error_handler = print_error;
 
-  auto operator<=>(ProgramMetadata const &) const noexcept = default;
+  constexpr auto operator<=>(ProgramMetadata const &) const noexcept = default;
 };
 
 struct ProgramView {
-  ProgramMetadata const &metadata;
+  ProgramMetadata metadata;
   std::span<Arg const> args;
   std::span<ProgramView const> cmds;
 
@@ -428,56 +433,128 @@ struct ProgramView {
   std::string format_for_help_index() const noexcept;
   std::string format_for_usage_summary() const noexcept;
 
-  auto operator<=>(ProgramView const &) const noexcept;
+  constexpr auto operator<=>(ProgramView const &other) const noexcept {
+    return this->metadata.name <=> other.metadata.name;
+  }
 };
 
+// struct Cmd {
+//   ProgramView program;
+
+//   consteval Cmd() = default;
+//   consteval Cmd(Cmd const &other) : program(other.program) {}
+//   consteval Cmd(ProgramView program) : program(program) {}
+// };
+
+consteval auto operator*(ProgramView const lhs, ProgramView const rhs) noexcept {
+  if (lhs.metadata.name == rhs.metadata.name)
+    throw "Trying to add command with a duplicate name";
+  return std::array{lhs, rhs};
+}
+
+template <std::size_t N>
+consteval auto operator*(std::array<ProgramView, N> const cmds, ProgramView const other) noexcept {
+  // validate_arg(other);
+  // validate_args(cmds, other);
+
+  std::array<ProgramView, N + 1> newcmds;
+  std::copy_n(cmds.begin(), N, newcmds.begin());
+  newcmds[N] = other;
+  return newcmds;
+}
+
+template <std::size_t ArgsSize, std::size_t CmdsSize>
 class Program {
 public:
   ProgramMetadata metadata{};
+  std::array<Arg, ArgsSize> args;
+  std::array<ProgramView, CmdsSize> cmds;
 
-  Program() = default;
-  Program(std::string_view name) : Program(name, {}) {}
-  Program(std::string_view name, std::string_view title) : metadata(name, title) {}
+  consteval Program() = default;
+  consteval Program(std::string_view name) : Program(name, {}) {}
+  consteval Program(std::string_view name, std::string_view title) : metadata(name, title) {}
 
-  Program &intro(std::string_view) noexcept;
-  Program &details(std::string_view) noexcept;
-  Program &version(std::string_view) noexcept;
-
-  Program &max_width(std::size_t) noexcept;
-  Program &on_error(ErrorHandler) noexcept;
-
-  Program &operator+(ProgramView const cmd) { return add(cmd); }
-
-  template <std::size_t N>
-  Program &operator+(std::array<Arg, N> args) {
-    _args.reserve(N);
-    for (auto &&arg : args)
-      add(arg);
-
-    // putting all positionals first without changing their relative order, then sorting all other args.
-    // We wouldn't need the following sort, but then it's already done if we end up printing the help text.
-    std::ranges::stable_partition(_args, [](auto const &arg) { return arg.type == ArgType::POS; });
-    std::stable_sort(std::next(_args.begin(), metadata.positionals_amount), _args.end());
-    return *this;
+  consteval Program(ProgramView const &other) : metadata(other.metadata) {
+    if constexpr (ArgsSize > 0)
+      if (other.args.size() > 0)
+        std::copy_n(other.args.begin(), ArgsSize, args.begin());
+    if constexpr (CmdsSize > 0)
+      if (other.args.size() > 0)
+        std::copy_n(other.cmds.begin(), CmdsSize, cmds.begin());
   }
 
-  ArgMap operator()(int, char const *[]) const noexcept;
-  ArgMap operator()(std::span<char const *>) const noexcept;
+  consteval auto intro(std::string_view introduction) const noexcept {
+    auto program = *this;
+    program.metadata.introduction = introduction;
+    return program;
+  }
 
-  std::span<Arg const> args() const noexcept { return _args; }
-  std::span<ProgramView const> cmds() const noexcept { return _cmds; }
+  consteval auto details(std::string_view description) const noexcept {
+    auto program = *this;
+    program.metadata.description = description;
+    return program;
+  }
 
-  constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->_args, this->_cmds); }
+  consteval auto version(std::string_view version) const noexcept {
+    auto program = *this;
+    program.metadata.version = version;
+    return program;
+  }
 
-private:
-  std::vector<Arg> _args;
-  std::vector<ProgramView> _cmds;
+  consteval auto max_width(std::size_t msg_width) const noexcept {
+    auto program = *this;
+    program.metadata.msg_width = msg_width;
+    return program;
+  }
 
-  Program &add(Arg);
-  Program &add(ProgramView const);
+  consteval auto on_error(ErrorHandler error_handler) const noexcept {
+    auto program = *this;
+    program.metadata.error_handler = error_handler;
+    return program;
+  }
+
+  template <std::size_t N>
+  consteval Program<N, CmdsSize> operator+(std::array<Arg, N> args) const noexcept {
+    Program<N, CmdsSize> newprogram(*this);
+    std::array<Arg, N> positionals, others;
+
+    auto const partition_result =
+        std::ranges::partition_copy(args, positionals.begin(), others.begin(), &Arg::is_positional);
+    newprogram.metadata.positionals_amount = std::ranges::distance(positionals.begin(), partition_result.out1);
+
+    auto const copy_result =
+        std::ranges::copy_n(positionals.begin(), newprogram.metadata.positionals_amount, newprogram.args.begin());
+    std::ranges::copy_n(others.begin(), N - newprogram.metadata.positionals_amount, copy_result.out);
+
+    // std::ranges::sort(copy_result.out, newprogram.args.end());
+    return newprogram;
+  }
+
+  template <std::size_t N>
+  consteval Program<ArgsSize, N> operator+(std::array<ProgramView, N> cmds) const noexcept {
+    Program<ArgsSize, N> newprogram(*this);
+    for (std::size_t i = 0; i < N; ++i)
+      newprogram.cmds[i] = cmds[i];
+    std::sort(newprogram.cmds.begin(), newprogram.cmds.end());
+    return newprogram;
+  }
+
+  constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->args, this->cmds); }
+
+  ArgMap operator()(std::span<char const *> args) const noexcept {
+    try {
+      return parse(*this, args);
+    } catch (UserError const &err) {
+      if (this->metadata.error_handler == nullptr)
+        std::exit(-1);
+      std::exit(this->metadata.error_handler(*this, err));
+    }
+  }
+
+  ArgMap operator()(int argc, char const *argv[]) const noexcept {
+    return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
+  }
 };
-
-ArgMap parse(ProgramView const program, std::span<char const *> args);
 
 // +--------------------+
 // | arg and cmd search |
