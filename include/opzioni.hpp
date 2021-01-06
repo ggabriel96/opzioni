@@ -393,22 +393,6 @@ consteval Arg Version(std::string_view description) noexcept {
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
 
-class Cmd {
-public:
-  // just a helper to encapsulate the pointer indirection
-  Program const *program;
-
-  Cmd(Program const &program) : program(&program) {}
-
-  std::string format_for_help_description() const noexcept;
-  std::string format_for_help_index() const noexcept;
-  std::string format_for_usage_summary() const noexcept;
-
-  auto operator<=>(Cmd const &) const noexcept;
-
-private:
-};
-
 struct ParsedOption {
   std::string_view name;
   // no string and empty string mean different things here
@@ -431,12 +415,20 @@ struct ProgramMetadata {
   std::size_t msg_width = 100;
   std::size_t positionals_amount = 0;
   ErrorHandler error_handler = print_error;
+
+  auto operator<=>(ProgramMetadata const &) const noexcept = default;
 };
 
 struct ProgramView {
   ProgramMetadata const &metadata;
   std::span<Arg const> args;
-  std::span<Cmd const> cmds;
+  std::span<ProgramView const> cmds;
+
+  std::string format_for_help_description() const noexcept;
+  std::string format_for_help_index() const noexcept;
+  std::string format_for_usage_summary() const noexcept;
+
+  auto operator<=>(ProgramView const &) const noexcept;
 };
 
 class Program {
@@ -454,7 +446,7 @@ public:
   Program &max_width(std::size_t) noexcept;
   Program &on_error(ErrorHandler) noexcept;
 
-  Program &operator+(Cmd cmd) { return add(cmd); }
+  Program &operator+(ProgramView const cmd) { return add(cmd); }
 
   template <std::size_t N>
   Program &operator+(std::array<Arg, N> args) {
@@ -472,17 +464,17 @@ public:
   ArgMap operator()(int, char const *[]) const noexcept;
   ArgMap operator()(std::span<char const *>) const noexcept;
 
-  std::vector<Arg> const &args() const noexcept { return _args; }
-  std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
+  std::span<Arg const> args() const noexcept { return _args; }
+  std::span<ProgramView const> cmds() const noexcept { return _cmds; }
 
   constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->_args, this->_cmds); }
 
 private:
   std::vector<Arg> _args;
-  std::vector<Cmd> _cmds;
+  std::vector<ProgramView> _cmds;
 
   Program &add(Arg);
-  Program &add(Cmd);
+  Program &add(ProgramView const);
 };
 
 ArgMap parse(ProgramView const program, std::span<char const *> args);
@@ -504,14 +496,14 @@ constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcep
 // +-----------------+
 
 constexpr bool is_dash_dash(std::string_view const) noexcept;
-constexpr Cmd const *is_command(ProgramView const, std::string_view const) noexcept;
+constexpr ProgramView const *is_command(ProgramView const, std::string_view const) noexcept;
 constexpr bool looks_positional(std::string_view const) noexcept;
 constexpr std::string_view is_short_flags(ProgramView const, std::string_view const) noexcept;
 constexpr std::string_view is_long_flag(ProgramView const, std::string_view const) noexcept;
 constexpr std::optional<ParsedOption> is_option(ProgramView const, std::string_view const) noexcept;
 constexpr bool is_flag(ProgramView const, std::string_view const) noexcept;
 
-std::size_t assign_command(ArgMap &, std::span<char const *>, Cmd const &);
+std::size_t assign_command(ArgMap &, std::span<char const *>, ProgramView const);
 std::size_t assign_positional(ProgramView const, ArgMap &, std::span<char const *>, std::size_t const);
 std::size_t assign_many_flags(ProgramView const, ArgMap &, std::string_view);
 std::size_t assign_flag(ProgramView const, ArgMap &, std::string_view);

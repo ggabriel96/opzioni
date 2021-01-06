@@ -67,7 +67,7 @@ int main(int argc, char const *argv[]) {
               .otherwise("~/.docker/cert.pem") *
           Opt("tlskey").help("Path to TLS key file (default {default_value})").otherwise("~/.docker/key.pem") *
           Flg("tlsverify").help("Use TLS and verify the remote") +
-      Cmd(exec) + Cmd(pull);
+      exec + pull;
 
   auto const args = docker(argc, argv);
 

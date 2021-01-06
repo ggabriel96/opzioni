@@ -306,11 +306,11 @@ SCENARIO("adding commands", "[Program][cmds]") {
     }
 
     WHEN("cmd is added as command of program") {
-      program + Cmd(cmd);
+      program + cmd;
 
       THEN("cmd should be added as only command of program") {
         REQUIRE(program.cmds().size() == 1);
-        REQUIRE(program.cmds()[0].program == &cmd);
+        REQUIRE(program.cmds()[0].metadata == cmd.metadata);
       }
       THEN("program's args should not be changed") {
         REQUIRE(program.args().size() == 0);
@@ -321,7 +321,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
         Program other_cmd("cmd");
 
         THEN("we should thow an error because of duplicate name") {
-          REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(other_cmd), ArgumentAlreadyExists);
+          REQUIRE_THROWS_AS(program + cmd + other_cmd, ArgumentAlreadyExists);
         }
       }
 
@@ -336,12 +336,12 @@ SCENARIO("adding commands", "[Program][cmds]") {
         }
 
         WHEN("cmd2 is added as command of program") {
-          program + Cmd(cmd2);
+          program + cmd2;
 
           THEN("cmd2 should be added as second command of program") {
             REQUIRE(program.cmds().size() == 2);
-            REQUIRE(program.cmds()[0].program == &cmd);
-            REQUIRE(program.cmds()[1].program == &cmd2);
+            REQUIRE(program.cmds()[0].metadata == cmd.metadata);
+            REQUIRE(program.cmds()[1].metadata == cmd2.metadata);
           }
           THEN("program's args should not be changed") {
             REQUIRE(program.args().size() == 0);
@@ -353,7 +353,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
 
     AND_WHEN("cmd is added as command of program twice") {
       THEN("we should thow an error because of duplicate name") {
-        REQUIRE_THROWS_AS(program + Cmd(cmd) + Cmd(cmd), ArgumentAlreadyExists);
+        REQUIRE_THROWS_AS(program + cmd + cmd, ArgumentAlreadyExists);
       }
     }
   }
@@ -379,12 +379,12 @@ SCENARIO("adding commands", "[Program][cmds]") {
     }
 
     WHEN("both are added as commands of program, but cmd2 first") {
-      program + Cmd(cmd2) + Cmd(cmd1);
+      program + cmd2 + cmd1;
 
       THEN("cmd2 should be added as first command of program and cmd1 as second") {
         REQUIRE(program.cmds().size() == 2);
-        REQUIRE(program.cmds()[0].program == &cmd2);
-        REQUIRE(program.cmds()[1].program == &cmd1);
+        REQUIRE(program.cmds()[0].metadata == cmd2.metadata);
+        REQUIRE(program.cmds()[1].metadata == cmd1.metadata);
       }
       THEN("program's args should not be changed") {
         REQUIRE(program.args().size() == 0);

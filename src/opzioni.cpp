@@ -86,19 +86,21 @@ std::string Arg::format_for_usage_summary() const noexcept {
   return format;
 }
 
-std::string Cmd::format_for_help_description() const noexcept { return std::string(program->metadata.introduction); }
-
-std::string Cmd::format_for_help_index() const noexcept { return format_for_usage_summary(); }
-
-std::string Cmd::format_for_usage_summary() const noexcept { return std::string(program->metadata.name); }
-
-auto Cmd::operator<=>(Cmd const &other) const noexcept {
-  return this->program->metadata.name <=> other.program->metadata.name;
-}
-
 // +---------+
 // | Program |
 // +---------+
+
+std::string ProgramView::format_for_help_description() const noexcept {
+  return std::string(this->metadata.introduction);
+}
+
+std::string ProgramView::format_for_help_index() const noexcept { return this->format_for_usage_summary(); }
+
+std::string ProgramView::format_for_usage_summary() const noexcept { return std::string(this->metadata.name); }
+
+auto ProgramView::operator<=>(ProgramView const &other) const noexcept {
+  return this->metadata.name <=> other.metadata.name;
+}
 
 Program &Program::intro(std::string_view introduction) noexcept {
   this->metadata.introduction = introduction;
@@ -131,9 +133,9 @@ Program &Program::add(Arg arg) {
   return *this;
 }
 
-Program &Program::add(Cmd cmd) {
-  if (has_cmd(*this, cmd.program->metadata.name))
-    throw ArgumentAlreadyExists(cmd.program->metadata.name);
+Program &Program::add(ProgramView cmd) {
+  if (has_cmd(*this, cmd.metadata.name))
+    throw ArgumentAlreadyExists(cmd.metadata.name);
   _cmds.push_back(cmd);
   return *this;
 }
@@ -236,7 +238,7 @@ constexpr bool has_pos(ProgramView const program, std::string_view name) noexcep
 }
 
 constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept {
-  return std::ranges::find(program.cmds, name, [](auto const &cmd) { return cmd.program->metadata.name; });
+  return std::ranges::find(program.cmds, name, [](auto const &cmd) { return cmd.metadata.name; });
 }
 
 constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept {
@@ -251,7 +253,7 @@ constexpr bool is_dash_dash(std::string_view const whole_arg) noexcept {
   return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
 }
 
-constexpr Cmd const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
+constexpr ProgramView const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
   if (auto const cmd = find_cmd(program, whole_arg); cmd != program.cmds.end())
     return &*cmd;
   return nullptr;
@@ -295,11 +297,11 @@ constexpr bool is_flag(ProgramView const program, std::string_view const name) n
 // | parsing assignments |
 // +---------------------+
 
-std::size_t assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) {
-  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.program->metadata.name);
+std::size_t assign_command(ArgMap &map, std::span<char const *> args, ProgramView const cmd) {
+  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.metadata.name);
   args[0] = exec_path.data();
-  map.cmd_name = cmd.program->metadata.name;
-  map.cmd_args = std::make_shared<ArgMap>(std::move((*cmd.program)(args)));
+  map.cmd_name = cmd.metadata.name;
+  map.cmd_args = std::make_shared<ArgMap>(std::move(parse(cmd, args)));
   return args.size();
 }
 
@@ -447,7 +449,7 @@ void HelpFormatter::print_long_usage() const noexcept {
   } else if (program.cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
     words.push_back(format("{{{},", program.cmds.front().format_for_usage_summary()));
-    transform(program.cmds | drop(1) | take(program.cmds.size() - 2), insert, &Cmd::format_for_usage_summary);
+    transform(program.cmds | drop(1) | take(program.cmds.size() - 2), insert, &ProgramView::format_for_usage_summary);
     words.push_back(format("{}}}", program.cmds.back().format_for_usage_summary()));
   }
 
