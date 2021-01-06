@@ -492,7 +492,7 @@ public:
 
   bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
 
-  operator ProgramView() const noexcept { return ProgramView(this->metadata, this->_args, this->_cmds); }
+  constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->_args, this->_cmds); }
 
 private:
   std::vector<Arg> _args;
