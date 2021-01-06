@@ -175,9 +175,9 @@ ArgMap Program::parse(std::span<char const *> args) const {
         index += assign_positional(*this, map, args.subspan(index), current_positional_idx);
         ++current_positional_idx;
       } else if (auto const flags = is_short_flags(*this, arg); !flags.empty()) {
-        index += assign_many_flags(map, flags);
+        index += assign_many_flags(*this, map, flags);
       } else if (auto const flag = is_long_flag(*this, arg); !flag.empty()) {
-        index += assign_flag(map, flag);
+        index += assign_flag(*this, map, flag);
       } else if (auto const option = is_option(*this, arg); option.has_value()) {
         index += assign_option(map, args.subspan(index), *option);
       } else {
@@ -316,16 +316,16 @@ std::size_t assign_positional(ProgramView const program, ArgMap &map, std::span<
   return gather_amount;
 }
 
-std::size_t Program::assign_many_flags(ArgMap &map, std::string_view flags) const {
+std::size_t assign_many_flags(ProgramView const program, ArgMap &map, std::string_view flags) {
   for (auto const flag : flags) {
-    assign_flag(map, std::string_view(&flag, 1));
+    assign_flag(program, map, std::string_view(&flag, 1));
   }
   return 1;
 }
 
-std::size_t Program::assign_flag(ArgMap &map, std::string_view flag) const {
-  auto const &arg = *find_arg(*this, flag, ArgType::FLG);
-  arg.action_fn(*this, map, arg, std::nullopt);
+std::size_t assign_flag(ProgramView const program, ArgMap &map, std::string_view flag) {
+  auto const &arg = *find_arg(program, flag, ArgType::FLG);
+  arg.action_fn(program, map, arg, std::nullopt);
   return 1;
 }
 

@@ -488,8 +488,6 @@ private:
   void check_contains_required(ArgMap const &) const;
   void set_defaults(ArgMap &) const noexcept;
 
-  std::size_t assign_many_flags(ArgMap &, std::string_view) const;
-  std::size_t assign_flag(ArgMap &, std::string_view) const;
   std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
 };
 
@@ -519,6 +517,8 @@ constexpr bool is_flag(ProgramView const, std::string_view const) noexcept;
 
 std::size_t assign_command(ArgMap &, std::span<char const *>, Cmd const &);
 std::size_t assign_positional(ProgramView const, ArgMap &, std::span<char const *>, std::size_t const);
+std::size_t assign_many_flags(ProgramView const, ArgMap &, std::string_view);
+std::size_t assign_flag(ProgramView const, ArgMap &, std::string_view);
 
 // +-----------+
 // | utilities |
