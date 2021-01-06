@@ -489,7 +489,6 @@ private:
   void set_defaults(ArgMap &) const noexcept;
 
   std::size_t assign_command(ArgMap &, std::span<char const *>, Cmd const &) const;
-  std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
   std::size_t assign_many_flags(ArgMap &, std::string_view) const;
   std::size_t assign_flag(ArgMap &, std::string_view) const;
   std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
@@ -518,6 +517,8 @@ constexpr std::string_view is_short_flags(ProgramView const, std::string_view co
 constexpr std::string_view is_long_flag(ProgramView const, std::string_view const) noexcept;
 constexpr std::optional<ParsedOption> is_option(ProgramView const, std::string_view const) noexcept;
 constexpr bool is_flag(ProgramView const, std::string_view const) noexcept;
+
+std::size_t assign_positional(ProgramView const, ArgMap &, std::span<char const *>, std::size_t const);
 
 // +-----------+
 // | utilities |

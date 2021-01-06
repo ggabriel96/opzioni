@@ -165,14 +165,14 @@ ArgMap Program::parse(std::span<char const *> args) const {
       if (is_dash_dash(arg)) {
         // +1 to ignore the dash-dash
         for (std::size_t offset = index + 1; offset < args.size();) {
-          offset += assign_positional(map, args.subspan(offset), current_positional_idx);
+          offset += assign_positional(*this, map, args.subspan(offset), current_positional_idx);
           ++current_positional_idx;
         }
         index = args.size();
       } else if (auto cmd = is_command(*this, arg); cmd != nullptr) {
         index += assign_command(map, args.subspan(index), *cmd);
       } else if (looks_positional(arg)) {
-        index += assign_positional(map, args.subspan(index), current_positional_idx);
+        index += assign_positional(*this, map, args.subspan(index), current_positional_idx);
         ++current_positional_idx;
       } else if (auto const flags = is_short_flags(*this, arg); !flags.empty()) {
         index += assign_many_flags(map, flags);
@@ -299,19 +299,19 @@ std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, C
   return args.size();
 }
 
-std::size_t Program::assign_positional(ArgMap &map, std::span<char const *> args,
-                                       std::size_t const positional_idx) const {
-  if (positional_idx >= metadata.positionals_amount) {
-    throw UnexpectedPositional(args[0], metadata.positionals_amount);
+std::size_t assign_positional(ProgramView const program, ArgMap &map, std::span<char const *> args,
+                              std::size_t const positional_idx) {
+  if (positional_idx >= program.metadata.positionals_amount) {
+    throw UnexpectedPositional(args[0], program.metadata.positionals_amount);
   }
-  auto const arg = _args[positional_idx];
+  auto const arg = program.args[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_amount == 0 ? args.size() : arg.gather_amount;
   if (gather_amount > args.size()) {
     throw MissingValue(arg.name, gather_amount, args.size());
   }
   for (std::size_t count = 0; count < gather_amount; ++count) {
-    arg.action_fn(*this, map, arg, args[count]);
+    arg.action_fn(program, map, arg, args[count]);
   }
   return gather_amount;
 }
