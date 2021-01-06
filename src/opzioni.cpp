@@ -291,7 +291,7 @@ constexpr bool is_flag(ProgramView const program, std::string_view const name) n
 // | parsing assignments |
 // +---------------------+
 
-std::size_t Program::assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) const {
+std::size_t assign_command(ArgMap &map, std::span<char const *> args, Cmd const &cmd) {
   auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.program->metadata.name);
   args[0] = exec_path.data();
   map.cmd_name = cmd.program->metadata.name;
