@@ -6,7 +6,7 @@
 int main(int argc, char const *argv[]) {
   using namespace opzioni;
 
-  auto const hello = Program("hello").v("0.1").intro("Greeting people since the dawn of computing") +
+  auto const hello = Program("hello").version("0.1").intro("Greeting people since the dawn of computing") +
                      Help() * Version() * Pos("name").help("Your name please, so I can greet you");
 
   auto const args = hello(argc, argv);

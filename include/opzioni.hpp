@@ -449,7 +449,7 @@ public:
 
   Program &intro(std::string_view) noexcept;
   Program &details(std::string_view) noexcept;
-  Program &v(std::string_view) noexcept; // I don't know what else to call this
+  Program &version(std::string_view) noexcept; // I don't know what else to call this
 
   Program &max_width(std::size_t) noexcept;
   Program &on_error(ErrorHandler) noexcept;

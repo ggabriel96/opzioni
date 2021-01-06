@@ -59,8 +59,8 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       }
     }
 
-    WHEN("v is called") {
-      program.v("1.0");
+    WHEN("version is called") {
+      program.version("1.0");
 
       THEN("only the version should be changed") {
         REQUIRE(program.metadata.version == "1.0");
@@ -76,8 +76,8 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       }
     }
 
-    WHEN("intro, details, and v are called") {
-      program.intro("intro").details("details").v("1.0");
+    WHEN("intro, details, and version are called") {
+      program.intro("intro").details("details").version("1.0");
 
       THEN("all three should be changed") {
         REQUIRE(program.metadata.introduction == "intro");
@@ -127,8 +127,8 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       }
     }
 
-    WHEN("intro, details, v, max_width, and on_error are called") {
-      program.intro("intro").details("details").v("1.0").max_width(80).on_error(nullptr);
+    WHEN("intro, details, version, max_width, and on_error are called") {
+      program.intro("intro").details("details").version("1.0").max_width(80).on_error(nullptr);
 
       THEN("all five should be changed") {
         REQUIRE(program.metadata.introduction == "intro");

@@ -110,7 +110,7 @@ Program &Program::details(std::string_view description) noexcept {
   return *this;
 }
 
-Program &Program::v(std::string_view version) noexcept {
+Program &Program::version(std::string_view version) noexcept {
   this->metadata.version = version;
   return *this;
 }

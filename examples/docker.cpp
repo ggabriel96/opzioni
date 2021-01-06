@@ -45,7 +45,7 @@ int main(int argc, char const *argv[]) {
 
   auto const docker =
       Program("docker")
-          .v("version 20.10.1, build 831ebea")
+          .version("version 20.10.1, build 831ebea")
           .intro("A self-sufficient runtime for containers")
           .details("Run 'docker COMMAND --help' for more information on a command.") +
       Help() * Version() *

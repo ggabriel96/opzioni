@@ -88,7 +88,7 @@ int main(int argc, char const *argv[]) {
 
   auto const hello =
       Program("hello")
-          .v("0.1")
+          .version("0.1")
           .intro("Greeting people since the dawn of computing") +
       Help() *
       Version() *

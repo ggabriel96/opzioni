@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]) {
 
   auto const program =
       Program("main")
-          .v("1.0")
+          .version("1.0")
           .intro("A short example illustrating opzioni's simpler features")
           .details("This example only covers simple positionals, options, and flags. For examples of more"
                    " complicated parse actions or subcommands, please take a look at the other examples.") +
