@@ -145,8 +145,8 @@ ArgMap Program::operator()(int argc, char const *argv[]) const {
 ArgMap Program::operator()(std::span<char const *> args) const {
   try {
     auto map = parse(args);
-    check_contains_required(map);
-    set_defaults(map);
+    check_contains_required(*this, map);
+    set_defaults(*this, map);
     return map;
   } catch (UserError const &err) {
     if (this->error_handler == nullptr)
@@ -188,7 +188,7 @@ ArgMap Program::parse(std::span<char const *> args) const {
   return map;
 }
 
-void Program::check_contains_required(ArgMap const &map) const {
+void check_contains_required(ProgramView const program, ArgMap const &map) {
   using std::ranges::transform;
   using std::views::filter;
   auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
@@ -196,15 +196,15 @@ void Program::check_contains_required(ArgMap const &map) const {
   auto is_required = [](auto const &arg) { return arg.is_required; };
   std::vector<std::string_view> missing_arg_names;
   auto insert = std::back_inserter(missing_arg_names);
-  transform(_args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(program.args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
   if (!missing_arg_names.empty())
     throw MissingRequiredArguments(missing_arg_names);
 }
 
-void Program::set_defaults(ArgMap &map) const noexcept {
+void set_defaults(ProgramView const program, ArgMap &map) noexcept {
   using std::views::filter;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  for (auto const &arg : _args | filter(wasnt_parsed) | filter(&Arg::has_default))
+  for (auto const &arg : program.args | filter(wasnt_parsed) | filter(&Arg::has_default))
     arg.set_default_to(map.args[arg.name]);
 }
 

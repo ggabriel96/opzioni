@@ -485,9 +485,10 @@ private:
   Program &add(Cmd);
 
   ArgMap parse(std::span<char const *>) const;
-  void check_contains_required(ArgMap const &) const;
-  void set_defaults(ArgMap &) const noexcept;
 };
+
+void check_contains_required(ProgramView const, ArgMap const &);
+void set_defaults(ProgramView const, ArgMap &) noexcept;
 
 // +--------------------+
 // | arg and cmd search |
