@@ -475,23 +475,6 @@ public:
   std::vector<Arg> const &args() const noexcept { return _args; }
   std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
 
-  constexpr auto find_arg(std::string_view name, ArgType type) const noexcept {
-    return std::ranges::find_if(_args, [name, type](auto const &arg) {
-      return arg.type == type && (arg.name == name || (arg.has_abbrev() && arg.abbrev == name));
-    });
-  }
-
-  bool has_arg(std::string_view name, ArgType type) const noexcept { return find_arg(name, type) != _args.end(); }
-  bool has_flg(std::string_view name) const noexcept { return has_arg(name, ArgType::FLG); }
-  bool has_opt(std::string_view name) const noexcept { return has_arg(name, ArgType::OPT); }
-  bool has_pos(std::string_view name) const noexcept { return has_arg(name, ArgType::POS); }
-
-  constexpr auto find_cmd(std::string_view name) const noexcept {
-    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->metadata.name; });
-  }
-
-  bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
-
   constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->_args, this->_cmds); }
 
 private:
@@ -505,20 +488,36 @@ private:
   void check_contains_required(ArgMap const &) const;
   void set_defaults(ArgMap &) const noexcept;
 
-  bool is_dash_dash(std::string_view const) const noexcept;
-  Cmd const *is_command(std::string_view const) const noexcept;
-  bool looks_positional(std::string_view const) const noexcept;
-  std::string_view is_short_flags(std::string_view const) const noexcept;
-  std::string_view is_long_flag(std::string_view const) const noexcept;
-  std::optional<ParsedOption> is_option(std::string_view const) const noexcept;
-  bool is_flag(std::string_view const) const noexcept;
-
   std::size_t assign_command(ArgMap &, std::span<char const *>, Cmd const &) const;
   std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
   std::size_t assign_many_flags(ArgMap &, std::string_view) const;
   std::size_t assign_flag(ArgMap &, std::string_view) const;
   std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
 };
+
+// +--------------------+
+// | arg and cmd search |
+// +--------------------+
+
+constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
+constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
+constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_opt(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_pos(ProgramView const program, std::string_view name) noexcept;
+constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept;
+
+// +-----------------+
+// | parsing helpers |
+// +-----------------+
+
+bool is_dash_dash(std::string_view const) noexcept;
+Cmd const *is_command(ProgramView const, std::string_view const) noexcept;
+bool looks_positional(std::string_view const) noexcept;
+std::string_view is_short_flags(ProgramView const, std::string_view const) noexcept;
+std::string_view is_long_flag(ProgramView const, std::string_view const) noexcept;
+std::optional<ParsedOption> is_option(ProgramView const, std::string_view const) noexcept;
+bool is_flag(ProgramView const, std::string_view const) noexcept;
 
 // +-----------+
 // | utilities |
