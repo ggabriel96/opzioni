@@ -526,7 +526,7 @@ public:
         std::ranges::copy_n(positionals.begin(), newprogram.metadata.positionals_amount, newprogram.args.begin());
     std::ranges::copy_n(others.begin(), N - newprogram.metadata.positionals_amount, copy_result.out);
 
-    // std::ranges::sort(copy_result.out, newprogram.args.end());
+    std::sort(copy_result.out, newprogram.args.end());
     return newprogram;
   }
 
