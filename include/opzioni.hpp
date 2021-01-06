@@ -430,6 +430,7 @@ struct ProgramMetadata {
 
   std::size_t msg_width = 100;
   std::size_t positionals_amount = 0;
+  ErrorHandler error_handler = print_error;
 };
 
 struct ProgramView {
@@ -441,7 +442,6 @@ struct ProgramView {
 class Program {
 public:
   ProgramMetadata metadata{};
-  ErrorHandler error_handler = print_error;
 
   Program() = default;
   Program(std::string_view name) : Program(name, {}) {}

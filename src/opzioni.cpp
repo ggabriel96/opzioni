@@ -121,7 +121,7 @@ Program &Program::max_width(std::size_t msg_width) noexcept {
 }
 
 Program &Program::on_error(ErrorHandler error_handler) noexcept {
-  this->error_handler = error_handler;
+  this->metadata.error_handler = error_handler;
   return *this;
 }
 
@@ -149,9 +149,9 @@ ArgMap Program::operator()(std::span<char const *> args) const {
     set_defaults(*this, map);
     return map;
   } catch (UserError const &err) {
-    if (this->error_handler == nullptr)
+    if (this->metadata.error_handler == nullptr)
       std::exit(-1);
-    std::exit(this->error_handler(*this, err));
+    std::exit(this->metadata.error_handler(*this, err));
   }
 }
 
