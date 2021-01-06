@@ -483,10 +483,9 @@ private:
 
   Program &add(Arg);
   Program &add(Cmd);
-
-  ArgMap parse(std::span<char const *>) const;
 };
 
+ArgMap parse(ProgramView const, std::span<char const *>);
 void check_contains_required(ProgramView const, ArgMap const &);
 void set_defaults(ProgramView const, ArgMap &) noexcept;
 

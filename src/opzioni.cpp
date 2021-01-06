@@ -144,7 +144,7 @@ ArgMap Program::operator()(int argc, char const *argv[]) const {
 
 ArgMap Program::operator()(std::span<char const *> args) const {
   try {
-    auto map = parse(args);
+    auto map = parse(*this, args);
     check_contains_required(*this, map);
     set_defaults(*this, map);
     return map;
@@ -155,7 +155,7 @@ ArgMap Program::operator()(std::span<char const *> args) const {
   }
 }
 
-ArgMap Program::parse(std::span<char const *> args) const {
+ArgMap parse(ProgramView const program, std::span<char const *> args) {
   ArgMap map;
   if (args.size() > 0) {
     map.exec_path = std::string(args[0]);
@@ -165,21 +165,21 @@ ArgMap Program::parse(std::span<char const *> args) const {
       if (is_dash_dash(arg)) {
         // +1 to ignore the dash-dash
         for (std::size_t offset = index + 1; offset < args.size();) {
-          offset += assign_positional(*this, map, args.subspan(offset), current_positional_idx);
+          offset += assign_positional(program, map, args.subspan(offset), current_positional_idx);
           ++current_positional_idx;
         }
         index = args.size();
-      } else if (auto cmd = is_command(*this, arg); cmd != nullptr) {
+      } else if (auto cmd = is_command(program, arg); cmd != nullptr) {
         index += assign_command(map, args.subspan(index), *cmd);
       } else if (looks_positional(arg)) {
-        index += assign_positional(*this, map, args.subspan(index), current_positional_idx);
+        index += assign_positional(program, map, args.subspan(index), current_positional_idx);
         ++current_positional_idx;
-      } else if (auto const flags = is_short_flags(*this, arg); !flags.empty()) {
-        index += assign_many_flags(*this, map, flags);
-      } else if (auto const flag = is_long_flag(*this, arg); !flag.empty()) {
-        index += assign_flag(*this, map, flag);
-      } else if (auto const option = is_option(*this, arg); option.has_value()) {
-        index += assign_option(*this, map, args.subspan(index), *option);
+      } else if (auto const flags = is_short_flags(program, arg); !flags.empty()) {
+        index += assign_many_flags(program, map, flags);
+      } else if (auto const flag = is_long_flag(program, arg); !flag.empty()) {
+        index += assign_flag(program, map, flag);
+      } else if (auto const option = is_option(program, arg); option.has_value()) {
+        index += assign_option(program, map, args.subspan(index), *option);
       } else {
         throw UnknownArgument(arg);
       }
