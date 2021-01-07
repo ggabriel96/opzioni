@@ -10,7 +10,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   using namespace opzioni;
 
   GIVEN("a default-initialized Program") {
-    constexpr Program program;
+    constexpr auto program = Program();
 
     THEN("all member variables should have their defaults") {
       REQUIRE(program.metadata.name.empty());
@@ -26,7 +26,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("intro is called") {
-      program.intro("intro");
+      constexpr auto program = Program().intro("intro");
 
       THEN("only the introduction should be changed") {
         REQUIRE(program.metadata.introduction == "intro");
@@ -43,7 +43,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("details is called") {
-      program.details("details");
+      constexpr auto program = Program().details("details");
 
       THEN("only the description should be changed") {
         REQUIRE(program.metadata.description == "details");
@@ -60,7 +60,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("version is called") {
-      program.version("1.0");
+      constexpr auto program = Program().version("1.0");
 
       THEN("only the version should be changed") {
         REQUIRE(program.metadata.version == "1.0");
@@ -77,7 +77,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("intro, details, and version are called") {
-      program.intro("intro").details("details").version("1.0");
+      constexpr auto program = Program().intro("intro").details("details").version("1.0");
 
       THEN("all three should be changed") {
         REQUIRE(program.metadata.introduction == "intro");
@@ -94,7 +94,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("max_width is called") {
-      program.max_width(80);
+      constexpr auto program = Program().max_width(80);
 
       THEN("only the msg_width should be changed") {
         REQUIRE(program.metadata.msg_width == 80);
@@ -111,7 +111,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("on_error is called") {
-      program.on_error(nullptr);
+      constexpr auto program = Program().on_error(nullptr);
 
       THEN("only the error_handler should be changed") {
         REQUIRE(program.metadata.error_handler == nullptr);
@@ -128,7 +128,8 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
     }
 
     WHEN("intro, details, version, max_width, and on_error are called") {
-      program.intro("intro").details("details").version("1.0").max_width(80).on_error(nullptr);
+      constexpr auto program =
+          Program().intro("intro").details("details").version("1.0").max_width(80).on_error(nullptr);
 
       THEN("all five should be changed") {
         REQUIRE(program.metadata.introduction == "intro");
@@ -146,7 +147,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   }
 
   GIVEN("a Program initialized with a name") {
-    constexpr Program program("program");
+    constexpr auto program = Program("program");
 
     THEN("only the name should not have its default value") {
       REQUIRE(program.metadata.name == "program");
@@ -163,7 +164,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   }
 
   GIVEN("a Program initialized with a name and title") {
-    constexpr Program program("program", "title");
+    constexpr auto program = Program("program", "title");
 
     THEN("only name and title should not have their default values") {
       REQUIRE(program.metadata.name == "program");
@@ -438,61 +439,63 @@ SCENARIO("parsing", "[Program][parsing]") {
     }
   }
 
-//   GIVEN("a program with all kinds of arguments and a command") {
-//     constexpr auto cmd_args = Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l");
-//     constexpr auto cmd = Program("cmd").on_error(rethrow) + cmd_args;
+  //   GIVEN("a program with all kinds of arguments and a command") {
+  //     constexpr auto cmd_args = Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l");
+  //     constexpr auto cmd = Program("cmd").on_error(rethrow) + cmd_args;
 
-//     constexpr auto args = Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") * Pos("pos1") *
-//                           Flg("glf", "g") * Flg("f") * Opt("o");
-//     constexpr auto program = Program().on_error(rethrow) + args + cmd;
+  //     constexpr auto args = Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") * Pos("pos1") *
+  //                           Flg("glf", "g") * Flg("f") * Opt("o");
+  //     constexpr auto program = Program().on_error(rethrow) + args + cmd;
 
-//     WHEN("an empty argv is parsed") {
-//       std::array<char const *, 0> argv;
+  //     WHEN("an empty argv is parsed") {
+  //       std::array<char const *, 0> argv;
 
-//       THEN("we should throw an error because of missing required arguments") {
-//         REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
-//       }
-//     }
+  //       THEN("we should throw an error because of missing required arguments") {
+  //         REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+  //       }
+  //     }
 
-//     AND_WHEN("an argv with only 1 element is parsed") {
-//       auto argv = std::array{"./program"};
+  //     AND_WHEN("an argv with only 1 element is parsed") {
+  //       auto argv = std::array{"./program"};
 
-//       THEN("we should throw an error because of missing required arguments") {
-//         REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
-//       }
-//     }
+  //       THEN("we should throw an error because of missing required arguments") {
+  //         REQUIRE_THROWS_AS(program(std::span(argv)), UserError);
+  //       }
+  //     }
 
-//     AND_WHEN("all arguments are parsed, all long names, positionals given last") {
-//       auto argv =
-//           std::array{"./program", "--long", "long-val", "--flg", "--longer-opt", "longer-opt-val", "--glf", "-f", "-o",
-//                      "o-val",     "a",      "b",        "cmd",   "--long",       "long-val",       "-f",    "aa", "bb"};
+  //     AND_WHEN("all arguments are parsed, all long names, positionals given last") {
+  //       auto argv =
+  //           std::array{"./program", "--long", "long-val", "--flg", "--longer-opt", "longer-opt-val", "--glf", "-f",
+  //           "-o",
+  //                      "o-val",     "a",      "b",        "cmd",   "--long",       "long-val",       "-f",    "aa",
+  //                      "bb"};
 
-//       auto const map = program(std::span(argv));
+  //       auto const map = program(std::span(argv));
 
-//       THEN("exec_path should be set") { REQUIRE(map.exec_path == std::string_view(argv[0])); }
+  //       THEN("exec_path should be set") { REQUIRE(map.exec_path == std::string_view(argv[0])); }
 
-//       AND_THEN("args should have all the arguments of the main program") {
-//         REQUIRE(map.args.size() == args.size());
-//         REQUIRE(map.as<std::string_view>("long") == std::string_view(argv[2]));
-//         REQUIRE(map.as<bool>("flg") == true);
-//         REQUIRE(map.as<std::string_view>("longer-opt") == std::string_view(argv[5]));
-//         REQUIRE(map.as<bool>("glf") == true);
-//         REQUIRE(map.as<bool>("f") == true);
-//         REQUIRE(map.as<std::string_view>("o") == std::string_view(argv[9]));
-//         REQUIRE(map.as<std::string_view>("pos2") == std::string_view(argv[10]));
-//         REQUIRE(map.as<std::string_view>("pos1") == std::string_view(argv[11]));
-//       }
+  //       AND_THEN("args should have all the arguments of the main program") {
+  //         REQUIRE(map.args.size() == args.size());
+  //         REQUIRE(map.as<std::string_view>("long") == std::string_view(argv[2]));
+  //         REQUIRE(map.as<bool>("flg") == true);
+  //         REQUIRE(map.as<std::string_view>("longer-opt") == std::string_view(argv[5]));
+  //         REQUIRE(map.as<bool>("glf") == true);
+  //         REQUIRE(map.as<bool>("f") == true);
+  //         REQUIRE(map.as<std::string_view>("o") == std::string_view(argv[9]));
+  //         REQUIRE(map.as<std::string_view>("pos2") == std::string_view(argv[10]));
+  //         REQUIRE(map.as<std::string_view>("pos1") == std::string_view(argv[11]));
+  //       }
 
-//       AND_THEN("cmd_name should be set") { REQUIRE(map.cmd_name == cmd.metadata.name); }
-//       AND_THEN("cmd_args should have all the arguments of the command") {
-//         REQUIRE(map.cmd_args != nullptr);
+  //       AND_THEN("cmd_name should be set") { REQUIRE(map.cmd_name == cmd.metadata.name); }
+  //       AND_THEN("cmd_args should have all the arguments of the command") {
+  //         REQUIRE(map.cmd_args != nullptr);
 
-//         auto const &cmd_args = *map.cmd_args;
-//         REQUIRE(cmd_args.as<std::string_view>("long") == std::string_view(argv[14]));
-//         REQUIRE(cmd_args.as<bool>("f") == true);
-//         REQUIRE(cmd_args.as<std::string_view>("pos1") == std::string_view(argv[16]));
-//         REQUIRE(cmd_args.as<std::string_view>("cmd-pos") == std::string_view(argv[17]));
-//       }
-//     }
-//   }
+  //         auto const &cmd_args = *map.cmd_args;
+  //         REQUIRE(cmd_args.as<std::string_view>("long") == std::string_view(argv[14]));
+  //         REQUIRE(cmd_args.as<bool>("f") == true);
+  //         REQUIRE(cmd_args.as<std::string_view>("pos1") == std::string_view(argv[16]));
+  //         REQUIRE(cmd_args.as<std::string_view>("cmd-pos") == std::string_view(argv[17]));
+  //       }
+  //     }
+  //   }
 }
