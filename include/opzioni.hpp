@@ -474,13 +474,16 @@ public:
   consteval Program(std::string_view name) : Program(name, {}) {}
   consteval Program(std::string_view name, std::string_view title) : metadata(name, title) {}
 
-  consteval Program(ProgramView const &other) : metadata(other.metadata) {
-    if constexpr (ArgsSize > 0)
-      if (other.args.size() > 0)
-        std::copy_n(other.args.begin(), ArgsSize, args.begin());
-    if constexpr (CmdsSize > 0)
-      if (other.args.size() > 0)
-        std::copy_n(other.cmds.begin(), CmdsSize, cmds.begin());
+  template <std::size_t OtherArgsSize, std::size_t OtherCmdsSize>
+  consteval Program(Program<OtherArgsSize, OtherCmdsSize> const &other) : metadata(other.metadata) {
+    static_assert(ArgsSize >= OtherArgsSize,
+                  "attempting to copy-construct a Program from another that has more args than the new one could hold");
+    static_assert(CmdsSize >= OtherCmdsSize,
+                  "attempting to copy-construct a Program from another that has more cmds than the new one could hold");
+    for (std::size_t i = 0; i < OtherArgsSize; ++i)
+      args[i] = other.args[i];
+    for (std::size_t i = 0; i < OtherCmdsSize; ++i)
+      cmds[i] = other.cmds[i];
   }
 
   consteval auto intro(std::string_view introduction) const noexcept {
