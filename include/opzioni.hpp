@@ -544,7 +544,7 @@ public:
 
   constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->args, this->cmds); }
 
-  ArgMap operator()(std::span<char const *> args) const noexcept {
+  ArgMap operator()(std::span<char const *> args) const {
     try {
       return parse(*this, args);
     } catch (UserError const &err) {
@@ -554,7 +554,7 @@ public:
     }
   }
 
-  ArgMap operator()(int argc, char const *argv[]) const noexcept {
+  ArgMap operator()(int argc, char const *argv[]) const {
     return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
   }
 };
