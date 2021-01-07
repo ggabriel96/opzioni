@@ -412,8 +412,8 @@ ArgMap parse(ProgramView const program, std::span<char const *> args);
 
 struct ProgramMetadata {
   std::string_view name{};
-  std::string_view version{};
   std::string_view title{};
+  std::string_view version{};
   std::string_view introduction{};
   std::string_view description{};
 
@@ -472,7 +472,7 @@ public:
 
   consteval Program() = default;
   consteval Program(std::string_view name) : Program(name, {}) {}
-  consteval Program(std::string_view name, std::string_view title) : metadata(name, title) {}
+  consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {}
 
   template <std::size_t OtherArgsSize, std::size_t OtherCmdsSize>
   consteval Program(Program<OtherArgsSize, OtherCmdsSize> const &other) : metadata(other.metadata) {
