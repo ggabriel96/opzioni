@@ -523,6 +523,9 @@ public:
   }
 
   consteval auto on_error(ErrorHandler error_handler) const noexcept {
+    if (error_handler == nullptr)
+      throw "A program or command must have an error handler. If you don't want the"
+            "default try... catch behavior, just use parse(ProgramView const, std::span<char const *>)";
     auto program = *this;
     program.metadata.error_handler = error_handler;
     return program;
