@@ -317,7 +317,7 @@ consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
     throw "Trying to add argument with a duplicate name";
   validate_arg(lhs);
   validate_arg(rhs);
-  return std::array<Arg, 2>{lhs, rhs};
+  return std::array{lhs, rhs};
 }
 
 template <std::size_t N>
