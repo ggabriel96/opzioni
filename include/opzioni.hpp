@@ -548,9 +548,8 @@ public:
   template <std::size_t N>
   consteval Program<ArgsSize, N> operator+(std::array<ProgramView, N> cmds) const noexcept {
     Program<ArgsSize, N> newprogram(*this);
-    for (std::size_t i = 0; i < N; ++i)
-      newprogram.cmds[i] = cmds[i];
-    std::sort(newprogram.cmds.begin(), newprogram.cmds.end());
+    std::ranges::copy(cmds, newprogram.cmds.begin());
+    std::sort(newprogram.cmds.begin(), newprogram.cmds.end()); // don't know why can't use std::ranges::sort
     return newprogram;
   }
 
