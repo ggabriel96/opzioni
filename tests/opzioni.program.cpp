@@ -256,70 +256,64 @@ SCENARIO("adding arguments", "[Program][args]") {
   }
 }
 
-// SCENARIO("adding commands", "[Program][cmds]") {
-//   using namespace opzioni;
-//   using namespace std::string_view_literals;
+SCENARIO("adding commands", "[Program][cmds]") {
+  using namespace opzioni;
+  using namespace std::string_view_literals;
 
-//   GIVEN("program and cmd") {
-//     constexpr auto cmd_name = "cmd"sv;
-//     constexpr Program cmd(cmd_name);
+  GIVEN("program and cmd") {
+    constexpr auto cmd_name = "cmd"sv;
+    constexpr static Program cmd(cmd_name);
 
-//     THEN("cmd should have no arguments") {
-//       REQUIRE(cmd.args.size() == 0);
-//       REQUIRE(cmd.cmds.size() == 0);
-//       REQUIRE(cmd.metadata.positionals_amount == 0);
-//     }
+    THEN("cmd should have no arguments") {
+      REQUIRE(cmd.args.size() == 0);
+      REQUIRE(cmd.cmds.size() == 0);
+      REQUIRE(cmd.metadata.positionals_amount == 0);
+    }
 
-//     WHEN("cmd is added as command of program") {
-//       constexpr auto program = Program() + std::array{Cmd(cmd)};
+    WHEN("cmd is added as command of program") {
+      constexpr auto program = Program() + std::array{ProgramView(cmd)};
 
-//       THEN("cmd should be added as only command of program") {
-//         REQUIRE(program.cmds.size() == 1);
-//         REQUIRE(program.cmds[0].metadata == cmd.metadata);
-//       }
-//       THEN("program's args should not be changed") {
-//         REQUIRE(program.args.size() == 0);
-//         REQUIRE(program.metadata.positionals_amount == 0);
-//       }
-//     }
+      THEN("cmd should be added as only command of program") {
+        REQUIRE(program.cmds.size() == 1);
+        REQUIRE(program.cmds[0].metadata == cmd.metadata);
+      }
+      THEN("program's args should not be changed") {
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
+      }
+    }
+  }
 
-//     AND_WHEN("cmd is added as command of program twice") {
-//       THEN("we should thow an error because of duplicate name") {
-//         REQUIRE_THROWS_AS(Program() + Cmd(cmd) * Cmd(cmd), ArgumentAlreadyExists);
-//       }
-//     }
-//   }
+  GIVEN("program, cmd1, and cmd2") {
+    constexpr auto cmd1_name = "cmd1"sv, cmd2_name = "cmd2"sv;
+    constexpr static Program cmd1(cmd1_name);
+    constexpr static Program cmd2(cmd2_name);
 
-//   GIVEN("program, cmd1, and cmd2") {
-//     constexpr auto cmd1_name = "cmd1"sv, cmd2_name = "cmd2"sv;
-//     constexpr Program cmd1(cmd1_name);
-//     constexpr Program cmd2(cmd2_name);
+    THEN("thee cmds should have no arguments") {
+      REQUIRE(cmd1.args.size() == 0);
+      REQUIRE(cmd1.cmds.size() == 0);
+      REQUIRE(cmd1.metadata.positionals_amount == 0);
 
-//     THEN("thee cmds should have no arguments") {
-//       REQUIRE(cmd1.args.size() == 0);
-//       REQUIRE(cmd1.cmds.size() == 0);
-//       REQUIRE(cmd1.metadata.positionals_amount == 0);
+      REQUIRE(cmd2.args.size() == 0);
+      REQUIRE(cmd2.cmds.size() == 0);
+      REQUIRE(cmd2.metadata.positionals_amount == 0);
+    }
 
-//       REQUIRE(cmd2.args.size() == 0);
-//       REQUIRE(cmd2.cmds.size() == 0);
-//       REQUIRE(cmd2.metadata.positionals_amount == 0);
-//     }
+    WHEN("both cmds are added as commands of program, but cmd2 first") {
+      constexpr auto program = Program() + cmd2 * cmd1;
 
-//     WHEN("both cmds are added as commands of program, but cmd2 first") {
-//       constexpr auto program = Program() + Cmd(cmd2) * Cmd(cmd1);
-
-//       THEN("cmd2 should be added as first command of program and cmd1 as second") {
-//         REQUIRE(program.cmds.size() == 2);
-//         REQUIRE(program.cmds[0].metadata == cmd2.metadata);
-//         REQUIRE(program.cmds[1].metadata == cmd1.metadata);
-//       }
-//       THEN("program's args should not be changed") {
-//         REQUIRE(program.args.size() == 0);
-//         REQUIRE(program.metadata.positionals_amount == 0);
-//       }
-//     }
-//   }
-// }
+      THEN("cmd1 should be added as first command of program and cmd2 as second") {
+        REQUIRE(program.cmds.size() == 2);
+        REQUIRE(program.cmds[0].metadata == cmd1.metadata);
+        REQUIRE(program.cmds[1].metadata == cmd2.metadata);
+      }
+      THEN("program's args should not be changed") {
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.metadata.positionals_amount == 0);
+      }
+    }
+  }
+}
 
 SCENARIO("parsing", "[Program][parsing]") {
   using namespace opzioni;
