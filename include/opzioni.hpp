@@ -562,8 +562,6 @@ public:
     try {
       return parse(*this, args);
     } catch (UserError const &err) {
-      if (this->metadata.error_handler == nullptr)
-        std::exit(-1);
       std::exit(this->metadata.error_handler(*this, err));
     }
   }
