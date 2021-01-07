@@ -470,8 +470,8 @@ consteval auto operator*(std::array<ProgramView, N> const cmds, ProgramView cons
 }
 
 template <std::size_t N>
-consteval void validate_cmds(std::array<ProgramView, N> const &args, ProgramView const &other) noexcept {
-  if (std::ranges::find(args, other) != args.end())
+consteval void validate_cmds(std::array<ProgramView, N> const &cmds, ProgramView const &other) noexcept {
+  if (std::ranges::find(cmds, other) != cmds.end())
     throw "Trying to add command with a duplicate name";
 }
 
