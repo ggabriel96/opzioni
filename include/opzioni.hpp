@@ -568,6 +568,8 @@ public:
   ArgMap operator()(int argc, char const *argv[]) const {
     return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
   }
+
+private:
 };
 
 // +--------------------+
