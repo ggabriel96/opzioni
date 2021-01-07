@@ -6,7 +6,7 @@
 int main(int argc, char const *argv[]) {
   using opzioni::Program, opzioni::Pos, opzioni::Help;
 
-  auto program = Program("test-package") + Pos("name").help("Your name") * Help();
+  constexpr auto program = Program("test-package") + Pos("name").help("Your name") * Help();
 
   auto const args = program(argc, argv);
   std::cout << "Number of arguments: " << args.size() << '\n';
