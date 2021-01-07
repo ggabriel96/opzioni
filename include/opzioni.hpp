@@ -44,6 +44,9 @@ consteval void validate_arg(Arg const &) noexcept;
 template <std::size_t N>
 consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
 
+template <std::size_t N>
+consteval void validate_cmds(std::array<ProgramView, N> const &, ProgramView const &) noexcept;
+
 // +----------------+
 // | error handlers |
 // +----------------+
@@ -432,11 +435,15 @@ struct ProgramView {
   std::string format_for_help_description() const noexcept;
   std::string format_for_help_index() const noexcept;
   std::string format_for_usage_summary() const noexcept;
-
-  constexpr auto operator<=>(ProgramView const &other) const noexcept {
-    return this->metadata.name <=> other.metadata.name;
-  }
 };
+
+constexpr bool operator<(ProgramView const &lhs, ProgramView const &rhs) noexcept {
+  return lhs.metadata.name < rhs.metadata.name;
+}
+
+constexpr bool operator==(ProgramView const &lhs, ProgramView const &rhs) noexcept {
+  return lhs.metadata.name == rhs.metadata.name;
+}
 
 // struct Cmd {
 //   ProgramView program;
@@ -447,20 +454,25 @@ struct ProgramView {
 // };
 
 consteval auto operator*(ProgramView const lhs, ProgramView const rhs) noexcept {
-  if (lhs.metadata.name == rhs.metadata.name)
+  if (lhs == rhs)
     throw "Trying to add command with a duplicate name";
   return std::array{lhs, rhs};
 }
 
 template <std::size_t N>
 consteval auto operator*(std::array<ProgramView, N> const cmds, ProgramView const other) noexcept {
-  // validate_arg(other);
-  // validate_args(cmds, other);
+  validate_cmds(cmds, other);
 
   std::array<ProgramView, N + 1> newcmds;
   std::copy_n(cmds.begin(), N, newcmds.begin());
   newcmds[N] = other;
   return newcmds;
+}
+
+template <std::size_t N>
+consteval void validate_cmds(std::array<ProgramView, N> const &args, ProgramView const &other) noexcept {
+  if (std::ranges::find(args, other) != args.end())
+    throw "Trying to add command with a duplicate name";
 }
 
 template <std::size_t ArgsSize, std::size_t CmdsSize>
