@@ -81,4 +81,34 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
+
+  WHEN("Help is called with no argument") {
+    constexpr auto arg = Help();
+
+    THEN("type should be FLG") { REQUIRE(arg.type == ArgType::FLG); }
+    THEN("name should be equal to help") { REQUIRE(arg.name == "help"); }
+    THEN("abbrev should be equal to h") { REQUIRE(arg.abbrev == "h"); }
+    THEN("description should be the default") { REQUIRE(arg.description == "Display this information"); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
+    THEN("set_value should be true") { REQUIRE(std::get<bool>(arg.set_value) == true); }
+    THEN("action_fn should be print_help") { REQUIRE(arg.action_fn == actions::print_help); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
+
+  WHEN("Help is called with one argument") {
+    constexpr auto arg = Help("Display this help text and exit");
+
+    THEN("type should be FLG") { REQUIRE(arg.type == ArgType::FLG); }
+    THEN("name should be equal to help") { REQUIRE(arg.name == "help"); }
+    THEN("abbrev should be equal to h") { REQUIRE(arg.abbrev == "h"); }
+    THEN("description should be equal to argument") { REQUIRE(arg.description == "Display this help text and exit"); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
+    THEN("set_value should be true") { REQUIRE(std::get<bool>(arg.set_value) == true); }
+    THEN("action_fn should be print_help") { REQUIRE(arg.action_fn == actions::print_help); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
 }
