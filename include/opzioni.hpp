@@ -428,9 +428,14 @@ struct ProgramMetadata {
 };
 
 struct ProgramView {
-  ProgramMetadata metadata;
-  std::span<Arg const> args;
-  std::span<ProgramView const> cmds;
+  ProgramMetadata metadata{};
+  Arg const *args_begin = nullptr;
+  std::size_t args_size = 0;
+  ProgramView const *cmds_begin = nullptr;
+  std::size_t cmds_size = 0;
+
+  constexpr auto args() const noexcept { return std::span<Arg const>(args_begin, args_size); }
+  constexpr auto cmds() const noexcept { return std::span<ProgramView const>(cmds_begin, cmds_size); }
 
   std::string format_for_help_description() const noexcept;
   std::string format_for_help_index() const noexcept;
@@ -556,7 +561,9 @@ public:
     return newprogram;
   }
 
-  constexpr operator ProgramView() const noexcept { return ProgramView(this->metadata, this->args, this->cmds); }
+  constexpr operator ProgramView() const noexcept {
+    return ProgramView(this->metadata, this->args.data(), this->args.size(), this->cmds.data(), this->cmds.size());
+  }
 
   ArgMap operator()(std::span<char const *> args) const {
     try {

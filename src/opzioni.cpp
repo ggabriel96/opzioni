@@ -139,7 +139,7 @@ void check_contains_required(ProgramView const program, ArgMap const &map) {
   auto is_required = [](auto const &arg) { return arg.is_required; };
   std::vector<std::string_view> missing_arg_names;
   auto insert = std::back_inserter(missing_arg_names);
-  transform(program.args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+  transform(program.args() | filter(wasnt_parsed) | filter(is_required), insert, get_name);
   if (!missing_arg_names.empty())
     throw MissingRequiredArguments(missing_arg_names);
 }
@@ -147,7 +147,7 @@ void check_contains_required(ProgramView const program, ArgMap const &map) {
 void set_defaults(ProgramView const program, ArgMap &map) noexcept {
   using std::views::filter;
   auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-  for (auto const &arg : program.args | filter(wasnt_parsed) | filter(&Arg::has_default))
+  for (auto const &arg : program.args() | filter(wasnt_parsed) | filter(&Arg::has_default))
     arg.set_default_to(map.args[arg.name]);
 }
 
@@ -163,13 +163,13 @@ ArgMap parse(ProgramView const program, std::span<char const *> args) {
 // +--------------------+
 
 constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept {
-  return std::ranges::find_if(program.args, [name, type](auto const &arg) {
+  return std::ranges::find_if(program.args(), [name, type](auto const &arg) {
     return arg.type == type && (arg.name == name || (arg.has_abbrev() && arg.abbrev == name));
   });
 }
 
 constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept {
-  return find_arg(program, name, type) != program.args.end();
+  return find_arg(program, name, type) != program.args().end();
 }
 constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept {
   return has_arg(program, name, ArgType::FLG);
@@ -182,11 +182,11 @@ constexpr bool has_pos(ProgramView const program, std::string_view name) noexcep
 }
 
 constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept {
-  return std::ranges::find(program.cmds, name, [](auto const &cmd) { return cmd.metadata.name; });
+  return std::ranges::find(program.cmds(), name, [](auto const &cmd) { return cmd.metadata.name; });
 }
 
 constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept {
-  return find_cmd(program, name) != program.cmds.end();
+  return find_cmd(program, name) != program.cmds().end();
 }
 
 // +-----------------+
@@ -198,7 +198,7 @@ constexpr bool is_dash_dash(std::string_view const whole_arg) noexcept {
 }
 
 constexpr ProgramView const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
-  if (auto const cmd = find_cmd(program, whole_arg); cmd != program.cmds.end())
+  if (auto const cmd = find_cmd(program, whole_arg); cmd != program.cmds().end())
     return &*cmd;
   return nullptr;
 }
@@ -254,7 +254,7 @@ std::size_t assign_positional(ProgramView const program, ArgMap &map, std::span<
   if (positional_idx >= program.metadata.positionals_amount) {
     throw UnexpectedPositional(args[0], program.metadata.positionals_amount);
   }
-  auto const arg = program.args[positional_idx];
+  auto const arg = program.args()[positional_idx];
   // if gather amount is 0, we gather everything else
   auto const gather_amount = arg.gather_amount == 0 ? args.size() : arg.gather_amount;
   if (gather_amount > args.size()) {
@@ -353,9 +353,9 @@ std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
   auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_help_index().length(); };
   std::size_t const required_length_args =
-      program.args.empty() ? 0 : std::ranges::max(program.args | transform(required_length));
+      program.args().empty() ? 0 : std::ranges::max(program.args() | transform(required_length));
   std::size_t const required_length_cmds =
-      program.cmds.empty() ? 0 : std::ranges::max(program.cmds | transform(required_length));
+      program.cmds().empty() ? 0 : std::ranges::max(program.cmds() | transform(required_length));
   return std::max(required_length_args, required_length_cmds);
 }
 
@@ -382,19 +382,20 @@ void HelpFormatter::print_long_usage() const noexcept {
   using std::views::drop, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + program.cmds.size() + program.args.size());
+  words.reserve(1 + program.cmds().size() + program.args().size());
 
   auto insert = std::back_inserter(words);
   words.push_back(std::string(program.metadata.name));
-  transform(program.args, insert, &Arg::format_for_usage_summary);
+  transform(program.args(), insert, &Arg::format_for_usage_summary);
 
-  if (program.cmds.size() == 1) {
-    words.push_back(format("{{{}}}", program.cmds.front().format_for_usage_summary()));
-  } else if (program.cmds.size() > 1) {
+  if (program.cmds().size() == 1) {
+    words.push_back(format("{{{}}}", program.cmds().front().format_for_usage_summary()));
+  } else if (program.cmds().size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", program.cmds.front().format_for_usage_summary()));
-    transform(program.cmds | drop(1) | take(program.cmds.size() - 2), insert, &ProgramView::format_for_usage_summary);
-    words.push_back(format("{}}}", program.cmds.back().format_for_usage_summary()));
+    words.push_back(format("{{{},", program.cmds().front().format_for_usage_summary()));
+    transform(program.cmds() | drop(1) | take(program.cmds().size() - 2), insert,
+              &ProgramView::format_for_usage_summary);
+    words.push_back(format("{}}}", program.cmds().back().format_for_usage_summary()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
@@ -412,15 +413,15 @@ void HelpFormatter::print_help() const noexcept {
 
   if (program.metadata.positionals_amount > 0) {
     out << "Positionals:\n";
-    for (auto const &arg : program.args | std::views::take(program.metadata.positionals_amount)) {
+    for (auto const &arg : program.args() | std::views::take(program.metadata.positionals_amount)) {
       print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
   }
 
-  if (program.args.size() > program.metadata.positionals_amount) {
+  if (program.args().size() > program.metadata.positionals_amount) {
     out << pending_nl << "Options & Flags:\n";
-    for (auto const &arg : program.args | std::views::drop(program.metadata.positionals_amount)) {
+    for (auto const &arg : program.args() | std::views::drop(program.metadata.positionals_amount)) {
       print_arg_help(arg, padding_size);
     }
     pending_nl = "\n";
@@ -428,9 +429,9 @@ void HelpFormatter::print_help() const noexcept {
     pending_nl = "";
   }
 
-  if (!program.cmds.empty()) {
+  if (!program.cmds().empty()) {
     out << pending_nl << "Commands:\n";
-    for (auto const &arg : program.cmds) {
+    for (auto const &arg : program.cmds()) {
       print_arg_help(arg, padding_size);
     }
   }
