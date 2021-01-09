@@ -66,4 +66,19 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
+
+  WHEN("Pos is called with one argument") {
+    constexpr auto arg = Pos("pos");
+
+    THEN("type should be POS") { REQUIRE(arg.type == ArgType::POS); }
+    THEN("name should be equal to argument") { REQUIRE(arg.name == "pos"); }
+    THEN("abbrev should be empty") { REQUIRE(arg.abbrev.empty()); }
+    THEN("description should be empty") { REQUIRE(arg.description.empty()); }
+    THEN("is_required should be true") { REQUIRE(arg.is_required); }
+    THEN("default_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.default_value)); }
+    THEN("set_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.set_value)); }
+    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == actions::assign<std::string_view>); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
 }
