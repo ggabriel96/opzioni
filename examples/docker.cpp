@@ -15,10 +15,6 @@ using vec = std::vector<T>;
  * It has no affiliation with the Docker project. I just ran `docker --help` and copied the arguments.
  * Hence, none of the docker CLI is my work, I just copied the help text.
  * Also, note that it is not *identical* to the real CLI.
- * ---
- * Almost all arguments are sorted because the actual CLI has them ordered and I copied them in that order.
- * But help and version are added first and opzioni re-arranges the arguments (don't worry about positionals,
- * their relative order is preserved). By the way, in the actual CLI, the `version` flag uses lowercase `-v`.
  */
 int main(int argc, char const *argv[]) {
   using namespace opzioni;
@@ -45,7 +41,7 @@ int main(int argc, char const *argv[]) {
 
   constexpr auto docker =
       Program("docker")
-          .version("version 20.10.1, build 831ebea")
+          .version("20.10.1, build 831ebea")
           .intro("A self-sufficient runtime for containers")
           .details("Run 'docker COMMAND --help' for more information on a command.") +
       Help() * Version() *
