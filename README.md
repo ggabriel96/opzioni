@@ -51,7 +51,9 @@ The goals of this library, in order of importance, are:
 
 1. **Be bleeding-edge.**
 
-    This library requires C++20. That limits a lot its potential users, but also allows for the use of the new and powerful features of C++. It also helps to accomplish the previous goals.
+    This library requires C++20.
+    That limits a lot its potential users, but also allows for the use of the new and powerful features of C++.
+    It also helps to accomplish the previous goals.
 
 # Disclaimer
 
@@ -86,13 +88,11 @@ Feel free to take a look at the other, more complex, examples in the same direct
 int main(int argc, char const *argv[]) {
   using namespace opzioni;
 
-  auto const hello =
-      Program("hello")
-          .version("0.1")
-          .intro("Greeting people since the dawn of computing") +
-      Help() *
-      Version() *
-      Pos("name").help("Your name please, so I can greet you");
+  constexpr auto hello =
+      Program("hello").version("0.1").intro(
+          "Greeting people since the dawn of computing") +
+      Help() * Version() *
+          Pos("name").help("Your name please, so I can greet you");
 
   auto const args = hello(argc, argv);
   std::string_view const name = args["name"];
@@ -131,11 +131,11 @@ int main(int argc, char const *argv[]) {
 1. Automatic error handling
 
     ```
-    $ ./build/examples/hello 
-    Missing required arguments: `name`
-
     $ ./build/examples/hello Gabriel Galli
     Unexpected positional argument `Galli`. This program expects 1 positional arguments
+
+    Usage:
+        hello <name> [--help] [--version]
     ```
 
 1. And finally:
@@ -164,7 +164,8 @@ int main(int argc, char const *argv[]) {
 1. Arguments are added to `Program`.
 
     The built-in help and version and a positional called `name`.
-    Note that there is an `operator*` between each argument and an `operator+` between the program and its arguments. This is better explained later.
+    Note that there is an `operator*` between each argument and an `operator+` between the program and its arguments.
+    This is better explained later.
 
 1. The command line arguments are parsed.
 
@@ -177,17 +178,6 @@ int main(int argc, char const *argv[]) {
     std::cout << args.as<std::string_view>("name") << '\n'; // 1
     std::cout << args["name"].as<std::string_view>() << '\n'; // 2
     ```
-
-### `Program` is not `constexpr`! Where is the compile-time stuff?
-
-Actually, everything related to the construction of arguments is marked `consteval`.
-Hence, it is mandatory for every argument to be built at compile-time.
-There is also a `consteval` construction of an array of arguments, allowing for more checks than would
-be possible if only looking at each argument individually, e.g. finding duplicate names.
-
-Unfortunately, `Program` itself is not `constexpr`-enabled.
-The TLDR reason is that it is too hard to make it work and clumsy to use.
-More details in the [Constexpr Arg](https://github.com/ggabriel96/opzioni/pull/43) PR.
 
 # Getting started
 
