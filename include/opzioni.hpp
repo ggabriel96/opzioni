@@ -507,10 +507,8 @@ public:
                   "attempting to copy-construct a Program from another that has more args than the new one could hold");
     static_assert(CmdsSize >= OtherCmdsSize,
                   "attempting to copy-construct a Program from another that has more cmds than the new one could hold");
-    for (std::size_t i = 0; i < OtherArgsSize; ++i)
-      args[i] = other.args[i];
-    for (std::size_t i = 0; i < OtherCmdsSize; ++i)
-      cmds[i] = other.cmds[i];
+    std::copy_n(other.args.begin(), OtherArgsSize, args.begin()); // don't know why std::ranges::copy_n doesn't work
+    std::copy_n(other.cmds.begin(), OtherCmdsSize, cmds.begin()); // don't know why std::ranges::copy_n doesn't work
   }
 
   consteval auto intro(std::string_view introduction) const noexcept {
