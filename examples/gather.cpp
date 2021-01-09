@@ -10,8 +10,8 @@ int main(int argc, char const *argv[]) {
   using opzioni::Help, opzioni::Opt, opzioni::Pos, opzioni::Version;
   using opzioni::Program, opzioni::ArgValue;
 
-  auto const program =
-      Program("gather", "A short example file to illustrate the gather feature").v("1.0") +
+  constexpr auto program =
+      Program("gather", "A short example file to illustrate the gather feature").version("1.0") +
       Help() * Version() *
           Pos("all")
               .help(

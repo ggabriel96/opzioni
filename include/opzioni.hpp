@@ -34,6 +34,9 @@ std::string builtin2str(BuiltinVariant const &) noexcept;
 
 struct Arg;
 struct ArgMap;
+struct ProgramView;
+
+template <std::size_t ArgsSize = 0, std::size_t CmdsSize = 0>
 class Program;
 
 consteval void validate_arg(Arg const &) noexcept;
@@ -41,34 +44,37 @@ consteval void validate_arg(Arg const &) noexcept;
 template <std::size_t N>
 consteval void validate_args(std::array<Arg, N> const &, Arg const &) noexcept;
 
+template <std::size_t N>
+consteval void validate_cmds(std::array<ProgramView, N> const &, ProgramView const &) noexcept;
+
 // +----------------+
 // | error handlers |
 // +----------------+
-using ErrorHandler = int (*)(Program const &, UserError const &);
+using ErrorHandler = int (*)(ProgramView const, UserError const &);
 
-int print_error(Program const &, UserError const &) noexcept;
-int print_error_and_usage(Program const &, UserError const &) noexcept;
-int rethrow(Program const &, UserError const &);
+int print_error(ProgramView const, UserError const &) noexcept;
+int print_error_and_usage(ProgramView const, UserError const &) noexcept;
+int rethrow(ProgramView const, UserError const &);
 
 // +---------+
 // | actions |
 // +---------+
 namespace actions {
 
-using Signature = void (*)(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <concepts::BuiltinType T>
-void assign(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <concepts::BuiltinType Elem>
-void append(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 template <concepts::BuiltinType Elem>
-void csv(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-void print_help(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-void print_version(Program const &, ArgMap &, Arg const &, std::optional<std::string_view> const);
+void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
 } // namespace actions
 
@@ -267,6 +273,7 @@ struct Arg {
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
   constexpr bool has_set() const noexcept { return set_value.index() != 0; }
+  constexpr bool is_positional() const noexcept { return type == ArgType::POS; }
 
   void set_default_to(ArgValue &arg) const noexcept {
     if (default_setter != nullptr) {
@@ -310,7 +317,7 @@ consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
     throw "Trying to add argument with a duplicate name";
   validate_arg(lhs);
   validate_arg(rhs);
-  return std::array<Arg, 2>{lhs, rhs};
+  return std::array{lhs, rhs};
 }
 
 template <std::size_t N>
@@ -392,127 +399,208 @@ consteval Arg Version(std::string_view description) noexcept {
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
 
-class Cmd {
-public:
-  // just a helper to encapsulate the pointer indirection
-  Program const *program;
+// +--------------------+
+// | arg and cmd search |
+// +--------------------+
 
-  Cmd(Program const &program) : program(&program) {}
+constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
+constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
+constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_opt(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_pos(ProgramView const program, std::string_view name) noexcept;
+constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept;
+
+// +---------+
+// | parsing |
+// +---------+
+
+ArgMap parse(ProgramView const program, std::span<char const *> args);
+
+// +-----------------+
+// | ProgramMetadata |
+// +-----------------+
+
+struct ProgramMetadata {
+  std::string_view name{};
+  std::string_view title{};
+  std::string_view version{};
+  std::string_view introduction{};
+  std::string_view description{};
+
+  std::size_t msg_width = 100;
+  std::size_t positionals_amount = 0;
+  ErrorHandler error_handler = print_error_and_usage;
+
+  constexpr auto operator<=>(ProgramMetadata const &) const noexcept = default;
+};
+
+// +-------------+
+// | ProgramView |
+// +-------------+
+
+class ProgramView {
+public:
+  ProgramMetadata metadata{};
+
+  constexpr ProgramView() = default;
+
+  constexpr ProgramView(ProgramMetadata metadata, Arg const *args_begin, std::size_t args_size,
+                        ProgramView const *cmds_begin, std::size_t cmds_size)
+      : metadata(metadata), args_begin(args_begin), args_size(args_size), cmds_begin(cmds_begin), cmds_size(cmds_size) {
+  }
+
+  constexpr auto args() const noexcept { return std::span<Arg const>(args_begin, args_size); }
+  constexpr auto cmds() const noexcept { return std::span<ProgramView const>(cmds_begin, cmds_size); }
 
   std::string format_for_help_description() const noexcept;
   std::string format_for_help_index() const noexcept;
   std::string format_for_usage_summary() const noexcept;
 
-  auto operator<=>(Cmd const &) const noexcept;
-
 private:
+  Arg const *args_begin = nullptr;
+  std::size_t args_size = 0;
+  ProgramView const *cmds_begin = nullptr;
+  std::size_t cmds_size = 0;
 };
 
-struct ParsedOption {
-  std::string_view name;
-  // no string and empty string mean different things here
-  std::optional<std::string_view> value;
-};
+constexpr bool operator<(ProgramView const &lhs, ProgramView const &rhs) noexcept {
+  return lhs.metadata.name < rhs.metadata.name;
+}
 
-ParsedOption parse_option(std::string_view const) noexcept;
+constexpr bool operator==(ProgramView const &lhs, ProgramView const &rhs) noexcept {
+  return lhs.metadata.name == rhs.metadata.name;
+}
+
+consteval auto operator*(ProgramView const lhs, ProgramView const rhs) noexcept {
+  if (lhs == rhs)
+    throw "Trying to add command with a duplicate name";
+  return std::array{lhs, rhs};
+}
+
+template <std::size_t N>
+consteval auto operator*(std::array<ProgramView, N> const cmds, ProgramView const other) noexcept {
+  validate_cmds(cmds, other);
+
+  std::array<ProgramView, N + 1> newcmds;
+  std::copy_n(cmds.begin(), N, newcmds.begin());
+  newcmds[N] = other;
+  return newcmds;
+}
+
+template <std::size_t N>
+consteval void validate_cmds(std::array<ProgramView, N> const &cmds, ProgramView const &other) noexcept {
+  if (std::ranges::find(cmds, other) != cmds.end())
+    throw "Trying to add command with a duplicate name";
+}
 
 // +---------+
 // | Program |
 // +---------+
 
+template <std::size_t ArgsSize, std::size_t CmdsSize>
 class Program {
 public:
-  std::string_view name{};
-  std::string_view version{};
-  std::string_view title{};
-  std::string_view introduction{};
-  std::string_view description{};
+  ProgramMetadata metadata{};
+  std::array<Arg, ArgsSize> args;
+  std::array<ProgramView, CmdsSize> cmds;
 
-  std::size_t msg_width = 100;
-  ErrorHandler error_handler = print_error;
-  // bool has_auto_help{false};
-  std::size_t positionals_amount = 0;
+  consteval Program() = default;
+  consteval Program(std::string_view name) : Program(name, {}) {}
+  consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {}
 
-  Program() = default;
-  Program(std::string_view name) : Program(name, {}) {}
-  Program(std::string_view name, std::string_view title) : name(name), title(title) {}
+  template <std::size_t OtherArgsSize, std::size_t OtherCmdsSize>
+  consteval Program(Program<OtherArgsSize, OtherCmdsSize> const &other) : metadata(other.metadata) {
+    static_assert(ArgsSize >= OtherArgsSize,
+                  "attempting to copy-construct a Program from another that has more args than the new one could hold");
+    static_assert(CmdsSize >= OtherCmdsSize,
+                  "attempting to copy-construct a Program from another that has more cmds than the new one could hold");
+    std::copy_n(other.args.begin(), OtherArgsSize, args.begin()); // don't know why std::ranges::copy_n doesn't work
+    std::copy_n(other.cmds.begin(), OtherCmdsSize, cmds.begin()); // don't know why std::ranges::copy_n doesn't work
+  }
 
-  Program &intro(std::string_view) noexcept;
-  Program &details(std::string_view) noexcept;
-  Program &v(std::string_view) noexcept; // I don't know what else to call this
+  consteval auto intro(std::string_view introduction) const noexcept {
+    auto program = *this;
+    program.metadata.introduction = introduction;
+    return program;
+  }
 
-  Program &max_width(std::size_t) noexcept;
-  Program &on_error(ErrorHandler) noexcept;
+  consteval auto details(std::string_view description) const noexcept {
+    auto program = *this;
+    program.metadata.description = description;
+    return program;
+  }
 
-  Program &operator+(Cmd cmd) { return add(cmd); }
+  consteval auto version(std::string_view version) const noexcept {
+    auto program = *this;
+    program.metadata.version = version;
+    return program;
+  }
+
+  consteval auto max_width(std::size_t msg_width) const noexcept {
+    auto program = *this;
+    program.metadata.msg_width = msg_width;
+    return program;
+  }
+
+  consteval auto on_error(ErrorHandler error_handler) const noexcept {
+    if (error_handler == nullptr)
+      throw "A program or command must have an error handler. If you don't want the"
+            "default try... catch behavior, just use parse(ProgramView const, std::span<char const *>)";
+    auto program = *this;
+    program.metadata.error_handler = error_handler;
+    return program;
+  }
 
   template <std::size_t N>
-  Program &operator+(std::array<Arg, N> args) {
-    _args.reserve(N);
-    for (auto &&arg : args)
-      add(arg);
+  consteval Program<N, CmdsSize> operator+(std::array<Arg, N> args) const noexcept {
+    Program<N, CmdsSize> newprogram(*this);
+    std::array<Arg, N> positionals, others;
 
-    // putting all positionals first without changing their relative order, then sorting all other args.
-    // We wouldn't need the following sort, but then it's already done if we end up printing the help text.
-    std::ranges::stable_partition(_args, [](auto const &arg) { return arg.type == ArgType::POS; });
-    std::stable_sort(std::next(_args.begin(), positionals_amount), _args.end());
-    return *this;
+    auto const partition_result =
+        std::ranges::partition_copy(args, positionals.begin(), others.begin(), &Arg::is_positional);
+    newprogram.metadata.positionals_amount = std::ranges::distance(positionals.begin(), partition_result.out1);
+
+    auto const copy_result =
+        std::ranges::copy_n(positionals.begin(), newprogram.metadata.positionals_amount, newprogram.args.begin());
+    std::ranges::copy_n(others.begin(), N - newprogram.metadata.positionals_amount, copy_result.out);
+
+    std::sort(copy_result.out, newprogram.args.end());
+    return newprogram;
   }
 
-  ArgMap operator()(int, char const *[]) const;
-  ArgMap operator()(std::span<char const *>) const;
-
-  std::vector<Arg> const &args() const noexcept { return _args; }
-  std::vector<Cmd> const &cmds() const noexcept { return _cmds; }
-
-  constexpr auto find_arg(std::string_view name, ArgType type) const noexcept {
-    return std::ranges::find_if(_args, [name, type](auto const &arg) {
-      return arg.type == type && (arg.name == name || (arg.has_abbrev() && arg.abbrev == name));
-    });
+  template <std::size_t N>
+  consteval Program<ArgsSize, N> operator+(std::array<ProgramView, N> cmds) const noexcept {
+    Program<ArgsSize, N> newprogram(*this);
+    std::ranges::copy(cmds, newprogram.cmds.begin());
+    std::sort(newprogram.cmds.begin(), newprogram.cmds.end()); // don't know why can't use std::ranges::sort
+    return newprogram;
   }
 
-  bool has_arg(std::string_view name, ArgType type) const noexcept { return find_arg(name, type) != _args.end(); }
-  bool has_flg(std::string_view name) const noexcept { return has_arg(name, ArgType::FLG); }
-  bool has_opt(std::string_view name) const noexcept { return has_arg(name, ArgType::OPT); }
-  bool has_pos(std::string_view name) const noexcept { return has_arg(name, ArgType::POS); }
-
-  constexpr auto find_cmd(std::string_view name) const noexcept {
-    return std::ranges::find(_cmds, name, [](auto const &cmd) { return cmd.program->name; });
+  constexpr operator ProgramView() const noexcept {
+    return ProgramView(this->metadata, this->args.data(), this->args.size(), this->cmds.data(), this->cmds.size());
   }
 
-  bool has_cmd(std::string_view name) const noexcept { return find_cmd(name) != _cmds.end(); }
+  ArgMap operator()(std::span<char const *> args) const {
+    try {
+      return parse(*this, args);
+    } catch (UserError const &err) {
+      std::exit(this->metadata.error_handler(*this, err));
+    }
+  }
+
+  ArgMap operator()(int argc, char const *argv[]) const {
+    return (*this)(std::span<char const *>{argv, static_cast<std::size_t>(argc)});
+  }
 
 private:
-  std::vector<Arg> _args;
-  std::vector<Cmd> _cmds;
-
-  Program &add(Arg);
-  Program &add(Cmd);
-
-  ArgMap parse(std::span<char const *>) const;
-  void check_contains_required(ArgMap const &) const;
-  void set_defaults(ArgMap &) const noexcept;
-
-  bool is_dash_dash(std::string_view const) const noexcept;
-  Cmd const *is_command(std::string_view const) const noexcept;
-  bool looks_positional(std::string_view const) const noexcept;
-  std::string_view is_short_flags(std::string_view const) const noexcept;
-  std::string_view is_long_flag(std::string_view const) const noexcept;
-  std::optional<ParsedOption> is_option(std::string_view const) const noexcept;
-  bool is_flag(std::string_view const) const noexcept;
-
-  std::size_t assign_command(ArgMap &, std::span<char const *>, Cmd const &) const;
-  std::size_t assign_positional(ArgMap &, std::span<char const *>, std::size_t const) const;
-  std::size_t assign_many_flags(ArgMap &, std::string_view) const;
-  std::size_t assign_flag(ArgMap &, std::string_view) const;
-  std::size_t assign_option(ArgMap &, std::span<char const *>, ParsedOption const) const;
 };
 
 // +-----------+
 // | utilities |
 // +-----------+
 
-void print_full_help(Program const &, std::ostream & = std::cout) noexcept;
+void print_full_help(ProgramView const, std::ostream & = std::cout) noexcept;
 
 // +------------+
 // | formatting |
@@ -520,7 +608,7 @@ void print_full_help(Program const &, std::ostream & = std::cout) noexcept;
 
 class HelpFormatter {
 public:
-  HelpFormatter(Program const &, std::ostream &);
+  HelpFormatter(ProgramView const, std::ostream &);
 
   void print_title() const noexcept;
   void print_intro() const noexcept;
@@ -532,22 +620,14 @@ public:
 
 private:
   std::ostream &out;
-  std::size_t const max_width;
-  std::string const program_name;
-  std::string const program_version;
-  std::string const program_title;
-  std::string const program_introduction;
-  std::string const program_description;
-  std::size_t positionals_amount;
-  std::vector<Cmd> cmds;
-  std::vector<Arg> args;
+  ProgramView const program;
 
   void print_arg_help(auto const &arg, std::size_t const padding_size) const noexcept {
     using std::views::drop;
     auto const description = arg.format_for_help_description();
     // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
     // then -4 again because we add 4 spaces between the arg usage and description
-    auto const description_lines = limit_within(description, max_width - padding_size - 8 - 4);
+    auto const description_lines = limit_within(description, program.metadata.msg_width - padding_size - 8 - 4);
 
     out << fmt::format("    {:<{}}    {}\n", arg.format_for_help_index(), padding_size,
                        fmt::join(description_lines.front(), " "));
@@ -577,7 +657,7 @@ void assign_to(ArgMap &map, std::string_view const name, T value) {
 }
 
 template <concepts::BuiltinType T>
-void assign(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+void assign(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
@@ -598,7 +678,7 @@ void append_to(ArgMap &map, std::string_view const name, Elem value) {
 }
 
 template <concepts::BuiltinType Elem>
-void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+void append(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   if (arg.type != ArgType::FLG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
@@ -610,7 +690,7 @@ void append(Program const &, ArgMap &map, Arg const &arg, std::optional<std::str
 // +-----+
 
 template <concepts::BuiltinType Elem>
-void csv(Program const &, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+void csv(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   assign_to(map, arg.name, convert<std::vector<Elem>>(*parsed_value));
 }
 
