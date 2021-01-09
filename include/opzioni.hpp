@@ -460,14 +460,6 @@ constexpr bool operator==(ProgramView const &lhs, ProgramView const &rhs) noexce
   return lhs.metadata.name == rhs.metadata.name;
 }
 
-// struct Cmd {
-//   ProgramView program;
-
-//   consteval Cmd() = default;
-//   consteval Cmd(Cmd const &other) : program(other.program) {}
-//   consteval Cmd(ProgramView program) : program(program) {}
-// };
-
 consteval auto operator*(ProgramView const lhs, ProgramView const rhs) noexcept {
   if (lhs == rhs)
     throw "Trying to add command with a duplicate name";
