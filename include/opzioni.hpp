@@ -427,12 +427,16 @@ struct ProgramMetadata {
   constexpr auto operator<=>(ProgramMetadata const &) const noexcept = default;
 };
 
-struct ProgramView {
+class ProgramView {
+public:
   ProgramMetadata metadata{};
-  Arg const *args_begin = nullptr;
-  std::size_t args_size = 0;
-  ProgramView const *cmds_begin = nullptr;
-  std::size_t cmds_size = 0;
+
+  constexpr ProgramView() = default;
+
+  constexpr ProgramView(ProgramMetadata metadata, Arg const *args_begin, std::size_t args_size,
+                        ProgramView const *cmds_begin, std::size_t cmds_size)
+      : metadata(metadata), args_begin(args_begin), args_size(args_size), cmds_begin(cmds_begin), cmds_size(cmds_size) {
+  }
 
   constexpr auto args() const noexcept { return std::span<Arg const>(args_begin, args_size); }
   constexpr auto cmds() const noexcept { return std::span<ProgramView const>(cmds_begin, cmds_size); }
@@ -440,6 +444,12 @@ struct ProgramView {
   std::string format_for_help_description() const noexcept;
   std::string format_for_help_index() const noexcept;
   std::string format_for_usage_summary() const noexcept;
+
+private:
+  Arg const *args_begin = nullptr;
+  std::size_t args_size = 0;
+  ProgramView const *cmds_begin = nullptr;
+  std::size_t cmds_size = 0;
 };
 
 constexpr bool operator<(ProgramView const &lhs, ProgramView const &rhs) noexcept {
