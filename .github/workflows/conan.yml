@@ -1,5 +1,3 @@
-name: Test Conan package
-
 on:
   pull_request:
     branches:
@@ -9,7 +7,7 @@ on:
       - main
 
 jobs:
-  gcc:
+  package-on-gcc:
     runs-on: ubuntu-latest
     container:
       image: conanio/gcc10:latest
