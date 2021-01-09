@@ -111,4 +111,34 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
+
+  WHEN("Version is called with no argument") {
+    constexpr auto arg = Version();
+
+    THEN("type should be FLG") { REQUIRE(arg.type == ArgType::FLG); }
+    THEN("name should be equal to version") { REQUIRE(arg.name == "version"); }
+    THEN("abbrev should be equal to V") { REQUIRE(arg.abbrev == "V"); }
+    THEN("description should be the default") { REQUIRE(arg.description == "Display the software version"); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
+    THEN("set_value should be true") { REQUIRE(std::get<bool>(arg.set_value) == true); }
+    THEN("action_fn should be print_version") { REQUIRE(arg.action_fn == actions::print_version); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
+
+  WHEN("Version is called with one argument") {
+    constexpr auto arg = Version("Show the version of this program");
+
+    THEN("type should be FLG") { REQUIRE(arg.type == ArgType::FLG); }
+    THEN("name should be equal to version") { REQUIRE(arg.name == "version"); }
+    THEN("abbrev should be equal to V") { REQUIRE(arg.abbrev == "V"); }
+    THEN("description should be equal to argument") { REQUIRE(arg.description == "Show the version of this program"); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
+    THEN("set_value should be true") { REQUIRE(std::get<bool>(arg.set_value) == true); }
+    THEN("action_fn should be print_version") { REQUIRE(arg.action_fn == actions::print_version); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
 }
