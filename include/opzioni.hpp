@@ -422,7 +422,7 @@ struct ProgramMetadata {
 
   std::size_t msg_width = 100;
   std::size_t positionals_amount = 0;
-  ErrorHandler error_handler = print_error;
+  ErrorHandler error_handler = print_error_and_usage;
 
   constexpr auto operator<=>(ProgramMetadata const &) const noexcept = default;
 };

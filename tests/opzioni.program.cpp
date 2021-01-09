@@ -20,7 +20,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       REQUIRE(program.metadata.description.empty());
       REQUIRE(program.metadata.msg_width == 100);
       REQUIRE(program.metadata.positionals_amount == 0);
-      REQUIRE(program.metadata.error_handler == print_error);
+      REQUIRE(program.metadata.error_handler == print_error_and_usage);
       REQUIRE(program.args.size() == 0);
       REQUIRE(program.cmds.size() == 0);
     }
@@ -36,7 +36,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
         REQUIRE(program.metadata.description.empty());
         REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
         REQUIRE(program.args.size() == 0);
         REQUIRE(program.cmds.size() == 0);
       }
@@ -53,7 +53,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
         REQUIRE(program.metadata.introduction.empty());
         REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
         REQUIRE(program.args.size() == 0);
         REQUIRE(program.cmds.size() == 0);
       }
@@ -70,7 +70,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
         REQUIRE(program.metadata.description.empty());
         REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
         REQUIRE(program.args.size() == 0);
         REQUIRE(program.cmds.size() == 0);
       }
@@ -87,7 +87,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
         REQUIRE(program.metadata.title.empty());
         REQUIRE(program.metadata.msg_width == 100);
         REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
         REQUIRE(program.args.size() == 0);
         REQUIRE(program.cmds.size() == 0);
       }
@@ -104,7 +104,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
         REQUIRE(program.metadata.introduction.empty());
         REQUIRE(program.metadata.description.empty());
         REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
         REQUIRE(program.args.size() == 0);
         REQUIRE(program.cmds.size() == 0);
       }
@@ -129,14 +129,14 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
 
     WHEN("intro, details, version, max_width, and on_error are called") {
       constexpr auto program =
-          Program().intro("intro").details("details").version("1.0").max_width(80).on_error(print_error_and_usage);
+          Program().intro("intro").details("details").version("1.0").max_width(80).on_error(print_error);
 
       THEN("all five should be changed") {
         REQUIRE(program.metadata.introduction == "intro");
         REQUIRE(program.metadata.description == "details");
         REQUIRE(program.metadata.version == "1.0");
         REQUIRE(program.metadata.msg_width == 80);
-        REQUIRE(program.metadata.error_handler == print_error_and_usage);
+        REQUIRE(program.metadata.error_handler == print_error);
         REQUIRE(program.metadata.name.empty());
         REQUIRE(program.metadata.title.empty());
         REQUIRE(program.metadata.positionals_amount == 0);
@@ -157,7 +157,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       REQUIRE(program.metadata.description.empty());
       REQUIRE(program.metadata.msg_width == 100);
       REQUIRE(program.metadata.positionals_amount == 0);
-      REQUIRE(program.metadata.error_handler == print_error);
+      REQUIRE(program.metadata.error_handler == print_error_and_usage);
       REQUIRE(program.args.size() == 0);
       REQUIRE(program.cmds.size() == 0);
     }
@@ -174,7 +174,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       REQUIRE(program.metadata.description.empty());
       REQUIRE(program.metadata.msg_width == 100);
       REQUIRE(program.metadata.positionals_amount == 0);
-      REQUIRE(program.metadata.error_handler == print_error);
+      REQUIRE(program.metadata.error_handler == print_error_and_usage);
       REQUIRE(program.args.size() == 0);
       REQUIRE(program.cmds.size() == 0);
     }
