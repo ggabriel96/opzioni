@@ -192,8 +192,8 @@ struct Arg {
     return arg;
   }
 
-  template <concepts::BuiltinType Elem>
-  consteval Arg csv_of() const noexcept {
+  template <concepts::BuiltinType Elem = std::string_view>
+  consteval Arg csv() const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
