@@ -14,6 +14,10 @@ std::string builtin2str(BuiltinVariant const &variant) noexcept {
   return std::visit(_2str, variant);
 }
 
+// +----------------+
+// | error handlers |
+// +----------------+
+
 int print_error(ProgramView const program, UserError const &err) noexcept {
   std::cerr << limit_string_within(err.what(), program.metadata.msg_width) << nl;
   return -1;
@@ -86,17 +90,200 @@ std::string Arg::format_for_usage_summary() const noexcept {
   return format;
 }
 
-// +---------+
-// | Program |
-// +---------+
+// +--------------------+
+// | arg and cmd search |
+// +--------------------+
 
-std::string ProgramView::format_for_help_description() const noexcept {
-  return std::string(this->metadata.introduction);
+constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept {
+  return std::ranges::find_if(program.args(), [name, type](auto const &arg) {
+    return arg.type == type && (arg.name == name || (arg.has_abbrev() && arg.abbrev == name));
+  });
 }
 
-std::string ProgramView::format_for_help_index() const noexcept { return this->format_for_usage_summary(); }
+constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept {
+  return find_arg(program, name, type) != program.args().end();
+}
+constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept {
+  return has_arg(program, name, ArgType::FLG);
+}
+constexpr bool has_opt(ProgramView const program, std::string_view name) noexcept {
+  return has_arg(program, name, ArgType::OPT);
+}
+constexpr bool has_pos(ProgramView const program, std::string_view name) noexcept {
+  return has_arg(program, name, ArgType::POS);
+}
 
-std::string ProgramView::format_for_usage_summary() const noexcept { return std::string(this->metadata.name); }
+constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept {
+  return std::ranges::find(program.cmds(), name, [](auto const &cmd) { return cmd.metadata.name; });
+}
+
+constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept {
+  return find_cmd(program, name) != program.cmds().end();
+}
+
+// +-----------------+
+// | parsing helpers |
+// +-----------------+
+
+struct ParsedOption {
+  std::string_view name;
+  // no string and empty string mean different things here
+  std::optional<std::string_view> value;
+};
+
+constexpr bool is_dash_dash(std::string_view const whole_arg) noexcept {
+  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
+}
+
+constexpr bool looks_positional(std::string_view const whole_arg) noexcept {
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
+}
+
+constexpr ProgramView const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
+  if (auto const cmd = find_cmd(program, whole_arg); cmd != program.cmds().end())
+    return &*cmd;
+  return nullptr;
+}
+
+constexpr bool is_flag(ProgramView const program, std::string_view const name) noexcept {
+  return has_flg(program, name);
+}
+
+constexpr std::string_view is_short_flags(ProgramView const program, std::string_view const whole_arg) noexcept {
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  auto const flags = whole_arg.substr(1);
+  auto const all_short_flags = std::all_of(
+      flags.begin(), flags.end(), [program](char const c) { return is_flag(program, std::string_view(&c, 1)); });
+  if (num_of_dashes == 1 && flags.length() >= 1 && all_short_flags)
+    return flags;
+  return {};
+}
+
+constexpr std::string_view is_long_flag(ProgramView const program, std::string_view const whole_arg) noexcept {
+  auto const name = whole_arg.substr(2);
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  if (num_of_dashes == 2 && name.length() >= 2 && is_flag(program, name))
+    return name;
+  return {};
+}
+
+constexpr ParsedOption parse_option(std::string_view const whole_arg) noexcept {
+  auto const num_of_dashes = whole_arg.find_first_not_of('-');
+  auto const eq_idx = whole_arg.find('=', num_of_dashes);
+  bool const has_equals = eq_idx != std::string_view::npos;
+  if (num_of_dashes == 1) {
+    // short option, e.g. `-O`
+    auto const name = whole_arg.substr(1, 1);
+    if (has_equals) {
+      if (whole_arg.length() > 3) {
+        // has equals followed by some value, e.g. `-O=2`
+        return {name, whole_arg.substr(3)};
+      }
+      // should this `-O=` be handled like this?
+      return {name, ""};
+    }
+    if (whole_arg.length() > 2) {
+      // only followed by some value, e.g. `-O2`
+      return {name, whole_arg.substr(2)};
+    }
+    // case left: has no value (next CLI argument could be it)
+    return {name, std::nullopt};
+  }
+  if (num_of_dashes == 2 && whole_arg.length() > 3) {
+    // long option, e.g. `--name`
+    if (has_equals) {
+      auto const name = whole_arg.substr(2, eq_idx - 2);
+      auto const value = whole_arg.substr(eq_idx + 1);
+      return {name, value};
+    }
+    // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
+    return {whole_arg.substr(2), std::nullopt};
+  }
+  // not an option
+  return {"", std::nullopt};
+}
+
+constexpr std::optional<ParsedOption> is_option(ProgramView const program, std::string_view const whole_arg) noexcept {
+  auto const parsed_option = parse_option(whole_arg);
+  if (has_opt(program, parsed_option.name))
+    return parsed_option;
+  return std::nullopt;
+}
+
+// +---------------------+
+// | parsing assignments |
+// +---------------------+
+
+std::size_t assign_command(ArgMap &map, std::span<char const *> args, ProgramView const cmd) {
+  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.metadata.name);
+  args[0] = exec_path.data();
+  map.cmd_name = cmd.metadata.name;
+  map.cmd_args = std::make_shared<ArgMap>(std::move(parse(cmd, args)));
+  return args.size();
+}
+
+std::size_t assign_positional(ProgramView const program, ArgMap &map, std::span<char const *> args,
+                              std::size_t const positional_idx) {
+  if (positional_idx >= program.metadata.positionals_amount) {
+    throw UnexpectedPositional(args[0], program.metadata.positionals_amount);
+  }
+  auto const arg = program.args()[positional_idx];
+  // if gather amount is 0, we gather everything else
+  auto const gather_amount = arg.gather_amount == 0 ? args.size() : arg.gather_amount;
+  if (gather_amount > args.size()) {
+    throw MissingValue(arg.name, gather_amount, args.size());
+  }
+  for (std::size_t count = 0; count < gather_amount; ++count) {
+    arg.action_fn(program, map, arg, args[count]);
+  }
+  return gather_amount;
+}
+
+std::size_t assign_flag(ProgramView const program, ArgMap &map, std::string_view flag) {
+  auto const &arg = *find_arg(program, flag, ArgType::FLG);
+  arg.action_fn(program, map, arg, std::nullopt);
+  return 1;
+}
+
+std::size_t assign_many_flags(ProgramView const program, ArgMap &map, std::string_view flags) {
+  for (auto const flag : flags) {
+    assign_flag(program, map, std::string_view(&flag, 1));
+  }
+  return 1;
+}
+
+std::size_t assign_option(ProgramView const program, ArgMap &map, std::span<char const *> args,
+                          ParsedOption const option) {
+  auto const &arg = *find_arg(program, option.name, ArgType::OPT);
+  auto const gather_amount = arg.gather_amount == 0 ? args.size() - 1 : arg.gather_amount;
+  if (option.value) {
+    if (gather_amount != 1) {
+      throw MissingValue(arg.name, gather_amount, 1);
+    }
+    arg.action_fn(program, map, arg, *option.value);
+    return 1;
+  } else if (gather_amount < args.size() && looks_positional(args[1])) {
+    // + 1 everywhere because 0 is the index in `args` that the option is,
+    // so 1 is where we start to parse values up to gather amount
+    std::size_t count = 0;
+    do {
+      auto const value = std::string_view(args[count + 1]);
+      arg.action_fn(program, map, arg, value);
+      ++count;
+    } while (count < gather_amount);
+    return gather_amount + 1;
+  } else if (arg.has_set()) {
+    arg.action_fn(program, map, arg, std::nullopt);
+    return 1;
+  } else {
+    throw MissingValue(arg.name, gather_amount, args.size() - 1);
+  }
+}
+
+// +---------+
+// | parsing |
+// +---------+
 
 ArgMap parse_args(ProgramView const program, std::span<char const *> args) {
   ArgMap map;
@@ -158,189 +345,35 @@ ArgMap parse(ProgramView const program, std::span<char const *> args) {
   return map;
 }
 
-// +--------------------+
-// | arg and cmd search |
-// +--------------------+
+// +-------------+
+// | ProgramView |
+// +-------------+
 
-constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept {
-  return std::ranges::find_if(program.args(), [name, type](auto const &arg) {
-    return arg.type == type && (arg.name == name || (arg.has_abbrev() && arg.abbrev == name));
-  });
+std::string ProgramView::format_for_help_description() const noexcept {
+  return std::string(this->metadata.introduction);
 }
 
-constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept {
-  return find_arg(program, name, type) != program.args().end();
-}
-constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept {
-  return has_arg(program, name, ArgType::FLG);
-}
-constexpr bool has_opt(ProgramView const program, std::string_view name) noexcept {
-  return has_arg(program, name, ArgType::OPT);
-}
-constexpr bool has_pos(ProgramView const program, std::string_view name) noexcept {
-  return has_arg(program, name, ArgType::POS);
-}
+std::string ProgramView::format_for_help_index() const noexcept { return this->format_for_usage_summary(); }
 
-constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept {
-  return std::ranges::find(program.cmds(), name, [](auto const &cmd) { return cmd.metadata.name; });
-}
+std::string ProgramView::format_for_usage_summary() const noexcept { return std::string(this->metadata.name); }
 
-constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept {
-  return find_cmd(program, name) != program.cmds().end();
-}
+// +-----------+
+// | utilities |
+// +-----------+
 
-// +-----------------+
-// | parsing helpers |
-// +-----------------+
-
-constexpr bool is_dash_dash(std::string_view const whole_arg) noexcept {
-  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
-}
-
-constexpr ProgramView const *is_command(ProgramView const program, std::string_view const whole_arg) noexcept {
-  if (auto const cmd = find_cmd(program, whole_arg); cmd != program.cmds().end())
-    return &*cmd;
-  return nullptr;
-}
-
-constexpr bool looks_positional(std::string_view const whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
-}
-
-constexpr std::string_view is_short_flags(ProgramView const program, std::string_view const whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const flags = whole_arg.substr(1);
-  auto const all_short_flags = std::all_of(
-      flags.begin(), flags.end(), [program](char const c) { return is_flag(program, std::string_view(&c, 1)); });
-  if (num_of_dashes == 1 && flags.length() >= 1 && all_short_flags)
-    return flags;
-  return {};
-}
-
-constexpr std::string_view is_long_flag(ProgramView const program, std::string_view const whole_arg) noexcept {
-  auto const name = whole_arg.substr(2);
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 2 && name.length() >= 2 && is_flag(program, name))
-    return name;
-  return {};
-}
-
-constexpr std::optional<ParsedOption> is_option(ProgramView const program, std::string_view const whole_arg) noexcept {
-  auto const parsed_option = parse_option(whole_arg);
-  if (has_opt(program, parsed_option.name))
-    return parsed_option;
-  return std::nullopt;
-}
-
-constexpr bool is_flag(ProgramView const program, std::string_view const name) noexcept {
-  return has_flg(program, name);
-}
-
-// +---------------------+
-// | parsing assignments |
-// +---------------------+
-
-std::size_t assign_command(ArgMap &map, std::span<char const *> args, ProgramView const cmd) {
-  auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.metadata.name);
-  args[0] = exec_path.data();
-  map.cmd_name = cmd.metadata.name;
-  map.cmd_args = std::make_shared<ArgMap>(std::move(parse(cmd, args)));
-  return args.size();
-}
-
-std::size_t assign_positional(ProgramView const program, ArgMap &map, std::span<char const *> args,
-                              std::size_t const positional_idx) {
-  if (positional_idx >= program.metadata.positionals_amount) {
-    throw UnexpectedPositional(args[0], program.metadata.positionals_amount);
+void print_full_help(ProgramView const program, std::ostream &ostream) noexcept {
+  HelpFormatter formatter(program, ostream);
+  formatter.print_title();
+  if (!program.metadata.introduction.empty()) {
+    ostream << nl;
+    formatter.print_intro();
   }
-  auto const arg = program.args()[positional_idx];
-  // if gather amount is 0, we gather everything else
-  auto const gather_amount = arg.gather_amount == 0 ? args.size() : arg.gather_amount;
-  if (gather_amount > args.size()) {
-    throw MissingValue(arg.name, gather_amount, args.size());
-  }
-  for (std::size_t count = 0; count < gather_amount; ++count) {
-    arg.action_fn(program, map, arg, args[count]);
-  }
-  return gather_amount;
-}
-
-std::size_t assign_many_flags(ProgramView const program, ArgMap &map, std::string_view flags) {
-  for (auto const flag : flags) {
-    assign_flag(program, map, std::string_view(&flag, 1));
-  }
-  return 1;
-}
-
-std::size_t assign_flag(ProgramView const program, ArgMap &map, std::string_view flag) {
-  auto const &arg = *find_arg(program, flag, ArgType::FLG);
-  arg.action_fn(program, map, arg, std::nullopt);
-  return 1;
-}
-
-std::size_t assign_option(ProgramView const program, ArgMap &map, std::span<char const *> args,
-                          ParsedOption const option) {
-  auto const &arg = *find_arg(program, option.name, ArgType::OPT);
-  auto const gather_amount = arg.gather_amount == 0 ? args.size() - 1 : arg.gather_amount;
-  if (option.value) {
-    if (gather_amount != 1) {
-      throw MissingValue(arg.name, gather_amount, 1);
-    }
-    arg.action_fn(program, map, arg, *option.value);
-    return 1;
-  } else if (gather_amount < args.size() && looks_positional(args[1])) {
-    // + 1 everywhere because 0 is the index in `args` that the option is,
-    // so 1 is where we start to parse values up to gather amount
-    std::size_t count = 0;
-    do {
-      auto const value = std::string_view(args[count + 1]);
-      arg.action_fn(program, map, arg, value);
-      ++count;
-    } while (count < gather_amount);
-    return gather_amount + 1;
-  } else if (arg.has_set()) {
-    arg.action_fn(program, map, arg, std::nullopt);
-    return 1;
-  } else {
-    throw MissingValue(arg.name, gather_amount, args.size() - 1);
-  }
-}
-
-constexpr ParsedOption parse_option(std::string_view const whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string_view::npos;
-  if (num_of_dashes == 1) {
-    // short option, e.g. `-O`
-    auto const name = whole_arg.substr(1, 1);
-    if (has_equals) {
-      if (whole_arg.length() > 3) {
-        // has equals followed by some value, e.g. `-O=2`
-        return {name, whole_arg.substr(3)};
-      }
-      // should this `-O=` be handled like this?
-      return {name, ""};
-    }
-    if (whole_arg.length() > 2) {
-      // only followed by some value, e.g. `-O2`
-      return {name, whole_arg.substr(2)};
-    }
-    // case left: has no value (next CLI argument could be it)
-    return {name, std::nullopt};
-  }
-  if (num_of_dashes == 2 && whole_arg.length() > 3) {
-    // long option, e.g. `--name`
-    if (has_equals) {
-      auto const name = whole_arg.substr(2, eq_idx - 2);
-      auto const value = whole_arg.substr(eq_idx + 1);
-      return {name, value};
-    }
-    // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
-    return {whole_arg.substr(2), std::nullopt};
-  }
-  // not an option
-  return {"", std::nullopt};
+  ostream << nl;
+  formatter.print_long_usage();
+  ostream << nl;
+  formatter.print_help();
+  ostream << nl;
+  formatter.print_description();
 }
 
 // +------------+
@@ -446,28 +479,9 @@ void HelpFormatter::print_description() const noexcept {
     out << limit_string_within(program.metadata.description, program.metadata.msg_width) << nl;
 }
 
-// +-----------+
-// | utilities |
-// +-----------+
-
-void print_full_help(ProgramView const program, std::ostream &ostream) noexcept {
-  HelpFormatter formatter(program, ostream);
-  formatter.print_title();
-  if (!program.metadata.introduction.empty()) {
-    ostream << nl;
-    formatter.print_intro();
-  }
-  ostream << nl;
-  formatter.print_long_usage();
-  ostream << nl;
-  formatter.print_help();
-  ostream << nl;
-  formatter.print_description();
-}
-
-// +---------+
-// | actions |
-// +---------+
+// +---------------------------+
+// | implementation of actions |
+// +---------------------------+
 
 namespace actions {
 

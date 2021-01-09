@@ -399,19 +399,27 @@ consteval Arg Version(std::string_view description) noexcept {
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
 
-struct ParsedOption {
-  std::string_view name;
-  // no string and empty string mean different things here
-  std::optional<std::string_view> value;
-};
+// +--------------------+
+// | arg and cmd search |
+// +--------------------+
 
-constexpr ParsedOption parse_option(std::string_view const) noexcept;
+constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
+constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
+constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_opt(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_pos(ProgramView const program, std::string_view name) noexcept;
+constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept;
+constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept;
 
 // +---------+
-// | Program |
+// | parsing |
 // +---------+
 
 ArgMap parse(ProgramView const program, std::span<char const *> args);
+
+// +-----------------+
+// | ProgramMetadata |
+// +-----------------+
 
 struct ProgramMetadata {
   std::string_view name{};
@@ -426,6 +434,10 @@ struct ProgramMetadata {
 
   constexpr auto operator<=>(ProgramMetadata const &) const noexcept = default;
 };
+
+// +-------------+
+// | ProgramView |
+// +-------------+
 
 class ProgramView {
 public:
@@ -481,6 +493,10 @@ consteval void validate_cmds(std::array<ProgramView, N> const &cmds, ProgramView
   if (std::ranges::find(cmds, other) != cmds.end())
     throw "Trying to add command with a duplicate name";
 }
+
+// +---------+
+// | Program |
+// +---------+
 
 template <std::size_t ArgsSize, std::size_t CmdsSize>
 class Program {
@@ -579,36 +595,6 @@ public:
 
 private:
 };
-
-// +--------------------+
-// | arg and cmd search |
-// +--------------------+
-
-constexpr auto find_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
-constexpr bool has_arg(ProgramView const program, std::string_view name, ArgType type) noexcept;
-constexpr bool has_flg(ProgramView const program, std::string_view name) noexcept;
-constexpr bool has_opt(ProgramView const program, std::string_view name) noexcept;
-constexpr bool has_pos(ProgramView const program, std::string_view name) noexcept;
-constexpr auto find_cmd(ProgramView const program, std::string_view name) noexcept;
-constexpr bool has_cmd(ProgramView const program, std::string_view name) noexcept;
-
-// +-----------------+
-// | parsing helpers |
-// +-----------------+
-
-constexpr bool is_dash_dash(std::string_view const) noexcept;
-constexpr ProgramView const *is_command(ProgramView const, std::string_view const) noexcept;
-constexpr bool looks_positional(std::string_view const) noexcept;
-constexpr std::string_view is_short_flags(ProgramView const, std::string_view const) noexcept;
-constexpr std::string_view is_long_flag(ProgramView const, std::string_view const) noexcept;
-constexpr std::optional<ParsedOption> is_option(ProgramView const, std::string_view const) noexcept;
-constexpr bool is_flag(ProgramView const, std::string_view const) noexcept;
-
-std::size_t assign_command(ArgMap &, std::span<char const *>, ProgramView const);
-std::size_t assign_positional(ProgramView const, ArgMap &, std::span<char const *>, std::size_t const);
-std::size_t assign_many_flags(ProgramView const, ArgMap &, std::string_view);
-std::size_t assign_flag(ProgramView const, ArgMap &, std::string_view);
-std::size_t assign_option(ProgramView const, ArgMap &, std::span<char const *>, ParsedOption const);
 
 // +-----------+
 // | utilities |
