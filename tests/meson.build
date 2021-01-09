@@ -2,6 +2,11 @@ catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 
 test_deps = [opzioni_dep, catch2_dep]
 
+arg_test = executable(
+    'arg',
+    ['catch2_main.cpp', 'opzioni.arg.cpp'],
+    dependencies: test_deps
+)
 converters_test = executable(
     'converters',
     ['catch2_main.cpp', 'converters.cpp'],
@@ -13,5 +18,6 @@ program_test = executable(
     dependencies: test_deps
 )
 
+test('arg', arg_test)
 test('converters', converters_test)
 test('program', program_test)
