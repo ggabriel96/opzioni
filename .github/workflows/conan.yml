@@ -1,3 +1,5 @@
+name: conan
+
 on:
   pull_request:
     branches:
