@@ -7,6 +7,21 @@
 SCENARIO("default values", "[Arg][defaults]") {
   using namespace opzioni;
 
+  WHEN("Arg is default constructed") {
+    constexpr auto arg = Arg();
+
+    THEN("type should be POS") { REQUIRE(arg.type == ArgType::POS); }
+    THEN("name should be empty") { REQUIRE(arg.name.empty()); }
+    THEN("abbrev should be empty") { REQUIRE(arg.abbrev.empty()); }
+    THEN("description should be empty") { REQUIRE(arg.description.empty()); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.default_value)); }
+    THEN("set_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.set_value)); }
+    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == actions::assign<std::string_view>); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
+
   WHEN("Flg is called with one argument") {
     constexpr auto arg = Flg("flg");
 
