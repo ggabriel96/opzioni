@@ -185,7 +185,6 @@ struct Arg {
   template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
-    arg.is_required = false;
     arg.action_fn = actions::append<Elem>;
     if (!this->is_required)
       arg.default_setter = set_empty_vector<Elem>;
@@ -197,7 +196,6 @@ struct Arg {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
     auto arg = Arg::With(*this, std::monostate{}, this->set_value);
-    arg.is_required = false;
     arg.action_fn = actions::csv<Elem>;
     if (!this->is_required)
       arg.default_setter = set_empty_vector<Elem>;
@@ -252,9 +250,8 @@ struct Arg {
   }
 
   consteval Arg required() const noexcept {
-    if (this->has_default())
-      throw "A required argument cannot have a default value";
-    auto arg = *this;
+    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    arg.default_setter = nullptr;
     arg.is_required = true;
     return arg;
   }
