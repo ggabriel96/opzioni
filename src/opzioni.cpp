@@ -412,14 +412,15 @@ void HelpFormatter::print_intro() const noexcept {
 void HelpFormatter::print_long_usage() const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
-  using std::views::drop, std::views::take;
+  using std::views::drop, std::views::filter, std::views::take;
 
   std::vector<std::string> words;
   words.reserve(1 + program.cmds().size() + program.args().size());
 
   auto insert = std::back_inserter(words);
   words.push_back(std::string(program.metadata.name));
-  transform(program.args(), insert, &Arg::format_for_usage_summary);
+  transform(program.args() | filter(&Arg::is_required), insert, &Arg::format_for_usage_summary);
+  transform(program.args() | filter(&Arg::has_default), insert, &Arg::format_for_usage_summary);
 
   if (program.cmds().size() == 1) {
     words.push_back(format("{{{}}}", program.cmds().front().format_for_usage_summary()));
