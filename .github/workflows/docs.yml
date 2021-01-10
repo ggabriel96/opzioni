@@ -15,7 +15,7 @@ jobs:
   deploy-gh-pages:
     runs-on: ubuntu-latest
     container: python:3.9-slim
-    if: github.ref == "refs/heads/main"
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
       - run: cd docs/
