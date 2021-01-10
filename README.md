@@ -10,10 +10,15 @@ The goals of this library, in order of importance, are:
 
     This mainly targets the user of the library, but also includes the user of the command line tool built with it.
 
+1. **`constexpr`-all-the-things.**
+
+    Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.
+
 1. **If it compiles, it works.**
 
     That's utopic, but that's what is being strived for.
-    Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.
+    It's also very closely related to the previous goal.
+    We should be able to detect most errors at compile-time and provide decent diagnostics.
 
 1. **_Try_ not to repeat yourself.**
 
