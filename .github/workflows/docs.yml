@@ -1,0 +1,25 @@
+name: docs
+
+on: push
+
+defaults:
+  run:
+    working-directory: docs/
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    container: python:3.9-slim
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install -r requirements.txt
+      - run: mkdocs build
+
+  deploy-gh-pages:
+    runs-on: ubuntu-latest
+    container: python:3.9-slim
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install -r requirements.txt
+      - run: mkdocs gh-deploy
