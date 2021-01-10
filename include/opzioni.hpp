@@ -351,6 +351,9 @@ consteval void validate_arg(Arg const &arg) noexcept {
   if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
       arg.default_value.index() != arg.set_value.index())
     throw "The default and set values must be of the same type";
+
+  if (arg.default_value.index() != 0 && arg.default_setter != nullptr)
+    throw "An argument cannot have a default value and a default value setter at the same time";
 }
 
 template <std::size_t N>
