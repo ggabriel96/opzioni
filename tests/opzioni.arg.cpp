@@ -285,3 +285,27 @@ SCENARIO("has_set", "[Arg]") {
     THEN("has_set should return true") { REQUIRE(arg.has_set()); }
   }
 }
+
+SCENARIO("is_positional", "[Arg]") {
+  using namespace opzioni;
+
+  GIVEN("an Arg with default-constructed type") {
+    constexpr auto arg = Arg{.type{}};
+    THEN("is_positional should return true") { REQUIRE(arg.is_positional()); }
+  }
+
+  GIVEN("an Arg with type set to POS") {
+    constexpr auto arg = Arg{.type = ArgType::POS};
+    THEN("is_positional should return true") { REQUIRE(arg.is_positional()); }
+  }
+
+  GIVEN("an Arg with type set to FLG") {
+    constexpr auto arg = Arg{.type = ArgType::FLG};
+    THEN("is_positional should return true") { REQUIRE(!arg.is_positional()); }
+  }
+
+  GIVEN("an Arg with type set to OPT") {
+    constexpr auto arg = Arg{.type = ArgType::OPT};
+    THEN("is_positional should return true") { REQUIRE(!arg.is_positional()); }
+  }
+}
