@@ -157,3 +157,37 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
 }
+
+SCENARIO("has_abbrev", "[Arg]") {
+  using namespace opzioni;
+
+  GIVEN("an Arg with a default-constructed abbrev") {
+    constexpr auto arg = Arg{.abbrev{}};
+    THEN("has_abbrev should return false") { REQUIRE(!arg.has_abbrev()); }
+  }
+
+  GIVEN("an Arg with an empty-string abbrev") {
+    constexpr auto arg = Arg{.abbrev = ""};
+    THEN("has_abbrev should return false") { REQUIRE(!arg.has_abbrev()); }
+  }
+
+  GIVEN("an Arg with an one-letter abbrev") {
+    constexpr auto arg = Arg{.abbrev = "a"};
+    THEN("has_abbrev should return true") { REQUIRE(arg.has_abbrev()); }
+  }
+
+  GIVEN("an Arg with an single blank abbrev") {
+    constexpr auto arg = Arg{.abbrev = " "};
+    THEN("has_abbrev should return true") { REQUIRE(arg.has_abbrev()); }
+  }
+
+  GIVEN("an Arg with an many-letter abbrev") {
+    constexpr auto arg = Arg{.abbrev = "abc"};
+    THEN("has_abbrev should return true") { REQUIRE(arg.has_abbrev()); }
+  }
+
+  GIVEN("an Arg with an many blanks abbrev") {
+    constexpr auto arg = Arg{.abbrev = "   "};
+    THEN("has_abbrev should return true") { REQUIRE(arg.has_abbrev()); }
+  }
+}
