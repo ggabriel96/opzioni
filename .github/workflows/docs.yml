@@ -21,6 +21,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
-      - run: apt-get update && apt-get install git
+
+      - name: Install git
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y git
+
       - run: pip install -r requirements.txt
       - run: mkdocs gh-deploy
