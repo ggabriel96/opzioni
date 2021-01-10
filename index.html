@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#goals" class="md-skip">
+        <a href="#home" class="md-skip">
           Skip to content
         </a>
       
@@ -231,6 +231,8 @@
     
     <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         Home
@@ -244,6 +246,8 @@
       
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">
@@ -270,26 +274,6 @@
   <a href="#sneak-peek" class="md-nav__link">
     Sneak peek
   </a>
-  
-    <nav class="md-nav" aria-label="Sneak peek">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#that-gives-us" class="md-nav__link">
-    That gives us:
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#lets-examine-this-code-step-by-step" class="md-nav__link">
-    Let's examine this code step by step:
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -349,6 +333,8 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -374,26 +360,6 @@
   <a href="#sneak-peek" class="md-nav__link">
     Sneak peek
   </a>
-  
-    <nav class="md-nav" aria-label="Sneak peek">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#that-gives-us" class="md-nav__link">
-    That gives us:
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#lets-examine-this-code-step-by-step" class="md-nav__link">
-    Let's examine this code step by step:
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -448,9 +414,8 @@
                   </a>
                 
                 
-                  <h1>Home</h1>
-                
-                <p>opzioni is a command line arguments parser library for C++.</p>
+                <h1 id="home">Home<a class="headerlink" href="#home" title="Permanent link">&para;</a></h1>
+<p>opzioni is a command line arguments parser library for C++.</p>
 <h2 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link">&para;</a></h2>
 <p>The goals of this library, in order of importance, are:</p>
 <ol>
@@ -459,31 +424,20 @@
 <p>This mainly targets the user of the library, but also includes the user of the command line tool built with it.</p>
 </li>
 <li>
+<p><strong><code>constexpr</code>-all-the-things.</strong></p>
+<p>Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.</p>
+</li>
+<li>
 <p><strong>If it compiles, it works.</strong></p>
 <p>That's utopic, but that's what is being strived for.
-Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.</p>
+It's also very closely related to the previous goal.
+We should be able to detect most errors at compile-time and provide decent diagnostics.</p>
 </li>
 <li>
 <p><strong><em>Try</em> not to repeat yourself.</strong></p>
-<p>I like to think about command-line parsers as follows.
-First, there is a CLI specification, say, with names, descriptions, types, default values, etc.
-Then, parsing is done and a result is returned with which one would <em>simply access</em> the information the user provided in
-the command-line or they themselves provided in the specification.
-By "simply access" I mean: if a <code>name</code> argument is defined in the specification, I would like to access its value in the
-result with a syntax similar to <code>args.name</code> or <code>args["name"]</code>.</p>
-<p>However, in C++, one thing that really bothers me is having to state the type of the argument <em>both</em> in the CLI specification
-<em>and</em> when accessing it in the parse result.
-Unfortunately, that is pretty much unavoidable, at least when accessing the result.
-On one hand, the result depends on runtime information (that comes from the command-line), so some things <em>cannot</em> be <code>constexpr</code>.
-On the other hand, I'm not yet capable of "propagating" the type information of each argument all the way from the
-specification to the result (if that's even possible).
-That means that it's impossible to write <code>auto name = args["name"]</code> if <code>args</code> is not <code>constexpr</code> and holds <code>std::variant</code>s.
-Boost.Hana makes me think there is a way, but I don't know how.
-See also <a href="https://github.com/ggabriel96/opzioni/issues/5">The return of templated Arg?</a>, at "The problem".</p>
-<p>Finally, I decided to at least <em>try</em> to avoid asking the user to actually write the type of each argument,
-since they'll eventually have to do that when accessing their values.
-In order to accomplish this, a lot of template argument deduction is used, together with the provided defaults and a lot of guessing.
-One place that didn't quite fully work though was with actions.</p>
+<p>When specifying a CLI, if some information was already given to the library, that same information should not be needed again.
+For example, if the type of an argument was already specified, the user should not be asked to tell the type again.
+Unfortunately that is very hard, so some places still require duplicate information.</p>
 </li>
 <li>
 <p><strong>Be bleeding-edge.</strong></p>
@@ -538,7 +492,7 @@ Feel free to take a look at the other, more complex, examples in the same direct
   <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<h3 id="that-gives-us">That gives us:<a class="headerlink" href="#that-gives-us" title="Permanent link">&para;</a></h3>
+<p>That gives us:</p>
 <ol>
 <li>
 <p>Automatic help with <code>--help</code> or <code>-h</code></p>
@@ -578,39 +532,6 @@ Usage:
 <div class="highlight"><pre><span></span><code>$ ./build/examples/hello &quot;Gabriel Galli&quot;
 Hello, Gabriel Galli!
 </code></pre></div>
-</li>
-</ol>
-<h3 id="lets-examine-this-code-step-by-step">Let's examine this code step by step:<a class="headerlink" href="#lets-examine-this-code-step-by-step" title="Permanent link">&para;</a></h3>
-<ol>
-<li>
-<p>First, include opzioni with <code>#include &lt;opzioni.hpp&gt;</code>.</p>
-</li>
-<li>
-<p>To gain easy access to opzioni's types and functions, add <code>using namespace opzioni;</code>.</p>
-<p>But that's a strong statement, so each name can be individually pulled into the current namespace too:</p>
-<div class="highlight"><pre><span></span><code><span class="k">using</span> <span class="n">opzioni</span><span class="o">::</span><span class="n">Program</span><span class="p">,</span> <span class="n">opzioni</span><span class="o">::</span><span class="n">Help</span><span class="p">,</span> <span class="n">opzioni</span><span class="o">::</span><span class="n">Version</span><span class="p">;</span> <span class="c1">// etc.</span>
-</code></pre></div>
-</li>
-<li>
-<p>An instance of <code>Program</code> is created.</p>
-<p>It is given the name <code>hello</code>, version <code>0.1</code>, and a short introduction.</p>
-</li>
-<li>
-<p>Arguments are added to <code>Program</code>.</p>
-<p>The built-in help and version and a positional called <code>name</code>.
-Note that there is an <code>operator*</code> between each argument and an <code>operator+</code> between the program and its arguments.
-This is better explained later.</p>
-</li>
-<li>
-<p>The command line arguments are parsed.</p>
-<p>As simple as calling a function with <code>argc</code> and <code>argv</code> and returns a map of the results.</p>
-</li>
-<li>
-<p>The parsed name is extracted from the resulting map and printed to <code>stdout</code>.</p>
-<p>It could also be used directly in <code>std::cout</code>:
-<div class="highlight"><pre><span></span><code><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">args</span><span class="p">.</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// 1</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">args</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">].</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// 2</span>
-</code></pre></div></p>
 </li>
 </ol>
 <h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
