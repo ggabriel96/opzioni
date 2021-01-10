@@ -139,7 +139,7 @@ Meanwhile, there are a few options to build and try it out. See the TLDR below.
 
 There are few options to get up to speed on building opzioni:
 
-- If you're familiar with Docker, there is a `Dockerfile` and a `docker-compose.yml` in [`.devcontainer/`][.devcontainer/].
+- If you're familiar with Docker, there is a `Dockerfile` and a `docker-compose.yml` in [`.devcontainer/`][.devcontainer].
     Also, the project is already configured to work with [VS Code Remote Containers](https://code.visualstudio.com/docs/remote/containers).
 
 - If you're familiar with [NixOS](https://nixos.org/), there is a [`shell.nix`][shell.nix] ready to use.
