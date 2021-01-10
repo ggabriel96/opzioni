@@ -256,3 +256,32 @@ SCENARIO("has_default", "[Arg]") {
     THEN("has_default should return true") { REQUIRE(arg.has_default()); }
   }
 }
+
+SCENARIO("has_set", "[Arg]") {
+  using namespace opzioni;
+
+  GIVEN("an Arg with a default-constructed set_value") {
+    constexpr auto arg = Arg{.set_value{}};
+    THEN("has_set should return false") { REQUIRE(!arg.has_set()); }
+  }
+
+  GIVEN("an Arg with a set_value explicitly set to monostate") {
+    constexpr auto arg = Arg{.set_value = std::monostate{}};
+    THEN("has_set should return false") { REQUIRE(!arg.has_set()); }
+  }
+
+  GIVEN("an Arg with a set_value set to zero") {
+    constexpr auto arg = Arg{.set_value = 0};
+    THEN("has_set should return true") { REQUIRE(arg.has_set()); }
+  }
+
+  GIVEN("an Arg with a set_value set to empty string") {
+    constexpr auto arg = Arg{.set_value = ""};
+    THEN("has_set should return true") { REQUIRE(arg.has_set()); }
+  }
+
+  GIVEN("an Arg with a set_value set to false") {
+    constexpr auto arg = Arg{.set_value = false};
+    THEN("has_set should return true") { REQUIRE(arg.has_set()); }
+  }
+}
