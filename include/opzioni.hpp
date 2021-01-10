@@ -238,6 +238,7 @@ struct Arg {
   consteval Arg otherwise(T value) const noexcept {
     auto arg = Arg::With(*this, value, this->set_value);
     arg.action_fn = actions::assign<T>;
+    arg.default_setter = nullptr;
     arg.is_required = false;
     return arg;
   }
