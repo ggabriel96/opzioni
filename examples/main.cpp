@@ -24,8 +24,8 @@ int main(int argc, char const *argv[]) {
           Opt("num", "n")
               .append<int>()
               .help("Creates a vector of numbers with each appearence of this argument. Default: {default_value}") *
-          Opt("csv").csv_of<int>().help("In contrast to `append`, this will create a vector of numbers from a single "
-                                        "comma-separated list of values. Default: {default_value}") *
+          Opt("csv").csv<int>().help("In contrast to `append`, this will create a vector of numbers from a single "
+                                     "comma-separated list of values. Default: {default_value}") *
           Opt("verbose", "v")
               .help("Level of verbosity. "
                     "Sets to {set_value} if given without a value (e.g. -{abbrev}). Default: {default_value}")

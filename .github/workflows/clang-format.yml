@@ -1,9 +1,9 @@
-name: ClangFormat
+name: clang-format
 
 on: push
 
 jobs:
-  check:
+  check-formatting:
     runs-on: ubuntu-latest
     container: ggabriel96/clang-format:latest
     steps:

@@ -1,4 +1,4 @@
-name: Build and test
+name: conan
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  gcc:
+  package-on-gcc:
     runs-on: ubuntu-latest
     container:
       image: conanio/gcc10:latest
@@ -23,7 +23,4 @@ jobs:
       - name: Install Meson and its dependencies
         run: pip install meson ninja
 
-      - run: make install
-      - run: make configure
-      - run: make build
-      - run: make test
+      - run: make create
