@@ -27,4 +27,12 @@ jobs:
           python-version: '3.x'
 
       - run: pip install -r requirements.txt
-      - run: mkdocs gh-deploy
+      - run: mkdocs build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./build/
+          enable_jekyll: false
