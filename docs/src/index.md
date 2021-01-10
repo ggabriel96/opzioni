@@ -1,3 +1,5 @@
+# Home
+
 opzioni is a command line arguments parser library for C++.
 
 ## Goals
@@ -8,34 +10,21 @@ The goals of this library, in order of importance, are:
 
     This mainly targets the user of the library, but also includes the user of the command line tool built with it.
 
+1. **`constexpr`-all-the-things.**
+
+    Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.
+
 1. **If it compiles, it works.**
 
     That's utopic, but that's what is being strived for.
-    Most of the time, all the information needed to build a command line interface is available at compile-time, so we should take advantage of that.
+    It's also very closely related to the previous goal.
+    We should be able to detect most errors at compile-time and provide decent diagnostics.
 
 1. **_Try_ not to repeat yourself.**
 
-    I like to think about command-line parsers as follows.
-    First, there is a CLI specification, say, with names, descriptions, types, default values, etc.
-    Then, parsing is done and a result is returned with which one would *simply access* the information the user provided in
-    the command-line or they themselves provided in the specification.
-    By "simply access" I mean: if a `name` argument is defined in the specification, I would like to access its value in the
-    result with a syntax similar to `args.name` or `args["name"]`.
-
-    However, in C++, one thing that really bothers me is having to state the type of the argument *both* in the CLI specification
-    *and* when accessing it in the parse result.
-    Unfortunately, that is pretty much unavoidable, at least when accessing the result.
-    On one hand, the result depends on runtime information (that comes from the command-line), so some things *cannot* be `constexpr`.
-    On the other hand, I'm not yet capable of "propagating" the type information of each argument all the way from the
-    specification to the result (if that's even possible).
-    That means that it's impossible to write `auto name = args["name"]` if `args` is not `constexpr` and holds `std::variant`s.
-    Boost.Hana makes me think there is a way, but I don't know how.
-    See also [The return of templated Arg?][issues/5], at "The problem".
-
-    Finally, I decided to at least *try* to avoid asking the user to actually write the type of each argument,
-    since they'll eventually have to do that when accessing their values.
-    In order to accomplish this, a lot of template argument deduction is used, together with the provided defaults and a lot of guessing.
-    One place that didn't quite fully work though was with actions.
+    When specifying a CLI, if some information was already given to the library, that same information should not be needed again.
+    For example, if the type of an argument was already specified, the user should not be asked to tell the type again.
+    Unfortunately that is very hard, so some places still require duplicate information.
 
 1. **Be bleeding-edge.**
 
@@ -88,7 +77,7 @@ int main(int argc, char const *argv[]) {
 }
 ```
 
-### That gives us:
+That gives us:
 
 1. Automatic help with `--help` or `-h`
 
@@ -131,40 +120,6 @@ int main(int argc, char const *argv[]) {
     ```
     $ ./build/examples/hello "Gabriel Galli"
     Hello, Gabriel Galli!
-    ```
-
-### Let's examine this code step by step:
-
-1. First, include opzioni with `#include <opzioni.hpp>`.
-
-1. To gain easy access to opzioni's types and functions, add `using namespace opzioni;`.
-
-    But that's a strong statement, so each name can be individually pulled into the current namespace too:
-
-    ```cpp
-    using opzioni::Program, opzioni::Help, opzioni::Version; // etc.
-    ```
-
-1. An instance of `Program` is created.
-
-    It is given the name `hello`, version `0.1`, and a short introduction.
-
-1. Arguments are added to `Program`.
-
-    The built-in help and version and a positional called `name`.
-    Note that there is an `operator*` between each argument and an `operator+` between the program and its arguments.
-    This is better explained later.
-
-1. The command line arguments are parsed.
-
-    As simple as calling a function with `argc` and `argv` and returns a map of the results.
-
-1. The parsed name is extracted from the resulting map and printed to `stdout`.
-
-    It could also be used directly in `std::cout`:
-    ```cpp
-    std::cout << args.as<std::string_view>("name") << '\n'; // 1
-    std::cout << args["name"].as<std::string_view>() << '\n'; // 2
     ```
 
 ## Getting started

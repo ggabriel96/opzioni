@@ -53,7 +53,7 @@ The goals of this library, in order of importance, are:
 
 # Sneak peek
 
-The code below is a fully working example, taken from [`examples/hello.cpp`](examples/hello.cpp), only reformatted and with quotes changed to angle brackets in the `#include`.
+The code below is a fully working example, taken from [`examples/hello.cpp`][examples/hello], only reformatted and with quotes changed to angle brackets in the `#include`.
 Feel free to take a look at the other, more complex, examples in the same directory.
 
 ```cpp
@@ -77,7 +77,7 @@ int main(int argc, char const *argv[]) {
 }
 ```
 
-### That gives us:
+That gives us:
 
 1. Automatic help with `--help` or `-h`
 
@@ -139,14 +139,14 @@ Meanwhile, there are a few options to build and try it out. See the TLDR below.
 
 There are few options to get up to speed on building opzioni:
 
-- If you're familiar with Docker, there is a `Dockerfile` and a `docker-compose.yml` in [`.devcontainer/`](.devcontainer/).
+- If you're familiar with Docker, there is a `Dockerfile` and a `docker-compose.yml` in [`.devcontainer/`][.devcontainer/].
     Also, the project is already configured to work with [VS Code Remote Containers](https://code.visualstudio.com/docs/remote/containers).
 
-- If you're familiar with [NixOS](https://nixos.org/), there is a [`shell.nix`](shell.nix) ready to use.
+- If you're familiar with [NixOS](https://nixos.org/), there is a [`shell.nix`][shell.nix] ready to use.
 
 Once in your chosen environment, simply run `make`.
 That should download the build dependencies with Conan and build the whole project with Meson and ninja.
-The [`Makefile`](Makefile) is just a simple helper to avoid having to remember all the commands.
+The [`Makefile`][Makefile] is just a simple helper to avoid having to remember all the commands.
 
 ## Dependencies
 
@@ -163,10 +163,18 @@ I still gotta pin them (except for `fmt` and `Catch2`, which are somewhat pinned
 
 # License
 
-opzioni's license is the [Boost Software License (BSL) 1.0](LICENSE/).
+opzioni's license is the [Boost Software License (BSL) 1.0][license].
 
 This means you are **free to use** this library **as you wish** and see fit.
 
 It is only needed to provide a copy of the license if the source is also being distributed.
 
 In other words, **there is no need to bundle opzioni's license with your binary**.
+
+<!-- links -->
+[issues/5]: https://github.com/ggabriel96/opzioni/issues/5
+[examples/hello]: https://github.com/ggabriel96/opzioni/blob/main/examples/hello.cpp
+[.devcontainer]: https://github.com/ggabriel96/opzioni/blob/main/.devcontainer/
+[Makefile]: https://github.com/ggabriel96/opzioni/blob/main/Makefile
+[shell.nix]: https://github.com/ggabriel96/opzioni/blob/main/shell.nix
+[license]: https://github.com/ggabriel96/opzioni/blob/main/LICENSE
