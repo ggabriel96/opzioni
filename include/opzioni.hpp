@@ -344,6 +344,9 @@ consteval void validate_arg(Arg const &arg) noexcept {
   if (arg.is_required && arg.has_default())
     throw "A required argument cannot have a default value";
 
+  if (!arg.is_required && !arg.has_default())
+    throw "An optional argument must have a default value";
+
   if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
       arg.default_value.index() != arg.set_value.index())
     throw "The default and set values must be of the same type";
