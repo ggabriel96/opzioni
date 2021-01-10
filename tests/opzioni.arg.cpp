@@ -191,3 +191,68 @@ SCENARIO("has_abbrev", "[Arg]") {
     THEN("has_abbrev should return true") { REQUIRE(arg.has_abbrev()); }
   }
 }
+
+SCENARIO("has_default", "[Arg]") {
+  using namespace opzioni;
+
+  GIVEN("an Arg with a default-constructed default_value") {
+    constexpr auto arg = Arg{.default_value{}};
+    THEN("has_default should return false") { REQUIRE(!arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default-constructed default_setter") {
+    constexpr auto arg = Arg{.default_setter{}};
+    THEN("has_default should return false") { REQUIRE(!arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default-constructed default_value and default_setter") {
+    constexpr auto arg = Arg{.default_value{}, .default_setter{}};
+    THEN("has_default should return false") { REQUIRE(!arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_value explicitly set to monostate") {
+    constexpr auto arg = Arg{.default_value = std::monostate{}, .default_setter{}};
+    THEN("has_default should return false") { REQUIRE(!arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_setter explicitly set to nullptr") {
+    constexpr auto arg = Arg{.default_value{}, .default_setter = nullptr};
+    THEN("has_default should return false") { REQUIRE(!arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_setter explicitly set to NULL") {
+    constexpr auto arg = Arg{.default_value{}, .default_setter = NULL};
+    THEN("has_default should return false") { REQUIRE(!arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_value set to zero") {
+    constexpr auto arg = Arg{.default_value = 0, .default_setter{}};
+    THEN("has_default should return true") { REQUIRE(arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_value set to empty string") {
+    constexpr auto arg = Arg{.default_value = "", .default_setter{}};
+    THEN("has_default should return true") { REQUIRE(arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_value set to false") {
+    constexpr auto arg = Arg{.default_value = false, .default_setter{}};
+    THEN("has_default should return true") { REQUIRE(arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_setter set to an empty lambda") {
+    constexpr auto arg = Arg{.default_value{}, .default_setter = +[](ArgValue &) {}};
+    THEN("has_default should return true") { REQUIRE(arg.has_default()); }
+  }
+
+  GIVEN("an Arg with a default_setter set to some non-empty lambda") {
+    constexpr auto arg = Arg{.default_value{}, .default_setter = +[](ArgValue &argval) { argval.value = 0; }};
+    THEN("has_default should return true") { REQUIRE(arg.has_default()); }
+  }
+
+  GIVEN("an Arg with both a default_value and a default_setter set to an empty lambda") {
+    // this would actually fail our validations in `validate_arg`
+    constexpr auto arg = Arg{.default_value = 0, .default_setter = +[](ArgValue &) {}};
+    THEN("has_default should return true") { REQUIRE(arg.has_default()); }
+  }
+}
