@@ -309,3 +309,77 @@ SCENARIO("is_positional", "[Arg]") {
     THEN("is_positional should return true") { REQUIRE(!arg.is_positional()); }
   }
 }
+
+SCENARIO("set_default_to", "[Arg]") {
+  using namespace opzioni;
+
+  GIVEN("an Arg without default_value and default_setter") {
+    constexpr auto arg = Arg{.default_value = std::monostate{}, .default_setter = nullptr};
+
+    WHEN("calling set_default_to with an empty ArgValue") {
+      ArgValue argval{};
+      REQUIRE(argval.value.index() == 0);
+
+      arg.set_default_to(argval);
+
+      THEN("the ArgValue should remain empty") {
+        REQUIRE(argval.value.index() == 0);
+        REQUIRE(std::holds_alternative<std::monostate>(argval.value));
+      }
+    }
+  }
+
+  GIVEN("an Arg with default_value and without default_setter") {
+    constexpr auto arg = Arg{.default_value = 1, .default_setter = nullptr};
+
+    WHEN("calling set_default_to with an empty ArgValue") {
+      ArgValue argval{};
+      REQUIRE(argval.value.index() == 0);
+
+      arg.set_default_to(argval);
+
+      THEN("the ArgValue should be set to the value from default_value") {
+        REQUIRE(argval.value.index() != 0);
+        REQUIRE(std::holds_alternative<int>(argval.value));
+        REQUIRE(std::get<int>(argval.value) == 1);
+      }
+    }
+  }
+
+  GIVEN("an Arg without default_value and with default_setter") {
+    constexpr auto arg = Arg{.default_value = std::monostate{},
+                             .default_setter = [](ArgValue &argval) { argval.value = "from setter"; }};
+
+    WHEN("calling set_default_to with an empty ArgValue") {
+      ArgValue argval{};
+      REQUIRE(argval.value.index() == 0);
+
+      arg.set_default_to(argval);
+
+      THEN("the ArgValue should be set to the value from default_setter") {
+        REQUIRE(argval.value.index() != 0);
+        REQUIRE(std::holds_alternative<std::string_view>(argval.value));
+        REQUIRE(std::get<std::string_view>(argval.value) == "from setter");
+      }
+    }
+  }
+
+  GIVEN("an Arg with default_value and with default_setter") {
+    // this shouldn't happen, but testing anyway
+    constexpr auto arg =
+        Arg{.default_value = "from default", .default_setter = [](ArgValue &argval) { argval.value = "from setter"; }};
+
+    WHEN("calling set_default_to with an empty ArgValue") {
+      ArgValue argval{};
+      REQUIRE(argval.value.index() == 0);
+
+      arg.set_default_to(argval);
+
+      THEN("the ArgValue should be set to the value from default_setter") {
+        REQUIRE(argval.value.index() != 0);
+        REQUIRE(std::holds_alternative<std::string_view>(argval.value));
+        REQUIRE(std::get<std::string_view>(argval.value) == "from setter");
+      }
+    }
+  }
+}
