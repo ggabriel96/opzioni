@@ -236,6 +236,7 @@ struct Arg {
   consteval Arg otherwise(T value) const noexcept {
     auto arg = Arg::With(*this, value, this->set_value);
     arg.action_fn = actions::assign<T>;
+    arg.default_setter = nullptr;
     arg.is_required = false;
     return arg;
   }
@@ -350,6 +351,9 @@ consteval void validate_arg(Arg const &arg) noexcept {
   if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
       arg.default_value.index() != arg.set_value.index())
     throw "The default and set values must be of the same type";
+
+  if (arg.default_value.index() != 0 && arg.default_setter != nullptr)
+    throw "An argument cannot have a default value and a default value setter at the same time";
 }
 
 template <std::size_t N>
