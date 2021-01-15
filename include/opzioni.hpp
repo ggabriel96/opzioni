@@ -509,7 +509,6 @@ public:
   std::array<Arg, ArgsSize> args;
   std::array<ProgramView, CmdsSize> cmds;
 
-  consteval Program() = default;
   consteval Program(std::string_view name) : Program(name, {}) {}
   consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {}
 

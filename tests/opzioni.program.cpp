@@ -9,143 +9,6 @@
 SCENARIO("setting general information", "[Program][defaults][info][setters]") {
   using namespace opzioni;
 
-  GIVEN("a default-initialized Program") {
-    constexpr auto program = Program();
-
-    THEN("all member variables should have their defaults") {
-      REQUIRE(program.metadata.name.empty());
-      REQUIRE(program.metadata.version.empty());
-      REQUIRE(program.metadata.title.empty());
-      REQUIRE(program.metadata.introduction.empty());
-      REQUIRE(program.metadata.description.empty());
-      REQUIRE(program.metadata.msg_width == 100);
-      REQUIRE(program.metadata.positionals_amount == 0);
-      REQUIRE(program.metadata.error_handler == print_error_and_usage);
-      REQUIRE(program.args.size() == 0);
-      REQUIRE(program.cmds.size() == 0);
-    }
-
-    WHEN("intro is called") {
-      constexpr auto program = Program().intro("intro");
-
-      THEN("only the introduction should be changed") {
-        REQUIRE(program.metadata.introduction == "intro");
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.version.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.description.empty());
-        REQUIRE(program.metadata.msg_width == 100);
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error_and_usage);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-
-    WHEN("details is called") {
-      constexpr auto program = Program().details("details");
-
-      THEN("only the description should be changed") {
-        REQUIRE(program.metadata.description == "details");
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.version.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.introduction.empty());
-        REQUIRE(program.metadata.msg_width == 100);
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error_and_usage);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-
-    WHEN("version is called") {
-      constexpr auto program = Program().version("1.0");
-
-      THEN("only the version should be changed") {
-        REQUIRE(program.metadata.version == "1.0");
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.introduction.empty());
-        REQUIRE(program.metadata.description.empty());
-        REQUIRE(program.metadata.msg_width == 100);
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error_and_usage);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-
-    WHEN("intro, details, and version are called") {
-      constexpr auto program = Program().intro("intro").details("details").version("1.0");
-
-      THEN("all three should be changed") {
-        REQUIRE(program.metadata.introduction == "intro");
-        REQUIRE(program.metadata.description == "details");
-        REQUIRE(program.metadata.version == "1.0");
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.msg_width == 100);
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error_and_usage);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-
-    WHEN("max_width is called") {
-      constexpr auto program = Program().max_width(80);
-
-      THEN("only the msg_width should be changed") {
-        REQUIRE(program.metadata.msg_width == 80);
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.version.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.introduction.empty());
-        REQUIRE(program.metadata.description.empty());
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.metadata.error_handler == print_error_and_usage);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-
-    WHEN("on_error is called") {
-      constexpr auto program = Program().on_error(rethrow);
-
-      THEN("only the error_handler should be changed") {
-        REQUIRE(program.metadata.error_handler == rethrow);
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.version.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.introduction.empty());
-        REQUIRE(program.metadata.description.empty());
-        REQUIRE(program.metadata.msg_width == 100);
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-
-    WHEN("intro, details, version, max_width, and on_error are called") {
-      constexpr auto program =
-          Program().intro("intro").details("details").version("1.0").max_width(80).on_error(print_error);
-
-      THEN("all five should be changed") {
-        REQUIRE(program.metadata.introduction == "intro");
-        REQUIRE(program.metadata.description == "details");
-        REQUIRE(program.metadata.version == "1.0");
-        REQUIRE(program.metadata.msg_width == 80);
-        REQUIRE(program.metadata.error_handler == print_error);
-        REQUIRE(program.metadata.name.empty());
-        REQUIRE(program.metadata.title.empty());
-        REQUIRE(program.metadata.positionals_amount == 0);
-        REQUIRE(program.args.size() == 0);
-        REQUIRE(program.cmds.size() == 0);
-      }
-    }
-  }
-
   GIVEN("a Program initialized with a name") {
     constexpr auto program = Program("program");
 
@@ -160,6 +23,126 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       REQUIRE(program.metadata.error_handler == print_error_and_usage);
       REQUIRE(program.args.size() == 0);
       REQUIRE(program.cmds.size() == 0);
+    }
+
+    WHEN("intro is called") {
+      constexpr auto program = Program("program").intro("intro");
+
+      THEN("only the introduction should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.introduction == "intro");
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.msg_width == 100);
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
+    }
+
+    WHEN("details is called") {
+      constexpr auto program = Program("program").details("details");
+
+      THEN("only the description should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.description == "details");
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.msg_width == 100);
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
+    }
+
+    WHEN("version is called") {
+      constexpr auto program = Program("program").version("1.0");
+
+      THEN("only the version should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.version == "1.0");
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.msg_width == 100);
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
+    }
+
+    WHEN("intro, details, and version are called") {
+      constexpr auto program = Program("program").intro("intro").details("details").version("1.0");
+
+      THEN("all three should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.introduction == "intro");
+        REQUIRE(program.metadata.description == "details");
+        REQUIRE(program.metadata.version == "1.0");
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.msg_width == 100);
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
+    }
+
+    WHEN("max_width is called") {
+      constexpr auto program = Program("program").max_width(80);
+
+      THEN("only the msg_width should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.msg_width == 80);
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.metadata.error_handler == print_error_and_usage);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
+    }
+
+    WHEN("on_error is called") {
+      constexpr auto program = Program("program").on_error(rethrow);
+
+      THEN("only the error_handler should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.error_handler == rethrow);
+        REQUIRE(program.metadata.version.empty());
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.introduction.empty());
+        REQUIRE(program.metadata.description.empty());
+        REQUIRE(program.metadata.msg_width == 100);
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
+    }
+
+    WHEN("intro, details, version, max_width, and on_error are called") {
+      constexpr auto program =
+          Program("program").intro("intro").details("details").version("1.0").max_width(80).on_error(print_error);
+
+      THEN("all five should be changed") {
+        REQUIRE(program.metadata.name == "program");
+        REQUIRE(program.metadata.introduction == "intro");
+        REQUIRE(program.metadata.description == "details");
+        REQUIRE(program.metadata.version == "1.0");
+        REQUIRE(program.metadata.msg_width == 80);
+        REQUIRE(program.metadata.error_handler == print_error);
+        REQUIRE(program.metadata.title.empty());
+        REQUIRE(program.metadata.positionals_amount == 0);
+        REQUIRE(program.args.size() == 0);
+        REQUIRE(program.cmds.size() == 0);
+      }
     }
   }
 
@@ -188,7 +171,7 @@ SCENARIO("adding arguments", "[Program][args]") {
   GIVEN("an empty Program") {
 
     WHEN("a positional is added") {
-      constexpr auto program = Program() + std::array{Pos("pos")};
+      constexpr auto program = Program("program") + std::array{Pos("pos")};
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 1); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -199,7 +182,7 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
 
     WHEN("two positionals are added") {
-      constexpr auto program = Program() + Pos("pos1") * Pos("pos2");
+      constexpr auto program = Program("program") + Pos("pos1") * Pos("pos2");
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 2); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -213,7 +196,7 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
 
     WHEN("multiple positionals are added") {
-      constexpr auto program = Program() + Pos("pos5") * Pos("pos2") * Pos("pos4") * Pos("pos1") * Pos("pos3");
+      constexpr auto program = Program("program") + Pos("pos5") * Pos("pos2") * Pos("pos4") * Pos("pos1") * Pos("pos3");
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 5); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -230,8 +213,8 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
 
     WHEN("other arguments are added before positionals") {
-      constexpr auto program =
-          Program() + Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") * Pos("pos2") * Opt("opt1") * Flg("flg2");
+      constexpr auto program = Program("program") + Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") *
+                                                        Pos("pos2") * Opt("opt1") * Flg("flg2");
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 7); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -271,7 +254,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
     }
 
     WHEN("cmd is added as command of program") {
-      constexpr auto program = Program() + std::array{ProgramView(cmd)};
+      constexpr auto program = Program("program") + std::array{ProgramView(cmd)};
 
       THEN("cmd should be added as only command of program") {
         REQUIRE(program.cmds.size() == 1);
@@ -300,7 +283,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
     }
 
     WHEN("both cmds are added as commands of program, but cmd2 first") {
-      constexpr auto program = Program() + cmd2 * cmd1;
+      constexpr auto program = Program("program") + cmd2 * cmd1;
 
       THEN("cmd1 should be added as first command of program and cmd2 as second") {
         REQUIRE(program.cmds.size() == 2);
@@ -319,7 +302,7 @@ SCENARIO("parsing", "[Program][parsing]") {
   using namespace opzioni;
 
   GIVEN("an empty Program") {
-    constexpr auto program = Program().on_error(rethrow);
+    constexpr auto program = Program("program").on_error(rethrow);
 
     WHEN("an empty argv is parsed") {
       std::array<char const *, 0> argv;
@@ -437,7 +420,7 @@ SCENARIO("parsing", "[Program][parsing]") {
     constexpr static auto cmd =
         Program("cmd").on_error(rethrow) + Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l");
 
-    constexpr auto program = Program().on_error(rethrow) + std::array{ProgramView(cmd)} +
+    constexpr auto program = Program("program").on_error(rethrow) + std::array{ProgramView(cmd)} +
                              Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") * Pos("pos1") *
                                  Flg("glf", "g") * Flg("f") * Opt("o");
 
