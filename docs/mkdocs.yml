@@ -19,6 +19,13 @@ theme:
     scheme: slate
     primary: deep purple
 
+nav:
+  - Home: index.md
+  - User guide:
+    - user-guide/from-scratch.md
+    - user-guide/customization.md
+    - user-guide/running-with-docker.md
+
 extra_css:
   - css/extra.css
 
