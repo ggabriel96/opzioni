@@ -1,4 +1,4 @@
-# Customization
+# Beyond the basics
 
 ## `Program`
 
@@ -8,9 +8,7 @@ In code, however, they are not member variables of `Program` (that's why I calle
 They are actually member variables of the `ProgramMetadata` class, held in the `metadata` member variable of `Program`.
 
 This detail deserves a longer explanation somewhere else, so to keep things short here, it suffices to say that it serves the purpose of having a common data structure between `Program` and `ProgramView`.
-`ProgramView` is like a `std::string_view`, but for `Program`.
-All program data is accessible through it, including its arguments and commands.
-
+`ProgramView` is like a `std::string_view`, but for `Program`, and all program data is accessible through it, including its arguments and commands.
 
 ### `name`
 
@@ -65,8 +63,9 @@ Options & Flags:
 It is specified via the `version` member function and can be any string.
 
 ```cpp
-constexpr auto wget = Program("wget", "a non-interactive network retriever")
-                        .version("1.20.3");
+constexpr auto wget =
+    Program("wget", "a non-interactive network retriever")
+      .version("1.20.3");
 ```
 
 In the automatic help, it is printed right next to the program name in the title line, so it is best to keep it within a maximum of ~16 characters.
@@ -88,12 +87,18 @@ Options & Flags:
 `introduction` is what goes between the program name and its list of arguments.
 So, for example, it can be used as an actual introduction to the program and what is does, or some message about its usage.
 It is specified via the `intro` member function.
-Try to keep it short (2 or 3 lines maximum).
+
+It has a special purpose too, though.
+The introduction is used as the description for commands in the automatic help text of their parent program.
+In that case, an actual introduction is recommended.
+So an introduction like in the example below is OK if the program is the root program.
+It's also best to keep it short (2 or 3 lines maximum).
 
 ```cpp
-constexpr auto wget = Program("wget", "a non-interactive network retriever")
-                        .version("1.20.3")
-                        .intro("Mandatory arguments to long options are mandatory for short options too.");
+constexpr auto wget =
+    Program("wget", "a non-interactive network retriever")
+      .version("1.20.3")
+      .intro("Mandatory arguments to long options are mandatory for short options too.");
 ```
 
 Output of the snippet above:
@@ -110,10 +115,6 @@ Options & Flags:
     -h, --help    Display this information
 ```
 
-Just keep in mind that the introduction is used as a description for commands in the automatic help text of their parent program.
-In that case, an actual introduction is recommended.
-So an introduction like the example above is OK if the program is the root program.
-
 ### `details`
 
 `details` is a piece of text that goes after the list of arguments.
@@ -121,11 +122,12 @@ It can be used, for example, to add some details that weren't relevant before, l
 It is specified via the `details` member function.
 
 ```cpp
-constexpr auto wget = Program("wget", "a non-interactive network retriever")
-                        .version("1.20.3")
-                        .intro("Mandatory arguments to long options are mandatory for short options too.")
-                        .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
-                                 " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.");
+constexpr auto wget =
+    Program("wget", "a non-interactive network retriever")
+      .version("1.20.3")
+      .intro("Mandatory arguments to long options are mandatory for short options too.")
+      .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
+               " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.");
 ```
 
 Note that C++ allows strings to be break into separate pieces for better code formatting, but that does not affect the output of the automatic help.
@@ -155,12 +157,13 @@ For example, it is used when printing the automatic help and when using the buil
 The default is `100` and it can be changed via the `max_width` member function.
 
 ```cpp
-constexpr auto wget = Program("wget", "a non-interactive network retriever")
-                        .version("1.20.3")
-                        .intro("Mandatory arguments to long options are mandatory for short options too.")
-                        .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
-                                 " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.")
-                        .max_width(64);
+constexpr auto wget =
+    Program("wget", "a non-interactive network retriever")
+      .version("1.20.3")
+      .intro("Mandatory arguments to long options are mandatory for short options too.")
+      .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
+               " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.")
+      .max_width(64);
 ```
 
 Output of the snippet above:
@@ -196,13 +199,14 @@ Change it via the `on_error` member function.
 For example, to only print the error message:
 
 ```cpp
-constexpr auto wget = Program("wget", "a non-interactive network retriever")
-                        .version("1.20.3")
-                        .intro("Mandatory arguments to long options are mandatory for short options too.")
-                        .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
-                                 " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.")
-                        .max_width(64)
-                        .on_error(print_error);
+constexpr auto wget =
+    Program("wget", "a non-interactive network retriever")
+      .version("1.20.3")
+      .intro("Mandatory arguments to long options are mandatory for short options too.")
+      .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
+               " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.")
+      .max_width(64)
+      .on_error(print_error);
 ```
 
 This also deserves a longer documentation, but until that's available, here is a brief explanation:

@@ -86,7 +86,7 @@ Note that:
 - there is a `+` between the `Program` and the arguments.
     This adds the array of arguments to the `Program` *at compile-time*.
 
-There are way more features available (see [Customization](customization.md)), but we'll keep things simple for now.
+There are way more features available (see [Beyond the basics](beyond-basics.md)), but we'll keep things simple for now.
 
 ## Parse the CLI
 
