@@ -624,14 +624,14 @@ https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.
 <h3 id="msg_width"><code>msg_width</code><a class="headerlink" href="#msg_width" title="Permanent link">&para;</a></h3>
 <p>The <code>msg_width</code> is what determines the maximum width of the messages that opzioni will output related to the program.
 For example, it is used when printing the automatic help and when using the built-in error handling actions.
-The default is <code>100</code> and it can be changed via the <code>max_width</code> member function.</p>
+The default is <code>100</code> and it can be changed via the <code>msg_width</code> member function.</p>
 <div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span>
     <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
       <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
       <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
       <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
                <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">)</span>
-      <span class="p">.</span><span class="n">max_width</span><span class="p">(</span><span class="mi">64</span><span class="p">);</span>
+      <span class="p">.</span><span class="n">msg_width</span><span class="p">(</span><span class="mi">64</span><span class="p">);</span>
 </code></pre></div>
 <p>Output of the snippet above:</p>
 <div class="highlight"><pre><span></span><code>wget 1.20.3 - a non-interactive network retriever
@@ -664,7 +664,7 @@ For example, to only print the error message:</p>
       <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
       <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
                <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">)</span>
-      <span class="p">.</span><span class="n">max_width</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">msg_width</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
       <span class="p">.</span><span class="n">on_error</span><span class="p">(</span><span class="n">print_error</span><span class="p">);</span>
 </code></pre></div>
 <p>This also deserves a longer documentation, but until that's available, here is a brief explanation:</p>
