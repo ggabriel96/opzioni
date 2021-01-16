@@ -14,7 +14,7 @@
     
     
       
-        <title>Writing a new CLI from scratch - opzioni docs</title>
+        <title>Starting from scratch - opzioni docs</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#writing-a-new-cli-from-scratch" class="md-skip">
+        <a href="#starting-from-scratch" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Writing a new CLI from scratch
+              Starting from scratch
             
           </span>
         </div>
@@ -290,12 +290,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Writing a new CLI from scratch
+        Starting from scratch
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Writing a new CLI from scratch
+      Starting from scratch
     </a>
     
       
@@ -312,8 +312,36 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-very-simple-curl" class="md-nav__link">
-    A very simple curl
+  <a href="#include-opzioni" class="md-nav__link">
+    Include opzioni
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declare-a-program" class="md-nav__link">
+    Declare a program
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-arguments" class="md-nav__link">
+    Add arguments
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parse-the-cli" class="md-nav__link">
+    Parse the CLI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-results" class="md-nav__link">
+    Get the results
   </a>
   
 </li>
@@ -321,6 +349,13 @@
         <li class="md-nav__item">
   <a href="#full-c-code" class="md-nav__link">
     Full C++ code
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-as-an-example" class="md-nav__link">
+    Build as an example
   </a>
   
 </li>
@@ -388,8 +423,36 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-very-simple-curl" class="md-nav__link">
-    A very simple curl
+  <a href="#include-opzioni" class="md-nav__link">
+    Include opzioni
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declare-a-program" class="md-nav__link">
+    Declare a program
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-arguments" class="md-nav__link">
+    Add arguments
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parse-the-cli" class="md-nav__link">
+    Parse the CLI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-results" class="md-nav__link">
+    Get the results
   </a>
   
 </li>
@@ -397,6 +460,13 @@
         <li class="md-nav__item">
   <a href="#full-c-code" class="md-nav__link">
     Full C++ code
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-as-an-example" class="md-nav__link">
+    Build as an example
   </a>
   
 </li>
@@ -418,18 +488,14 @@
                   </a>
                 
                 
-                <h1 id="writing-a-new-cli-from-scratch">Writing a new CLI from scratch<a class="headerlink" href="#writing-a-new-cli-from-scratch" title="Permanent link">&para;</a></h1>
-<h2 id="a-very-simple-curl">A <strong>very</strong> simple <code>curl</code><a class="headerlink" href="#a-very-simple-curl" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p>Create a new file in the <code>examples/</code> directory, say, <code>curl.cpp</code>.</p>
-</li>
-<li>
-<p>Import opzioni and any other libraries you might want to use. Then add a <code>main</code>.
-    For example:</p>
+                <h1 id="starting-from-scratch">Starting from scratch<a class="headerlink" href="#starting-from-scratch" title="Permanent link">&para;</a></h1>
+<p>This guide shows how to use opzioni right from the beginning: from <code>#include</code>-ing it to specifying the CLI and consuming the parsed values.
+As an example, we'll write a <strong>very</strong> simple <code>curl</code>.</p>
+<h2 id="include-opzioni">Include opzioni<a class="headerlink" href="#include-opzioni" title="Permanent link">&para;</a></h2>
+<p>Including opzioni is as simple as <code>include &lt;opzioni.hpp&gt;</code> (or in quotes if <a href="#build-as-an-example">building as an example</a>).
+For instance:</p>
 <div class="highlight"><pre><span></span><code><span class="cp">#include</span> <span class="cpf">&lt;string_view&gt;</span><span class="cp"></span>
 
-<span class="c1">// the awesome fmt library is installed and available!</span>
 <span class="cp">#include</span> <span class="cpf">&lt;fmt/format.h&gt;</span><span class="cp"></span>
 
 <span class="cp">#include</span> <span class="cpf">&quot;opzioni.hpp&quot;</span><span class="cp"></span>
@@ -440,60 +506,120 @@
 </code></pre></div>
 <p>The <code>using</code> directive for the <code>opzioni</code> namespace is just to make things easier for now.
 You can always import the desired names individually later.</p>
-</li>
-<li>
-<p>Now let's specify our CLI. First, declare a <code>Program</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">curl</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">).</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;transfer a URL&quot;</span><span class="p">);</span>
+<p>Also, I'm using the awesome <a href="https://fmt.dev">fmt</a> library.
+You should check it out!</p>
+<h2 id="declare-a-program">Declare a program<a class="headerlink" href="#declare-a-program" title="Permanent link">&para;</a></h2>
+<p>Now let's specify our CLI.
+First, declare a <code>Program</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">curl</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span> <span class="s">&quot;transfer a URL&quot;</span><span class="p">);</span>
 </code></pre></div>
-<p>This only creates a program named <code>curl</code> with a little introduction, so it doesn't do anything yet.</p>
-</li>
-<li>
-<p>Add arguments to the program.</p>
-<p>Let's add a positional argument for the URL, an option for the HTTP method, and a help flag.</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">curl</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">).</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span> <span class="o">+</span>
+<p>This only creates a program named <code>curl</code> with a little title, so it doesn't do anything yet.
+Note that it is marked <code>constexpr</code>, so it means that <code>curl</code> is a <em>constant expression</em>, that is, its value is known at compile-time.</p>
+<h2 id="add-arguments">Add arguments<a class="headerlink" href="#add-arguments" title="Permanent link">&para;</a></h2>
+<p>Let's add a positional argument for the URL, an option for the HTTP method, a flag for verbosity, and some help text.</p>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">curl</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span> <span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span> <span class="o">+</span>
                         <span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">)</span> <span class="o">*</span>
                         <span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span> <span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">)</span> <span class="o">*</span>
+                        <span class="n">Flg</span><span class="p">(</span><span class="s">&quot;verbose&quot;</span><span class="p">,</span> <span class="s">&quot;v&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Make the operation more talkative&quot;</span><span class="p">)</span> <span class="o">*</span>
                         <span class="n">Help</span><span class="p">();</span>
 </code></pre></div>
 <p>Note that:</p>
 <ul>
-<li>a positional is created by calling <code>Pos()</code> with a name.
-    Positionals are required by default.</li>
-<li>an option is created by calling <code>Opt()</code> with a name and an optional short name.
-    Options are optional by default and have an empty string as default value.</li>
-<li>the automatic help text is created by calling <code>Help()</code>.
-    It is a flag and, being so, is also optional by default.</li>
-<li>the <code>.help()</code> member function is how descriptions are added to arguments.
-    They will appear in the automatic help text.</li>
-<li>there is a <code>*</code> between every pair of arguments. This creates an array of arguments to be added to the <code>Program</code>.</li>
-<li>there is a <code>+</code> between the <code>Program</code> and the arguments. This will add the array of arguments to the <code>Program</code>.</li>
-</ul>
+<li>
+<p>a positional is created by calling the <code>Pos()</code> function with a name.
+    <strong>Positionals are required by default.</strong></p>
 </li>
 <li>
-<p>Parse the CLI.</p>
+<p>an option is created by calling the <code>Opt()</code> function with a name and an optional short name.
+    <strong>Options are optional by default and have an empty string as default value.</strong></p>
+</li>
+<li>
+<p>a flag is created by calling the <code>Flg()</code> function with a name and an optional short name.
+    <strong>Flags are optional by default and have <code>false</code> as default value.</strong></p>
+</li>
+<li>
+<p><code>Pos</code>, <code>Opt</code>, and <code>Flg</code> are functions, not constructors.
+    This is because the actual <em>type</em> of the arguments is <code>Arg</code> and it represents any type of argument.
+    If its constructor were to be called, the type would have to be specified, requiring more typing.
+    So these functions exist as helpers (or factories) for the supported kinds: positional, option, and flag.</p>
+</li>
+<li>
+<p>the <code>.help()</code> member function is how descriptions are added to arguments.
+    They will appear in the automatic help text.</p>
+</li>
+<li>
+<p>calling <code>Help()</code> adds a help flag that handles the automatic help text.
+    It is just a shorthand for this very common flag, so there's nothing special about it.
+    Here how it's done:</p>
+<div class="highlight"><pre><span></span><code><span class="n">Flg</span><span class="p">(</span><span class="s">&quot;help&quot;</span><span class="p">,</span> <span class="s">&quot;h&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="n">description</span><span class="p">).</span><span class="n">action</span><span class="p">(</span><span class="n">actions</span><span class="o">::</span><span class="n">print_help</span><span class="p">);</span>
+</code></pre></div>
+<p>Where <code>description</code> is <code>"Display this information"</code> by default.</p>
+</li>
+<li>
+<p>there is a <code>*</code> between every pair of arguments.
+    This creates an array of arguments <em>at compile-time</em> to be added to the <code>Program</code>.</p>
+</li>
+<li>
+<p>there is a <code>+</code> between the <code>Program</code> and the arguments.
+    This adds the array of arguments to the <code>Program</code> <em>at compile-time</em>.</p>
+</li>
+</ul>
+<p>There are way more features available (see <a href="../customization/">Customization</a>), but we'll keep things simple for now.</p>
+<h2 id="parse-the-cli">Parse the CLI<a class="headerlink" href="#parse-the-cli" title="Permanent link">&para;</a></h2>
 <p>We just need to call <code>curl</code> with <code>argc</code> and <code>argv</code>. As simple as that!</p>
 <div class="highlight"><pre><span></span><code><span class="k">auto</span> <span class="k">const</span> <span class="n">map</span> <span class="o">=</span> <span class="n">curl</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
 </code></pre></div>
-<p>The result is a map of arguments of what was parsed from the CLI.</p>
-</li>
-<li>
-<p>Print the results.</p>
+<p>The result is a map of arguments of what was parsed from the CLI.
+Note that <code>map</code> is <em>not</em> <code>constexpr</code>, since its value depends on runtime information.</p>
+<h2 id="get-the-results">Get the results<a class="headerlink" href="#get-the-results" title="Permanent link">&para;</a></h2>
 <p>There are a few ways of getting the results out of the map:</p>
 <div class="highlight"><pre><span></span><code><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span> <span class="c1">// 1</span>
 <span class="k">auto</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">);</span> <span class="c1">// 2</span>
 <span class="k">auto</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">].</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// 3</span>
 </code></pre></div>
 <p>Choose whichever you like most.
-However, it is always the long name of the argument that is used to get the result from the map.</p>
+However, it is always the long name of the argument that is used to get the result from the map.
+So, for example, to get the value of the <code>request</code> option, it's always via the name <code>request</code>, never <code>X</code>.</p>
 <p>Now let's print them out!</p>
 <div class="highlight"><pre><span></span><code><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span>
 <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">request</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;request&quot;</span><span class="p">];</span>
+<span class="kt">bool</span> <span class="k">const</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;verbose&quot;</span><span class="p">];</span>
 <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;url: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
 <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;request: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">);</span>
+<span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;verbose: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="p">);</span>
 </code></pre></div>
+<h2 id="full-c-code">Full C++ code<a class="headerlink" href="#full-c-code" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="cp">#include</span> <span class="cpf">&lt;string_view&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;fmt/format.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&quot;opzioni.hpp&quot;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="k">using</span> <span class="k">namespace</span> <span class="n">opzioni</span><span class="p">;</span>
+
+    <span class="k">constexpr</span> <span class="k">auto</span> <span class="n">curl</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span> <span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span> <span class="o">+</span>
+                            <span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">)</span> <span class="o">*</span>
+                            <span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span> <span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">)</span> <span class="o">*</span>
+                            <span class="n">Flg</span><span class="p">(</span><span class="s">&quot;verbose&quot;</span><span class="p">,</span> <span class="s">&quot;v&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Make the operation more talkative&quot;</span><span class="p">)</span> <span class="o">*</span>
+                            <span class="n">Help</span><span class="p">();</span>
+
+    <span class="k">auto</span> <span class="k">const</span> <span class="n">map</span> <span class="o">=</span> <span class="n">curl</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">request</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;request&quot;</span><span class="p">];</span>
+    <span class="kt">bool</span> <span class="k">const</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;verbose&quot;</span><span class="p">];</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;url: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;request: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">);</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;verbose: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="build-as-an-example">Build as an example<a class="headerlink" href="#build-as-an-example" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p>Put the newly created file in the <code>examples/</code> directory, say, <code>curl.cpp</code>.</p>
 </li>
 <li>
-<p>And that's it! Now let's build the CLI and give it a try!</p>
 <p>Add an <code>executable</code> entry for it in <code>examples/meson.build</code>, just like the other examples.</p>
 <div class="highlight"><pre><span></span><code><span class="n">curl</span> <span class="o">=</span> <span class="n">executable</span><span class="p">(</span>
     <span class="s1">&#39;curl&#39;</span><span class="p">,</span> <span class="s1">&#39;curl.cpp&#39;</span><span class="p">,</span>
@@ -512,34 +638,11 @@ However, it is always the long name of the argument that is used to get the resu
 <p>Test that URL is really required by giving no arguments to the executable:</p>
 <div class="highlight"><pre><span></span><code>./build/examples/curl
 </code></pre></div>
-<p>Give it all arguments and see the output:    </p>
+<p>Give it a valid set of arguments and see the output:    </p>
 <div class="highlight"><pre><span></span><code>./build/examples/curl -X GET google.com
 </code></pre></div>
 </li>
 </ol>
-<h2 id="full-c-code">Full C++ code<a class="headerlink" href="#full-c-code" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="cp">#include</span> <span class="cpf">&lt;string_view&gt;</span><span class="cp"></span>
-
-<span class="cp">#include</span> <span class="cpf">&lt;fmt/format.h&gt;</span><span class="cp"></span>
-
-<span class="cp">#include</span> <span class="cpf">&quot;opzioni.hpp&quot;</span><span class="cp"></span>
-
-<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
-    <span class="k">using</span> <span class="k">namespace</span> <span class="n">opzioni</span><span class="p">;</span>
-
-    <span class="k">constexpr</span> <span class="k">auto</span> <span class="n">curl</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">).</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span> <span class="o">+</span>
-                            <span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">)</span> <span class="o">*</span>
-                            <span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span> <span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">)</span> <span class="o">*</span>
-                            <span class="n">Help</span><span class="p">();</span>
-
-    <span class="k">auto</span> <span class="k">const</span> <span class="n">map</span> <span class="o">=</span> <span class="n">curl</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
-
-    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">request</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;request&quot;</span><span class="p">];</span>
-    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;url: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
-    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;request: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
                 
               
               
