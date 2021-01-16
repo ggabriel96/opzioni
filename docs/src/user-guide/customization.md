@@ -110,6 +110,10 @@ Options & Flags:
     -h, --help    Display this information
 ```
 
+Just keep in mind that the introduction is used as a description for commands in the automatic help text of their parent program.
+In that case, an actual introduction is recommended.
+So an introduction like the example above is OK if the program is the root program.
+
 ### `details`
 
 `details` is a piece of text that goes after the list of arguments.
