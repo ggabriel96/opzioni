@@ -361,8 +361,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    description
+  <a href="#details" class="md-nav__link">
+    details
   </a>
   
 </li>
@@ -472,8 +472,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    description
+  <a href="#details" class="md-nav__link">
+    details
   </a>
   
 </li>
@@ -589,8 +589,11 @@ Usage:
 Options &amp; Flags:
     -h, --help    Display this information
 </code></pre></div>
-<h3 id="description"><code>description</code><a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
-<p><code>description</code> is a piece of text that goes after the list of arguments.
+<p>Just keep in mind that the introduction is used as a description for commands in the automatic help text of their parent program.
+In that case, an actual introduction is recommended.
+So an introduction like the example above is OK if the program is the root program.</p>
+<h3 id="details"><code>details</code><a class="headerlink" href="#details" title="Permanent link">&para;</a></h3>
+<p><code>details</code> is a piece of text that goes after the list of arguments.
 It can be used, for example, to add some details that weren't relevant before, like website, documentation, or contact information.
 It is specified via the <code>details</code> member function.</p>
 <div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
