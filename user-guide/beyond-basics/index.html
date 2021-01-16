@@ -14,7 +14,7 @@
     
     
       
-        <title>Customization - opzioni docs</title>
+        <title>Beyond the basics - opzioni docs</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#customization" class="md-skip">
+        <a href="#beyond-the-basics" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Customization
+              Beyond the basics
             
           </span>
         </div>
@@ -303,12 +303,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Customization
+        Beyond the basics
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Customization
+      Beyond the basics
     </a>
     
       
@@ -509,19 +509,18 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/ggabriel96/opzioni/edit/master/docs/user-guide/customization.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/ggabriel96/opzioni/edit/master/docs/user-guide/beyond-basics.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="customization">Customization<a class="headerlink" href="#customization" title="Permanent link">&para;</a></h1>
+                <h1 id="beyond-the-basics">Beyond the basics<a class="headerlink" href="#beyond-the-basics" title="Permanent link">&para;</a></h1>
 <h2 id="program"><code>Program</code><a class="headerlink" href="#program" title="Permanent link">&para;</a></h2>
 <p>The following sections explain the various attributes of <code>Program</code> and how to set them via the provided member functions.</p>
 <p>In code, however, they are not member variables of <code>Program</code> (that's why I called them attributes instead).
 They are actually member variables of the <code>ProgramMetadata</code> class, held in the <code>metadata</code> member variable of <code>Program</code>.</p>
 <p>This detail deserves a longer explanation somewhere else, so to keep things short here, it suffices to say that it serves the purpose of having a common data structure between <code>Program</code> and <code>ProgramView</code>.
-<code>ProgramView</code> is like a <code>std::string_view</code>, but for <code>Program</code>.
-All program data is accessible through it, including its arguments and commands.</p>
+<code>ProgramView</code> is like a <code>std::string_view</code>, but for <code>Program</code>, and all program data is accessible through it, including its arguments and commands.</p>
 <h3 id="name"><code>name</code><a class="headerlink" href="#name" title="Permanent link">&para;</a></h3>
 <p>The first and most basic information of <code>Program</code> is <code>name</code>.
 It is the only attribute that the user is required to provide.
@@ -556,8 +555,9 @@ Options &amp; Flags:
 <h3 id="version"><code>version</code><a class="headerlink" href="#version" title="Permanent link">&para;</a></h3>
 <p><code>version</code> is... well, the program version.
 It is specified via the <code>version</code> member function and can be any string.</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span>
+    <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>In the automatic help, it is printed right next to the program name in the title line, so it is best to keep it within a maximum of ~16 characters.</p>
 <p>Output of the snippet above:</p>
@@ -572,11 +572,16 @@ Options &amp; Flags:
 <h3 id="introduction"><code>introduction</code><a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h3>
 <p><code>introduction</code> is what goes between the program name and its list of arguments.
 So, for example, it can be used as an actual introduction to the program and what is does, or some message about its usage.
-It is specified via the <code>intro</code> member function.
-Try to keep it short (2 or 3 lines maximum).</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">);</span>
+It is specified via the <code>intro</code> member function.</p>
+<p>It has a special purpose too, though.
+The introduction is used as the description for commands in the automatic help text of their parent program.
+In that case, an actual introduction is recommended.
+So an introduction like in the example below is OK if the program is the root program.
+It's also best to keep it short (2 or 3 lines maximum).</p>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span>
+    <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>Output of the snippet above:</p>
 <div class="highlight"><pre><span></span><code>wget 1.20.3 - a non-interactive network retriever
@@ -589,18 +594,16 @@ Usage:
 Options &amp; Flags:
     -h, --help    Display this information
 </code></pre></div>
-<p>Just keep in mind that the introduction is used as a description for commands in the automatic help text of their parent program.
-In that case, an actual introduction is recommended.
-So an introduction like the example above is OK if the program is the root program.</p>
 <h3 id="details"><code>details</code><a class="headerlink" href="#details" title="Permanent link">&para;</a></h3>
 <p><code>details</code> is a piece of text that goes after the list of arguments.
 It can be used, for example, to add some details that weren't relevant before, like website, documentation, or contact information.
 It is specified via the <code>details</code> member function.</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
-                                 <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span>
+    <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
+               <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>Note that C++ allows strings to be break into separate pieces for better code formatting, but that does not affect the output of the automatic help.
 Don't make it too long, though, as that will move the argument list up in the help text.</p>
@@ -622,12 +625,13 @@ https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.
 <p>The <code>msg_width</code> is what determines the maximum width of the messages that opzioni will output related to the program.
 For example, it is used when printing the automatic help and when using the built-in error handling actions.
 The default is <code>100</code> and it can be changed via the <code>max_width</code> member function.</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
-                                 <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">max_width</span><span class="p">(</span><span class="mi">64</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span>
+    <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
+               <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">max_width</span><span class="p">(</span><span class="mi">64</span><span class="p">);</span>
 </code></pre></div>
 <p>Output of the snippet above:</p>
 <div class="highlight"><pre><span></span><code>wget 1.20.3 - a non-interactive network retriever
@@ -654,13 +658,14 @@ This doesn't affect the automatic help text.</p>
 <p>The default is to print the error message and the usage of the program.
 Change it via the <code>on_error</code> member function.
 For example, to only print the error message:</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
-                                 <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">max_width</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
-                        <span class="p">.</span><span class="n">on_error</span><span class="p">(</span><span class="n">print_error</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span> <span class="k">auto</span> <span class="n">wget</span> <span class="o">=</span>
+    <span class="n">Program</span><span class="p">(</span><span class="s">&quot;wget&quot;</span><span class="p">,</span> <span class="s">&quot;a non-interactive network retriever&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;1.20.3&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">intro</span><span class="p">(</span><span class="s">&quot;Mandatory arguments to long options are mandatory for short options too.&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">details</span><span class="p">(</span><span class="s">&quot;Email bug reports, questions, discussions to &lt;bug-wget@gnu.org&gt;&quot;</span>
+               <span class="s">&quot; and/or open issues at https://savannah.gnu.org/bugs/?func=additem&amp;group=wget.&quot;</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">max_width</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+      <span class="p">.</span><span class="n">on_error</span><span class="p">(</span><span class="n">print_error</span><span class="p">);</span>
 </code></pre></div>
 <p>This also deserves a longer documentation, but until that's available, here is a brief explanation:</p>
 <p>The argument to <code>on_error</code> must be of the <code>ErrorHandler</code> type, which is actually a <code>using</code> declaration for the following function pointer:</p>
