@@ -1,6 +1,6 @@
 project(
     'opzioni', 'cpp',
-    version: '0.44.5',
+    version: '0.45.0',
     license: 'BSL-1.0',
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
