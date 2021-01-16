@@ -373,7 +373,7 @@ void print_full_help(ProgramView const program, std::ostream &ostream) noexcept 
   ostream << nl;
   formatter.print_help();
   ostream << nl;
-  formatter.print_description();
+  formatter.print_details();
 }
 
 // +------------+
@@ -471,13 +471,13 @@ void HelpFormatter::print_help() const noexcept {
   }
 }
 
-void HelpFormatter::print_description() const noexcept {
-  if (program.metadata.description.empty())
+void HelpFormatter::print_details() const noexcept {
+  if (program.metadata.details.empty())
     return;
-  if (program.metadata.description.length() <= program.metadata.msg_width)
-    out << program.metadata.description << nl;
+  if (program.metadata.details.length() <= program.metadata.msg_width)
+    out << program.metadata.details << nl;
   else
-    out << limit_string_within(program.metadata.description, program.metadata.msg_width) << nl;
+    out << limit_string_within(program.metadata.details, program.metadata.msg_width) << nl;
 }
 
 // +---------------------------+
