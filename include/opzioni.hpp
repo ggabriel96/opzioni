@@ -541,7 +541,7 @@ public:
     return program;
   }
 
-  consteval auto max_width(std::size_t msg_width) const noexcept {
+  consteval auto msg_width(std::size_t msg_width) const noexcept {
     auto program = *this;
     program.metadata.msg_width = msg_width;
     return program;

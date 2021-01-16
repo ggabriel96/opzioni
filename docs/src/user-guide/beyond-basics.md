@@ -154,7 +154,7 @@ https://savannah.gnu.org/bugs/?func=additem&group=wget.
 
 The `msg_width` is what determines the maximum width of the messages that opzioni will output related to the program.
 For example, it is used when printing the automatic help and when using the built-in error handling actions.
-The default is `100` and it can be changed via the `max_width` member function.
+The default is `100` and it can be changed via the `msg_width` member function.
 
 ```cpp
 constexpr auto wget =
@@ -163,7 +163,7 @@ constexpr auto wget =
       .intro("Mandatory arguments to long options are mandatory for short options too.")
       .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
                " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.")
-      .max_width(64);
+      .msg_width(64);
 ```
 
 Output of the snippet above:
@@ -205,7 +205,7 @@ constexpr auto wget =
       .intro("Mandatory arguments to long options are mandatory for short options too.")
       .details("Email bug reports, questions, discussions to <bug-wget@gnu.org>"
                " and/or open issues at https://savannah.gnu.org/bugs/?func=additem&group=wget.")
-      .max_width(64)
+      .msg_width(64)
       .on_error(print_error);
 ```
 

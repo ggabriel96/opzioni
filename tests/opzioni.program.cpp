@@ -93,8 +93,8 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       }
     }
 
-    WHEN("max_width is called") {
-      constexpr auto program = Program("program").max_width(80);
+    WHEN("msg_width is called") {
+      constexpr auto program = Program("program").msg_width(80);
 
       THEN("only the msg_width should be changed") {
         REQUIRE(program.metadata.name == "program");
@@ -127,9 +127,9 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
       }
     }
 
-    WHEN("intro, details, version, max_width, and on_error are called") {
+    WHEN("intro, details, version, msg_width, and on_error are called") {
       constexpr auto program =
-          Program("program").intro("intro").details("details").version("1.0").max_width(80).on_error(print_error);
+          Program("program").intro("intro").details("details").version("1.0").msg_width(80).on_error(print_error);
 
       THEN("all five should be changed") {
         REQUIRE(program.metadata.name == "program");
