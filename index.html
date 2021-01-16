@@ -568,8 +568,9 @@ Feel free to take a look at the other, more complex, examples in the same direct
   <span class="k">constexpr</span> <span class="k">auto</span> <span class="n">hello</span> <span class="o">=</span>
       <span class="n">Program</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">).</span><span class="n">version</span><span class="p">(</span><span class="s">&quot;0.1&quot;</span><span class="p">).</span><span class="n">intro</span><span class="p">(</span>
           <span class="s">&quot;Greeting people since the dawn of computing&quot;</span><span class="p">)</span> <span class="o">+</span>
-      <span class="n">Help</span><span class="p">()</span> <span class="o">*</span> <span class="n">Version</span><span class="p">()</span> <span class="o">*</span>
-          <span class="n">Pos</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Your name please, so I can greet you&quot;</span><span class="p">);</span>
+        <span class="n">Pos</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Your name please, so I can greet you&quot;</span><span class="p">)</span> <span class="o">*</span>
+        <span class="n">Help</span><span class="p">()</span> <span class="o">*</span>
+        <span class="n">Version</span><span class="p">();</span>
 
   <span class="k">auto</span> <span class="k">const</span> <span class="n">args</span> <span class="o">=</span> <span class="n">hello</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
   <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">];</span>
@@ -599,7 +600,7 @@ Options &amp; Flags:
 <li>
 <p>Automatic version with <code>--version</code> or <code>-V</code></p>
 <div class="highlight"><pre><span></span><code>$ ./build/examples/hello -V
-hello <span class="m">0</span>.1
+hello 0.1
 </code></pre></div>
 </li>
 <li>
