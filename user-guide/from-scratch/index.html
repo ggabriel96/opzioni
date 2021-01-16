@@ -571,6 +571,9 @@ Note that it is marked <code>constexpr</code>, so it means that <code>curl</code
 </code></pre></div>
 <p>The result is a map of arguments of what was parsed from the CLI.
 Note that <code>map</code> is <em>not</em> <code>constexpr</code>, since its value depends on runtime information.</p>
+<p>Automatic error handling is provided when calling the call operator of <code>Program</code>.
+This means that, if the user gives <code>curl</code> some invalid arguments, the default behavior is to terminate the program and show an error message alongside the usage of the program.
+This is explained later, but this behavior can be changed either while keeping the automatic error handling or not.</p>
 <h2 id="get-the-results">Get the results<a class="headerlink" href="#get-the-results" title="Permanent link">&para;</a></h2>
 <p>There are a few ways of getting the results out of the map:</p>
 <div class="highlight"><pre><span></span><code><span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="k">const</span> <span class="n">url</span> <span class="o">=</span> <span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span> <span class="c1">// 1</span>
