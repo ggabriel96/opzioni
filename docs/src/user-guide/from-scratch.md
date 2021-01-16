@@ -99,6 +99,10 @@ auto const map = curl(argc, argv);
 The result is a map of arguments of what was parsed from the CLI.
 Note that `map` is *not* `constexpr`, since its value depends on runtime information.
 
+Automatic error handling is provided when calling the call operator of `Program`.
+This means that, if the user gives `curl` some invalid arguments, the default behavior is to terminate the program and show an error message alongside the usage of the program.
+This is explained later, but this behavior can be changed either while keeping the automatic error handling or not.
+
 ## Get the results
 
 There are a few ways of getting the results out of the map:
