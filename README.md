@@ -2,7 +2,7 @@
 
 opzioni is a command line arguments parser library for C++.
 
-# Goals
+## Goals
 
 The goals of this library, in order of importance, are:
 
@@ -32,7 +32,7 @@ The goals of this library, in order of importance, are:
     That limits a lot its potential users, but also allows for the use of the new and powerful features of C++.
     It also helps to accomplish the previous goals.
 
-# Disclaimer
+## Disclaimer
 
 - This is a **personal project** with **no promise of maintainability** for the time being.
 
@@ -51,7 +51,7 @@ The goals of this library, in order of importance, are:
 
 - There is a whole documentation to write.
 
-# Sneak peek
+## Sneak peek
 
 The code below is a fully working example, taken from [`examples/hello.cpp`][examples/hello], only reformatted and with quotes changed to angle brackets in the `#include`.
 Feel free to take a look at the other, more complex, examples in the same directory.
@@ -122,7 +122,7 @@ That gives us:
     Hello, Gabriel Galli!
     ```
 
-# Getting started
+## Getting started
 
 opzioni is not published anywhere yet.
 The goal is to eventually make it available on:
@@ -135,7 +135,7 @@ The goal is to eventually make it available on:
 
 Meanwhile, there are a few options to build and try it out. See the TLDR below.
 
-## TLDR
+### TLDR
 
 There are few options to get up to speed on building opzioni:
 
@@ -148,7 +148,7 @@ Once in your chosen environment, simply run `make`.
 That should download the build dependencies with Conan and build the whole project with Meson and ninja.
 The [`Makefile`][Makefile] is just a simple helper to avoid having to remember all the commands.
 
-## Dependencies
+### Dependencies
 
 All dependencies below might still work if on earlier minor versions, but I'm not sure.
 I still gotta pin them (except for `fmt` and `Catch2`, which are somewhat pinned in the build definitions).
@@ -161,7 +161,7 @@ I still gotta pin them (except for `fmt` and `Catch2`, which are somewhat pinned
 - [Catch2](https://github.com/catchorg/Catch2/) >= 2.13.0
 - ClangFormat 10 if willing to apply the formatting as checked in CI
 
-# License
+## License
 
 opzioni's license is the [Boost Software License (BSL) 1.0][license].
 
