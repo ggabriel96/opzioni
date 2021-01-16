@@ -68,8 +68,9 @@ int main(int argc, char const *argv[]) {
   constexpr auto hello =
       Program("hello").version("0.1").intro(
           "Greeting people since the dawn of computing") +
-      Help() * Version() *
-          Pos("name").help("Your name please, so I can greet you");
+        Pos("name").help("Your name please, so I can greet you") *
+        Help() *
+        Version();
 
   auto const args = hello(argc, argv);
   std::string_view const name = args["name"];
@@ -100,7 +101,7 @@ That gives us:
 
 1. Automatic version with `--version` or `-V`
 
-    ```sh
+    ```
     $ ./build/examples/hello -V
     hello 0.1
     ```
