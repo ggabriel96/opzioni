@@ -110,9 +110,9 @@ Options & Flags:
     -h, --help    Display this information
 ```
 
-### `description`
+### `details`
 
-`description` is a piece of text that goes after the list of arguments.
+`details` is a piece of text that goes after the list of arguments.
 It can be used, for example, to add some details that weren't relevant before, like website, documentation, or contact information.
 It is specified via the `details` member function.
 

@@ -430,7 +430,7 @@ struct ProgramMetadata {
   std::string_view title{};
   std::string_view version{};
   std::string_view introduction{};
-  std::string_view description{};
+  std::string_view details{};
 
   std::size_t msg_width = 100;
   std::size_t positionals_amount = 0;
@@ -528,9 +528,9 @@ public:
     return program;
   }
 
-  consteval auto details(std::string_view description) const noexcept {
+  consteval auto details(std::string_view details) const noexcept {
     auto program = *this;
-    program.metadata.description = description;
+    program.metadata.details = details;
     return program;
   }
 
@@ -617,7 +617,7 @@ public:
   void print_intro() const noexcept;
   void print_long_usage() const noexcept;
   void print_help() const noexcept;
-  void print_description() const noexcept;
+  void print_details() const noexcept;
 
   std::size_t help_padding_size() const noexcept;
 
