@@ -34,7 +34,7 @@ std::string builtin2str(BuiltinVariant const &) noexcept;
 
 struct Arg;
 struct ArgMap;
-struct ProgramView;
+class ProgramView;
 
 template <std::size_t ArgsSize = 0, std::size_t CmdsSize = 0>
 class Program;
@@ -639,7 +639,7 @@ private:
     for (auto const &line : description_lines | drop(1)) {
       // the same 4 spaces of left margin, then additional 4 spaces of indentation
       out << fmt::format("    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
-    };
+    }
   }
 };
 
