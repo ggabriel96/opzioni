@@ -360,6 +360,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#supported-formats-of-arguments" class="md-nav__link">
+    Supported formats of arguments
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -467,6 +474,13 @@
         <li class="md-nav__item">
   <a href="#building-as-an-example" class="md-nav__link">
     Building as an example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-formats-of-arguments" class="md-nav__link">
+    Supported formats of arguments
   </a>
   
 </li>
@@ -628,6 +642,66 @@ So, for example, to get the value of the <code>request</code> option, it's alway
 </code></pre></div>
 </li>
 </ol>
+<h2 id="supported-formats-of-arguments">Supported formats of arguments<a class="headerlink" href="#supported-formats-of-arguments" title="Permanent link">&para;</a></h2>
+<p>There are many ways in which a user might provide arguments to a program.
+The following list contains the rules that opzioni follows when parsing them.</p>
+<ul>
+<li>
+<p>Arguments that don't start with <code>-</code> or are just a single <code>-</code> are considered positionals.</p>
+<p>Example: <code>rm file.txt</code>, where <code>file.txt</code> is a positional argument of <code>rm</code>.</p>
+</li>
+<li>
+<p>Commands are a special case of positional arguments in which they exactly match the name of some program added as command.</p>
+<p>Example: <code>git clone &lt;clone args...&gt;</code>, where <code>clone</code> is a command of <code>git</code>.</p>
+</li>
+<li>
+<p>An argument starting with a single <code>-</code> followed by one or more letters can be
+    one short flag or many short flags together if all characters match the abbreviation of existing flags;
+    or a short option immediately followed by its value if the first character matches the abbreviation of an existing option.
+    In the case of an option, the value may be optionally preceded by <code>=</code> or it can be the next argument in the command-line.</p>
+<p>Example:</p>
+<ul>
+<li>
+<p><code>pip -h</code>, where <code>h</code> is a flag of <code>pip</code>.</p>
+</li>
+<li>
+<p><code>tar -vxz</code>, where <code>vxz</code> are three flags of <code>tar</code>.</p>
+</li>
+<li>
+<p><code>g++ -O2</code> or <code>g++ -O=2</code>, where <code>O</code> is an option of <code>g++</code> and <code>2</code> is its value.</p>
+<p>Note that both <code>-O2</code> and <code>-O=2</code> are a single argument.</p>
+</li>
+<li>
+<p><code>curl -X GET</code>, where <code>X</code> is an option of <code>curl</code> and <code>GET</code> is its value.</p>
+<p>This is a special case in which the argument (<code>-X</code>) is an existing option and the argument that immediately follows it would be parsed as a positional argument.</p>
+</li>
+</ul>
+<p>Passing arguments like <code>set -euxo pipefail</code> <strong>is intentionally not supported</strong>.
+The format <code>-abc</code> <strong>always</strong> means many flags together or an option <code>a</code> followed by its value <code>bc</code>.</p>
+</li>
+<li>
+<p>An argument starting with two <code>-</code> followed by any number of characters is either a flag or an option.
+   it is considered a flag If the name exactly matches an existing flag, otherwise it is considered an option.
+   In the case of an option, the value may be optionally preceded by <code>=</code> or it can be the next argument in the command-line.</p>
+<p>Example:</p>
+<ul>
+<li>
+<p><code>pip --help</code>, where <code>help</code> is a flag of <code>pip</code>.</p>
+</li>
+<li>
+<p><code>wget --timeout=10</code>, where <code>timeout</code> is an option of <code>wget</code> and <code>10</code> is its value.</p>
+<p>Note that <code>--timeout=10</code> is a single argument and <code>--timeout10</code> would not work the same way (it would be parsed as a flag).</p>
+</li>
+<li>
+<p><code>wget --user-agent Firefox</code>, where <code>user-agent</code> is an option of <code>wget</code> and <code>Firefox</code> is its value.</p>
+<p>Similarly to short flags and options, this is a special case in which the argument (<code>--user-agent</code>) is an existing option and the argument that immediately follows it would be parsed as a positional argument.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>An argument that is exactly <code>--</code> indicates that everything that follows should always be parsed as positional arguments.</p>
+</li>
+</ul>
                 
               
               
