@@ -1,11 +1,14 @@
-# Starting from scratch
+# The basics
 
-This guide shows how to use opzioni right from the beginning: from `#include`-ing it to specifying the CLI and consuming the parsed values.
-As an example, we'll write a **very** simple `curl`.
+opzioni is made up of simple concepts: programs and arguments.
+A program is either the root or is a command of another program.
+Meanwhile, arguments describe the inputs that a program expects from the user.
+In code, programs are represented by `Program` and arguments by `Arg`.
 
-## Include opzioni
 
-Including opzioni is as simple as `include <opzioni.hpp>` (or in quotes if [building as an example](#build-as-an-example)).
+## Including opzioni
+
+Including opzioni is as simple as `include <opzioni.hpp>` (or in quotes if [building as an example](#building-as-an-example)).
 For instance:
 
 ```cpp
@@ -26,22 +29,41 @@ You can always import the desired names individually later.
 Also, I'm using the awesome [fmt](https://fmt.dev) library.
 You should check it out!
 
-## Declare a program
 
-Now let's specify our CLI.
-First, declare a `Program`.
+## Declaring a program
+
+In order to create a `Program`, we call one of its two constructors:
+one just takes a name; the other takes a name and a title:
 
 ```cpp
 constexpr auto curl = Program("curl", "transfer a URL");
 ```
 
-This only creates a program named `curl` with a little title, so it doesn't do anything yet.
 Note that it is marked `constexpr`, so it means that `curl` is a *constant expression*, that is, its value is known at compile-time.
 
 
-## Add arguments
+## Adding arguments
 
-Let's add a positional argument for the URL, an option for the HTTP method, a flag for verbosity, and some help text.
+An argument can be one of three types: positional, option, or flag.
+These types are created via the functions `Pos()`, `Opt()`, and `Flg()`, respectively.
+`Pos()` only takes a name, while `Opt()` and `Flg()` take a name and an abbreviation.
+These functions are just helpers, since they all construct an `Arg`, but they set the appropriate values for the type of argument being created.
+These defaults are:
+
+- positionals and options are initially of type `std::string_view`
+- flags are initially of type `bool`
+- positionals are required
+- options and flags are optional
+- options have `""` as default value
+- flags have `false` as default value
+
+Although possible, if the constructor of `Arg` were to be called, the argument type and all these defaults would have to be manually specified, requiring more typing.
+
+Arguments are added to a program via its operator `+`, but first are gathered into an array via their operator `*`.
+These choices relate to operator precedence, since we first need to build the array, then add the array of arguments to the program.
+Building an array is needed so we can verify that all argument names are unique, for example.
+
+Let's add some arguments to our `curl` program:
 
 ```cpp
 constexpr auto curl = Program("curl", "transfer a URL") +
@@ -51,46 +73,18 @@ constexpr auto curl = Program("curl", "transfer a URL") +
                         Help();
 ```
 
-Note that:
+Since we get an `Arg` after calling one of the three argument factories, we can further customize it with its member functions.
+The first one we are presented here is `.help()`, which serves the purpose of setting descriptions to arguments.
+These descriptions are what appears in the automatic help text that opzioni generates.
 
-- a positional is created by calling the `Pos()` function with a name.
-    **Positionals are required by default.**
+To tell opzioni that automatic help text is desired, we simply call `Help()`.
+Similar to the previous functions, it's just a helper, but this time to create a very common flag, which is to show the program help.
 
-- an option is created by calling the `Opt()` function with a name and an optional short name.
-    **Options are optional by default and have an empty string as default value.**
 
-- a flag is created by calling the `Flg()` function with a name and an optional short name.
-    **Flags are optional by default and have `false` as default value.**
+## Parsing the CLI
 
-- `Pos`, `Opt`, and `Flg` are functions, not constructors.
-    This is because the actual *type* of the arguments is `Arg` and it represents any type of argument.
-    If its constructor were to be called, the type would have to be specified, requiring more typing.
-    So these functions exist as helpers (or factories) for the supported kinds: positional, option, and flag.
-
-- the `.help()` member function is how descriptions are added to arguments.
-    They will appear in the automatic help text.
-
-- calling `Help()` adds a help flag that handles the automatic help text.
-    It is just a shorthand for this very common flag, so there's nothing special about it.
-    Here how it's done:
-
-    ```cpp
-    Flg("help", "h").help(description).action(actions::print_help);
-    ```
-
-    Where `description` is `"Display this information"` by default.
-
-- there is a `*` between every pair of arguments.
-    This creates an array of arguments *at compile-time* to be added to the `Program`.
-
-- there is a `+` between the `Program` and the arguments.
-    This adds the array of arguments to the `Program` *at compile-time*.
-
-There are way more features available (see [Beyond the basics](beyond-basics.md)), but we'll keep things simple for now.
-
-## Parse the CLI
-
-We just need to call `curl` with `argc` and `argv`. As simple as that!
+Now that our very simple `curl` has some arguments, we can try parsing the CLI and see what we get.
+We just need to call `curl` with `argc` and `argv`:
 
 ```cpp
 auto const map = curl(argc, argv);
@@ -99,11 +93,12 @@ auto const map = curl(argc, argv);
 The result is a map of arguments of what was parsed from the CLI.
 Note that `map` is *not* `constexpr`, since its value depends on runtime information.
 
-Automatic error handling is provided when calling the call operator of `Program`.
+opzioni also provide automatic error handling when calling the call operator of `Program`.
 This means that, if the user gives `curl` some invalid arguments, the default behavior is to terminate the program and show an error message alongside the usage of the program.
 This is explained later, but this behavior can be changed either while keeping the automatic error handling or not.
 
-## Get the results
+
+## Getting the results
 
 There are a few ways of getting the results out of the map:
 
@@ -127,6 +122,7 @@ fmt::print("url: {}\n", url);
 fmt::print("request: {}\n", request);
 fmt::print("verbose: {}\n", verbose);
 ```
+
 
 ## Full C++ code
 
@@ -157,9 +153,9 @@ int main(int argc, char const *argv[]) {
 }
 ```
 
-## Build as an example
+## Building as an example
 
-1. Put the newly created file in the `examples/` directory, say, `curl.cpp`.
+1. Put the code above in a file in the `examples/` directory, say, `curl.cpp`.
 
 1. Add an `executable` entry for it in `examples/meson.build`, just like the other examples.
 

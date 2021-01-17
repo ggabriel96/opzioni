@@ -22,7 +22,7 @@ theme:
 nav:
   - Home: index.md
   - User guide:
-    - user-guide/from-scratch.md
+    - user-guide/the-basics.md
     - user-guide/beyond-basics.md
     - user-guide/running-with-docker.md
 
