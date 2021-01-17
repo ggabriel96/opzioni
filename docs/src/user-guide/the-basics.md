@@ -187,3 +187,57 @@ int main(int argc, char const *argv[]) {
     ```sh
     ./build/examples/curl -X GET google.com
     ```
+
+
+## Supported formats of arguments
+
+There are many ways in which a user might provide arguments to a program.
+The following list contains the rules that opzioni follows when parsing them.
+
+- Arguments that don't start with `-` or are just a single `-` are considered positionals.
+
+    Example: `rm file.txt`, where `file.txt` is a positional argument of `rm`.
+
+- Commands are a special case of positional arguments in which they exactly match the name of some program added as command.
+
+    Example: `git clone <clone args...>`, where `clone` is a command of `git`.
+  
+- An argument starting with a single `-` followed by one or more letters can be
+    one short flag or many short flags together if all characters match the abbreviation of existing flags;
+    or a short option immediately followed by its value if the first character matches the abbreviation of an existing option.
+    In the case of an option, the value may be optionally preceded by `=` or it can be the next argument in the command-line.
+
+    Example:
+
+    - `pip -h`, where `h` is a flag of `pip`.
+
+    - `tar -vxz`, where `vxz` are three flags of `tar`.
+
+    - `g++ -O2` or `g++ -O=2`, where `O` is an option of `g++` and `2` is its value.
+
+        Note that both `-O2` and `-O=2` are a single argument.
+
+    - `curl -X GET`, where `X` is an option of `curl` and `GET` is its value.
+
+        This is a special case in which the argument (`-X`) is an existing option and the argument that immediately follows it would be parsed as a positional argument.
+    
+    Passing arguments like `set -euxo pipefail` **is intentionally not supported**.
+    The format `-abc` **always** means many flags together or an option `a` followed by its value `bc`.
+
+- An argument starting with two `-` followed by any number of characters is either a flag or an option.
+   it is considered a flag If the name exactly matches an existing flag, otherwise it is considered an option.
+   In the case of an option, the value may be optionally preceded by `=` or it can be the next argument in the command-line.
+
+    Example:
+
+    - `pip --help`, where `help` is a flag of `pip`.
+
+    - `wget --timeout=10`, where `timeout` is an option of `wget` and `10` is its value.
+
+        Note that `--timeout=10` is a single argument and `--timeout10` would not work the same way (it would be parsed as a flag).
+
+    - `wget --user-agent Firefox`, where `user-agent` is an option of `wget` and `Firefox` is its value.
+
+        Similarly to short flags and options, this is a special case in which the argument (`--user-agent`) is an existing option and the argument that immediately follows it would be parsed as a positional argument.
+
+- An argument that is exactly `--` indicates that everything that follows should always be parsed as positional arguments.
