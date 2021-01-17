@@ -219,7 +219,7 @@ std::size_t assign_command(ArgMap &map, std::span<char const *> args, ProgramVie
   auto const exec_path = fmt::format("{} {}", map.exec_path, cmd.metadata.name);
   args[0] = exec_path.data();
   map.cmd_name = cmd.metadata.name;
-  map.cmd_args = std::make_shared<ArgMap>(std::move(parse(cmd, args)));
+  map.cmd_args = std::make_shared<ArgMap>(parse(cmd, args));
   return args.size();
 }
 
