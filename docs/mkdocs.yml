@@ -23,7 +23,7 @@ nav:
   - Home: index.md
   - User guide:
     - user-guide/the-basics.md
-    - user-guide/beyond-basics.md
+    - user-guide/customizing-program.md
     - user-guide/running-with-docker.md
 
 extra_css:

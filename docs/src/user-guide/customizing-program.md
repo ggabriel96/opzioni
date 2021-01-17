@@ -1,6 +1,4 @@
-# Beyond the basics
-
-## `Program`
+# Customizing programs
 
 The following sections explain the various attributes of `Program` and how to set them via the provided member functions.
 
@@ -9,6 +7,7 @@ They are actually member variables of the `ProgramMetadata` class, held in the `
 
 This detail deserves a longer explanation somewhere else, so to keep things short here, it suffices to say that it serves the purpose of having a common data structure between `Program` and `ProgramView`.
 `ProgramView` is like a `std::string_view`, but for `Program`, and all program data is accessible through it, including its arguments and commands.
+
 
 ### `name`
 
@@ -34,6 +33,7 @@ Options & Flags:
     -h, --help    Display this information
 ```
 
+
 ### `title`
 
 The `title` is like the headline of the program.
@@ -56,6 +56,7 @@ Usage:
 Options & Flags:
     -h, --help    Display this information
 ```
+
 
 ### `version`
 
@@ -82,16 +83,17 @@ Options & Flags:
     -h, --help    Display this information
 ```
 
+
 ### `introduction`
 
 `introduction` is what goes between the program name and its list of arguments.
-So, for example, it can be used as an actual introduction to the program and what is does, or some message about its usage.
+So, for example, it can be used as an actual introduction to the program and what it does, or some message about its usage.
 It is specified via the `intro` member function.
 
-It has a special purpose too, though.
+It has a special purpose, though.
 The introduction is used as the description for commands in the automatic help text of their parent program.
 In that case, an actual introduction is recommended.
-So an introduction like in the example below is OK if the program is the root program.
+So an introduction like the one in the example below is OK if the program is the root program.
 It's also best to keep it short (2 or 3 lines maximum).
 
 ```cpp
@@ -114,6 +116,7 @@ Usage:
 Options & Flags:
     -h, --help    Display this information
 ```
+
 
 ### `details`
 
@@ -149,6 +152,7 @@ Options & Flags:
 Email bug reports, questions, discussions to <bug-wget@gnu.org> and/or open issues at
 https://savannah.gnu.org/bugs/?func=additem&group=wget.
 ```
+
 
 ### `msg_width`
 
@@ -189,13 +193,14 @@ It is a best-effort, though, so don't make it too narrow.
 If the maximum width is not enough for long words (like the URL above), they will be printed in a dedicated line anyway
 (try this last snippet with a maximum width of 32).
 
+
 ### `error_handler`
 
 `error_handler` determines how the program behaves when a user error occurs.
 This doesn't affect the automatic help text.
 
 The default is to print the error message and the usage of the program.
-Change it via the `on_error` member function.
+Changing it is done via the `on_error` member function.
 For example, to only print the error message:
 
 ```cpp
@@ -217,7 +222,7 @@ The argument to `on_error` must be of the `ErrorHandler` type, which is actually
 using ErrorHandler = int (*)(ProgramView const, UserError const &);
 ```
 
-`ProgramView` was introduced [earlier](#program).
+`ProgramView` was introduced [earlier](#customizing-programs).
 
 `UserError` is the base class of the exceptions that are thrown when a user error occurs (user as in user of the command-line program).
 All opzioni exceptions inherit from `std::exception`, so the error message can be obtained via their `what` member function.
