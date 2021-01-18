@@ -330,6 +330,9 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 }
 
 consteval void validate_arg(Arg const &arg) noexcept {
+  if (arg.name.empty())
+    throw "An argument cannot have an empty name";
+
   if (arg.type == ArgType::POS && arg.has_abbrev())
     throw "Positionals cannot have abbreviations";
 
