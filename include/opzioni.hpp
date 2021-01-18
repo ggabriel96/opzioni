@@ -340,9 +340,10 @@ consteval void validate_arg(Arg const &arg) noexcept {
     throw "Abbreviations must be a single letter";
 
   if (!is_valid_name(arg.name))
-    throw "Argument name is invalid. Names can only contain alphanumeric characters and - or _";
-  if (!is_valid_name(arg.abbrev))
-    throw "Argument abbreviation is invalid. Names can only contain alphanumeric characters and - or _";
+    throw "Argument names can only contain alphanumeric characters and - or _";
+
+  if (!is_valid_abbrev(arg.abbrev))
+    throw "Argument abbreviations can only contain alphanumeric characters";
 
   if (arg.type == ArgType::POS && arg.has_set())
     throw "Positionals cannot use set value because they always take a value from the command-line";

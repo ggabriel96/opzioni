@@ -11,7 +11,8 @@ namespace opzioni {
 
 constexpr char nl = '\n';
 constexpr std::string_view whitespace = " \f\n\r\t\v";
-constexpr std::string_view valid_name_chars = "0123456789_ABCDEFGHIJKLMNOPQRSTUVWXYZ-abcdefghijklmnopqrstuvwxyz";
+constexpr std::string_view valid_name_chars = "-_0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+constexpr std::string_view valid_abbrev_chars = valid_name_chars.substr(2);
 
 std::string_view trim(std::string_view) noexcept;
 
@@ -42,7 +43,12 @@ constexpr bool contains(std::string_view const str, char const ch) noexcept {
 }
 
 constexpr bool is_valid_name(std::string_view name) noexcept {
+  // name is valid if there is no character that is not in `valid_name_chars`
   return std::ranges::find_if(name, [](char const ch) { return !contains(valid_name_chars, ch); }) == name.end();
+}
+
+constexpr bool is_valid_abbrev(std::string_view abbrev) noexcept {
+  return abbrev.length() == 0 || contains(valid_abbrev_chars, abbrev[0]);
 }
 
 } // namespace opzioni
