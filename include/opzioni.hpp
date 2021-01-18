@@ -337,7 +337,7 @@ consteval void validate_arg(Arg const &arg) noexcept {
     throw "Positionals cannot have abbreviations";
 
   if (arg.has_abbrev() && arg.abbrev.length() != 1)
-    throw "Abbreviations must be a single letter";
+    throw "Abbreviations must be a single character";
 
   if (!is_valid_name(arg.name))
     throw "Argument names can only contain alphanumeric characters and - or _";
