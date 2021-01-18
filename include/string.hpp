@@ -43,8 +43,9 @@ constexpr bool contains(std::string_view const str, char const ch) noexcept {
 }
 
 constexpr bool is_valid_name(std::string_view name) noexcept {
-  // name is valid if there is no character that is not in `valid_name_chars`
-  return std::ranges::find_if(name, [](char const ch) { return !contains(valid_name_chars, ch); }) == name.end();
+  // name is valid if it doesn't begin with - or _ and there is no character in it that is not in `valid_name_chars`
+  return name.length() > 0 && name[0] != '-' && name[0] != '_' &&
+         std::ranges::find_if(name, [](char const ch) { return !contains(valid_name_chars, ch); }) == name.end();
 }
 
 constexpr bool is_valid_abbrev(std::string_view abbrev) noexcept {
