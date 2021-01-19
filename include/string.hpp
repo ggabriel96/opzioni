@@ -43,8 +43,8 @@ constexpr bool contains(std::string_view const str, char const ch) noexcept {
 }
 
 constexpr bool is_valid_name(std::string_view name) noexcept {
-  // name is valid if it doesn't begin with - or _ and there is no character in it that is not in `valid_name_chars`
-  return name.length() > 0 && name[0] != '-' && name[0] != '_' &&
+  // name is valid if it begins with a letter and there is no character in it that is not in `valid_name_chars`
+  return name.length() > 0 && ((name[0] >= 'A' && name[0] <= 'Z') || (name[0] >= 'a' && name[0] <= 'z')) &&
          std::ranges::find_if(name, [](char const ch) { return !contains(valid_name_chars, ch); }) == name.end();
 }
 
