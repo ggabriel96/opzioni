@@ -340,7 +340,8 @@ consteval void validate_arg(Arg const &arg) noexcept {
     throw "Abbreviations must be a single character";
 
   if (!is_valid_name(arg.name))
-    throw "Argument names can only contain alphanumeric characters and - or _ (and must begin with a letter)";
+    throw "Argument names can only contain alphanumeric characters and - or _,"
+          "and must begin with a letter and end with a letter or a number";
 
   if (!is_valid_abbrev(arg.abbrev))
     throw "Argument abbreviations can only contain alphanumeric characters";
