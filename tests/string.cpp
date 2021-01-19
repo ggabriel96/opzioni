@@ -227,3 +227,95 @@ SCENARIO("is_valid_name", "[string]") {
     REQUIRE(is_valid_name("a\\a") == false);
   }
 }
+
+SCENARIO("is_valid_abbrev", "[string]") {
+  using namespace opzioni;
+
+  GIVEN("valid abbreviations") {
+    REQUIRE(is_valid_abbrev("") == true);
+    REQUIRE(is_valid_abbrev("0") == true);
+    REQUIRE(is_valid_abbrev("1") == true);
+    REQUIRE(is_valid_abbrev("2") == true);
+    REQUIRE(is_valid_abbrev("3") == true);
+    REQUIRE(is_valid_abbrev("4") == true);
+    REQUIRE(is_valid_abbrev("5") == true);
+    REQUIRE(is_valid_abbrev("6") == true);
+    REQUIRE(is_valid_abbrev("7") == true);
+    REQUIRE(is_valid_abbrev("8") == true);
+    REQUIRE(is_valid_abbrev("9") == true);
+    REQUIRE(is_valid_abbrev("a") == true);
+    REQUIRE(is_valid_abbrev("A") == true);
+    REQUIRE(is_valid_abbrev("\0") == true); // apparently there's nothing I can do about this!?
+  }
+
+  GIVEN("invalid abbreviations") {
+    REQUIRE(is_valid_abbrev("-") == false);
+    REQUIRE(is_valid_abbrev("_") == false);
+
+    REQUIRE(is_valid_abbrev("`") == false);
+    REQUIRE(is_valid_abbrev("~") == false);
+    REQUIRE(is_valid_abbrev("!") == false);
+    REQUIRE(is_valid_abbrev("@") == false);
+    REQUIRE(is_valid_abbrev("#") == false);
+    REQUIRE(is_valid_abbrev("$") == false);
+    REQUIRE(is_valid_abbrev("%") == false);
+    REQUIRE(is_valid_abbrev("^") == false);
+    REQUIRE(is_valid_abbrev("&") == false);
+    REQUIRE(is_valid_abbrev("*") == false);
+    REQUIRE(is_valid_abbrev("(") == false);
+    REQUIRE(is_valid_abbrev(")") == false);
+    REQUIRE(is_valid_abbrev("=") == false);
+    REQUIRE(is_valid_abbrev("+") == false);
+    REQUIRE(is_valid_abbrev("[") == false);
+    REQUIRE(is_valid_abbrev("]") == false);
+    REQUIRE(is_valid_abbrev("{") == false);
+    REQUIRE(is_valid_abbrev("}") == false);
+    REQUIRE(is_valid_abbrev("|") == false);
+    REQUIRE(is_valid_abbrev(";") == false);
+    REQUIRE(is_valid_abbrev(":") == false);
+    REQUIRE(is_valid_abbrev("'") == false);
+    REQUIRE(is_valid_abbrev(",") == false);
+    REQUIRE(is_valid_abbrev(".") == false);
+    REQUIRE(is_valid_abbrev("<") == false);
+    REQUIRE(is_valid_abbrev(">") == false);
+    REQUIRE(is_valid_abbrev("/") == false);
+    REQUIRE(is_valid_abbrev("?") == false);
+    REQUIRE(is_valid_abbrev("\"") == false);
+    REQUIRE(is_valid_abbrev("\\") == false);
+
+    REQUIRE(is_valid_abbrev(" ") == false);
+    REQUIRE(is_valid_abbrev("\f") == false);
+    REQUIRE(is_valid_abbrev("\n") == false);
+    REQUIRE(is_valid_abbrev("\r") == false);
+    REQUIRE(is_valid_abbrev("\t") == false);
+    REQUIRE(is_valid_abbrev("\v") == false);
+
+    REQUIRE(is_valid_abbrev("aa") == false);
+    REQUIRE(is_valid_abbrev("aA") == false);
+    REQUIRE(is_valid_abbrev("a0") == false);
+    REQUIRE(is_valid_abbrev("a-") == false);
+    REQUIRE(is_valid_abbrev("a_") == false);
+    REQUIRE(is_valid_abbrev("a ") == false);
+
+    REQUIRE(is_valid_abbrev("Aa") == false);
+    REQUIRE(is_valid_abbrev("AA") == false);
+    REQUIRE(is_valid_abbrev("A0") == false);
+    REQUIRE(is_valid_abbrev("A-") == false);
+    REQUIRE(is_valid_abbrev("A_") == false);
+    REQUIRE(is_valid_abbrev("A ") == false);
+
+    REQUIRE(is_valid_abbrev("0a") == false);
+    REQUIRE(is_valid_abbrev("0A") == false);
+    REQUIRE(is_valid_abbrev("00") == false);
+    REQUIRE(is_valid_abbrev("0-") == false);
+    REQUIRE(is_valid_abbrev("0_") == false);
+    REQUIRE(is_valid_abbrev("0 ") == false);
+
+    REQUIRE(is_valid_abbrev(" a") == false);
+    REQUIRE(is_valid_abbrev(" A") == false);
+    REQUIRE(is_valid_abbrev(" 0") == false);
+    REQUIRE(is_valid_abbrev(" -") == false);
+    REQUIRE(is_valid_abbrev(" _") == false);
+    REQUIRE(is_valid_abbrev("  ") == false);
+  }
+}
