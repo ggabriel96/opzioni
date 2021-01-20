@@ -525,7 +525,7 @@ public:
   consteval Program(std::string_view name) : Program(name, {}) {}
   consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {
     if (!is_valid_name(name))
-      throw "Program names can only contain alphanumeric characters and - or _,"
+      throw "Program names cannot be empty, can only contain alphanumeric characters and - or _,"
             "and must begin with a letter and end with a letter or a number";
   }
 
