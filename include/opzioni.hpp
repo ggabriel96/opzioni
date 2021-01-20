@@ -523,7 +523,11 @@ public:
   std::array<ProgramView, CmdsSize> cmds;
 
   consteval Program(std::string_view name) : Program(name, {}) {}
-  consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {}
+  consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {
+    if (!is_valid_name(name))
+      throw "Program names can only contain alphanumeric characters and - or _,"
+            "and must begin with a letter and end with a letter or a number";
+  }
 
   template <std::size_t OtherArgsSize, std::size_t OtherCmdsSize>
   consteval Program(Program<OtherArgsSize, OtherCmdsSize> const &other) : metadata(other.metadata) {
