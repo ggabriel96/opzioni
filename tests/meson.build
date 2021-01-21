@@ -17,7 +17,13 @@ program_test = executable(
     ['catch2_main.cpp', 'opzioni.program.cpp'],
     dependencies: test_deps
 )
+string_test = executable(
+    'string',
+    ['catch2_main.cpp', 'string.cpp'],
+    dependencies: test_deps
+)
 
 test('arg', arg_test)
 test('converters', converters_test)
 test('program', program_test)
+test('string', string_test)

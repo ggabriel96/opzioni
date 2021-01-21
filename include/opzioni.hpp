@@ -330,17 +330,27 @@ consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcep
 }
 
 consteval void validate_arg(Arg const &arg) noexcept {
+  if (arg.name.empty())
+    throw "An argument cannot have an empty name";
+
   if (arg.type == ArgType::POS && arg.has_abbrev())
     throw "Positionals cannot have abbreviations";
+
+  if (arg.has_abbrev() && arg.abbrev.length() != 1)
+    throw "Abbreviations must be a single character";
+
+  if (!is_valid_name(arg.name))
+    throw "Argument names can only contain alphanumeric characters and - or _,"
+          "and must begin with a letter and end with a letter or a number";
+
+  if (!is_valid_abbrev(arg.abbrev))
+    throw "Argument abbreviations can only contain alphanumeric characters";
 
   if (arg.type == ArgType::POS && arg.has_set())
     throw "Positionals cannot use set value because they always take a value from the command-line";
 
   if (arg.type == ArgType::FLG && arg.gather_amount != 1) // 1 is the default
     throw "Flags cannot use gather because they do not take values from the command-line";
-
-  if (arg.has_abbrev() && arg.abbrev.length() != 1)
-    throw "Abbreviations must be a single letter";
 
   if (arg.is_required && arg.has_default())
     throw "A required argument cannot have a default value";
@@ -367,28 +377,30 @@ consteval void validate_args(std::array<Arg, N> const &args, Arg const &other) n
 // +----------------------+
 
 consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
-  if (!abbrev.empty() && abbrev.length() != 1)
-    throw "Abbreviations must be a single letter";
-  return Arg{.type = ArgType::FLG,
-             .name = name,
-             .abbrev = abbrev,
-             .default_value = false,
-             .set_value = true,
-             .action_fn = actions::assign<bool>};
+  auto const arg = Arg{.type = ArgType::FLG,
+                       .name = name,
+                       .abbrev = abbrev,
+                       .default_value = false,
+                       .set_value = true,
+                       .action_fn = actions::assign<bool>};
+  validate_arg(arg);
+  return arg;
 }
 
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
-  if (!abbrev.empty() && abbrev.length() != 1)
-    throw "Abbreviations must be a single letter";
-  return Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
+  auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
+  validate_arg(arg);
+  return arg;
 }
 
 consteval Arg Opt(std::string_view name) noexcept { return Opt(name, {}); }
 
 consteval Arg Pos(std::string_view name) noexcept {
-  return Arg{.type = ArgType::POS, .name = name, .is_required = true};
+  auto const arg = Arg{.type = ArgType::POS, .name = name, .is_required = true};
+  validate_arg(arg);
+  return arg;
 }
 
 consteval Arg Help(std::string_view description) noexcept {
@@ -511,7 +523,11 @@ public:
   std::array<ProgramView, CmdsSize> cmds;
 
   consteval Program(std::string_view name) : Program(name, {}) {}
-  consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {}
+  consteval Program(std::string_view name, std::string_view title) : metadata{.name = name, .title = title} {
+    if (!is_valid_name(name))
+      throw "Program names cannot be empty, can only contain alphanumeric characters and - or _,"
+            "and must begin with a letter and end with a letter or a number";
+  }
 
   template <std::size_t OtherArgsSize, std::size_t OtherCmdsSize>
   consteval Program(Program<OtherArgsSize, OtherCmdsSize> const &other) : metadata(other.metadata) {
