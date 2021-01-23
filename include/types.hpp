@@ -50,7 +50,7 @@ struct VectorOf<TypeList<Ts...>> {
   using type = TypeList<std::vector<Ts>...>;
 };
 
-// types that may be used as default_value and set_value
+// types that may be used as default_value and implicit_value
 using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
 using BuiltinVariant = VariantOf<BuiltinTypes>::type;
 

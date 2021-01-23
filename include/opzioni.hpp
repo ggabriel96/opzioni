@@ -171,7 +171,7 @@ struct Arg {
   std::string_view description{};
   bool is_required = false;
   BuiltinVariant default_value{};
-  BuiltinVariant set_value{};
+  BuiltinVariant implicit_value{};
   actions::Signature action_fn = actions::assign<std::string_view>;
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
@@ -184,7 +184,7 @@ struct Arg {
 
   template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg append() const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
     arg.action_fn = actions::append<Elem>;
     if (!this->is_required)
       arg.default_setter = set_empty_vector<Elem>;
@@ -195,7 +195,7 @@ struct Arg {
   consteval Arg csv() const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use the csv action because they do not take values from the command-line";
-    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
     arg.action_fn = actions::csv<Elem>;
     if (!this->is_required)
       arg.default_setter = set_empty_vector<Elem>;
@@ -206,7 +206,7 @@ struct Arg {
   consteval Arg gather(std::size_t amount) const noexcept {
     if (this->type == ArgType::FLG)
       throw "Flags cannot use gather because they do not take values from the command-line";
-    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
     arg.gather_amount = amount;
     arg.action_fn = actions::append<Elem>;
     if (!this->is_required)
@@ -234,7 +234,7 @@ struct Arg {
 
   template <concepts::BuiltinType T>
   consteval Arg otherwise(T value) const noexcept {
-    auto arg = Arg::With(*this, value, this->set_value);
+    auto arg = Arg::With(*this, value, this->implicit_value);
     arg.action_fn = actions::assign<T>;
     arg.default_setter = nullptr;
     arg.is_required = false;
@@ -244,33 +244,33 @@ struct Arg {
   consteval Arg otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
 
   consteval Arg otherwise(DefaultValueSetter setter) const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
     arg.default_setter = setter;
     arg.is_required = false;
     return arg;
   }
 
   consteval Arg required() const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->set_value);
+    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
     arg.default_setter = nullptr;
     arg.is_required = true;
     return arg;
   }
 
   template <concepts::BuiltinType T>
-  consteval Arg set(T value) const noexcept {
+  consteval Arg implicitly(T value) const noexcept {
     if (this->type == ArgType::POS)
-      throw "Positionals cannot use set value because they always take a value from the command-line";
+      throw "Positionals cannot use implicit value because they always take a value from the command-line";
     auto arg = Arg::With(*this, this->default_value, value);
     arg.action_fn = actions::assign<T>;
     return arg;
   }
 
-  consteval Arg set(char const *value) const noexcept { return set(std::string_view(value)); }
+  consteval Arg implicitly(char const *value) const noexcept { return implicitly(std::string_view(value)); }
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
-  constexpr bool has_set() const noexcept { return set_value.index() != 0; }
+  constexpr bool has_implicit() const noexcept { return implicit_value.index() != 0; }
   constexpr bool is_positional() const noexcept { return type == ArgType::POS; }
 
   void set_default_to(ArgValue &arg) const noexcept {
@@ -288,14 +288,14 @@ struct Arg {
   std::string format_for_usage_summary() const noexcept;
 
   // workaround for not being able to change the value of a variant after it's been constructed
-  static consteval Arg With(Arg const &other, BuiltinVariant default_value, BuiltinVariant set_value) noexcept {
+  static consteval Arg With(Arg const &other, BuiltinVariant default_value, BuiltinVariant implicit_value) noexcept {
     return Arg{.type = other.type,
                .name = other.name,
                .abbrev = other.abbrev,
                .description = other.description,
                .is_required = other.is_required,
                .default_value = default_value,
-               .set_value = set_value,
+               .implicit_value = implicit_value,
                .action_fn = other.action_fn,
                .gather_amount = other.gather_amount,
                .default_setter = other.default_setter};
@@ -346,8 +346,8 @@ consteval void validate_arg(Arg const &arg) noexcept {
   if (!is_valid_abbrev(arg.abbrev))
     throw "Argument abbreviations can only contain alphanumeric characters";
 
-  if (arg.type == ArgType::POS && arg.has_set())
-    throw "Positionals cannot use set value because they always take a value from the command-line";
+  if (arg.type == ArgType::POS && arg.has_implicit())
+    throw "Positionals cannot use implicit value because they always take a value from the command-line";
 
   if (arg.type == ArgType::FLG && arg.gather_amount != 1) // 1 is the default
     throw "Flags cannot use gather because they do not take values from the command-line";
@@ -358,9 +358,9 @@ consteval void validate_arg(Arg const &arg) noexcept {
   if (!arg.is_required && !arg.has_default())
     throw "An optional argument must have a default value";
 
-  if (arg.default_value.index() != 0 && arg.set_value.index() != 0 &&
-      arg.default_value.index() != arg.set_value.index())
-    throw "The default and set values must be of the same type";
+  if (arg.default_value.index() != 0 && arg.implicit_value.index() != 0 &&
+      arg.default_value.index() != arg.implicit_value.index())
+    throw "The default and implicit values must be of the same type";
 
   if (arg.default_value.index() != 0 && arg.default_setter != nullptr)
     throw "An argument cannot have a default value and a default value setter at the same time";
@@ -381,7 +381,7 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
                        .name = name,
                        .abbrev = abbrev,
                        .default_value = false,
-                       .set_value = true,
+                       .implicit_value = true,
                        .action_fn = actions::assign<bool>};
   validate_arg(arg);
   return arg;
@@ -681,7 +681,7 @@ void assign(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::s
   if (arg.type != ArgType::FLG && parsed_value)
     assign_to(map, arg.name, convert<T>(*parsed_value));
   else
-    assign_to(map, arg.name, std::get<T>(arg.set_value));
+    assign_to(map, arg.name, std::get<T>(arg.implicit_value));
 }
 
 // +--------+
@@ -702,7 +702,7 @@ void append(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::s
   if (arg.type != ArgType::FLG && parsed_value)
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
-    append_to<Elem>(map, arg.name, std::get<Elem>(arg.set_value));
+    append_to<Elem>(map, arg.name, std::get<Elem>(arg.implicit_value));
 }
 
 // +-----+

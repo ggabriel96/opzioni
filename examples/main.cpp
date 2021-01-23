@@ -28,19 +28,20 @@ int main(int argc, char const *argv[]) {
                                      "comma-separated list of values. Default: {default_value}") *
           Opt("verbose", "v")
               .help("Level of verbosity. "
-                    "Sets to {set_value} if given without a value (e.g. -{abbrev}). Default: {default_value}")
-              .set(1)
+                    "Sets to {implicit_value} if given without a value (e.g. -{abbrev}). Default: {default_value}")
+              .implicitly(1)
               .otherwise(0) *
           Flg("append", "a")
-              .set(1)
+              .implicitly(1)
               .append<int>()
-              .help("The equivalent of Python's argparse `append_const`: will append {set_value} every time it "
+              .help("The equivalent of Python's argparse `append_const`: will append {implicit_value} every time it "
                     "appears in the CLI. Default: {default_value}") *
           Flg("flag", "f")
-              .set("do something!")
+              .implicitly("do something!")
               .otherwise("nope")
-              .help("The equivalent of Python's argparse `store_const`: will store \"{set_value}\" if it appears in "
-                    "the CLI. Default: {default_value}") *
+              .help(
+                  "The equivalent of Python's argparse `store_const`: will store \"{implicit_value}\" if it appears in "
+                  "the CLI. Default: {default_value}") *
           Flg("t").help("We also support flags with only short names. Default: {default_value}").otherwise(false);
 
   auto const args = program(argc, argv);

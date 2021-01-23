@@ -44,7 +44,7 @@ std::string Arg::format_base_usage() const noexcept {
   auto const dashes = name.length() > 1 ? "--" : "-";
   if (type == ArgType::OPT) {
     auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
-    if (has_set())
+    if (has_implicit())
       val = "[" + val + "]";
     return fmt::format("{}{} {}", dashes, name, val);
   }
@@ -53,14 +53,14 @@ std::string Arg::format_base_usage() const noexcept {
 }
 
 std::string Arg::format_for_help_description() const noexcept {
-  auto const format = [this](auto const &default_value, auto const &set_value) {
+  auto const format = [this](auto const &default_value, auto const &implicit_value) {
     return fmt::format(description, fmt::arg("name", this->name), fmt::arg("abbrev", this->abbrev),
-                       fmt::arg("default_value", default_value), fmt::arg("set_value", set_value),
+                       fmt::arg("default_value", default_value), fmt::arg("implicit_value", implicit_value),
                        fmt::arg("gather_amount", this->gather_amount));
   };
   ArgValue default_value{};
   set_default_to(default_value); // gotta use this because of DefaultValueSetter
-  return std::visit(format, default_value.value, this->set_value);
+  return std::visit(format, default_value.value, this->implicit_value);
 }
 
 std::string Arg::format_for_help_index() const noexcept {
@@ -273,7 +273,7 @@ std::size_t assign_option(ProgramView const program, ArgMap &map, std::span<char
       ++count;
     } while (count < gather_amount);
     return gather_amount + 1;
-  } else if (arg.has_set()) {
+  } else if (arg.has_implicit()) {
     arg.action_fn(program, map, arg, std::nullopt);
     return 1;
   } else {
