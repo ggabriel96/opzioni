@@ -3,7 +3,7 @@
 all: install configure build test
 
 install:
-	conan install -if build/ -b missing -s compiler.libcxx=libstdc++11 .
+	conan install -if build/ -b missing -s compiler=gcc -s compiler.version=10 -s compiler.libcxx=libstdc++11 .
 
 configure:
 	meson setup --build.pkg-config-path=build/ -Dexamples=True build/
