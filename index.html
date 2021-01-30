@@ -294,35 +294,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    Getting started
+  <a href="#license" class="md-nav__link">
+    License
   </a>
-  
-    <nav class="md-nav" aria-label="Getting started">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tldr" class="md-nav__link">
-    TLDR
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    Dependencies
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    License
+  <a href="#acknowledgements" class="md-nav__link">
+    Acknowledgements
   </a>
   
 </li>
@@ -448,35 +428,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    Getting started
+  <a href="#license" class="md-nav__link">
+    License
   </a>
-  
-    <nav class="md-nav" aria-label="Getting started">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tldr" class="md-nav__link">
-    TLDR
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    Dependencies
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    License
+  <a href="#acknowledgements" class="md-nav__link">
+    Acknowledgements
   </a>
   
 </li>
@@ -619,48 +579,14 @@ Hello, Gabriel Galli!
 </code></pre></div>
 </li>
 </ol>
-<h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
-<p>opzioni is not published anywhere yet.
-The goal is to eventually make it available on:</p>
-<ul>
-<li><a href="https://conan.io/">Conan</a></li>
-<li><a href="https://github.com/microsoft/vcpkg">vcpkg</a></li>
-<li>Meson's <a href="https://wrapdb.mesonbuild.com/">Wrap DB</a></li>
-<li><a href="https://conda-forge.org/">conda-forge</a></li>
-<li><a href="https://spack.io/">Spack</a></li>
-</ul>
-<p>Meanwhile, there are a few options to build and try it out. See the TLDR below.</p>
-<h3 id="tldr">TLDR<a class="headerlink" href="#tldr" title="Permanent link">&para;</a></h3>
-<p>There are few options to get up to speed on building opzioni:</p>
-<ul>
-<li>
-<p>If you're familiar with Docker, there is a <code>Dockerfile</code> and a <code>docker-compose.yml</code> in <a href="https://github.com/ggabriel96/opzioni/blob/main/.devcontainer/"><code>.devcontainer/</code></a>.
-    Also, the project is already configured to work with <a href="https://code.visualstudio.com/docs/remote/containers">VS Code Remote Containers</a>.</p>
-</li>
-<li>
-<p>If you're familiar with <a href="https://nixos.org/">NixOS</a>, there is a <a href="https://github.com/ggabriel96/opzioni/blob/main/shell.nix"><code>shell.nix</code></a> ready to use.</p>
-</li>
-</ul>
-<p>Once in your chosen environment, simply run <code>make</code>.
-That should download the build dependencies with Conan and build the whole project with Meson and ninja.
-The <a href="https://github.com/ggabriel96/opzioni/blob/main/Makefile"><code>Makefile</code></a> is just a simple helper to avoid having to remember all the commands.</p>
-<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
-<p>All dependencies below might still work if on earlier minor versions, but I'm not sure.
-I still gotta pin them (except for <code>fmt</code> and <code>Catch2</code>, which are somewhat pinned in the build definitions).
-<strong>I always try to go for the latest versions.</strong></p>
-<ul>
-<li>GCC &gt;= 10.2. Concepts and Ranges support is required.</li>
-<li><a href="https://mesonbuild.com/">meson</a> &gt;= 0.50 (gotta check that)</li>
-<li><a href="https://ninja-build.org/">ninja</a> &gt;= 1.10</li>
-<li><a href="https://fmt.dev/">fmt</a> &gt;= 7.0.3</li>
-<li><a href="https://github.com/catchorg/Catch2/">Catch2</a> &gt;= 2.13.0</li>
-<li>ClangFormat 10 if willing to apply the formatting as checked in CI</li>
-</ul>
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>opzioni's license is the <a href="https://github.com/ggabriel96/opzioni/blob/main/LICENSE">Boost Software License (BSL) 1.0</a>.</p>
 <p>This means you are <strong>free to use</strong> this library <strong>as you wish</strong> and see fit.</p>
 <p>It is only needed to provide a copy of the license if the source is also being distributed.</p>
 <p>In other words, <strong>there is no need to bundle opzioni's license with your binary</strong>.</p>
+<h2 id="acknowledgements">Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permanent link">&para;</a></h2>
+<p><a href="https://www.jetbrains.com/?from=opzioni"><img alt="" src="assets/images/jetbrains-variant-3.svg" /></a></p>
+<p>Thank you to <a href="https://www.jetbrains.com/?from=opzioni">JetBrains</a> for supporting this project by providing free access to its products as part of the Open Source Licenses program.</p>
 <!-- links -->
                 
               
