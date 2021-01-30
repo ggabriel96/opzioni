@@ -172,6 +172,12 @@ It is only needed to provide a copy of the license if the source is also being d
 
 In other words, **there is no need to bundle opzioni's license with your binary**.
 
+## Acknowledgements
+
+[![](docs/src/assets/images/jetbrains-variant-3.svg)](https://www.jetbrains.com/?from=opzioni)
+
+Thank you to [JetBrains](https://www.jetbrains.com/?from=opzioni) for supporting this project by providing free access to its products as part of the Open Source Licenses program.
+
 <!-- links -->
 [issues/5]: https://github.com/ggabriel96/opzioni/issues/5
 [examples/hello]: https://github.com/ggabriel96/opzioni/blob/main/examples/hello.cpp
