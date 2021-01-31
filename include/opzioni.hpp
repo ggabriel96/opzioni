@@ -69,6 +69,8 @@ void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_
 template <concepts::BuiltinType Elem>
 void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
+void count(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
 template <concepts::BuiltinType Elem>
 void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
@@ -191,6 +193,16 @@ struct Arg {
     return arg;
   }
 
+  consteval Arg count() const noexcept {
+    if (this->type != ArgType::FLG)
+      throw "Count arguments must be flags";
+    auto arg = Arg::With(*this, std::monostate{}, std::monostate{});
+    arg.action_fn = actions::count;
+    if (this->is_required)
+      return arg;
+    return arg.otherwise(0);
+  }
+
   template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg csv() const noexcept {
     if (this->type == ArgType::FLG)
@@ -235,7 +247,7 @@ struct Arg {
   template <concepts::BuiltinType T>
   consteval Arg otherwise(T value) const noexcept {
     auto arg = Arg::With(*this, value, this->implicit_value);
-    arg.action_fn = actions::assign<T>;
+    //    arg.action_fn = actions::assign<T>;
     arg.default_setter = nullptr;
     arg.is_required = false;
     return arg;
@@ -703,6 +715,16 @@ void append(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::s
     append_to<Elem>(map, arg.name, convert<Elem>(*parsed_value));
   else
     append_to<Elem>(map, arg.name, std::get<Elem>(arg.implicit_value));
+}
+
+// +-------+
+// | count |
+// +-------+
+
+void count(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+  auto [it, inserted] = map.args.try_emplace(arg.name, 1);
+  if (!inserted)
+    it->second.value = std::get<int>(it->second.value) + 1;
 }
 
 // +-----+

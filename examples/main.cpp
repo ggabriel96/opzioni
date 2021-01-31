@@ -42,7 +42,7 @@ int main(int argc, char const *argv[]) {
               .help(
                   "The equivalent of Python's argparse `store_const`: will store \"{implicit_value}\" if it appears in "
                   "the CLI. Default: {default_value}") *
-          Flg("t").help("We also support flags with only short names. Default: {default_value}").otherwise(false);
+          Flg("t").help("We also support flags with only short names. Default: {default_value}").count();
 
   auto const args = program(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);
@@ -60,5 +60,5 @@ int main(int argc, char const *argv[]) {
 
   print("append: {}\n", args.has("append") ? args.as<std::vector<int>>("append") : std::vector<int>{});
   print("flag: {}\n", args.as<std::string_view>("flag"));
-  print("t: {}\n", args.as<bool>("t"));
+  print("t: {}\n", args.as<int>("t"));
 }
