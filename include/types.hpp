@@ -51,7 +51,7 @@ struct VectorOf<TypeList<Ts...>> {
 };
 
 // types that may be used as default_value and implicit_value
-using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::string_view>;
+using BuiltinTypes = TypeList<std::monostate, bool, int, double, std::size_t, std::string_view>;
 using BuiltinVariant = VariantOf<BuiltinTypes>::type;
 
 // types that may be the result of parsing the CLI

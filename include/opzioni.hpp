@@ -198,7 +198,7 @@ struct Arg {
       throw "Count arguments must be flags";
     auto arg = Arg::With(*this, std::monostate{}, std::monostate{});
     if (!this->is_required)
-      arg = arg.otherwise(0);
+      arg = arg.otherwise(std::size_t{0});
     arg.action_fn = actions::count;
     return arg;
   }
@@ -722,9 +722,9 @@ void append(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::s
 // +-------+
 
 void count(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
-  auto [it, inserted] = map.args.try_emplace(arg.name, 1);
+  auto [it, inserted] = map.args.try_emplace(arg.name, std::size_t{1});
   if (!inserted)
-    it->second.value = std::get<int>(it->second.value) + 1;
+    it->second.value = std::get<std::size_t>(it->second.value) + 1;
 }
 
 // +-----+

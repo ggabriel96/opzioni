@@ -60,5 +60,5 @@ int main(int argc, char const *argv[]) {
 
   print("append: {}\n", args.has("append") ? args.as<std::vector<int>>("append") : std::vector<int>{});
   print("flag: {}\n", args.as<std::string_view>("flag"));
-  print("t: {}\n", args.as<int>("t"));
+  print("t: {}\n", args.as<std::size_t>("t"));
 }
