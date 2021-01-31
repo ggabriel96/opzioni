@@ -197,10 +197,10 @@ struct Arg {
     if (this->type != ArgType::FLG)
       throw "Count arguments must be flags";
     auto arg = Arg::With(*this, std::monostate{}, std::monostate{});
+    if (!this->is_required)
+      arg = arg.otherwise(0);
     arg.action_fn = actions::count;
-    if (this->is_required)
-      return arg;
-    return arg.otherwise(0);
+    return arg;
   }
 
   template <concepts::BuiltinType Elem = std::string_view>
@@ -247,7 +247,7 @@ struct Arg {
   template <concepts::BuiltinType T>
   consteval Arg otherwise(T value) const noexcept {
     auto arg = Arg::With(*this, value, this->implicit_value);
-    //    arg.action_fn = actions::assign<T>;
+    arg.action_fn = actions::assign<T>;
     arg.default_setter = nullptr;
     arg.is_required = false;
     return arg;
