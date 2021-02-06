@@ -3,7 +3,7 @@ project(
     default_options: ['cpp_std=c++2a', 'buildtype=debug']
 )
 
-opzioni_dep = dependency('opzioni', version: '0.46.0')
+opzioni_dep = dependency('opzioni', version: '0.47.0')
 
 main = executable(
     'main', 'main.cpp',

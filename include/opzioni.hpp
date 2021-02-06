@@ -69,6 +69,8 @@ void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_
 template <concepts::BuiltinType Elem>
 void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
+void count(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
 template <concepts::BuiltinType Elem>
 void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
@@ -188,6 +190,16 @@ struct Arg {
     arg.action_fn = actions::append<Elem>;
     if (!this->is_required)
       arg.default_setter = set_empty_vector<Elem>;
+    return arg;
+  }
+
+  consteval Arg count() const noexcept {
+    if (this->type != ArgType::FLG)
+      throw "Count arguments must be flags";
+    auto arg = Arg::With(*this, std::monostate{}, std::monostate{});
+    if (!this->is_required)
+      arg = arg.otherwise(std::size_t{0});
+    arg.action_fn = actions::count;
     return arg;
   }
 

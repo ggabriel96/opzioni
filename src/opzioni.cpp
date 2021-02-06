@@ -486,6 +486,12 @@ void HelpFormatter::print_details() const noexcept {
 
 namespace actions {
 
+void count(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
+  auto [it, inserted] = map.args.try_emplace(arg.name, std::size_t{1});
+  if (!inserted)
+    it->second.value = std::get<std::size_t>(it->second.value) + 1;
+}
+
 void print_help(ProgramView const program, ArgMap &, Arg const &, std::optional<std::string_view> const) {
   print_full_help(program);
   std::exit(0);
