@@ -42,7 +42,8 @@ int main(int argc, char const *argv[]) {
               .help(
                   "The equivalent of Python's argparse `store_const`: will store \"{implicit_value}\" if it appears in "
                   "the CLI. Default: {default_value}") *
-          Flg("t").help("We also support flags with only short names. Default: {default_value}").count();
+          Flg("t").count().help("We also support flags with only short names. This argument counts how many times it "
+                                "appears in the CLI. Default: {default_value}");
 
   auto const args = program(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);
