@@ -184,6 +184,13 @@ struct Arg {
     return arg;
   }
 
+  template <concepts::BuiltinType T>
+  consteval Arg assign() const noexcept {
+    auto arg = *this;
+    arg.action_fn = actions::assign<T>;
+    return arg;
+  }
+
   template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg append() const noexcept {
     auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
@@ -234,13 +241,6 @@ struct Arg {
   consteval Arg help(std::string_view description) const noexcept {
     auto arg = *this;
     arg.description = description;
-    return arg;
-  }
-
-  template <concepts::BuiltinType T>
-  consteval Arg of() const noexcept {
-    auto arg = *this;
-    arg.action_fn = actions::assign<T>;
     return arg;
   }
 
