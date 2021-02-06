@@ -717,16 +717,6 @@ void append(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::s
     append_to<Elem>(map, arg.name, std::get<Elem>(arg.implicit_value));
 }
 
-// +-------+
-// | count |
-// +-------+
-
-void count(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
-  auto [it, inserted] = map.args.try_emplace(arg.name, std::size_t{1});
-  if (!inserted)
-    it->second.value = std::get<std::size_t>(it->second.value) + 1;
-}
-
 // +-----+
 // | csv |
 // +-----+
