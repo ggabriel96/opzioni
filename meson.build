@@ -8,7 +8,8 @@ project(
 # +--------------+
 # | Dependencies |
 # +--------------+
-fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
+fmt_proj = subproject('fmt', version: ['>=7.0.3', '<8.0.0'])
+fmt_dep = fmt_proj.get_variable('fmt_dep')
 
 # +--------------------+
 # | Library definition |
