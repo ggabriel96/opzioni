@@ -1,0 +1,11 @@
+# for use with conda (https://docs.conda.io/en/latest/miniconda.html):
+# conda env create -f environment.yml
+name: "opzioni"
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - clang-tools=10
+  - gxx_linux-64=10
+  - meson=0.59
+  - ninja=1.10
