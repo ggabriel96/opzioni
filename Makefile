@@ -1,12 +1,9 @@
-.PHONY: all install configure build test format clean create
+.PHONY: all setup-gcc build test format clean
 
-all: install configure build test
+all: setup-gcc build test
 
-install:
-	conan install -if build/ -b missing -s compiler=gcc -s compiler.version=10 -s compiler.libcxx=libstdc++11 .
-
-configure:
-	meson setup --build.pkg-config-path=build/ -Dexamples=True build/
+setup-gcc:
+	meson setup --native-file conda-gcc.ini -Dexamples=True build/
 
 build:
 	meson compile -C build/
@@ -15,14 +12,9 @@ test:
 	meson test -C build/ --print-errorlogs
 
 format:
-	clang-format --verbose -i $(shell find . -name '*.cpp') $(shell find . -name '*.hpp')
+	clang-format --verbose -i \
+		$(shell find . -path './subprojects' -prune , -name '*.cpp') \
+		$(shell find . -path './subprojects' -prune , -name '*.hpp')
 
 clean:
 	rm build/ -rf
-
-# --------------------
-# related to packaging
-# --------------------
-
-create:
-	conan create . opzioni/stable -b missing
