@@ -4,6 +4,10 @@ package/
 .cache/
 .ccls-cache/
 
+# Meson
+subprojects/*
+!subprojects/*.wrap
+
 # Conan
 *.pc
 conan.lock
