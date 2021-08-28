@@ -9,21 +9,16 @@ on:
       - main
 
 jobs:
-  build-on-gcc:
+  gcc:
     runs-on: ubuntu-latest
-    container:
-      image: conanio/gcc10:latest
-      options: -u root
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: '3.x'
+          activate-environment: opzioni
+          auto-activate-base: false
+          environment-file: environment.yml
 
-      - name: Install Meson and its dependencies
-        run: pip install meson ninja
-
-      - run: make install
-      - run: make configure
+      - run: make setup-gcc
       - run: make build
       - run: make test
