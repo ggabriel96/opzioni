@@ -11,7 +11,8 @@ conanbuildinfo.txt
 conaninfo.txt
 graph_info.json
 
-# VS Code
+# IDEs
+.idea/
 .vscode/
 
 # Prerequisites
