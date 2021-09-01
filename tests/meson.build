@@ -1,6 +1,4 @@
-catch2_proj = subproject('catch2', version: ['>=2.13.0', '<=3.0.0'])
-catch2_dep = catch2_proj.get_variable('catch2_dep')
-
+catch2_dep = dependency('catch2', version: ['>=2.13.0', '<=3.0.0'])
 test_deps = [opzioni_dep, catch2_dep]
 
 arg_test = executable(
