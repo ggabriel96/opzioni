@@ -6,7 +6,7 @@ channels:
   - defaults
 dependencies:
   - clang-tools=10
-  - gxx_linux-64=10
+  - gxx_impl_linux-64=10
   - make
   - meson=0.59
   - ninja=1.10
