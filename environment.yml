@@ -10,3 +10,6 @@ dependencies:
   - make
   - meson=0.59
   - ninja=1.10
+variables:
+  NM: x86_64-conda-linux-gnu-nm
+  READELF: x86_64-conda-linux-gnu-readelf
