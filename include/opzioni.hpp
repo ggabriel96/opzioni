@@ -170,6 +170,9 @@ concept Action = requires(A action) {
   typename A::value_type;
   requires BuiltinType<typename A::value_type>;
 
+  { action.get_is_required() }
+  noexcept->std::same_as<bool>;
+
   { action.get_default_value() }
   noexcept->std::same_as<std::optional<typename A::value_type>>;
 
@@ -212,10 +215,19 @@ public:
 
   consteval Append<Elem> otherwise(DefaultValueSetter setter) const noexcept {
     auto append = *this;
+    append.is_required = false;
     append.default_setter = setter;
     return append;
   }
 
+  consteval Append<Elem> required() const noexcept {
+    auto append = *this;
+    append.is_required = true;
+    append.default_setter = nullptr;
+    return append;
+  }
+
+  consteval bool get_is_required() const noexcept { return this->is_required; }
   consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
   consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
   consteval actions::Signature get_fn() const noexcept { return actions::append<Elem>; }
@@ -223,6 +235,7 @@ public:
   consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
 
 private:
+  bool is_required = false;
   std::optional<Elem> implicit_value{};
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
@@ -235,10 +248,19 @@ public:
 
   consteval List<Elem> otherwise(DefaultValueSetter setter) const noexcept {
     auto list = *this;
+    list.is_required = false;
     list.default_setter = setter;
     return list;
   }
 
+  consteval List<Elem> required() const noexcept {
+    auto list = *this;
+    list.is_required = true;
+    list.default_setter = nullptr;
+    return list;
+  }
+
+  consteval bool get_is_required() const noexcept { return this->is_required; }
   consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
   consteval std::optional<Elem> get_implicit_value() const noexcept { return std::nullopt; }
   consteval actions::Signature get_fn() const noexcept { return actions::csv<Elem>; }
@@ -246,6 +268,7 @@ public:
   consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
 
 private:
+  bool is_required = false;
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
 };
 
@@ -379,6 +402,7 @@ struct Arg {
                : default_value                 ? Arg::With(*this, *default_value, std::monostate{})
                : implicit_value                ? Arg::With(*this, std::monostate{}, *implicit_value)
                                                : Arg::With(*this, std::monostate{}, std::monostate{});
+    arg.is_required = action.get_is_required();
     arg.action_fn = action.get_fn();
     arg.gather_amount = action.get_gather_amount();
     arg.default_setter = action.get_default_setter();
