@@ -345,16 +345,6 @@ struct Arg {
     return arg;
   }
 
-  consteval Arg count() const noexcept {
-    if (this->type != ArgType::FLG)
-      throw "Count arguments must be flags";
-    auto arg = Arg::With(*this, std::monostate{}, std::monostate{});
-    if (!this->is_required)
-      arg = arg.otherwise(std::size_t{0});
-    arg.action_fn = actions::count;
-    return arg;
-  }
-
   template <concepts::BuiltinType Elem = std::string_view>
   consteval Arg csv() const noexcept {
     if (this->type == ArgType::FLG)
@@ -567,6 +557,18 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
 }
 
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
+
+consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
+  auto const arg = Arg{.type = ArgType::FLG,
+                       .name = name,
+                       .abbrev = abbrev,
+                       .default_value = std::size_t{0},
+                       .action_fn = actions::count};
+  validate_arg(arg);
+  return arg;
+}
+
+consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
 
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
   auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
