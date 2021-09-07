@@ -14,7 +14,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("name should be empty") { REQUIRE(arg.name.empty()); }
     THEN("abbrev should be empty") { REQUIRE(arg.abbrev.empty()); }
     THEN("description should be empty") { REQUIRE(arg.description.empty()); }
-    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("is_required should be true") { REQUIRE(arg.is_required); }
     THEN("default_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.default_value)); }
     THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
     THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == act::fn::assign<std::string_view>); }
