@@ -19,18 +19,19 @@ using vec = std::vector<T>;
 int main(int argc, char const *argv[]) {
   using namespace opzioni;
 
-  constexpr static auto exec = Program("exec").intro("Run a command in a running container") +
-                               Help() * Flg("detach", "d").help("Detached mode: run command in the background") *
-                                   Opt("detach-keys").help("Override the key sequence for detaching a container") *
-                                   Opt("env", "e").help("Set environment variables").append() *
-                                   Opt("env-file").help("Read in a file of environment variables").append() *
-                                   Flg("interactive", "i").help("Keep STDIN open even if not attached") *
-                                   Flg("privileged").help("Give extended privileges to the command") *
-                                   Flg("tty", "t").help("Allocate a pseudo-TTY") *
-                                   Opt("user", "u").help("Username or UID (format: <name|uid>[:<group|gid>])") *
-                                   Opt("workdir", "w").help("Working directory inside the container") *
-                                   Pos("container").help("Name of the target container") *
-                                   Pos("command").help("The command to run in the container").gather();
+  constexpr static auto exec =
+      Program("exec").intro("Run a command in a running container") +
+      Help() * Flg("detach", "d").help("Detached mode: run command in the background") *
+          Opt("detach-keys").help("Override the key sequence for detaching a container") *
+          Opt("env", "e").help("Set environment variables")[actions::Append()] *
+          Opt("env-file").help("Read in a file of environment variables")[actions::Append()] *
+          Flg("interactive", "i").help("Keep STDIN open even if not attached") *
+          Flg("privileged").help("Give extended privileges to the command") *
+          Flg("tty", "t").help("Allocate a pseudo-TTY") *
+          Opt("user", "u").help("Username or UID (format: <name|uid>[:<group|gid>])") *
+          Opt("workdir", "w").help("Working directory inside the container") *
+          Pos("container").help("Name of the target container") *
+          Pos("command").help("The command to run in the container")[actions::Append().gather()];
 
   constexpr static auto pull = Program("pull").intro("Pull an image or a repository from a registry") +
                                Help() * Pos("name").help("The name of the image or repository to pull") *
@@ -45,23 +46,24 @@ int main(int argc, char const *argv[]) {
           .intro("A self-sufficient runtime for containers")
           .details("Run 'docker COMMAND --help' for more information on a command.") +
       Help() * Version() *
-          Opt("config").help("Location of client config files (default {default_value})").otherwise("~/.docker") *
+          Opt("config").help(
+              "Location of client config files (default {default_value})")[actions::Assign().otherwise("~/.docker")] *
           Opt("context", "c")
               .help("Name of the context to use to connect to the daemon (overrides DOCKER_HOST env var and default "
                     "context set with \"docker context use\")") *
           Flg("debug", "D").help("Enable debug mode") *
-          Opt("host", "H").help("Daemon socket(s) to connect to").append() *
+          Opt("host", "H").help("Daemon socket(s) to connect to")[actions::Append()] *
           Opt("log-level", "l")
               .help("Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default {default_value})")
-              .otherwise("info") *
+                  [actions::Assign().otherwise("info")] *
           Flg("tls").help("Use TLS; implied by --tlsverify") *
           Opt("tlscacert")
-              .help("Trust certs signed only by this CA (default {default_value})")
-              .otherwise("~/.docker/ca.pem") *
-          Opt("tlscert")
-              .help("Path to TLS certificate file (default {default_value})")
-              .otherwise("~/.docker/cert.pem") *
-          Opt("tlskey").help("Path to TLS key file (default {default_value})").otherwise("~/.docker/key.pem") *
+              .help("Trust certs signed only by this CA (default {default_value})")[actions::Assign().otherwise(
+                  "~/.docker/ca.pem")] *
+          Opt("tlscert").help("Path to TLS certificate file (default {default_value})")[actions::Assign().otherwise(
+              "~/.docker/cert.pem")] *
+          Opt("tlskey").help(
+              "Path to TLS key file (default {default_value})")[actions::Assign().otherwise("~/.docker/key.pem")] *
           Flg("tlsverify").help("Use TLS and verify the remote") +
       exec * pull;
 
