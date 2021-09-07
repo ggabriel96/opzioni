@@ -56,33 +56,9 @@ int print_error(ProgramView const, UserError const &) noexcept;
 int print_error_and_usage(ProgramView const, UserError const &) noexcept;
 int rethrow(ProgramView const, UserError const &);
 
-// +---------+
-// | actions |
-// +---------+
-namespace act::fn {
-
-using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-template <concepts::BuiltinType T>
-void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-template <concepts::BuiltinType Elem>
-void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-void count(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-template <concepts::BuiltinType Elem>
-void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-} // namespace act::fn
-
-// +-----------+
-// | arguments |
-// +-----------+
+// +--------------+
+// | argument map |
+// +--------------+
 
 struct ArgValue {
   ExternalVariant value{};
@@ -153,12 +129,41 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
+// +-------------------------------+
+// | generic default value setters |
+// +-------------------------------+
+
 using DefaultValueSetter = void (*)(ArgValue &);
 
 template <concepts::BuiltinType T>
 void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
+
+// +---------+
+// | actions |
+// +---------+
+
+namespace act::fn {
+
+using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+template <concepts::BuiltinType T>
+void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+template <concepts::BuiltinType Elem>
+void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+void count(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+template <concepts::BuiltinType Elem>
+void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+} // namespace act::fn
 
 namespace concepts {
 
