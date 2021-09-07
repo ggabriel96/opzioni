@@ -366,97 +366,11 @@ struct Arg {
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
 
-  consteval Arg action(actions::Signature action_fn) const noexcept {
-    auto arg = *this;
-    arg.action_fn = action_fn;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg append() const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.action_fn = actions::append<Elem>;
-    if (!this->is_required)
-      arg.default_setter = set_empty_vector<Elem>;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg csv() const noexcept {
-    if (this->type == ArgType::FLG)
-      throw "Flags cannot use the csv action because they do not take values from the command-line";
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.action_fn = actions::csv<Elem>;
-    if (!this->is_required)
-      arg.default_setter = set_empty_vector<Elem>;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg gather(std::size_t amount) const noexcept {
-    if (this->type == ArgType::FLG)
-      throw "Flags cannot use gather because they do not take values from the command-line";
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.gather_amount = amount;
-    arg.action_fn = actions::append<Elem>;
-    if (!this->is_required)
-      arg.default_setter = set_empty_vector<Elem>;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg gather() const noexcept {
-    return gather<Elem>(0);
-  }
-
   consteval Arg help(std::string_view description) const noexcept {
     auto arg = *this;
     arg.description = description;
     return arg;
   }
-
-  template <concepts::BuiltinType T>
-  consteval Arg of() const noexcept {
-    auto arg = *this;
-    arg.action_fn = actions::assign<T>;
-    return arg;
-  }
-
-  template <concepts::BuiltinType T>
-  consteval Arg otherwise(T value) const noexcept {
-    auto arg = Arg::With(*this, value, this->implicit_value);
-    arg.action_fn = actions::assign<T>;
-    arg.default_setter = nullptr;
-    arg.is_required = false;
-    return arg;
-  }
-
-  consteval Arg otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
-
-  consteval Arg otherwise(DefaultValueSetter setter) const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.default_setter = setter;
-    arg.is_required = false;
-    return arg;
-  }
-
-  consteval Arg required() const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.default_setter = nullptr;
-    arg.is_required = true;
-    return arg;
-  }
-
-  template <concepts::BuiltinType T>
-  consteval Arg implicitly(T value) const noexcept {
-    if (this->type == ArgType::POS)
-      throw "Positionals cannot use implicit value because they always take a value from the command-line";
-    auto arg = Arg::With(*this, this->default_value, value);
-    arg.action_fn = actions::assign<T>;
-    return arg;
-  }
-
-  consteval Arg implicitly(char const *value) const noexcept { return implicitly(std::string_view(value)); }
 
   template <concepts::Action Action>
   consteval Arg operator[](Action action) const noexcept {
