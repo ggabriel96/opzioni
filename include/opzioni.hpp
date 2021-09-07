@@ -255,9 +255,7 @@ public:
     return implicitly(std::string_view(value));
   }
 
-  consteval Assign<Elem> optional() const noexcept {
-    return Assign(false, this->default_value, this-implicit_value);
-  }
+  consteval Assign<Elem> optional() const noexcept { return Assign(false, this->default_value, this - implicit_value); }
 
   consteval Assign<Elem> otherwise(Elem value) const noexcept { return Assign(false, value, this->implicit_value); }
 
