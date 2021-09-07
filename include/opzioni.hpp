@@ -170,21 +170,11 @@ concept Action = requires(A action) {
   typename A::value_type;
   requires BuiltinType<typename A::value_type>;
 
-  requires requires(A action) {
-    { action.get_default_value() }
-    noexcept->std::same_as<std::monostate>;
-  } || requires(A action) {
-    { action.get_default_value() }
-    noexcept->std::same_as<typename A::value_type>;
-  };
+  { action.get_default_value() }
+  noexcept->std::same_as<std::optional<typename A::value_type>>;
 
-  requires requires(A action) {
-    { action.get_implicit_value() }
-    noexcept->std::same_as<std::monostate>;
-  } || requires(A action) {
-    { action.get_implicit_value() }
-    noexcept->std::same_as<typename A::value_type>;
-  };
+  { action.get_implicit_value() }
+  noexcept->std::same_as<std::optional<typename A::value_type>>;
 
   { action.get_fn() }
   noexcept->std::same_as<opzioni::actions::Signature>;
@@ -215,14 +205,13 @@ public:
     return gather;
   }
 
-  consteval std::monostate get_default_value() const noexcept { return std::monostate{}; }
-  consteval std::monostate get_implicit_value() const noexcept { return std::monostate{}; }
-  consteval opzioni::actions::Signature get_fn() const noexcept { return this->action_fn; }
+  consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return std::nullopt; }
+  consteval actions::Signature get_fn() const noexcept { return actions::append<Elem>; }
   consteval std::size_t get_gather_amount() const noexcept { return this->amount; }
-  consteval opzioni::DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
 
 private:
-  actions::Signature action_fn = actions::append<Elem>;
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
 };
 
@@ -350,7 +339,12 @@ struct Arg {
 
   template <concepts::Action Action>
   consteval Arg operator[](Action action) const noexcept {
-    auto arg = Arg::With(*this, action.get_default_value(), action.get_implicit_value());
+    auto const &default_value = action.get_default_value();
+    auto const &implicit_value = action.get_implicit_value();
+    auto arg = default_value && implicit_value ? Arg::With(*this, *default_value, *implicit_value)
+               : default_value                 ? Arg::With(*this, *default_value, std::monostate{})
+               : implicit_value                ? Arg::With(*this, std::monostate{}, *implicit_value)
+                                               : Arg::With(*this, std::monostate{}, std::monostate{});
     arg.action_fn = action.get_fn();
     arg.gather_amount = action.get_gather_amount();
     arg.default_setter = action.get_default_setter();
