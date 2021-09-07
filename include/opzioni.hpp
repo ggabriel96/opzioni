@@ -229,32 +229,6 @@ private:
 };
 
 template <concepts::BuiltinType Elem>
-class Gather {
-public:
-  using value_type = Elem;
-
-  std::size_t amount = 1;
-
-  consteval Gather() = default;
-  consteval Gather(std::size_t amount) : amount(amount) {}
-
-  consteval Gather<Elem> otherwise(DefaultValueSetter setter) const noexcept {
-    auto gather = *this;
-    gather.default_setter = setter;
-    return gather;
-  }
-
-  consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
-  consteval std::optional<Elem> get_implicit_value() const noexcept { return std::nullopt; }
-  consteval actions::Signature get_fn() const noexcept { return actions::append<Elem>; }
-  consteval std::size_t get_gather_amount() const noexcept { return this->amount; }
-  consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
-
-private:
-  DefaultValueSetter default_setter = set_empty_vector<Elem>;
-};
-
-template <concepts::BuiltinType Elem>
 class List {
 public:
   using value_type = Elem;
