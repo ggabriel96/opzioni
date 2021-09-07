@@ -202,6 +202,8 @@ public:
     return append;
   }
 
+  consteval Append<Elem> gather() const noexcept { return gather<Elem>(0); }
+
   consteval Append<Elem> implicitly(Elem value) const noexcept {
     auto append = *this;
     append.implicit_value = value;
