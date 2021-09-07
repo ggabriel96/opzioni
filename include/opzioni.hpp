@@ -200,31 +200,25 @@ public:
   consteval Append() = default;
 
   consteval Append<Elem> gather(std::size_t amount) const noexcept {
-    auto append = *this;
-    append.gather_amount = amount;
-    return append;
+    return Append(this->is_required, this->implicit_value, amount, this->default_setter);
   }
 
   consteval Append<Elem> gather() const noexcept { return gather<Elem>(0); }
 
   consteval Append<Elem> implicitly(Elem value) const noexcept {
-    auto append = *this;
-    append.implicit_value = value;
-    return append;
+    return Append(this->is_required, value, this->gather_amount, this->default_setter);
+  }
+
+  consteval Append<Elem> implicitly(char const *value) const noexcept requires std::is_same_v<Elem, std::string_view> {
+    return implicitly(std::string_view(value));
   }
 
   consteval Append<Elem> otherwise(DefaultValueSetter setter) const noexcept {
-    auto append = *this;
-    append.is_required = false;
-    append.default_setter = setter;
-    return append;
+    return Append(false, this->implicit_value, this->gather_amount, setter);
   }
 
   consteval Append<Elem> required() const noexcept {
-    auto append = *this;
-    append.is_required = true;
-    append.default_setter = nullptr;
-    return append;
+    return Append(true, this->implicit_value, this->gather_amount, nullptr);
   }
 
   consteval bool get_is_required() const noexcept { return this->is_required; }
@@ -239,6 +233,11 @@ private:
   std::optional<Elem> implicit_value{};
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
+
+  consteval Append(bool is_required, std::optional<Elem> implicit_value, std::size_t gather_amount,
+                   DefaultValueSetter default_setter)
+      : is_required(is_required), implicit_value(implicit_value), gather_amount(gather_amount),
+        default_setter(default_setter) {}
 };
 
 template <concepts::BuiltinType Elem = std::string_view>
