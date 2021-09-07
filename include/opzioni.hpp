@@ -263,6 +263,8 @@ public:
     return otherwise(std::string_view(value));
   }
 
+  consteval Assign<Elem> required() const noexcept { return Assign(true, std::nullopt, this->implicit_value); }
+
   consteval bool get_is_required() const noexcept { return this->is_required; }
   consteval std::optional<Elem> get_default_value() const noexcept { return this->default_value; }
   consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
