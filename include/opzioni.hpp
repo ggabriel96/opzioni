@@ -192,7 +192,7 @@ concept Action = requires(A action) {
 
 namespace actions {
 
-template <concepts::BuiltinType Elem>
+template <concepts::BuiltinType Elem = std::string_view>
 class Append {
 public:
   using value_type = Elem;
@@ -241,7 +241,7 @@ private:
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
 };
 
-template <concepts::BuiltinType Elem>
+template <concepts::BuiltinType Elem = std::string_view>
 class List {
 public:
   using value_type = Elem;
