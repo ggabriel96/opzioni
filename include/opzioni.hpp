@@ -160,6 +160,43 @@ void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
 
+namespace concepts {
+
+// unfortunately, this concept has to be here instead of in types.hpp
+// because it references stuff defined in this header :(
+// (we would have a circular dependency)
+template <typename A>
+concept Action = requires(A action) {
+  typename A::value_type;
+  requires BuiltinType<typename A::value_type>;
+
+  requires requires(A action) {
+    { action.get_default_value() }
+    noexcept->std::same_as<std::monostate>;
+  } || requires(A action) {
+    { action.get_default_value() }
+    noexcept->std::same_as<typename A::value_type>;
+  };
+
+  requires requires(A action) {
+    { action.get_implicit_value() }
+    noexcept->std::same_as<std::monostate>;
+  } || requires(A action) {
+    { action.get_implicit_value() }
+    noexcept->std::same_as<typename A::value_type>;
+  };
+
+  { action.get_fn() }
+  noexcept->std::same_as<opzioni::actions::Signature>;
+  { action.get_gather_amount() }
+  noexcept->std::same_as<std::size_t>;
+
+  { action.get_default_setter() }
+  noexcept->std::same_as<opzioni::DefaultValueSetter>;
+};
+
+} // namespace concepts
+
 // +-----+
 // | Arg |
 // +-----+
@@ -279,6 +316,15 @@ struct Arg {
   }
 
   consteval Arg implicitly(char const *value) const noexcept { return implicitly(std::string_view(value)); }
+
+  template <concepts::Action Action>
+  consteval Arg operator[](Action action) const noexcept {
+    auto arg = Arg::With(*this, action.get_default_value(), action.get_implicit_value());
+    arg.action_fn = action.get_fn();
+    arg.gather_amount = action.get_gather_amount();
+    arg.default_setter = action.get_default_setter();
+    return arg;
+  }
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
