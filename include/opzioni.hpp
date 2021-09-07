@@ -190,6 +190,43 @@ concept Action = requires(A action) {
 namespace actions {
 
 template <concepts::BuiltinType Elem>
+class Append {
+public:
+  using value_type = Elem;
+
+  consteval Append() = default;
+
+  consteval Append<Elem> gather(std::size_t amount) const noexcept {
+    auto append = *this;
+    append.gather_amount = amount;
+    return append;
+  }
+
+  consteval Append<Elem> implicitly(Elem value) const noexcept {
+    auto append = *this;
+    append.implicit_value = value;
+    return append;
+  }
+
+  consteval Append<Elem> otherwise(DefaultValueSetter setter) const noexcept {
+    auto append = *this;
+    append.default_setter = setter;
+    return append;
+  }
+
+  consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
+  consteval actions::Signature get_fn() const noexcept { return actions::append<Elem>; }
+  consteval std::size_t get_gather_amount() const noexcept { return this->gather_amount; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
+
+private:
+  std::optional<Elem> implicit_value{};
+  std::size_t gather_amount = 1;
+  DefaultValueSetter default_setter = set_empty_vector<Elem>;
+};
+
+template <concepts::BuiltinType Elem>
 class Gather {
 public:
   using value_type = Elem;
