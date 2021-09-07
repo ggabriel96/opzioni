@@ -197,6 +197,37 @@ concept Action = requires(A action) {
 
 } // namespace concepts
 
+namespace actions {
+
+template <concepts::BuiltinType Elem>
+class Gather {
+public:
+  using value_type = Elem;
+
+  std::size_t amount = 1;
+
+  consteval Gather() = default;
+  consteval Gather(std::size_t amount) : amount(amount) {}
+
+  consteval Gather<Elem> otherwise(DefaultValueSetter setter) const noexcept {
+    auto gather = *this;
+    gather.default_setter = setter;
+    return gather;
+  }
+
+  consteval std::monostate get_default_value() const noexcept { return std::monostate{}; }
+  consteval std::monostate get_implicit_value() const noexcept { return std::monostate{}; }
+  consteval opzioni::actions::Signature get_fn() const noexcept { return this->action_fn; }
+  consteval std::size_t get_gather_amount() const noexcept { return this->amount; }
+  consteval opzioni::DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
+
+private:
+  actions::Signature action_fn = actions::append<Elem>;
+  DefaultValueSetter default_setter = set_empty_vector<Elem>;
+};
+
+} // namespace actions
+
 // +-----+
 // | Arg |
 // +-----+
