@@ -59,7 +59,7 @@ int rethrow(ProgramView const, UserError const &);
 // +---------+
 // | actions |
 // +---------+
-namespace actions {
+namespace act::fn {
 
 using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
@@ -78,7 +78,7 @@ void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::str
 
 void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
 
-} // namespace actions
+} // namespace act::fn
 
 // +-----------+
 // | arguments |
@@ -180,7 +180,7 @@ concept Action = requires(A action) {
   noexcept->std::same_as<std::optional<typename A::value_type>>;
 
   { action.get_fn() }
-  noexcept->std::same_as<opzioni::actions::Signature>;
+  noexcept->std::same_as<opzioni::act::fn::Signature>;
   { action.get_gather_amount() }
   noexcept->std::same_as<std::size_t>;
 
@@ -190,7 +190,7 @@ concept Action = requires(A action) {
 
 } // namespace concepts
 
-namespace actions {
+namespace act {
 
 template <concepts::BuiltinType Elem = std::string_view>
 class Append {
@@ -224,7 +224,7 @@ public:
   consteval bool get_is_required() const noexcept { return this->is_required; }
   consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
   consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
-  consteval actions::Signature get_fn() const noexcept { return actions::append<Elem>; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::append<Elem>; }
   consteval std::size_t get_gather_amount() const noexcept { return this->gather_amount; }
   consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
 
@@ -268,7 +268,7 @@ public:
   consteval bool get_is_required() const noexcept { return this->is_required; }
   consteval std::optional<Elem> get_default_value() const noexcept { return this->default_value; }
   consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
-  consteval actions::Signature get_fn() const noexcept { return actions::assign<Elem>; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::assign<Elem>; }
   consteval std::size_t get_gather_amount() const noexcept { return 1; }
   consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
 
@@ -288,7 +288,7 @@ public:
   consteval bool get_is_required() const noexcept { return false; }
   consteval std::optional<std::size_t> get_default_value() const noexcept { return std::size_t{0}; }
   consteval std::optional<std::size_t> get_implicit_value() const noexcept { return std::nullopt; }
-  consteval actions::Signature get_fn() const noexcept { return actions::count; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::count; }
   consteval std::size_t get_gather_amount() const noexcept { return 1; }
   consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
 };
@@ -315,7 +315,7 @@ public:
   consteval bool get_is_required() const noexcept { return this->is_required; }
   consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
   consteval std::optional<Elem> get_implicit_value() const noexcept { return std::nullopt; }
-  consteval actions::Signature get_fn() const noexcept { return actions::csv<Elem>; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::csv<Elem>; }
   consteval std::size_t get_gather_amount() const noexcept { return 1; }
   consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
 
@@ -331,7 +331,7 @@ public:
   consteval bool get_is_required() const noexcept { return false; }
   consteval std::optional<bool> get_default_value() const noexcept { return false; }
   consteval std::optional<bool> get_implicit_value() const noexcept { return true; }
-  consteval actions::Signature get_fn() const noexcept { return actions::print_help; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::print_help; }
   consteval std::size_t get_gather_amount() const noexcept { return 1; }
   consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
 };
@@ -343,12 +343,12 @@ public:
   consteval bool get_is_required() const noexcept { return false; }
   consteval std::optional<bool> get_default_value() const noexcept { return false; }
   consteval std::optional<bool> get_implicit_value() const noexcept { return true; }
-  consteval actions::Signature get_fn() const noexcept { return actions::print_version; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::print_version; }
   consteval std::size_t get_gather_amount() const noexcept { return 1; }
   consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
 };
 
-} // namespace actions
+} // namespace act
 
 // +-----+
 // | Arg |
@@ -364,7 +364,7 @@ struct Arg {
   bool is_required = false;
   BuiltinVariant default_value{};
   BuiltinVariant implicit_value{};
-  actions::Signature action_fn = actions::assign<std::string_view>;
+  act::fn::Signature action_fn = act::fn::assign<std::string_view>;
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
 
@@ -503,7 +503,7 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
                        .abbrev = abbrev,
                        .default_value = false,
                        .implicit_value = true,
-                       .action_fn = actions::assign<bool>};
+                       .action_fn = act::fn::assign<bool>};
   validate_arg(arg);
   return arg;
 }
@@ -511,7 +511,7 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
 consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
-  return Flg(name, abbrev)[actions::Count()];
+  return Flg(name, abbrev)[act::Count()];
 }
 
 consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
@@ -531,13 +531,13 @@ consteval Arg Pos(std::string_view name) noexcept {
 }
 
 consteval Arg Help(std::string_view description) noexcept {
-  return Flg("help", "h").help(description)[actions::PrintHelp()];
+  return Flg("help", "h").help(description)[act::PrintHelp()];
 }
 
 consteval Arg Help() noexcept { return Help("Display this information"); }
 
 consteval Arg Version(std::string_view description) noexcept {
-  return Flg("version", "V").help(description)[actions::PrintVersion()];
+  return Flg("version", "V").help(description)[act::PrintVersion()];
 }
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
@@ -790,7 +790,7 @@ private:
 // | implementation of actions |
 // +---------------------------+
 
-namespace actions {
+namespace act::fn {
 
 // +--------+
 // | assign |
@@ -841,7 +841,7 @@ void csv(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::stri
   assign_to(map, arg.name, convert<std::vector<Elem>>(*parsed_value));
 }
 
-} // namespace actions
+} // namespace act::fn
 
 } // namespace opzioni
 

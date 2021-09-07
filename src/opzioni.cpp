@@ -484,7 +484,7 @@ void HelpFormatter::print_details() const noexcept {
 // | implementation of actions |
 // +---------------------------+
 
-namespace actions {
+namespace act::fn {
 
 void count(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::string_view> const parsed_value) {
   auto [it, inserted] = map.args.try_emplace(arg.name, std::size_t{1});
@@ -502,7 +502,7 @@ void print_version(ProgramView const program, ArgMap &, Arg const &, std::option
   std::exit(0);
 }
 
-} // namespace actions
+} // namespace act::fn
 
 } // namespace opzioni
 

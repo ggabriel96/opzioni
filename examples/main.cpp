@@ -17,30 +17,29 @@ int main(int argc, char const *argv[]) {
           .details("This example only covers simple positionals, options, and flags. For examples of more"
                    " complicated parse actions or subcommands, please take a look at the other examples.") +
       Help() * Version() * Pos("name").help("Your first name") *
-          Opt("double", "d").help("A double. Default: {default_value}")[actions::Assign<double>().otherwise(7.11)] *
+          Opt("double", "d").help("A double. Default: {default_value}")[act::Assign<double>().otherwise(7.11)] *
           Opt("last-name").help("Your last name") *
           Opt("o").help(
-              "We also support having short names only. Default: {default_value}")[actions::Assign().otherwise("oh")] *
+              "We also support having short names only. Default: {default_value}")[act::Assign().otherwise("oh")] *
           Opt("num", "n")
               .help("Creates a vector of numbers with each appearence of this argument. Default: {default_value}")
-                  [actions::Append<int>()] *
+                  [act::Append<int>()] *
           Opt("csv").help("In contrast to `Append`, this will create a vector of numbers from a single "
-                          "comma-separated list of values. Default: {default_value}")[actions::List<int>()] *
+                          "comma-separated list of values. Default: {default_value}")[act::List<int>()] *
           Opt("verbose", "v")
               .help("Level of verbosity. "
                     "Sets to {implicit_value} if given without a value (e.g. -{abbrev}). Default: {default_value}")
-                  [actions::Assign<int>().implicitly(1).otherwise(0)] *
+                  [act::Assign<int>().implicitly(1).otherwise(0)] *
           Flg("append", "a")
               .help("The equivalent of Python's argparse `append_const`: will append {implicit_value} every time it "
-                    "appears in the CLI. Default: {default_value}")[actions::Append<int>().implicitly(1)] *
+                    "appears in the CLI. Default: {default_value}")[act::Append<int>().implicitly(1)] *
           Flg("flag", "f")
               .help(
                   "The equivalent of Python's argparse `store_const`: will store \"{implicit_value}\" if it appears in "
-                  "the CLI. Default: {default_value}")
-                  [actions::Assign().implicitly("do something!").otherwise("nope")] *
+                  "the CLI. Default: {default_value}")[act::Assign().implicitly("do something!").otherwise("nope")] *
           Counter("t").help("We also support flags with only short names. This argument counts how many times it "
                             "appears in the CLI. Default: {default_value}") *
-          Opt("woo", "w").help("Woo")[actions::Append<int>().gather(3)];
+          Opt("woo", "w").help("Woo")[act::Append<int>().gather(3)];
 
   auto const args = program(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);

@@ -16,11 +16,11 @@ int main(int argc, char const *argv[]) {
               "This is the equivalent of Python's argparse `nargs` with `+`: it requires at least one value and "
               "consumes all of them into a vector. Note that precisely this type of argument is somewhat limiting "
               "because, since it consumes every argument, it will not allow us to parse anything that comes after "
-              "it")[actions::Append<int>().gather()] *
+              "it")[act::Append<int>().gather()] *
           Opt("two").help(
               "This is similar to the previous gather, but it limits the amount of consumed arguments to only "
               "{gather_amount}, hence it is not so problematic. Default: {default_value}")
-              [actions::Append<int>().gather(2).otherwise(+[](ArgValue &arg) {
+              [act::Append<int>().gather(2).otherwise(+[](ArgValue &arg) {
                 arg.value = std::vector{0, 0};
               })];
 
