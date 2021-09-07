@@ -252,6 +252,27 @@ private:
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
 };
 
+template <concepts::BuiltinType Elem>
+class List {
+public:
+  using value_type = Elem;
+
+  consteval List<Elem> otherwise(DefaultValueSetter setter) const noexcept {
+    auto list = *this;
+    list.default_setter = setter;
+    return list;
+  }
+
+  consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return std::nullopt; }
+  consteval actions::Signature get_fn() const noexcept { return actions::csv<Elem>; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
+
+private:
+  DefaultValueSetter default_setter = set_empty_vector<Elem>;
+};
+
 } // namespace actions
 
 // +-----+
