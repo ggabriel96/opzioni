@@ -279,6 +279,18 @@ private:
       : is_required(is_required), default_value(default_value), implicit_value(implicit_value) {}
 };
 
+class Count {
+public:
+  using value_type = std::size_t;
+
+  consteval bool get_is_required() const noexcept { return false; }
+  consteval std::optional<std::size_t> get_default_value() const noexcept { return std::size_t{0}; }
+  consteval std::optional<std::size_t> get_implicit_value() const noexcept { return std::nullopt; }
+  consteval actions::Signature get_fn() const noexcept { return actions::count; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+};
+
 template <concepts::BuiltinType Elem = std::string_view>
 class List {
 public:
@@ -308,6 +320,30 @@ public:
 private:
   bool is_required = false;
   DefaultValueSetter default_setter = set_empty_vector<Elem>;
+};
+
+class PrintHelp {
+public:
+  using value_type = bool;
+
+  consteval bool get_is_required() const noexcept { return false; }
+  consteval std::optional<bool> get_default_value() const noexcept { return false; }
+  consteval std::optional<bool> get_implicit_value() const noexcept { return true; }
+  consteval actions::Signature get_fn() const noexcept { return actions::print_help; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+};
+
+class PrintVersion {
+public:
+  using value_type = bool;
+
+  consteval bool get_is_required() const noexcept { return false; }
+  consteval std::optional<bool> get_default_value() const noexcept { return false; }
+  consteval std::optional<bool> get_implicit_value() const noexcept { return true; }
+  consteval actions::Signature get_fn() const noexcept { return actions::print_version; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
 };
 
 } // namespace actions
@@ -559,13 +595,7 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
 consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
-  auto const arg = Arg{.type = ArgType::FLG,
-                       .name = name,
-                       .abbrev = abbrev,
-                       .default_value = std::size_t{0},
-                       .action_fn = actions::count};
-  validate_arg(arg);
-  return arg;
+  return Flg(name, abbrev)[actions::Count()];
 }
 
 consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
@@ -585,13 +615,13 @@ consteval Arg Pos(std::string_view name) noexcept {
 }
 
 consteval Arg Help(std::string_view description) noexcept {
-  return Flg("help", "h").help(description).action(actions::print_help);
+  return Flg("help", "h").help(description)[actions::PrintHelp()];
 }
 
 consteval Arg Help() noexcept { return Help("Display this information"); }
 
 consteval Arg Version(std::string_view description) noexcept {
-  return Flg("version", "V").help(description).action(actions::print_version);
+  return Flg("version", "V").help(description)[actions::PrintVersion()];
 }
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
