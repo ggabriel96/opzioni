@@ -511,12 +511,6 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
 
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
-consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
-  return Flg(name, abbrev)[act::Count()];
-}
-
-consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
-
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
   auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .is_required = false, .default_value = ""};
   validate_arg(arg);
@@ -530,6 +524,16 @@ consteval Arg Pos(std::string_view name) noexcept {
   validate_arg(arg);
   return arg;
 }
+
+// +--------------------+
+// | argument shortcuts |
+// +--------------------+
+
+consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
+  return Flg(name, abbrev)[act::Count()];
+}
+
+consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
 
 consteval Arg Help(std::string_view description) noexcept {
   return Flg("help", "h").help(description)[act::PrintHelp()];
