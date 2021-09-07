@@ -203,7 +203,7 @@ public:
     return Append(this->is_required, this->implicit_value, amount, this->default_setter);
   }
 
-  consteval Append<Elem> gather() const noexcept { return gather<Elem>(0); }
+  consteval Append<Elem> gather() const noexcept { return gather(0); }
 
   consteval Append<Elem> implicitly(Elem value) const noexcept {
     return Append(this->is_required, value, this->gather_amount, this->default_setter);
