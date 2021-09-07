@@ -361,7 +361,7 @@ struct Arg {
   std::string_view name{};
   std::string_view abbrev{};
   std::string_view description{};
-  bool is_required = false;
+  bool is_required = true;
   BuiltinVariant default_value{};
   BuiltinVariant implicit_value{};
   act::fn::Signature action_fn = act::fn::assign<std::string_view>;
@@ -501,6 +501,7 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
   auto const arg = Arg{.type = ArgType::FLG,
                        .name = name,
                        .abbrev = abbrev,
+                       .is_required = false,
                        .default_value = false,
                        .implicit_value = true,
                        .action_fn = act::fn::assign<bool>};
@@ -517,7 +518,7 @@ consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
 consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
 
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
-  auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
+  auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .is_required = false, .default_value = ""};
   validate_arg(arg);
   return arg;
 }
