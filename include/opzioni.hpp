@@ -242,6 +242,47 @@ private:
 };
 
 template <concepts::BuiltinType Elem = std::string_view>
+class Assign {
+public:
+  using value_type = Elem;
+
+  consteval Assign() = default;
+
+  consteval Assign<Elem> implicitly(Elem value) const noexcept {
+    return Assign(this->is_required, this->default_value, value);
+  }
+
+  consteval Assign<Elem> implicitly(char const *value) const noexcept requires std::is_same_v<Elem, std::string_view> {
+    return implicitly(std::string_view(value));
+  }
+
+  consteval Assign<Elem> optional() const noexcept {
+    return Assign(false, this->default_value, this-implicit_value);
+  }
+
+  consteval Assign<Elem> otherwise(Elem value) const noexcept { return Assign(false, value, this->implicit_value); }
+
+  consteval Assign<Elem> otherwise(char const *value) const noexcept requires std::is_same_v<Elem, std::string_view> {
+    return otherwise(std::string_view(value));
+  }
+
+  consteval bool get_is_required() const noexcept { return this->is_required; }
+  consteval std::optional<Elem> get_default_value() const noexcept { return this->default_value; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
+  consteval actions::Signature get_fn() const noexcept { return actions::assign<Elem>; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+
+private:
+  bool is_required = true;
+  std::optional<Elem> default_value{};
+  std::optional<Elem> implicit_value{};
+
+  consteval Assign(bool is_required, std::optional<Elem> default_value, std::optional<Elem> implicit_value)
+      : is_required(is_required), default_value(default_value), implicit_value(implicit_value) {}
+};
+
+template <concepts::BuiltinType Elem = std::string_view>
 class List {
 public:
   using value_type = Elem;
