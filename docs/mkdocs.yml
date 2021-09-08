@@ -14,7 +14,11 @@ theme:
     repo: fontawesome/brands/github
   favicon: assets/images/terminal.svg
   features:
+    - navigation.instant
+    - navigation.sections
     - navigation.tabs
+    - navigation.top
+    - toc.integrate
   palette:
     scheme: slate
     primary: deep purple
