@@ -20,8 +20,20 @@ theme:
     - navigation.top
     - toc.integrate
   palette:
-    scheme: slate
-    primary: deep purple
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
 
 nav:
   - Home: index.md
