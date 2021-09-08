@@ -14,20 +14,25 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
+
       - run: pip install -r requirements.txt
       - run: mkdocs build
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: built-docs
+          path: docs/build/
+
 
   deploy-gh-pages:
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    needs: build-docs
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/download-artifact@v2
         with:
-          python-version: '3.x'
-
-      - run: pip install -r requirements.txt
-      - run: mkdocs build
+          name: built-docs
+          path: docs/build/
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

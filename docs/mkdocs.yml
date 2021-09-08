@@ -14,17 +14,35 @@ theme:
     repo: fontawesome/brands/github
   favicon: assets/images/terminal.svg
   features:
+    - navigation.instant
+    - navigation.sections
     - navigation.tabs
+    - navigation.top
+    - toc.integrate
   palette:
-    scheme: slate
-    primary: deep purple
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  font:
+    code: JetBrains Mono
+    text: Inter
 
 nav:
   - Home: index.md
   - User guide:
     - user-guide/the-basics.md
     - user-guide/customizing-programs.md
-    - user-guide/running-with-docker.md
 
 extra_css:
   - css/extra.css
