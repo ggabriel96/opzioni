@@ -56,33 +56,9 @@ int print_error(ProgramView const, UserError const &) noexcept;
 int print_error_and_usage(ProgramView const, UserError const &) noexcept;
 int rethrow(ProgramView const, UserError const &);
 
-// +---------+
-// | actions |
-// +---------+
-namespace actions {
-
-using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-template <concepts::BuiltinType T>
-void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-template <concepts::BuiltinType Elem>
-void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-void count(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-template <concepts::BuiltinType Elem>
-void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
-
-} // namespace actions
-
-// +-----------+
-// | arguments |
-// +-----------+
+// +--------------+
+// | argument map |
+// +--------------+
 
 struct ArgValue {
   ExternalVariant value{};
@@ -153,12 +129,231 @@ struct ArgMap {
   std::map<std::string_view, ArgValue> args;
 };
 
+// +-------------------------------+
+// | generic default value setters |
+// +-------------------------------+
+
 using DefaultValueSetter = void (*)(ArgValue &);
 
 template <concepts::BuiltinType T>
 void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
+
+// +---------+
+// | actions |
+// +---------+
+
+namespace act::fn {
+
+using Signature = void (*)(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+template <concepts::BuiltinType T>
+void assign(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+template <concepts::BuiltinType Elem>
+void append(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+void count(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+template <concepts::BuiltinType Elem>
+void csv(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+void print_help(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+void print_version(ProgramView const, ArgMap &, Arg const &, std::optional<std::string_view> const);
+
+} // namespace act::fn
+
+namespace concepts {
+
+// unfortunately, this concept has to be here instead of in types.hpp
+// because it references stuff defined in this header :(
+// (we would have a circular dependency)
+template <typename A>
+concept Action = requires(A action) {
+  typename A::value_type;
+  requires BuiltinType<typename A::value_type>;
+
+  { action.get_is_required() }
+  noexcept->std::same_as<bool>;
+
+  { action.get_default_value() }
+  noexcept->std::same_as<std::optional<typename A::value_type>>;
+
+  { action.get_implicit_value() }
+  noexcept->std::same_as<std::optional<typename A::value_type>>;
+
+  { action.get_fn() }
+  noexcept->std::same_as<opzioni::act::fn::Signature>;
+  { action.get_gather_amount() }
+  noexcept->std::same_as<std::size_t>;
+
+  { action.get_default_setter() }
+  noexcept->std::same_as<opzioni::DefaultValueSetter>;
+};
+
+} // namespace concepts
+
+namespace act {
+
+template <concepts::BuiltinType Elem = std::string_view>
+class Append {
+public:
+  using value_type = Elem;
+
+  consteval Append() = default;
+
+  consteval Append<Elem> gather(std::size_t amount) const noexcept {
+    return Append(this->is_required, this->implicit_value, amount, this->default_setter);
+  }
+
+  consteval Append<Elem> gather() const noexcept { return gather(0); }
+
+  consteval Append<Elem> implicitly(Elem value) const noexcept {
+    return Append(this->is_required, value, this->gather_amount, this->default_setter);
+  }
+
+  consteval Append<Elem> implicitly(char const *value) const noexcept requires std::is_same_v<Elem, std::string_view> {
+    return implicitly(std::string_view(value));
+  }
+
+  consteval Append<Elem> otherwise(DefaultValueSetter setter) const noexcept {
+    return Append(false, this->implicit_value, this->gather_amount, setter);
+  }
+
+  consteval Append<Elem> required() const noexcept {
+    return Append(true, this->implicit_value, this->gather_amount, nullptr);
+  }
+
+  consteval bool get_is_required() const noexcept { return this->is_required; }
+  consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::append<Elem>; }
+  consteval std::size_t get_gather_amount() const noexcept { return this->gather_amount; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
+
+private:
+  bool is_required = false;
+  std::optional<Elem> implicit_value{};
+  std::size_t gather_amount = 1;
+  DefaultValueSetter default_setter = set_empty_vector<Elem>;
+
+  consteval Append(bool is_required, std::optional<Elem> implicit_value, std::size_t gather_amount,
+                   DefaultValueSetter default_setter)
+      : is_required(is_required), implicit_value(implicit_value), gather_amount(gather_amount),
+        default_setter(default_setter) {}
+};
+
+template <concepts::BuiltinType Elem = std::string_view>
+class Assign {
+public:
+  using value_type = Elem;
+
+  consteval Assign() = default;
+
+  consteval Assign<Elem> implicitly(Elem value) const noexcept {
+    return Assign(this->is_required, this->default_value, value);
+  }
+
+  consteval Assign<Elem> implicitly(char const *value) const noexcept requires std::is_same_v<Elem, std::string_view> {
+    return implicitly(std::string_view(value));
+  }
+
+  consteval Assign<Elem> optional() const noexcept { return Assign(false, this->default_value, this->implicit_value); }
+
+  consteval Assign<Elem> otherwise(Elem value) const noexcept { return Assign(false, value, this->implicit_value); }
+
+  consteval Assign<Elem> otherwise(char const *value) const noexcept requires std::is_same_v<Elem, std::string_view> {
+    return otherwise(std::string_view(value));
+  }
+
+  consteval Assign<Elem> required() const noexcept { return Assign(true, std::nullopt, this->implicit_value); }
+
+  consteval bool get_is_required() const noexcept { return this->is_required; }
+  consteval std::optional<Elem> get_default_value() const noexcept { return this->default_value; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return this->implicit_value; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::assign<Elem>; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+
+private:
+  bool is_required = true;
+  std::optional<Elem> default_value{};
+  std::optional<Elem> implicit_value{};
+
+  consteval Assign(bool is_required, std::optional<Elem> default_value, std::optional<Elem> implicit_value)
+      : is_required(is_required), default_value(default_value), implicit_value(implicit_value) {}
+};
+
+class Count {
+public:
+  using value_type = std::size_t;
+
+  consteval bool get_is_required() const noexcept { return false; }
+  consteval std::optional<std::size_t> get_default_value() const noexcept { return std::size_t{0}; }
+  consteval std::optional<std::size_t> get_implicit_value() const noexcept { return std::nullopt; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::count; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+};
+
+template <concepts::BuiltinType Elem = std::string_view>
+class List {
+public:
+  using value_type = Elem;
+
+  consteval List<Elem> otherwise(DefaultValueSetter setter) const noexcept {
+    auto list = *this;
+    list.is_required = false;
+    list.default_setter = setter;
+    return list;
+  }
+
+  consteval List<Elem> required() const noexcept {
+    auto list = *this;
+    list.is_required = true;
+    list.default_setter = nullptr;
+    return list;
+  }
+
+  consteval bool get_is_required() const noexcept { return this->is_required; }
+  consteval std::optional<Elem> get_default_value() const noexcept { return std::nullopt; }
+  consteval std::optional<Elem> get_implicit_value() const noexcept { return std::nullopt; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::csv<Elem>; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return this->default_setter; }
+
+private:
+  bool is_required = false;
+  DefaultValueSetter default_setter = set_empty_vector<Elem>;
+};
+
+class PrintHelp {
+public:
+  using value_type = bool;
+
+  consteval bool get_is_required() const noexcept { return false; }
+  consteval std::optional<bool> get_default_value() const noexcept { return false; }
+  consteval std::optional<bool> get_implicit_value() const noexcept { return true; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::print_help; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+};
+
+class PrintVersion {
+public:
+  using value_type = bool;
+
+  consteval bool get_is_required() const noexcept { return false; }
+  consteval std::optional<bool> get_default_value() const noexcept { return false; }
+  consteval std::optional<bool> get_implicit_value() const noexcept { return true; }
+  consteval act::fn::Signature get_fn() const noexcept { return act::fn::print_version; }
+  consteval std::size_t get_gather_amount() const noexcept { return 1; }
+  consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
+};
+
+} // namespace act
 
 // +-----+
 // | Arg |
@@ -171,65 +366,12 @@ struct Arg {
   std::string_view name{};
   std::string_view abbrev{};
   std::string_view description{};
-  bool is_required = false;
+  bool is_required = true;
   BuiltinVariant default_value{};
   BuiltinVariant implicit_value{};
-  actions::Signature action_fn = actions::assign<std::string_view>;
+  act::fn::Signature action_fn = act::fn::assign<std::string_view>;
   std::size_t gather_amount = 1;
   DefaultValueSetter default_setter = nullptr;
-
-  consteval Arg action(actions::Signature action_fn) const noexcept {
-    auto arg = *this;
-    arg.action_fn = action_fn;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg append() const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.action_fn = actions::append<Elem>;
-    if (!this->is_required)
-      arg.default_setter = set_empty_vector<Elem>;
-    return arg;
-  }
-
-  consteval Arg count() const noexcept {
-    if (this->type != ArgType::FLG)
-      throw "Count arguments must be flags";
-    auto arg = Arg::With(*this, std::monostate{}, std::monostate{});
-    if (!this->is_required)
-      arg = arg.otherwise(std::size_t{0});
-    arg.action_fn = actions::count;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg csv() const noexcept {
-    if (this->type == ArgType::FLG)
-      throw "Flags cannot use the csv action because they do not take values from the command-line";
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.action_fn = actions::csv<Elem>;
-    if (!this->is_required)
-      arg.default_setter = set_empty_vector<Elem>;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg gather(std::size_t amount) const noexcept {
-    if (this->type == ArgType::FLG)
-      throw "Flags cannot use gather because they do not take values from the command-line";
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.gather_amount = amount;
-    arg.action_fn = actions::append<Elem>;
-    if (!this->is_required)
-      arg.default_setter = set_empty_vector<Elem>;
-    return arg;
-  }
-
-  template <concepts::BuiltinType Elem = std::string_view>
-  consteval Arg gather() const noexcept {
-    return gather<Elem>(0);
-  }
 
   consteval Arg help(std::string_view description) const noexcept {
     auto arg = *this;
@@ -237,48 +379,20 @@ struct Arg {
     return arg;
   }
 
-  template <concepts::BuiltinType T>
-  consteval Arg of() const noexcept {
-    auto arg = *this;
-    arg.action_fn = actions::assign<T>;
+  template <concepts::Action Action>
+  consteval Arg operator[](Action action) const noexcept {
+    auto const &default_value = action.get_default_value();
+    auto const &implicit_value = action.get_implicit_value();
+    auto arg = default_value && implicit_value ? Arg::With(*this, *default_value, *implicit_value)
+               : default_value                 ? Arg::With(*this, *default_value, std::monostate{})
+               : implicit_value                ? Arg::With(*this, std::monostate{}, *implicit_value)
+                                               : Arg::With(*this, std::monostate{}, std::monostate{});
+    arg.is_required = action.get_is_required();
+    arg.action_fn = action.get_fn();
+    arg.gather_amount = action.get_gather_amount();
+    arg.default_setter = action.get_default_setter();
     return arg;
   }
-
-  template <concepts::BuiltinType T>
-  consteval Arg otherwise(T value) const noexcept {
-    auto arg = Arg::With(*this, value, this->implicit_value);
-    arg.action_fn = actions::assign<T>;
-    arg.default_setter = nullptr;
-    arg.is_required = false;
-    return arg;
-  }
-
-  consteval Arg otherwise(char const *value) const noexcept { return otherwise(std::string_view(value)); }
-
-  consteval Arg otherwise(DefaultValueSetter setter) const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.default_setter = setter;
-    arg.is_required = false;
-    return arg;
-  }
-
-  consteval Arg required() const noexcept {
-    auto arg = Arg::With(*this, std::monostate{}, this->implicit_value);
-    arg.default_setter = nullptr;
-    arg.is_required = true;
-    return arg;
-  }
-
-  template <concepts::BuiltinType T>
-  consteval Arg implicitly(T value) const noexcept {
-    if (this->type == ArgType::POS)
-      throw "Positionals cannot use implicit value because they always take a value from the command-line";
-    auto arg = Arg::With(*this, this->default_value, value);
-    arg.action_fn = actions::assign<T>;
-    return arg;
-  }
-
-  consteval Arg implicitly(char const *value) const noexcept { return implicitly(std::string_view(value)); }
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
@@ -392,9 +506,10 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
   auto const arg = Arg{.type = ArgType::FLG,
                        .name = name,
                        .abbrev = abbrev,
+                       .is_required = false,
                        .default_value = false,
                        .implicit_value = true,
-                       .action_fn = actions::assign<bool>};
+                       .action_fn = act::fn::assign<bool>};
   validate_arg(arg);
   return arg;
 }
@@ -402,7 +517,7 @@ consteval Arg Flg(std::string_view name, std::string_view abbrev) noexcept {
 consteval Arg Flg(std::string_view name) noexcept { return Flg(name, {}); }
 
 consteval Arg Opt(std::string_view name, std::string_view abbrev) noexcept {
-  auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .default_value = ""};
+  auto const arg = Arg{.type = ArgType::OPT, .name = name, .abbrev = abbrev, .is_required = false, .default_value = ""};
   validate_arg(arg);
   return arg;
 }
@@ -415,14 +530,24 @@ consteval Arg Pos(std::string_view name) noexcept {
   return arg;
 }
 
+// +--------------------+
+// | argument shortcuts |
+// +--------------------+
+
+consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
+  return Flg(name, abbrev)[act::Count()];
+}
+
+consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
+
 consteval Arg Help(std::string_view description) noexcept {
-  return Flg("help", "h").help(description).action(actions::print_help);
+  return Flg("help", "h").help(description)[act::PrintHelp()];
 }
 
 consteval Arg Help() noexcept { return Help("Display this information"); }
 
 consteval Arg Version(std::string_view description) noexcept {
-  return Flg("version", "V").help(description).action(actions::print_version);
+  return Flg("version", "V").help(description)[act::PrintVersion()];
 }
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
@@ -675,7 +800,7 @@ private:
 // | implementation of actions |
 // +---------------------------+
 
-namespace actions {
+namespace act::fn {
 
 // +--------+
 // | assign |
@@ -726,7 +851,7 @@ void csv(ProgramView const, ArgMap &map, Arg const &arg, std::optional<std::stri
   assign_to(map, arg.name, convert<std::vector<Elem>>(*parsed_value));
 }
 
-} // namespace actions
+} // namespace act::fn
 
 } // namespace opzioni
 

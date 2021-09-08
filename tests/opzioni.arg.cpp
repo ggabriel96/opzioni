@@ -14,10 +14,10 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("name should be empty") { REQUIRE(arg.name.empty()); }
     THEN("abbrev should be empty") { REQUIRE(arg.abbrev.empty()); }
     THEN("description should be empty") { REQUIRE(arg.description.empty()); }
-    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("is_required should be true") { REQUIRE(arg.is_required); }
     THEN("default_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.default_value)); }
     THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
-    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == actions::assign<std::string_view>); }
+    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == act::fn::assign<std::string_view>); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -32,7 +32,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
     THEN("implicit_value should be true") { REQUIRE(std::get<bool>(arg.implicit_value) == true); }
-    THEN("action_fn should be assign<bool>") { REQUIRE(arg.action_fn == actions::assign<bool>); }
+    THEN("action_fn should be assign<bool>") { REQUIRE(arg.action_fn == act::fn::assign<bool>); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -47,7 +47,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
     THEN("implicit_value should be true") { REQUIRE(std::get<bool>(arg.implicit_value) == true); }
-    THEN("action_fn should be assign<bool>") { REQUIRE(arg.action_fn == actions::assign<bool>); }
+    THEN("action_fn should be assign<bool>") { REQUIRE(arg.action_fn == act::fn::assign<bool>); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -62,7 +62,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be empty string") { REQUIRE(std::get<std::string_view>(arg.default_value) == ""); }
     THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
-    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == actions::assign<std::string_view>); }
+    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == act::fn::assign<std::string_view>); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -77,7 +77,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be empty string") { REQUIRE(std::get<std::string_view>(arg.default_value) == ""); }
     THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
-    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == actions::assign<std::string_view>); }
+    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == act::fn::assign<std::string_view>); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -92,7 +92,41 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be true") { REQUIRE(arg.is_required); }
     THEN("default_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.default_value)); }
     THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
-    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == actions::assign<std::string_view>); }
+    THEN("action_fn should be assign<string_view>") { REQUIRE(arg.action_fn == act::fn::assign<std::string_view>); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
+
+  WHEN("Counter is called with one argument") {
+    constexpr auto arg = Counter("count");
+
+    THEN("type should be FLG") { REQUIRE(arg.type == ArgType::FLG); }
+    THEN("name should be equal to argument") { REQUIRE(arg.name == "count"); }
+    THEN("abbrev should be empty") { REQUIRE(arg.abbrev.empty()); }
+    THEN("description should be empty") { REQUIRE(arg.description.empty()); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be unsigned zero") {
+      REQUIRE(std::get<std::size_t>(arg.default_value) == std::size_t{0});
+    }
+    THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
+    THEN("action_fn should be count") { REQUIRE(arg.action_fn == act::fn::count); }
+    THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
+    THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
+  }
+
+  WHEN("Counter is called with two arguments") {
+    constexpr auto arg = Counter("count", "c");
+
+    THEN("type should be FLG") { REQUIRE(arg.type == ArgType::FLG); }
+    THEN("name should be equal to first argument") { REQUIRE(arg.name == "count"); }
+    THEN("abbrev should be equal to second argument") { REQUIRE(arg.abbrev == "c"); }
+    THEN("description should be empty") { REQUIRE(arg.description.empty()); }
+    THEN("is_required should be false") { REQUIRE(!arg.is_required); }
+    THEN("default_value should be unsigned zero") {
+      REQUIRE(std::get<std::size_t>(arg.default_value) == std::size_t{0});
+    }
+    THEN("implicit_value should be empty") { REQUIRE(std::holds_alternative<std::monostate>(arg.implicit_value)); }
+    THEN("action_fn should be count") { REQUIRE(arg.action_fn == act::fn::count); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -107,7 +141,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
     THEN("implicit_value should be true") { REQUIRE(std::get<bool>(arg.implicit_value) == true); }
-    THEN("action_fn should be print_help") { REQUIRE(arg.action_fn == actions::print_help); }
+    THEN("action_fn should be print_help") { REQUIRE(arg.action_fn == act::fn::print_help); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -122,7 +156,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
     THEN("implicit_value should be true") { REQUIRE(std::get<bool>(arg.implicit_value) == true); }
-    THEN("action_fn should be print_help") { REQUIRE(arg.action_fn == actions::print_help); }
+    THEN("action_fn should be print_help") { REQUIRE(arg.action_fn == act::fn::print_help); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -137,7 +171,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
     THEN("implicit_value should be true") { REQUIRE(std::get<bool>(arg.implicit_value) == true); }
-    THEN("action_fn should be print_version") { REQUIRE(arg.action_fn == actions::print_version); }
+    THEN("action_fn should be print_version") { REQUIRE(arg.action_fn == act::fn::print_version); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
@@ -152,7 +186,7 @@ SCENARIO("default values", "[Arg][defaults]") {
     THEN("is_required should be false") { REQUIRE(!arg.is_required); }
     THEN("default_value should be false") { REQUIRE(std::get<bool>(arg.default_value) == false); }
     THEN("implicit_value should be true") { REQUIRE(std::get<bool>(arg.implicit_value) == true); }
-    THEN("action_fn should be print_version") { REQUIRE(arg.action_fn == actions::print_version); }
+    THEN("action_fn should be print_version") { REQUIRE(arg.action_fn == act::fn::print_version); }
     THEN("gather_amount should be 1") { REQUIRE(arg.gather_amount == 1); }
     THEN("default_setter should be nullptr") { REQUIRE(arg.default_setter == nullptr); }
   }
