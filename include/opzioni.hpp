@@ -429,7 +429,18 @@ struct Arg {
   }
 };
 
-constexpr bool operator<(Arg const &lhs, Arg const &rhs) noexcept { return lhs.name < rhs.name; }
+constexpr bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
+  bool const lhs_is_positional = lhs.type == ArgType::POS;
+  bool const rhs_is_positional = rhs.type == ArgType::POS;
+
+  if (lhs_is_positional && rhs_is_positional)
+    return false; // don't move positionals relative to each other
+
+  if (!lhs_is_positional && !rhs_is_positional)
+    return lhs.name < rhs.name; // sort non-positionals by name
+
+  return lhs_is_positional; // sort positionals before other types
+}
 
 constexpr bool operator==(Arg const &lhs, Arg const &rhs) noexcept {
   auto const same_name = lhs.name == rhs.name;
