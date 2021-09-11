@@ -59,18 +59,15 @@ These defaults are:
 
 Although possible, if the constructor of `Arg` were to be called, the argument type and all these defaults would have to be manually specified, requiring more typing.
 
-Arguments are added to a program via its operator `+`, but first are gathered into an array via their operator `*`.
-These choices relate to operator precedence, since we first need to build the array, then add the array of arguments to the program.
-Building an array is needed so we can verify that all argument names are unique, for example.
-
-Let's add some arguments to our `curl` program:
+Arguments are added to a program via its `add` member function. Let's add some to our `curl` example:
 
 ```cpp
-constexpr auto curl = Program("curl", "transfer a URL") +
-                        Pos("url").help("The URL to transfer") *
-                        Opt("request", "X").help("The HTTP method to use") *
-                        Flg("verbose", "v").help("Make the operation more talkative") *
-                        Help();
+constexpr auto curl =
+  Program("curl", "transfer a URL")
+    .add(Pos("url").help("The URL to transfer"))
+    .add(Opt("request", "X").help("The HTTP method to use"))
+    .add(Flg("verbose", "v").help("Make the operation more talkative"))
+    .add(Help());
 ```
 
 Since we get an `Arg` after calling one of the three argument factories, we can further customize it with its member functions.
@@ -134,22 +131,23 @@ fmt::print("verbose: {}\n", verbose);
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
-    using namespace opzioni;
+  using namespace opzioni;
 
-    constexpr auto curl = Program("curl", "transfer a URL") +
-                            Pos("url").help("The URL to transfer") *
-                            Opt("request", "X").help("The HTTP method to use") *
-                            Flg("verbose", "v").help("Make the operation more talkative") *
-                            Help();
+  constexpr auto curl =
+    Program("curl", "transfer a URL")
+      .add(Pos("url").help("The URL to transfer"))
+      .add(Opt("request", "X").help("The HTTP method to use"))
+      .add(Flg("verbose", "v").help("Make the operation more talkative"))
+      .add(Help());
 
-    auto const map = curl(argc, argv);
+  auto const map = curl(argc, argv);
 
-    std::string_view const url = map["url"];
-    std::string_view const request = map["request"];
-    bool const verbose = map["verbose"];
-    fmt::print("url: {}\n", url);
-    fmt::print("request: {}\n", request);
-    fmt::print("verbose: {}\n", verbose);
+  std::string_view const url = map["url"];
+  std::string_view const request = map["request"];
+  bool const verbose = map["verbose"];
+  fmt::print("url: {}\n", url);
+  fmt::print("request: {}\n", request);
+  fmt::print("verbose: {}\n", verbose);
 }
 ```
 
