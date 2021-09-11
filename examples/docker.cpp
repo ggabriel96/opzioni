@@ -68,8 +68,8 @@ int main(int argc, char const *argv[]) {
                   "~/.docker/cert.pem")] *
               Opt("tlskey").help(
                   "Path to TLS key file (default {default_value})")[act::Assign().otherwise("~/.docker/key.pem")] *
-              Flg("tlsverify").help("Use TLS and verify the remote")) +
-      exec * pull;
+              Flg("tlsverify").help("Use TLS and verify the remote"))
+          .add_cmds(exec * pull);
 
   auto const args = docker(argc, argv);
 

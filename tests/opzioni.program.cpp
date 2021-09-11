@@ -255,7 +255,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
     }
 
     WHEN("cmd is added as command of program") {
-      constexpr auto program = Program("program") + std::array{ProgramView(cmd)};
+      constexpr auto program = Program("program").add_cmds(std::array{ProgramView(cmd)});
 
       THEN("cmd should be added as only command of program") {
         REQUIRE(program.cmds.size() == 1);
@@ -284,7 +284,7 @@ SCENARIO("adding commands", "[Program][cmds]") {
     }
 
     WHEN("both cmds are added as commands of program, but cmd2 first") {
-      constexpr auto program = Program("program") + cmd2 * cmd1;
+      constexpr auto program = Program("program").add_cmds(cmd2 * cmd1);
 
       THEN("cmd1 should be added as first command of program and cmd2 as second") {
         REQUIRE(program.cmds.size() == 2);
@@ -421,10 +421,11 @@ SCENARIO("parsing", "[Program][parsing]") {
     constexpr static auto cmd =
         Program("cmd").on_error(rethrow).add_args(Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l"));
 
-    constexpr auto program =
-        Program("program").on_error(rethrow).add_args(Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") *
-                                                      Pos("pos1") * Flg("glf", "g") * Flg("f") * Opt("o")) +
-        std::array{ProgramView(cmd)};
+    constexpr auto program = Program("program")
+                                 .on_error(rethrow)
+                                 .add_args(Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") *
+                                           Pos("pos1") * Flg("glf", "g") * Flg("f") * Opt("o"))
+                                 .add_cmds(std::array{ProgramView(cmd)});
 
     WHEN("an empty argv is parsed") {
       std::array<char const *, 0> argv;
