@@ -19,7 +19,7 @@ For instance:
 #include "opzioni.hpp"
 
 int main(int argc, char const *argv[]) {
-    using namespace opzioni;
+  using namespace opzioni;
 }
 ```
 
@@ -157,7 +157,7 @@ int main(int argc, char const *argv[]) {
 
 1. Add an `executable` entry for it in `examples/meson.build`, just like the other examples.
 
-    ```py
+    ```
     curl = executable(
         'curl', 'curl.cpp',
         dependencies: [fmt_dep, opzioni_dep]
