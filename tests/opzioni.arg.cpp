@@ -1,8 +1,15 @@
+#include <type_traits>
 #include <variant>
 
 #include <catch2/catch.hpp>
 
 #include "opzioni.hpp"
+
+SCENARIO("type traits", "[Arg]") {
+  using namespace opzioni;
+
+  REQUIRE(std::is_aggregate_v<Arg>);
+}
 
 SCENARIO("default values", "[Arg][defaults]") {
   using namespace opzioni;
