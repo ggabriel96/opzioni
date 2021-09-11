@@ -19,30 +19,34 @@ int main(int argc, char const *argv[]) {
           .add(Help())
           .add(Version())
           .add(Pos("name").help("Your first name"))
-          .add(Opt("double", "d").help("A double. Default: {default_value}")[act::Assign<double>().otherwise(7.11)])
+          .add(Opt("double", "d").help("A double. Default: {default_value}").action(Assign<double>().otherwise(7.11)))
           .add(Opt("last-name").help("Your last name"))
-          .add(Opt("o").help(
-              "We also support having short names only. Default: {default_value}")[act::Assign().otherwise("oh")])
+          .add(Opt("o")
+                   .help("We also support having short names only. Default: {default_value}")
+                   .action(Assign().otherwise("oh")))
           .add(Opt("num", "n")
                    .help("Creates a vector of numbers with each appearence of this argument. Default: {default_value}")
-                       [act::Append<int>()])
-          .add(Opt("csv").help("In contrast to `Append`, this will create a vector of numbers from a single "
-                               "comma-separated list of values. Default: {default_value}")[act::List<int>()])
+                   .action(Append<int>()))
+          .add(Opt("csv")
+                   .help("In contrast to `Append`, this will create a vector of numbers from a single "
+                         "comma-separated list of values. Default: {default_value}")
+                   .action(List<int>()))
           .add(Opt("verbose", "v")
                    .help("Level of verbosity. "
                          "Sets to {implicit_value} if given without a value (e.g. -{abbrev}). Default: {default_value}")
-                       [act::Assign<int>().implicitly(1).otherwise(0)])
+                   .action(Assign<int>().implicitly(1).otherwise(0)))
           .add(Flg("append", "a")
                    .help(
                        "The equivalent of Python's argparse `append_const`: will append {implicit_value} every time it "
-                       "appears in the CLI. Default: {default_value}")[act::Append<int>().implicitly(1)])
+                       "appears in the CLI. Default: {default_value}")
+                   .action(Append<int>().implicitly(1)))
           .add(Flg("flag", "f")
                    .help("The equivalent of Python's argparse `store_const`: will store \"{implicit_value}\" if it "
                          "appears in the CLI. Default: {default_value}")
-                       [act::Assign().implicitly("do something!").otherwise("nope")])
+                   .action(Assign().implicitly("do something!").otherwise("nope")))
           .add(Counter("t").help("We also support flags with only short names. This argument counts how many times it "
                                  "appears in the CLI. Default: {default_value}"))
-          .add(Opt("woo", "w").help("Woo")[act::Append<int>().gather(3)]);
+          .add(Opt("woo", "w").help("Woo").action(Append<int>().gather(3)));
 
   auto const args = program(argc, argv);
   print("\nCommand path: {}\n", args.exec_path);

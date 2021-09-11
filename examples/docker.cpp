@@ -25,15 +25,15 @@ int main(int argc, char const *argv[]) {
           .add(Help())
           .add(Flg("detach", "d").help("Detached mode: run command in the background"))
           .add(Opt("detach-keys").help("Override the key sequence for detaching a container"))
-          .add(Opt("env", "e").help("Set environment variables")[act::Append()])
-          .add(Opt("env-file").help("Read in a file of environment variables")[act::Append()])
+          .add(Opt("env", "e").help("Set environment variables").action(Append()))
+          .add(Opt("env-file").help("Read in a file of environment variables").action(Append()))
           .add(Flg("interactive", "i").help("Keep STDIN open even if not attached"))
           .add(Flg("privileged").help("Give extended privileges to the command"))
           .add(Flg("tty", "t").help("Allocate a pseudo-TTY"))
           .add(Opt("user", "u").help("Username or UID (format: <name|uid>[:<group|gid>])"))
           .add(Opt("workdir", "w").help("Working directory inside the container"))
           .add(Pos("container").help("Name of the target container"))
-          .add(Pos("command").help("The command to run in the container")[act::Append().gather()]);
+          .add(Pos("command").help("The command to run in the container").action(Append().gather()));
 
   constexpr static auto pull = Program("pull")
                                    .intro("Pull an image or a repository from a registry")
@@ -51,25 +51,29 @@ int main(int argc, char const *argv[]) {
           .details("Run 'docker COMMAND --help' for more information on a command.")
           .add(Help())
           .add(Version())
-          .add(Opt("config").help(
-              "Location of client config files (default {default_value})")[act::Assign().otherwise("~/.docker")])
+          .add(Opt("config")
+                   .help("Location of client config files (default {default_value})")
+                   .action(Assign().otherwise("~/.docker")))
           .add(Opt("context", "c")
                    .help(
                        "Name of the context to use to connect to the daemon (overrides DOCKER_HOST env var and default "
                        "context set with \"docker context use\")"))
           .add(Flg("debug", "D").help("Enable debug mode"))
-          .add(Opt("host", "H").help("Daemon socket(s) to connect to")[act::Append()])
+          .add(Opt("host", "H").help("Daemon socket(s) to connect to").action(Append()))
           .add(Opt("log-level", "l")
                    .help("Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default "
-                         "{default_value})")[act::Assign().otherwise("info")])
+                         "{default_value})")
+                   .action(Assign().otherwise("info")))
           .add(Flg("tls").help("Use TLS; implied by --tlsverify"))
           .add(Opt("tlscacert")
-                   .help("Trust certs signed only by this CA (default {default_value})")[act::Assign().otherwise(
-                       "~/.docker/ca.pem")])
-          .add(Opt("tlscert").help(
-              "Path to TLS certificate file (default {default_value})")[act::Assign().otherwise("~/.docker/cert.pem")])
-          .add(Opt("tlskey").help(
-              "Path to TLS key file (default {default_value})")[act::Assign().otherwise("~/.docker/key.pem")])
+                   .help("Trust certs signed only by this CA (default {default_value})")
+                   .action(Assign().otherwise("~/.docker/ca.pem")))
+          .add(Opt("tlscert")
+                   .help("Path to TLS certificate file (default {default_value})")
+                   .action(Assign().otherwise("~/.docker/cert.pem")))
+          .add(Opt("tlskey")
+                   .help("Path to TLS key file (default {default_value})")
+                   .action(Assign().otherwise("~/.docker/key.pem")))
           .add(Flg("tlsverify").help("Use TLS and verify the remote"))
           .add(exec)
           .add(pull);

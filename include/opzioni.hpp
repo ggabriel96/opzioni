@@ -140,9 +140,9 @@ void set_empty_vector(ArgValue &arg) noexcept {
   arg.value = std::vector<T>{};
 }
 
-// +---------+
-// | actions |
-// +---------+
+// +------------------+
+// | action functions |
+// +------------------+
 
 namespace act::fn {
 
@@ -195,7 +195,9 @@ concept Action = requires(A action) {
 
 } // namespace concepts
 
-namespace act {
+// +---------+
+// | actions |
+// +---------+
 
 template <concepts::BuiltinType Elem = std::string_view>
 class Append {
@@ -353,8 +355,6 @@ public:
   consteval DefaultValueSetter get_default_setter() const noexcept { return nullptr; }
 };
 
-} // namespace act
-
 // +-----+
 // | Arg |
 // +-----+
@@ -380,13 +380,14 @@ struct Arg {
   }
 
   template <concepts::Action Action>
-  consteval Arg operator[](Action action) const noexcept {
+  consteval Arg action(Action action) const noexcept {
     auto const &default_value = action.get_default_value();
     auto const &implicit_value = action.get_implicit_value();
-    auto arg = default_value && implicit_value ? Arg::With(*this, *default_value, *implicit_value)
-               : default_value                 ? Arg::With(*this, *default_value, std::monostate{})
-               : implicit_value                ? Arg::With(*this, std::monostate{}, *implicit_value)
-                                               : Arg::With(*this, std::monostate{}, std::monostate{});
+    auto arg = default_value && implicit_value
+                   ? Arg::With(*this, *default_value, *implicit_value)
+                   : default_value ? Arg::With(*this, *default_value, std::monostate{})
+                                   : implicit_value ? Arg::With(*this, std::monostate{}, *implicit_value)
+                                                    : Arg::With(*this, std::monostate{}, std::monostate{});
     arg.is_required = action.get_is_required();
     arg.action_fn = action.get_fn();
     arg.gather_amount = action.get_gather_amount();
@@ -527,19 +528,19 @@ consteval Arg Pos(std::string_view name) noexcept {
 // +--------------------+
 
 consteval Arg Counter(std::string_view name, std::string_view abbrev) noexcept {
-  return Flg(name, abbrev)[act::Count()];
+  return Flg(name, abbrev).action(Count());
 }
 
 consteval Arg Counter(std::string_view name) noexcept { return Counter(name, {}); }
 
 consteval Arg Help(std::string_view description) noexcept {
-  return Flg("help", "h").help(description)[act::PrintHelp()];
+  return Flg("help", "h").help(description).action(PrintHelp());
 }
 
 consteval Arg Help() noexcept { return Help("Display this information"); }
 
 consteval Arg Version(std::string_view description) noexcept {
-  return Flg("version", "V").help(description)[act::PrintVersion()];
+  return Flg("version", "V").help(description).action(PrintVersion());
 }
 
 consteval Arg Version() noexcept { return Version("Display the software version"); }
@@ -765,9 +766,9 @@ private:
   }
 };
 
-// +---------------------------+
-// | implementation of actions |
-// +---------------------------+
+// +------------------------------------+
+// | implementation of action functions |
+// +------------------------------------+
 
 namespace act::fn {
 
