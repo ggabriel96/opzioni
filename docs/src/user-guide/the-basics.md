@@ -58,6 +58,7 @@ These defaults are:
 - flags have `false` as default value
 
 Although possible, if the constructor of `Arg` were to be called, the argument type and all these defaults would have to be manually specified, requiring more typing.
+`Arg` is an aggregate, though, which eases things a bit.
 
 Arguments are added to a program via its `add` member function. Let's add some to our `curl` example:
 
@@ -70,11 +71,11 @@ constexpr auto curl =
     .add(Help());
 ```
 
-Since we get an `Arg` after calling one of the three argument factories, we can further customize it with its member functions.
-The first one we are presented here is `.help()`, which serves the purpose of setting descriptions to arguments.
+Since we get an `Arg` after calling one of the argument factories, we can further customize it with its member functions.
+The first one we used here is `.help()`, which serves the purpose of setting descriptions to arguments.
 These descriptions are what appears in the automatic help text that opzioni generates.
 
-To tell opzioni that automatic help text is desired, we simply call `Help()`.
+To tell opzioni that automatic help text is desired, we simply add a `Help()`.
 Similar to the previous functions, it's just a helper, but this time to create a very common flag, which is to show the program help.
 
 
@@ -209,7 +210,7 @@ The following list contains the rules that opzioni follows when parsing them.
 
     - `pip -h`, where `h` is a flag of `pip`.
 
-    - `tar -vxz`, where `vxz` are three flags of `tar`.
+    - `tar -vxz`, where `v`, `x`, and `z` are three flags of `tar`.
 
     - `g++ -O2` or `g++ -O=2`, where `O` is an option of `g++` and `2` is its value.
 
