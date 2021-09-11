@@ -456,7 +456,7 @@ For instance:</p>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;opzioni.hpp&quot;</span><span class="cp"></span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">opzioni</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">opzioni</span><span class="p">;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </code></pre></div>
 <p>The <code>using</code> directive for the <code>opzioni</code> namespace is just to make things easier for now.
@@ -483,21 +483,20 @@ These defaults are:</p>
 <li>options have <code>""</code> as default value</li>
 <li>flags have <code>false</code> as default value</li>
 </ul>
-<p>Although possible, if the constructor of <code>Arg</code> were to be called, the argument type and all these defaults would have to be manually specified, requiring more typing.</p>
-<p>Arguments are added to a program via its operator <code>+</code>, but first are gathered into an array via their operator <code>*</code>.
-These choices relate to operator precedence, since we first need to build the array, then add the array of arguments to the program.
-Building an array is needed so we can verify that all argument names are unique, for example.</p>
-<p>Let's add some arguments to our <code>curl</code> program:</p>
-<div class="highlight"><pre><span></span><code><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">curl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"></span>
-<span class="w">                        </span><span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
-<span class="w">                        </span><span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
-<span class="w">                        </span><span class="n">Flg</span><span class="p">(</span><span class="s">&quot;verbose&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Make the operation more talkative&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
-<span class="w">                        </span><span class="n">Help</span><span class="p">();</span><span class="w"></span>
+<p>Although possible, if the constructor of <code>Arg</code> were to be called, the argument type and all these defaults would have to be manually specified, requiring more typing.
+<code>Arg</code> is an aggregate, though, which eases things a bit.</p>
+<p>Arguments are added to a program via its <code>add</code> member function. Let's add some to our <code>curl</code> example:</p>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">curl</span><span class="w"> </span><span class="o">=</span><span class="w"></span>
+<span class="w">  </span><span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Flg</span><span class="p">(</span><span class="s">&quot;verbose&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Make the operation more talkative&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Help</span><span class="p">());</span><span class="w"></span>
 </code></pre></div>
-<p>Since we get an <code>Arg</code> after calling one of the three argument factories, we can further customize it with its member functions.
-The first one we are presented here is <code>.help()</code>, which serves the purpose of setting descriptions to arguments.
+<p>Since we get an <code>Arg</code> after calling one of the argument factories, we can further customize it with its member functions.
+The first one we used here is <code>.help()</code>, which serves the purpose of setting descriptions to arguments.
 These descriptions are what appears in the automatic help text that opzioni generates.</p>
-<p>To tell opzioni that automatic help text is desired, we simply call <code>Help()</code>.
+<p>To tell opzioni that automatic help text is desired, we simply add a <code>Help()</code>.
 Similar to the previous functions, it's just a helper, but this time to create a very common flag, which is to show the program help.</p>
 <h2 id="parsing-the-cli">Parsing the CLI<a class="headerlink" href="#parsing-the-cli" title="Permanent link">&para;</a></h2>
 <p>Now that our very simple <code>curl</code> has some arguments, we can try parsing the CLI and see what we get.
@@ -534,22 +533,23 @@ So, for example, to get the value of the <code>request</code> option, it's alway
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;opzioni.hpp&quot;</span><span class="cp"></span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">opzioni</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">opzioni</span><span class="p">;</span><span class="w"></span>
 
-<span class="w">    </span><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">curl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"></span>
-<span class="w">                            </span><span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
-<span class="w">                            </span><span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
-<span class="w">                            </span><span class="n">Flg</span><span class="p">(</span><span class="s">&quot;verbose&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Make the operation more talkative&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
-<span class="w">                            </span><span class="n">Help</span><span class="p">();</span><span class="w"></span>
+<span class="w">  </span><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">curl</span><span class="w"> </span><span class="o">=</span><span class="w"></span>
+<span class="w">    </span><span class="n">Program</span><span class="p">(</span><span class="s">&quot;curl&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;transfer a URL&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">      </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Pos</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The URL to transfer&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">      </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Opt</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;X&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;The HTTP method to use&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">      </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Flg</span><span class="p">(</span><span class="s">&quot;verbose&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v&quot;</span><span class="p">).</span><span class="n">help</span><span class="p">(</span><span class="s">&quot;Make the operation more talkative&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">      </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Help</span><span class="p">());</span><span class="w"></span>
 
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">curl</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">curl</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span><span class="w"></span>
 
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span><span class="w"></span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">[</span><span class="s">&quot;request&quot;</span><span class="p">];</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">[</span><span class="s">&quot;verbose&quot;</span><span class="p">];</span><span class="w"></span>
-<span class="w">    </span><span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;url: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;request: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">request</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;verbose: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">verbose</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">];</span><span class="w"></span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">[</span><span class="s">&quot;request&quot;</span><span class="p">];</span><span class="w"></span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">[</span><span class="s">&quot;verbose&quot;</span><span class="p">];</span><span class="w"></span>
+<span class="w">  </span><span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;url: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;request: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">request</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;verbose: {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">verbose</span><span class="p">);</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </code></pre></div>
 <h2 id="building-as-an-example">Building as an example<a class="headerlink" href="#building-as-an-example" title="Permanent link">&para;</a></h2>
@@ -559,10 +559,10 @@ So, for example, to get the value of the <code>request</code> option, it's alway
 </li>
 <li>
 <p>Add an <code>executable</code> entry for it in <code>examples/meson.build</code>, just like the other examples.</p>
-<div class="highlight"><pre><span></span><code><span class="n">curl</span> <span class="o">=</span> <span class="n">executable</span><span class="p">(</span>
-    <span class="s1">&#39;curl&#39;</span><span class="p">,</span> <span class="s1">&#39;curl.cpp&#39;</span><span class="p">,</span>
-    <span class="n">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="n">fmt_dep</span><span class="p">,</span> <span class="n">opzioni_dep</span><span class="p">]</span>
-<span class="p">)</span>
+<div class="highlight"><pre><span></span><code>curl = executable(
+    &#39;curl&#39;, &#39;curl.cpp&#39;,
+    dependencies: [fmt_dep, opzioni_dep]
+)
 </code></pre></div>
 </li>
 <li>
@@ -604,7 +604,7 @@ The following list contains the rules that opzioni follows when parsing them.</p
 <p><code>pip -h</code>, where <code>h</code> is a flag of <code>pip</code>.</p>
 </li>
 <li>
-<p><code>tar -vxz</code>, where <code>vxz</code> are three flags of <code>tar</code>.</p>
+<p><code>tar -vxz</code>, where <code>v</code>, <code>x</code>, and <code>z</code> are three flags of <code>tar</code>.</p>
 </li>
 <li>
 <p><code>g++ -O2</code> or <code>g++ -O=2</code>, where <code>O</code> is an option of <code>g++</code> and <code>2</code> is its value.</p>
