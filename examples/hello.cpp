@@ -9,7 +9,9 @@ int main(int argc, char const *argv[]) {
   constexpr auto hello = Program("hello")
                              .version("0.1")
                              .intro("Greeting people since the dawn of computing")
-                             .add_args(Help() * Version() * Pos("name").help("Your name please, so I can greet you"));
+                             .add(Help())
+                             .add(Version())
+                             .add(Pos("name").help("Your name please, so I can greet you"));
 
   auto const args = hello(argc, argv);
   std::string_view const name = args["name"];

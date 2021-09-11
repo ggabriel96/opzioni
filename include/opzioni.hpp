@@ -448,25 +448,6 @@ constexpr bool operator==(Arg const &lhs, Arg const &rhs) noexcept {
   return same_name || same_abbrev;
 }
 
-consteval auto operator*(Arg const lhs, Arg const rhs) noexcept {
-  if (lhs == rhs)
-    throw "Trying to add argument with a duplicate name";
-  validate_arg(lhs);
-  validate_arg(rhs);
-  return std::array{lhs, rhs};
-}
-
-template <std::size_t N>
-consteval auto operator*(std::array<Arg, N> const args, Arg const other) noexcept {
-  validate_arg(other);
-  validate_args(args, other);
-
-  std::array<Arg, N + 1> newargs;
-  std::copy_n(args.begin(), N, newargs.begin());
-  newargs[N] = other;
-  return newargs;
-}
-
 consteval void validate_arg(Arg const &arg) noexcept {
   if (arg.name.empty())
     throw "An argument cannot have an empty name";
@@ -638,22 +619,6 @@ constexpr bool operator==(ProgramView const &lhs, ProgramView const &rhs) noexce
   return lhs.metadata.name == rhs.metadata.name;
 }
 
-consteval auto operator*(ProgramView const lhs, ProgramView const rhs) noexcept {
-  if (lhs == rhs)
-    throw "Trying to add command with a duplicate name";
-  return std::array{lhs, rhs};
-}
-
-template <std::size_t N>
-consteval auto operator*(std::array<ProgramView, N> const cmds, ProgramView const other) noexcept {
-  validate_cmds(cmds, other);
-
-  std::array<ProgramView, N + 1> newcmds;
-  std::copy_n(cmds.begin(), N, newcmds.begin());
-  newcmds[N] = other;
-  return newcmds;
-}
-
 template <std::size_t N>
 consteval void validate_cmds(std::array<ProgramView, N> const &cmds, ProgramView const &other) noexcept {
   if (std::ranges::find(cmds, other) != cmds.end())
@@ -721,29 +686,22 @@ public:
     return program;
   }
 
-  template <std::size_t N>
-  consteval Program<N, CmdsSize> add_args(std::array<Arg, N> args) const noexcept {
-    Program<N, CmdsSize> newprogram(*this);
-    std::array<Arg, N> positionals, others;
-
-    auto const partition_result =
-        std::ranges::partition_copy(args, positionals.begin(), others.begin(), &Arg::is_positional);
-    newprogram.metadata.positionals_amount = std::ranges::distance(positionals.begin(), partition_result.out1);
-
-    auto const copy_result =
-        std::ranges::copy_n(positionals.begin(), newprogram.metadata.positionals_amount, newprogram.args.begin());
-    std::ranges::copy_n(others.begin(), N - newprogram.metadata.positionals_amount, copy_result.out);
-
-    std::sort(copy_result.out, newprogram.args.end());
-    return newprogram;
+  consteval Program<ArgsSize + 1, CmdsSize> add(Arg const arg) const noexcept {
+    validate_arg(arg);
+    validate_args(this->args, arg);
+    Program<ArgsSize + 1, CmdsSize> new_program(*this);
+    new_program.args[ArgsSize] = arg;
+    new_program.metadata.positionals_amount += arg.type == ArgType::POS;
+    std::sort(new_program.args.begin(), new_program.args.end());
+    return new_program;
   }
 
-  template <std::size_t N>
-  consteval Program<ArgsSize, N> add_cmds(std::array<ProgramView, N> cmds) const noexcept {
-    Program<ArgsSize, N> newprogram(*this);
-    std::ranges::copy(cmds, newprogram.cmds.begin());
-    std::sort(newprogram.cmds.begin(), newprogram.cmds.end()); // don't know why can't use std::ranges::sort
-    return newprogram;
+  consteval Program<ArgsSize, CmdsSize + 1> add(ProgramView const cmd) const noexcept {
+    validate_cmds(this->cmds, cmd);
+    Program<ArgsSize, CmdsSize + 1> new_program(*this);
+    new_program.cmds[CmdsSize] = cmd;
+    std::sort(new_program.cmds.begin(), new_program.cmds.end());
+    return new_program;
   }
 
   constexpr operator ProgramView() const noexcept {
