@@ -171,7 +171,7 @@ SCENARIO("adding arguments", "[Program][args]") {
   GIVEN("an empty Program") {
 
     WHEN("a positional is added") {
-      constexpr auto program = Program("program") + std::array{Pos("pos")};
+      constexpr auto program = Program("program").add_args(std::array{Pos("pos")});
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 1); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -182,7 +182,7 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
 
     WHEN("two positionals are added") {
-      constexpr auto program = Program("program") + Pos("pos1") * Pos("pos2");
+      constexpr auto program = Program("program").add_args(Pos("pos1") * Pos("pos2"));
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 2); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -196,7 +196,8 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
 
     WHEN("multiple positionals are added") {
-      constexpr auto program = Program("program") + Pos("pos5") * Pos("pos2") * Pos("pos4") * Pos("pos1") * Pos("pos3");
+      constexpr auto program =
+          Program("program").add_args(Pos("pos5") * Pos("pos2") * Pos("pos4") * Pos("pos1") * Pos("pos3"));
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 5); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -213,8 +214,8 @@ SCENARIO("adding arguments", "[Program][args]") {
     }
 
     WHEN("other arguments are added before positionals") {
-      constexpr auto program = Program("program") + Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") *
-                                                        Pos("pos2") * Opt("opt1") * Flg("flg2");
+      constexpr auto program = Program("program").add_args(Flg("flg1") * Opt("opt2") * Pos("pos3") * Pos("pos1") *
+                                                           Pos("pos2") * Opt("opt1") * Flg("flg2"));
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 7); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -418,11 +419,12 @@ SCENARIO("parsing", "[Program][parsing]") {
 
   GIVEN("a program with all kinds of arguments and a command") {
     constexpr static auto cmd =
-        Program("cmd").on_error(rethrow) + Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l");
+        Program("cmd").on_error(rethrow).add_args(Flg("f") * Pos("pos1") * Pos("cmd-pos") * Opt("long", "l"));
 
-    constexpr auto program = Program("program").on_error(rethrow) + std::array{ProgramView(cmd)} +
-                             Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") * Pos("pos1") *
-                                 Flg("glf", "g") * Flg("f") * Opt("o");
+    constexpr auto program =
+        Program("program").on_error(rethrow).add_args(Pos("pos2") * Opt("long") * Flg("flg") * Opt("longer-opt", "l") *
+                                                      Pos("pos1") * Flg("glf", "g") * Flg("f") * Opt("o")) +
+        std::array{ProgramView(cmd)};
 
     WHEN("an empty argv is parsed") {
       std::array<char const *, 0> argv;

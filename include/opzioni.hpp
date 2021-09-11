@@ -383,10 +383,11 @@ struct Arg {
   consteval Arg operator[](Action action) const noexcept {
     auto const &default_value = action.get_default_value();
     auto const &implicit_value = action.get_implicit_value();
-    auto arg = default_value && implicit_value ? Arg::With(*this, *default_value, *implicit_value)
-               : default_value                 ? Arg::With(*this, *default_value, std::monostate{})
-               : implicit_value                ? Arg::With(*this, std::monostate{}, *implicit_value)
-                                               : Arg::With(*this, std::monostate{}, std::monostate{});
+    auto arg = default_value && implicit_value
+                   ? Arg::With(*this, *default_value, *implicit_value)
+                   : default_value ? Arg::With(*this, *default_value, std::monostate{})
+                                   : implicit_value ? Arg::With(*this, std::monostate{}, *implicit_value)
+                                                    : Arg::With(*this, std::monostate{}, std::monostate{});
     arg.is_required = action.get_is_required();
     arg.action_fn = action.get_fn();
     arg.gather_amount = action.get_gather_amount();
@@ -710,7 +711,7 @@ public:
   }
 
   template <std::size_t N>
-  consteval Program<N, CmdsSize> operator+(std::array<Arg, N> args) const noexcept {
+  consteval Program<N, CmdsSize> add_args(std::array<Arg, N> args) const noexcept {
     Program<N, CmdsSize> newprogram(*this);
     std::array<Arg, N> positionals, others;
 
