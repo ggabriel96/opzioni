@@ -383,11 +383,10 @@ struct Arg {
   consteval Arg operator[](Action action) const noexcept {
     auto const &default_value = action.get_default_value();
     auto const &implicit_value = action.get_implicit_value();
-    auto arg = default_value && implicit_value
-                   ? Arg::With(*this, *default_value, *implicit_value)
-                   : default_value ? Arg::With(*this, *default_value, std::monostate{})
-                                   : implicit_value ? Arg::With(*this, std::monostate{}, *implicit_value)
-                                                    : Arg::With(*this, std::monostate{}, std::monostate{});
+    auto arg = default_value && implicit_value ? Arg::With(*this, *default_value, *implicit_value)
+               : default_value                 ? Arg::With(*this, *default_value, std::monostate{})
+               : implicit_value                ? Arg::With(*this, std::monostate{}, *implicit_value)
+                                               : Arg::With(*this, std::monostate{}, std::monostate{});
     arg.is_required = action.get_is_required();
     arg.action_fn = action.get_fn();
     arg.gather_amount = action.get_gather_amount();

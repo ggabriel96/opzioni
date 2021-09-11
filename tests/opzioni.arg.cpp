@@ -5,7 +5,6 @@
 
 #include "opzioni.hpp"
 
-
 SCENARIO("type traits", "[Arg]") {
   using namespace opzioni;
 
