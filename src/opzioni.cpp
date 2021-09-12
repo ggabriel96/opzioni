@@ -480,9 +480,9 @@ void HelpFormatter::print_details() const noexcept {
     out << limit_string_within(program.metadata.details, program.metadata.msg_width) << nl;
 }
 
-// +---------------------------+
-// | implementation of actions |
-// +---------------------------+
+// +------------------------------------+
+// | implementation of action functions |
+// +------------------------------------+
 
 namespace act::fn {
 
