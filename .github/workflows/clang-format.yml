@@ -16,8 +16,14 @@ jobs:
           auto-activate-base: false
           environment-file: environment.yml
 
-      - name: Check header files
-        run: clang-format --dry-run --verbose -Werror $(find . -path './subprojects' -prune , -name '*.hpp')
+      - name: Check examples/
+        run: clang-format --dry-run --verbose -Werror examples/*.cpp
 
-      - name: Check source files
-        run: clang-format --dry-run --verbose -Werror $(find . -path './subprojects' -prune , -name '*.cpp')
+      - name: Check include/
+        run: clang-format --dry-run --verbose -Werror include/*.hpp
+
+      - name: Check src/
+        run: clang-format --dry-run --verbose -Werror src/*.cpp
+
+      - name: Check tests/
+        run: clang-format --dry-run --verbose -Werror tests/*.cpp
