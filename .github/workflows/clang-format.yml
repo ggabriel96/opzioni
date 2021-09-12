@@ -5,16 +5,38 @@ on: push
 jobs:
   check-formatting:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       - uses: actions/checkout@v2
+
+      - name: Cache conda packages
+        uses: actions/cache@v2
+        env:
+          CACHE_VERSION: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-v${{ env.CACHE_VERSION }}-${{ runner.os }}-${{ hashFiles('environment.yml') }}
+
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: opzioni
           auto-activate-base: false
           environment-file: environment.yml
 
-      - name: Check header files
-        run: clang-format --dry-run --verbose -Werror $(find . -path './subprojects' -prune , -name '*.hpp')
+      - name: Check examples/
+        run: clang-format --dry-run --verbose -Werror examples/*.cpp
+        if: always()
 
-      - name: Check source files
-        run: clang-format --dry-run --verbose -Werror $(find . -path './subprojects' -prune , -name '*.cpp')
+      - name: Check include/
+        run: clang-format --dry-run --verbose -Werror include/*.hpp
+        if: always()
+
+      - name: Check src/
+        run: clang-format --dry-run --verbose -Werror src/*.cpp
+        if: always()
+
+      - name: Check tests/
+        run: clang-format --dry-run --verbose -Werror tests/*.cpp
+        if: always()

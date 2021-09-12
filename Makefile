@@ -13,8 +13,10 @@ test:
 
 format:
 	clang-format --verbose -i \
-		$(shell find . -path './subprojects' -prune , -name '*.cpp') \
-		$(shell find . -path './subprojects' -prune , -name '*.hpp')
+		examples/*.cpp \
+		include/*.hpp \
+		src/*.cpp \
+		tests/*.cpp
 
 clean:
 	rm build/ -rf
