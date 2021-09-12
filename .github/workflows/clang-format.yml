@@ -18,12 +18,16 @@ jobs:
 
       - name: Check examples/
         run: clang-format --dry-run --verbose -Werror examples/*.cpp
+        if: always()
 
       - name: Check include/
         run: clang-format --dry-run --verbose -Werror include/*.hpp
+        if: always()
 
       - name: Check src/
         run: clang-format --dry-run --verbose -Werror src/*.cpp
+        if: always()
 
       - name: Check tests/
         run: clang-format --dry-run --verbose -Werror tests/*.cpp
+        if: always()
