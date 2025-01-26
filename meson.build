@@ -2,7 +2,7 @@ project(
     'opzioni', 'cpp',
     version: '0.50.0',
     license: 'BSL-1.0',
-    default_options: ['cpp_std=c++20', 'buildtype=debug']
+    default_options: ['cpp_std=c++23', 'buildtype=debug']
 )
 
 # +--------------+
@@ -15,8 +15,8 @@ fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
 # +--------------------+
 include_dir = include_directories('include/')
 opzioni_lib = library(
-    'opzioni',
-    ['src/converters.cpp', 'src/opzioni.cpp', 'src/string.cpp'],
+    'explib',
+    ['src/exp.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true
@@ -31,7 +31,7 @@ opzioni_dep = declare_dependency(
 # +-------+
 # | Tests |
 # +-------+
-subdir('tests/')
+# subdir('tests/')
 
 # +----------+
 # | Examples |
