@@ -18,6 +18,23 @@ struct InStringList<Needle, StringList<Needle, Haystack...>> : std::true_type {}
 template <fixed_string Needle, fixed_string Other, fixed_string... Haystack>
 struct InStringList<Needle, StringList<Other, Haystack...>> : InStringList<Needle, StringList<Haystack...>> {};
 
+// base case (str not found)
+template<int Idx, fixed_string, typename...>
+struct IndexOfStr : std::integral_constant<int, -1> {};
+
+// base case (str found)
+template<int Idx, fixed_string Needle, fixed_string... Haystack>
+struct IndexOfStr<Idx, Needle, StringList<Needle, Haystack...>> : std::integral_constant<int, Idx> {};
+
+// recursive case (keep looking)
+template<int Idx, fixed_string Needle, fixed_string Other, fixed_string... Haystack>
+struct IndexOfStr<Idx, Needle, StringList<Other, Haystack...>> : IndexOfStr<Idx + 1, Needle, StringList<Haystack...>> {};
+
+// +------------------------------+
+// |           TypeList           |
+// +------------------------------+
+
+
 template <typename...>
 struct TypeList;
 
