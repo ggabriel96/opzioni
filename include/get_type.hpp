@@ -2,6 +2,10 @@
 
 #include "fixed_string.hpp"
 
+// +--------------------------------+
+// |           StringList           |
+// +--------------------------------+
+
 template <fixed_string...>
 struct StringList;
 
@@ -17,17 +21,21 @@ struct InStringList<Needle, StringList<Other, Haystack...>> : InStringList<Needl
 template <typename...>
 struct TypeList;
 
-template<std::size_t, typename... Ts>
-struct IndexOfImpl : std::integral_constant<std::size_t, sizeof... (Ts)> {};
+template<int, typename... Ts>
+struct IndexOfTypeImpl : std::integral_constant<int, -1> {};
 
-template<std::size_t Idx, typename T, typename... Ts>
-struct IndexOfImpl<Idx, T, TypeList<T, Ts...>> : std::integral_constant<std::size_t, Idx> {};
+template<int Idx, typename T, typename... Ts>
+struct IndexOfTypeImpl<Idx, T, TypeList<T, Ts...>> : std::integral_constant<int, Idx> {};
 
-template<std::size_t Idx, typename T, typename U, typename... Ts>
-struct IndexOfImpl<Idx, T, TypeList<U, Ts...>> : IndexOfImpl<Idx + 1, T, TypeList<Ts...>> {};
+template<int Idx, typename T, typename U, typename... Ts>
+struct IndexOfTypeImpl<Idx, T, TypeList<U, Ts...>> : IndexOfTypeImpl<Idx + 1, T, TypeList<Ts...>> {};
 
 template<typename T, typename... Ts>
-struct IndexOf : IndexOfImpl<0, T, TypeList<Ts...>> {};
+struct IndexOfType : IndexOfTypeImpl<0, T, TypeList<Ts...>> {};
+
+// +-----------------------------+
+// |           GetType           |
+// +-----------------------------+
 
 template <typename T>
 struct TypeResult {
