@@ -11,7 +11,7 @@ struct Program;
 template<>
 struct Program<> {
   template <fixed_string Name, typename T>
-  constexpr auto Add() {
+  consteval auto Add() {
     return Program<StringList<Name>, TypeList<T>>{};
   }
 };
@@ -24,7 +24,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   std::tuple<std::optional<Types>...> values{};
 
   template <fixed_string Name, typename T>
-  constexpr auto Add() {
+  consteval auto Add() {
     return Program<StringList<Name, Names...>, TypeList<T, Types...>>{};
   }
 
