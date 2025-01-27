@@ -1,3 +1,5 @@
+#include <cstddef>
+
 #include "fixed_string.hpp"
 
 template <fixed_string...>
@@ -14,6 +16,18 @@ struct InStringList<Needle, StringList<Other, Haystack...>> : InStringList<Needl
 
 template <typename...>
 struct TypeList;
+
+template<std::size_t, typename... Ts>
+struct IndexOfImpl : std::integral_constant<std::size_t, sizeof... (Ts)> {};
+
+template<std::size_t Idx, typename T, typename... Ts>
+struct IndexOfImpl<Idx, T, TypeList<T, Ts...>> : std::integral_constant<std::size_t, Idx> {};
+
+template<std::size_t Idx, typename T, typename U, typename... Ts>
+struct IndexOfImpl<Idx, T, TypeList<U, Ts...>> : IndexOfImpl<Idx + 1, T, TypeList<Ts...>> {};
+
+template<typename T, typename... Ts>
+struct IndexOf : IndexOfImpl<0, T, TypeList<Ts...>> {};
 
 template <typename T>
 struct TypeResult {
