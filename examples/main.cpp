@@ -6,11 +6,11 @@
 #include "exp.hpp"
 
 int main(int argc, char const *argv[]) {
-    // constexpr auto p = Program<StringList<"age", "name">, TypeList<int, std::string>>();
-    constexpr auto p = Program()
+    auto p = Program()
         .Add<"age", int>()
         .Add<"name", std::string>();
 
-    auto name = p.GetValue<"name">();
-    fmt::print("name: [{}]\n", name);
+    p.SetValue<"age">(28);
+    auto age = p.GetValue<"age">();
+    fmt::print("age: [{}]\n", age.value_or(-1));
 }
