@@ -29,10 +29,10 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   }
 
   template<fixed_string Name>
-  constexpr GetType<Name, argNames, argTypes>::type GetValue() const noexcept {
-    using T = GetType<Name, argNames, argTypes>::type;
-    static_assert(!std::is_same_v< T, void >, "unknown parameter name");
-    return T();
+  constexpr std::optional<typename GetType<Name, argNames, argTypes>::type> GetValue() const noexcept {
+    using ValueIdx = IndexOfStr<0, Name, argNames>;
+    static_assert(ValueIdx::value != -1, "unknown parameter name");
+    return std::get<ValueIdx::value>(values);
   }
 
   template<fixed_string Name, typename V>
