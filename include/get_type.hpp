@@ -22,16 +22,13 @@ template <typename...>
 struct TypeList;
 
 template<int, typename... Ts>
-struct IndexOfTypeImpl : std::integral_constant<int, -1> {};
+struct IndexOfType : std::integral_constant<int, -1> {};
 
 template<int Idx, typename T, typename... Ts>
-struct IndexOfTypeImpl<Idx, T, TypeList<T, Ts...>> : std::integral_constant<int, Idx> {};
+struct IndexOfType<Idx, T, TypeList<T, Ts...>> : std::integral_constant<int, Idx> {};
 
 template<int Idx, typename T, typename U, typename... Ts>
-struct IndexOfTypeImpl<Idx, T, TypeList<U, Ts...>> : IndexOfTypeImpl<Idx + 1, T, TypeList<Ts...>> {};
-
-template<typename T, typename... Ts>
-struct IndexOfType : IndexOfTypeImpl<0, T, TypeList<Ts...>> {};
+struct IndexOfType<Idx, T, TypeList<U, Ts...>> : IndexOfType<Idx + 1, T, TypeList<Ts...>> {};
 
 // +-----------------------------+
 // |           GetType           |
