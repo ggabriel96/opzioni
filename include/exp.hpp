@@ -36,12 +36,12 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   }
 
   template<fixed_string Name, typename V>
-  constexpr void SetValue(V value) const noexcept {
+  void SetValue(V value) noexcept {
     using T = GetType<Name, argNames, argTypes>::type;
     static_assert(!std::is_same_v< T, void >, "unknown parameter name");
     static_assert(std::is_same_v< V, T >, "parameter of given name has different type than provided value");
-    using ValueIdx = IndexOfType<V, argTypes>::value;
+    using ValueIdx = IndexOfType<0, V, argTypes>;
 
-    std::get<ValueIdx>(values) = value;
+    std::get<ValueIdx::value>(values).emplace(value);
   }
 };
