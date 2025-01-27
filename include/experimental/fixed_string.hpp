@@ -1,5 +1,5 @@
-#ifndef FIXED_STRING_H
-#define FIXED_STRING_H
+#ifndef OPZIONI_FIXED_STRING_H
+#define OPZIONI_FIXED_STRING_H
 
 #include <cstddef>
 

@@ -1,3 +1,6 @@
+#ifndef OPZIONI_PROGRAM_H
+#define OPZIONI_PROGRAM_H
+
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -45,3 +48,5 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     std::get<ValueIdx::value>(values).emplace(value);
   }
 };
+
+#endif
