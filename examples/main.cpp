@@ -7,10 +7,11 @@
 
 int main(int argc, char const *argv[]) {
     auto p = Program()
-        .Add<"age", int>()
-        .Add<"name", std::string>();
+        .Pos<"name", std::string>({.help = "The name of the delivery recipient"})
+        .Pos<"address", std::string>({.help = "The shipping address for your purchase"})
+    ;
 
-    p.SetValue<"age">(28);
-    auto age = p.GetValue<"age">();
-    fmt::print("age: [{}]\n", age.value_or(-1));
+    // p.SetValue<"age">(28);
+    // auto age = p.GetValue<"name">();
+    // fmt::print("name: [{}]\n", age.value_or(std::string()));
 }
