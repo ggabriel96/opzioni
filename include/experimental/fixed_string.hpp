@@ -12,6 +12,10 @@ struct fixed_string {
       data[i] = input[i];
     }
   }
+
+  constexpr operator std::string_view() const noexcept {
+    return std::string_view(data, N);
+  }
 };
 
 #endif
