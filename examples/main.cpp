@@ -6,7 +6,7 @@
 #include "experimental/all.hpp"
 
 int main(int argc, char const *argv[]) {
-    auto p = Program()
+    auto p = DefaultProgram("pull")
         .Pos<"name", std::string>({.help = "The name of the image or repository to pull"})
         .Opt<"platform", std::string>({.help = "Set platform if server is multi-platform capable"})
         .Flg<"all-tags", "a">({.help = "Download all tagged images in the repository"})

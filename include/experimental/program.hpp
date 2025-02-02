@@ -14,36 +14,26 @@
 template<typename ...>
 struct Program;
 
-template<>
-struct Program<> {
-
-  template <fixed_string Name, typename T>
-  consteval auto Pos(ArgMeta meta) {
-    Program<StringList<Name>, TypeList<T>> new_program;
-    new_program.args[0] = Arg{
-      .name = Name,
-      .abbrev = "",
-      .help = meta.help,
-      .is_required = meta.is_required,
-    };
-    new_program.amount_pos += 1;
-    return new_program;
-  }
-
-};
-
 template <fixed_string... Names, typename... Types>
 struct Program<StringList<Names...>, TypeList<Types...>> {
   using argNames = StringList<Names...>;
   using argTypes = TypeList<Types...>;
 
+  std::string_view name{};
+  std::string_view version{};
+  std::string_view intro{};
   std::array<Arg, sizeof... (Names)> args;
   std::size_t amount_pos = 0;
 
   consteval Program() = default;
 
+  consteval Program(std::string_view name) : name(name) {}
+
   template <fixed_string... OtherNames, typename... OtherTypes>
   consteval Program(Program<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
+    name = other.name;
+    version = other.version;
+    intro = other.intro;
     std::copy_n(other.args.begin(), sizeof... (OtherNames), args.begin());
   }
 
@@ -110,5 +100,17 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   //   std::get<ValueIdx::value>(values).emplace(value);
   // }
 };
+
+consteval auto DefaultProgram(std::string_view name) {
+  auto p = Program<StringList<"help">, TypeList<bool>>(name);
+  p.args[0] = Arg{
+    .type = ArgType::FLG,
+    .name = "help",
+    .abbrev = "h",
+    .help = "Display this information",
+    .is_required = false,
+  };
+  return p;
+}
 
 #endif
