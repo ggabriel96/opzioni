@@ -51,12 +51,41 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   consteval auto Pos(ArgSpec spec) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
     new_program.args[sizeof... (Names) - 1] = Arg{
+      .type = ArgType::POS,
       .name = Name,
       .abbrev = "",
       .help = spec.help,
       .is_required = spec.is_required,
     };
     new_program.amount_pos += 1;
+    std::sort(new_program.args.begin(), new_program.args.end());
+    return new_program;
+  }
+
+  template <fixed_string Name, typename T>
+  consteval auto Opt(ArgSpec spec) {
+    Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
+    new_program.args[sizeof... (Names) - 1] = Arg{
+      .type = ArgType::OPT,
+      .name = Name,
+      .abbrev = spec.abbrev,
+      .help = spec.help,
+      .is_required = spec.is_required,
+    };
+    std::sort(new_program.args.begin(), new_program.args.end());
+    return new_program;
+  }
+
+  template <fixed_string Name>
+  consteval auto Flg(ArgSpec spec) {
+    Program<StringList<Name, Names...>, TypeList<bool, Types...>> new_program(*this);
+    new_program.args[sizeof... (Names) - 1] = Arg{
+      .type = ArgType::FLG,
+      .name = Name,
+      .abbrev = spec.abbrev,
+      .help = spec.help,
+      .is_required = spec.is_required,
+    };
     std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
