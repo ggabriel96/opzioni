@@ -16,8 +16,8 @@ struct Program;
 
 template <fixed_string... Names, typename... Types>
 struct Program<StringList<Names...>, TypeList<Types...>> {
-  using argNames = StringList<Names...>;
-  using argTypes = TypeList<Types...>;
+  using arg_names = StringList<Names...>;
+  using arg_types = TypeList<Types...>;
 
   std::string_view name{};
   std::string_view version{};
@@ -89,18 +89,18 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   }
 
   // template<fixed_string Name>
-  // constexpr std::optional<typename GetType<Name, argNames, argTypes>::type> GetValue() const noexcept {
-  //   using ValueIdx = IndexOfStr<0, Name, argNames>;
+  // constexpr std::optional<typename GetType<Name, arg_names, arg_types>::type> GetValue() const noexcept {
+  //   using ValueIdx = IndexOfStr<0, Name, arg_names>;
   //   static_assert(ValueIdx::value != -1, "unknown parameter name");
   //   return std::get<ValueIdx::value>(values);
   // }
 
   // template<fixed_string Name, typename V>
   // void SetValue(V value) noexcept {
-  //   using T = GetType<Name, argNames, argTypes>::type;
+  //   using T = GetType<Name, arg_names, arg_types>::type;
   //   static_assert(!std::is_same_v< T, void >, "unknown parameter name");
   //   static_assert(std::is_same_v< V, T >, "parameter of given name has different type than provided value");
-  //   using ValueIdx = IndexOfType<0, V, argTypes>;
+  //   using ValueIdx = IndexOfType<0, V, arg_types>;
 
   //   std::get<ValueIdx::value>(values).emplace(value);
   // }
