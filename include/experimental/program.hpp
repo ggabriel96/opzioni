@@ -26,8 +26,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   std::size_t amount_pos = 0;
 
   consteval Program() = default;
-
-  consteval Program(std::string_view name) : name(name) {}
+  consteval Program(std::string_view name, std::string_view version = "") : name(name), version(version) {}
 
   template <fixed_string... OtherNames, typename... OtherTypes>
   consteval Program(Program<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
@@ -35,6 +34,12 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     version = other.version;
     intro = other.intro;
     std::copy_n(other.args.begin(), sizeof... (OtherNames), args.begin());
+  }
+
+  consteval auto Intro(std::string_view intro) const noexcept {
+    auto p = *this;
+    p.intro = intro;
+    return p;
   }
 
   template <fixed_string Name, typename T>
@@ -101,7 +106,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   // }
 };
 
-consteval auto DefaultProgram(std::string_view name) {
+consteval auto DefaultProgram(std::string_view name, std::string_view version = "") {
   auto p = Program<StringList<"help">, TypeList<bool>>(name);
   p.args[0] = Arg{
     .type = ArgType::FLG,

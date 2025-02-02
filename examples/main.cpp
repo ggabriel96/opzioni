@@ -6,7 +6,8 @@
 #include "experimental/all.hpp"
 
 int main(int argc, char const *argv[]) {
-    auto p = DefaultProgram("pull")
+    auto p = DefaultProgram("pull", "1.0")
+        .Intro("Pull an image or a repository from a registry")
         .Pos<"name", std::string>({.help = "The name of the image or repository to pull"})
         .Opt<"platform", std::string>({.help = "Set platform if server is multi-platform capable"})
         .Flg<"all-tags", "a">({.help = "Download all tagged images in the repository"})
