@@ -11,7 +11,7 @@
 #include "experimental/fixed_string.hpp"
 #include "experimental/get_type.hpp"
 
-template<typename ...>
+template <typename...>
 struct Program;
 
 template <fixed_string... Names, typename... Types>
@@ -22,7 +22,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   std::string_view name{};
   std::string_view version{};
   std::string_view intro{};
-  std::array<Arg, sizeof... (Names)> args;
+  std::array<Arg, sizeof...(Names)> args;
   std::size_t amount_pos = 0;
 
   consteval Program() = default;
@@ -33,7 +33,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     name = other.name;
     version = other.version;
     intro = other.intro;
-    std::copy_n(other.args.begin(), sizeof... (OtherNames), args.begin());
+    std::copy_n(other.args.begin(), sizeof...(OtherNames), args.begin());
   }
 
   consteval auto Intro(std::string_view intro) const noexcept {
@@ -45,12 +45,12 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, typename T>
   consteval auto Pos(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args[sizeof... (Names) - 1] = Arg{
-      .type = ArgType::POS,
-      .name = Name,
-      .abbrev = "",
-      .help = meta.help,
-      .is_required = meta.is_required,
+    new_program.args[sizeof...(Names) - 1] = Arg{
+        .type = ArgType::POS,
+        .name = Name,
+        .abbrev = "",
+        .help = meta.help,
+        .is_required = meta.is_required,
     };
     new_program.amount_pos += 1;
     std::sort(new_program.args.begin(), new_program.args.end());
@@ -60,29 +60,31 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, fixed_string Abbrev, typename T>
   consteval auto Opt(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args[sizeof... (Names) - 1] = Arg{
-      .type = ArgType::OPT,
-      .name = Name,
-      .abbrev = Abbrev,
-      .help = meta.help,
-      .is_required = meta.is_required,
+    new_program.args[sizeof...(Names) - 1] = Arg{
+        .type = ArgType::OPT,
+        .name = Name,
+        .abbrev = Abbrev,
+        .help = meta.help,
+        .is_required = meta.is_required,
     };
     std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
 
   template <fixed_string Name, typename T>
-  consteval auto Opt(ArgMeta meta) { return Opt<Name, "", T>(meta); }
+  consteval auto Opt(ArgMeta meta) {
+    return Opt<Name, "", T>(meta);
+  }
 
   template <fixed_string Name, fixed_string Abbrev = "">
   consteval auto Flg(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<bool, Types...>> new_program(*this);
-    new_program.args[sizeof... (Names) - 1] = Arg{
-      .type = ArgType::FLG,
-      .name = Name,
-      .abbrev = Abbrev,
-      .help = meta.help,
-      .is_required = meta.is_required,
+    new_program.args[sizeof...(Names) - 1] = Arg{
+        .type = ArgType::FLG,
+        .name = Name,
+        .abbrev = Abbrev,
+        .help = meta.help,
+        .is_required = meta.is_required,
     };
     std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
@@ -109,11 +111,11 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 consteval auto DefaultProgram(std::string_view name, std::string_view version = "") {
   auto p = Program<StringList<"help">, TypeList<bool>>(name);
   p.args[0] = Arg{
-    .type = ArgType::FLG,
-    .name = "help",
-    .abbrev = "h",
-    .help = "Display this information",
-    .is_required = false,
+      .type = ArgType::FLG,
+      .name = "help",
+      .abbrev = "h",
+      .help = "Display this information",
+      .is_required = false,
   };
   return p;
 }

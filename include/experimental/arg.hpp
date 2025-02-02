@@ -17,15 +17,15 @@ struct Arg {
   std::string_view abbrev{};
   std::string_view help{};
   bool is_required = true;
-//   BuiltinVariant default_value{};
-//   BuiltinVariant implicit_value{};
-//   act::fn::Signature action_fn = act::fn::assign<std::string_view>;
-//   std::size_t gather_amount = 1;
-//   DefaultValueSetter default_setter = nullptr;
+  //   BuiltinVariant default_value{};
+  //   BuiltinVariant implicit_value{};
+  //   act::fn::Signature action_fn = act::fn::assign<std::string_view>;
+  //   std::size_t gather_amount = 1;
+  //   DefaultValueSetter default_setter = nullptr;
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
-//   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
-//   constexpr bool has_implicit() const noexcept { return implicit_value.index() != 0; }
+  //   constexpr bool has_default() const noexcept { return default_value.index() != 0 || default_setter != nullptr; }
+  //   constexpr bool has_implicit() const noexcept { return implicit_value.index() != 0; }
   constexpr bool is_positional() const noexcept { return type == ArgType::POS; }
 
   std::string format_base_usage() const noexcept;
