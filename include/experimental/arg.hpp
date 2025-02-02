@@ -4,8 +4,7 @@
 #include <cstddef>
 #include <string_view>
 
-struct ArgSpec {
-  std::string_view abbrev{};
+struct ArgMeta {
   std::string_view help{};
   bool is_required = true;
 };

@@ -18,13 +18,13 @@ template<>
 struct Program<> {
 
   template <fixed_string Name, typename T>
-  consteval auto Pos(ArgSpec spec) {
+  consteval auto Pos(ArgMeta meta) {
     Program<StringList<Name>, TypeList<T>> new_program;
     new_program.args[0] = Arg{
       .name = Name,
       .abbrev = "",
-      .help = spec.help,
-      .is_required = spec.is_required,
+      .help = meta.help,
+      .is_required = meta.is_required,
     };
     new_program.amount_pos += 1;
     return new_program;
@@ -48,43 +48,46 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   }
 
   template <fixed_string Name, typename T>
-  consteval auto Pos(ArgSpec spec) {
+  consteval auto Pos(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
     new_program.args[sizeof... (Names) - 1] = Arg{
       .type = ArgType::POS,
       .name = Name,
       .abbrev = "",
-      .help = spec.help,
-      .is_required = spec.is_required,
+      .help = meta.help,
+      .is_required = meta.is_required,
     };
     new_program.amount_pos += 1;
     std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
 
-  template <fixed_string Name, typename T>
-  consteval auto Opt(ArgSpec spec) {
+  template <fixed_string Name, fixed_string Abbrev, typename T>
+  consteval auto Opt(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
     new_program.args[sizeof... (Names) - 1] = Arg{
       .type = ArgType::OPT,
       .name = Name,
-      .abbrev = spec.abbrev,
-      .help = spec.help,
-      .is_required = spec.is_required,
+      .abbrev = Abbrev,
+      .help = meta.help,
+      .is_required = meta.is_required,
     };
     std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
 
-  template <fixed_string Name>
-  consteval auto Flg(ArgSpec spec) {
+  template <fixed_string Name, typename T>
+  consteval auto Opt(ArgMeta meta) { return Opt<Name, "", T>(meta); }
+
+  template <fixed_string Name, fixed_string Abbrev = "">
+  consteval auto Flg(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<bool, Types...>> new_program(*this);
     new_program.args[sizeof... (Names) - 1] = Arg{
       .type = ArgType::FLG,
       .name = Name,
-      .abbrev = spec.abbrev,
-      .help = spec.help,
-      .is_required = spec.is_required,
+      .abbrev = Abbrev,
+      .help = meta.help,
+      .is_required = meta.is_required,
     };
     std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;

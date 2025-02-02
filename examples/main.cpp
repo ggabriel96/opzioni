@@ -9,9 +9,9 @@ int main(int argc, char const *argv[]) {
     auto p = Program()
         .Pos<"name", std::string>({.help = "The name of the image or repository to pull"})
         .Opt<"platform", std::string>({.help = "Set platform if server is multi-platform capable"})
-        .Flg<"all-tags">({.abbrev = "a", .help = "Download all tagged images in the repository"})
+        .Flg<"all-tags", "a">({.help = "Download all tagged images in the repository"})
         .Flg<"disable-content-trust">({.help = "Skip image verification"})
-        .Flg<"quiet">({.abbrev = "q", .help = "Supress verbose output"})
+        .Flg<"quiet", "q">({.help = "Supress verbose output"})
     ;
 
     // p.SetValue<"age">(28);
