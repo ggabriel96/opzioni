@@ -14,6 +14,8 @@ int main(int argc, char const *argv[]) {
                .Flg<"disable-content-trust">({.help = "Skip image verification"})
                .Flg<"quiet", "q">({.help = "Supress verbose output"});
 
+  parse(p, std::span<char const *>{argv, argc});
+
   // p.SetValue<"age">(28);
   // auto age = p.GetValue<"name">();
   // fmt::print("name: [{}]\n", age.value_or(std::string()));
