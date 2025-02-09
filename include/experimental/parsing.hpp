@@ -45,7 +45,7 @@ struct ArgsView {
   std::map<std::string_view, std::string_view> options;
 };
 
-struct ArgMap {
+struct ArgsMap {
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
 
@@ -77,8 +77,8 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
 
   ArgParser(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program) : program(program) {}
 
-  ArgMap operator()(std::span<char const *> args) {
-    ArgMap map;
+  ArgsMap operator()(std::span<char const *> args) {
+    ArgsMap map;
     map.exec_path = args[0];
     return map;
   }
