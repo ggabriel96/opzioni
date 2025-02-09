@@ -127,8 +127,8 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
 
 template <fixed_string... ArgNames, typename... ArgTypes>
 auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program, std::span<char const *> args) {
-  auto result  = ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>>(program);
-  auto const i = result.get_args_view(args);
+  auto parser  = ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>>(program);
+  auto const i = parser.get_args_view(args);
   std::print("positionals ({}):", i.positionals.size());
   for (auto &&p : i.positionals) {
     std::print(" {}", p);
@@ -142,7 +142,7 @@ auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &progra
 
   // auto map = parse_args(program, args);
   // check_contains_required(program, map);
-  return result;
+  return parser;
 }
 
 // +---------------------+
