@@ -71,8 +71,6 @@ struct ArgParser;
 template <fixed_string... ArgNames, typename... ArgTypes>
 struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
 
-  std::string_view exec_path{};
-  std::map<std::string_view, std::any> args;
   Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program;
 
   ArgParser(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program) : program(program) {}
@@ -123,6 +121,8 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
     }
     return view;
   }
+
+  auto get_args_map() {}
 };
 
 template <fixed_string... ArgNames, typename... ArgTypes>
