@@ -41,6 +41,7 @@ constexpr ParsedOption try_parse_option(std::string_view const) noexcept;
 // +-----------------------+
 
 struct ArgsView {
+  std::string_view exec_path{};
   std::vector<std::string_view> positionals;
   std::map<std::string_view, std::string_view> options;
 };
@@ -84,6 +85,7 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
   auto get_args_view(std::span<char const *> args) {
     ArgsView view;
     if (args.size() > 0) {
+      view.exec_path = std::string_view(args[0]);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
         auto const arg = std::string_view(args[index]);
