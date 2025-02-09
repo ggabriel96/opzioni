@@ -104,6 +104,7 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
           view.positionals.emplace_back(arg);
           ++current_positional_idx;
           ++index;
+        // TODO: fix conflict between -O2-like options and -fvx-like options
         } else if (auto const option = try_parse_option(arg); option.value.has_value()) {
           view.options[option.name] = *option.value;
           index += 1; // TODO: tmply only accepting options with their values "glued" together
