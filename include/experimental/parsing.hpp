@@ -42,7 +42,7 @@ constexpr ParsedOption try_parse_option(std::string_view const) noexcept;
 
 struct ArgsView {
   std::vector<std::string_view> positionals;
-  std::map<std::string_view, std::vector<std::string_view>> options;
+  std::map<std::string_view, std::string_view> options;
 };
 
 struct ArgMap {
@@ -104,12 +104,13 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
           view.positionals.emplace_back(arg);
           ++current_positional_idx;
           ++index;
+        } else if (auto const option = try_parse_option(arg); option.value.has_value()) {
+          view.options[option.name] = *option.value;
+          index += 1; // TODO: tmply only accepting options with their values "glued" together
         // } else if (auto const flags = is_short_flags(program, arg); !flags.empty()) {
         //   index += assign_many_flags(program, map, flags);
         // } else if (auto const flag = is_long_flag(program, arg); !flag.empty()) {
         //   index += assign_flag(program, map, flag);
-        // } else if (auto const option = is_option(program, arg); option.has_value()) {
-        //   index += assign_option(program, map, args.subspan(index), *option);
         } else {
           throw opzioni::UnknownArgument(arg);
         }
@@ -123,11 +124,17 @@ template <fixed_string... ArgNames, typename... ArgTypes>
 auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program, std::span<char const *> args) {
   auto result  = ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>>(program);
   auto const i = result.get_args_view(args);
-  std::print("positionals:\n");
+  std::print("positionals ({}):", i.positionals.size());
   for (auto &&p : i.positionals) {
-    std::print("{} ", p);
+    std::print(" {}", p);
   }
   std::print("\n");
+
+  std::print("options & flags:\n");
+  for (auto &&o : i.options) {
+    std::print("- {} = {}\n", o.first, o.second);
+  }
+
   // auto map = parse_args(program, args);
   // check_contains_required(program, map);
   return result;
@@ -174,8 +181,9 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
         // has equals followed by some value, e.g. `-O=2`
         return {name, whole_arg.substr(3)};
       }
-      // should this `-O=` be handled like this?
-      return {name, ""};
+      // TODO: should this `-O=` be handled like this?
+      // return {name, ""};
+      return {"", std::nullopt}; // tmply considered not an option
     }
 
     if (whole_arg.length() > 2) {
@@ -183,8 +191,9 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
       return {name, whole_arg.substr(2)};
     }
 
-    // case left: has no value (next CLI argument could be it)
-    return {name, std::nullopt};
+    // TODO: case left: has no value (next CLI argument could be it)
+    // return {name, std::nullopt};
+    return {"", std::nullopt}; // tmply considered not an option
   }
 
   if (num_of_dashes == 2 && whole_arg.length() > 3) {
@@ -194,8 +203,10 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
       auto const value = whole_arg.substr(eq_idx + 1);
       return {name, value};
     }
+
     // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
-    return {whole_arg.substr(2), std::nullopt};
+    // TODO: return {whole_arg.substr(2), std::nullopt};
+    return {"", std::nullopt}; // tmply considered not an option
   }
 
   // not an option
