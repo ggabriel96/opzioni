@@ -107,10 +107,14 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
         } else if (auto const option = try_parse_option(arg); option.value.has_value()) {
           view.options[option.name] = *option.value;
           index += 1; // TODO: tmply only accepting options with their values "glued" together
-        // } else if (auto const flags = is_short_flags(program, arg); !flags.empty()) {
-        //   index += assign_many_flags(program, map, flags);
-        // } else if (auto const flag = is_long_flag(program, arg); !flag.empty()) {
-        //   index += assign_flag(program, map, flag);
+        } else if (auto const flag = get_if_long_flag(arg); !flag.empty()) {
+          view.options[flag] = "";
+          index += 1;
+        } else if (auto const flags = get_if_short_flags(arg); !flags.empty()) {
+          for (decltype(flags)::size_type i = 0; i < flags.size(); ++i) {
+            view.options[flags.substr(i, 1)] = "";
+          }
+          index += 1;
         } else {
           throw opzioni::UnknownArgument(arg);
         }
@@ -154,10 +158,10 @@ constexpr bool looks_positional(std::string_view const whole_arg) noexcept {
 }
 
 constexpr std::string_view get_if_short_flags(std::string_view const whole_arg) noexcept {
+  auto const names = whole_arg.substr(1);
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const flags = whole_arg.substr(1);
-  if (num_of_dashes == 1 && flags.length() >= 1)
-    return flags;
+  if (num_of_dashes == 1 && names.length() >= 1)
+    return names;
   return {};
 }
 
