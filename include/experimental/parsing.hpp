@@ -1,6 +1,7 @@
 #ifndef OPZIONI_PARSING_H
 #define OPZIONI_PARSING_H
 
+#include <algorithm>
 #include <any>
 #include <map>
 #include <print>
@@ -42,28 +43,37 @@ constexpr ParsedOption try_parse_option(std::string_view const) noexcept;
 
 struct ArgsView {
   std::string_view exec_path{};
+  // TODO: put positionals and options on the same map when we
+  // start querying the program args?
   std::vector<std::string_view> positionals;
   std::map<std::string_view, std::string_view> options;
 };
 
-struct ArgsMap {
+template <typename...>
+struct ArgsMap;
+
+template <fixed_string... ArgNames, typename... ArgTypes>
+struct ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> {
+  using arg_names = StringList<ArgNames...>;
+  using arg_types = TypeList<ArgTypes...>;
+
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
 
-  std::any operator[](std::string_view name) const {
-    if (!args.contains(name)) throw opzioni::ArgumentNotFound(name);
-    return args.at(name);
+  template<fixed_string Name>
+  typename GetType<Name, arg_names, arg_types>::type get() const {
+    using T = GetType<Name, arg_names, arg_types>::type;
+    static_assert(!std::is_same_v< T, void >, "unknown parameter name");
+    auto const val = args.find(Name);
+    if (val == args.end()) throw opzioni::ArgumentNotFound(Name.data);
+    return std::any_cast<T>(val->second);
   }
 
-  template <typename T>
-  T as(std::string_view name) const {
-    auto const arg = (*this)[name];
-    return std::any_cast<T>(arg);
-  }
+  // TODO: get_or(<default value>)
 
   bool has(std::string_view name) const noexcept { return args.contains(name); }
 
-  auto size() const noexcept { return this->args.size(); }
+  auto size() const noexcept { return args.size(); }
 };
 
 template <typename...>
@@ -76,11 +86,11 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
 
   ArgParser(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program) : program(program) {}
 
-  ArgsMap operator()(std::span<char const *> args) {
-    ArgsMap map;
-    map.exec_path = args[0];
-    return map;
-  }
+  // auto operator()(std::span<char const *> args) {
+  //   ArgsMap map;
+  //   map.exec_path = args[0];
+  //   return map;
+  // }
 
   auto get_args_view(std::span<char const *> args) {
     ArgsView view;
@@ -124,27 +134,71 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
     return view;
   }
 
-  auto get_args_map() {}
+  auto get_args_map(ArgsView const &view) const {
+    auto map = ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>>{.exec_path = view.exec_path};
+    std::size_t idx = sizeof...(ArgTypes) - 1;
+    std::size_t idx_pos = 0;
+    ((process<ArgNames>(idx, map, view, idx_pos), idx--), ...);
+    return map;
+  }
+
+  template<fixed_string ArgName>
+  auto process(std::size_t idx, ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> &map, ArgsView const &view, std::size_t &idx_pos) const {
+    using T = GetType<ArgName, StringList<ArgNames...>, TypeList<ArgTypes...>>::type;
+    auto const arg = program.args[idx];
+    switch (arg.type) {
+      case ArgType::POS: {
+        std::print("process POS {}=={}, idx {}, idx_pos {}\n", ArgName.data, arg.name, idx, idx_pos);
+        if (idx_pos < view.positionals.size()) {
+          map.args[ArgName] = opzioni::convert<T>(view.positionals[idx_pos]);
+          idx_pos += 1;
+        } else if (arg.is_required) {
+          // TODO
+          throw "missing positional";
+        }
+        break;
+      }
+      case ArgType::OPT: {
+        std::print("process OPT {}=={}, idx {}\n", ArgName.data, arg.name, idx);
+        auto const opt = view.options.find(ArgName);
+        if (opt != view.options.end()) {
+          std::print("OPT {} found, value: {}\n", ArgName.data, opt->second);
+          map.args[ArgName] = opzioni::convert<T>(opt->second);
+        } else if (arg.is_required) {
+          // TODO
+          throw "missing option";
+        }
+        break;
+      }
+      case ArgType::FLG: {
+        std::print("process FLG {}=={}, idx {}\n", ArgName.data, arg.name, idx);
+        map.args[ArgName] = view.options.contains(ArgName);
+        break;
+      }
+    }
+  }
 };
 
 template <fixed_string... ArgNames, typename... ArgTypes>
 auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program, std::span<char const *> args) {
   auto parser  = ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>>(program);
-  auto const i = parser.get_args_view(args);
-  std::print("positionals ({}):", i.positionals.size());
-  for (auto &&p : i.positionals) {
+  auto const view = parser.get_args_view(args);
+  std::print("positionals ({}):", view.positionals.size());
+  for (auto &&p : view.positionals) {
     std::print(" {}", p);
   }
   std::print("\n");
 
   std::print("options & flags:\n");
-  for (auto &&o : i.options) {
+  for (auto &&o : view.options) {
     std::print("- {} = {}\n", o.first, o.second);
   }
 
+  auto const map = parser.get_args_map(view);
+
   // auto map = parse_args(program, args);
   // check_contains_required(program, map);
-  return parser;
+  return map;
 }
 
 // +---------------------+
