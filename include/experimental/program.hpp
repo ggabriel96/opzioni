@@ -45,7 +45,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, typename T>
   consteval auto Pos(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args[sizeof...(Names) - 1] = Arg{
+    new_program.args[sizeof...(Names)] = Arg{
         .type = ArgType::POS,
         .name = Name,
         .abbrev = "",
@@ -60,7 +60,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, fixed_string Abbrev, typename T>
   consteval auto Opt(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args[sizeof...(Names) - 1] = Arg{
+    new_program.args[sizeof...(Names)] = Arg{
         .type = ArgType::OPT,
         .name = Name,
         .abbrev = Abbrev,
@@ -79,7 +79,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, fixed_string Abbrev = "">
   consteval auto Flg(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<bool, Types...>> new_program(*this);
-    new_program.args[sizeof...(Names) - 1] = Arg{
+    new_program.args[sizeof...(Names)] = Arg{
         .type = ArgType::FLG,
         .name = Name,
         .abbrev = Abbrev,
