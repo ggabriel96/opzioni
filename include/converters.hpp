@@ -11,6 +11,7 @@
 #include <optional>
 #include <ranges>
 #include <sstream>
+#include <string>
 #include <string_view>
 
 #include <fmt/format.h>
