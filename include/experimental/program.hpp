@@ -49,7 +49,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .name = Name,
         .abbrev = "",
         .help = meta.help,
-        .is_required = meta.is_required,
+        .is_required = meta.is_required.value_or(true),
     };
     new_program.amount_pos += 1;
     return new_program;
@@ -63,7 +63,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
-        .is_required = meta.is_required,
+        .is_required = meta.is_required.value_or(false),
     };
     return new_program;
   }
@@ -81,7 +81,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
-        .is_required = meta.is_required,
+        .is_required = false,
     };
     return new_program;
   }

@@ -2,11 +2,12 @@
 #define OPZIONI_ARG_H
 
 #include <cstddef>
+#include <optional>
 #include <string_view>
 
 struct ArgMeta {
   std::string_view help{};
-  bool is_required = true;
+  std::optional<bool> is_required = std::nullopt;
 };
 
 enum struct ArgType { POS, OPT, FLG };
@@ -16,7 +17,7 @@ struct Arg {
   std::string_view name{};
   std::string_view abbrev{};
   std::string_view help{};
-  bool is_required = true;
+  bool is_required = false;
   //   BuiltinVariant default_value{};
   //   BuiltinVariant implicit_value{};
   //   act::fn::Signature action_fn = act::fn::assign<std::string_view>;
