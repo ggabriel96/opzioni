@@ -13,7 +13,7 @@ struct fixed_string {
     }
   }
 
-  constexpr operator std::string_view() const noexcept { return std::string_view(data, N); }
+  constexpr operator std::string_view() const noexcept { return data; }
 };
 
 #endif
