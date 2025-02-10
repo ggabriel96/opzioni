@@ -1,7 +1,6 @@
 #ifndef OPZIONI_PROGRAM_H
 #define OPZIONI_PROGRAM_H
 
-#include <algorithm>
 #include <array>
 #include <optional>
 #include <tuple>
@@ -53,7 +52,6 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .is_required = meta.is_required,
     };
     new_program.amount_pos += 1;
-    std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
 
@@ -67,7 +65,6 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .help = meta.help,
         .is_required = meta.is_required,
     };
-    std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
 
@@ -86,7 +83,6 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .help = meta.help,
         .is_required = meta.is_required,
     };
-    std::sort(new_program.args.begin(), new_program.args.end());
     return new_program;
   }
 
