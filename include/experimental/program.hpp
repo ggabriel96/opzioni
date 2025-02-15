@@ -32,6 +32,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     name = other.name;
     version = other.version;
     intro = other.intro;
+    amount_pos = other.amount_pos;
     std::copy_n(other.args.begin(), sizeof...(OtherNames), args.begin());
   }
 
