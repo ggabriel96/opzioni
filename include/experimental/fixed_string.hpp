@@ -2,6 +2,7 @@
 #define OPZIONI_FIXED_STRING_H
 
 #include <cstddef>
+#include <string_view>
 
 template <size_t N>
 struct fixed_string {
