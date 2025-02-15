@@ -78,6 +78,12 @@ public:
   UnknownArgument(std::string_view name) : UserError(fmt::format("Unknown argument `{}`", name)) {}
 };
 
+class WrongType : public UserError {
+public:
+  WrongType(std::string_view name, std::string_view expected_type, std::string_view received_type)
+    : UserError(fmt::format("Argument `{}` is a known {}, but was provided as {}", name, expected_type, received_type)) {}
+};
+
 } // namespace opzioni
 
 #endif // OPZIONI_EXCEPTIONS_H

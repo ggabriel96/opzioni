@@ -9,6 +9,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include "converters.hpp"
@@ -102,36 +103,87 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
         auto const arg = std::string_view(args[index]);
         if (is_dash_dash(arg)) {
           // +1 to ignore the dash-dash
-          auto const rest = args.subspan(index + 1);
-          view.positionals.reserve(view.positionals.size() + rest.size());
-          for (auto const &str : rest) {
-            view.positionals.emplace_back(str);
+          for (std::size_t offset = index + 1; offset < args.size();) {
+            offset += assign_positional(view, args.subspan(offset), current_positional_idx);
+            ++current_positional_idx;
           }
-          current_positional_idx += rest.size();
           index = args.size();
         // } else if (auto cmd = is_command(program, arg); cmd != nullptr) {
         //   index += assign_command(map, args.subspan(index), *cmd);
         } else if (looks_positional(arg)) {
-          view.positionals.emplace_back(arg);
+          index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
-          ++index;
-        } else if (auto const option = try_parse_option(arg); option.value.has_value()) {
-          view.options[option.name] = *option.value;
-          index += 1; // TODO: tmply only accepting options with their values "glued" together
+        } else if (auto const option = try_parse_option(arg); !option.name.empty()) {
+          index += assign_option(view, option, args.subspan(index));
         } else if (auto const flag = get_if_long_flag(arg); !flag.empty()) {
-          view.options[flag] = "";
-          index += 1;
+          index += assign_long_flag(view, flag);
         } else if (auto const flags = get_if_short_flags(arg); !flags.empty()) {
-          for (decltype(flags)::size_type i = 0; i < flags.size(); ++i) {
-            view.options[flags.substr(i, 1)] = "";
-          }
-          index += 1;
+          index += assign_short_flags(view, flags);
         } else {
           throw opzioni::UnknownArgument(arg);
         }
       }
     }
     return view;
+  }
+
+  std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
+    if (cur_pos_idx + 1 > program.amount_pos)
+      throw opzioni::UnexpectedPositional(args[0], program.amount_pos);
+    view.positionals.emplace_back(args[0]);
+    return 1;
+  }
+
+  std::size_t assign_option(ArgsView &view, ParsedOption const option, std::span<char const *> args) const {
+    if (option.value) {
+      view.options[option.name] = *option.value;
+      return 1;
+    }
+
+    auto const it = std::ranges::find_if(program.args, [&option](auto const &a) { return a.name == option.name; });
+    if (it == program.args.end()) {
+      throw opzioni::UnknownArgument(option.name);
+    }
+    if (it->type != ArgType::OPT) {
+      throw opzioni::WrongType(option.name, ToString(it->type), ToString(ArgType::OPT));
+    }
+
+    if (args.size() > 1 && looks_positional(args[1])) {
+      view.options[option.name] = args[1];
+      return 2;
+    }
+
+    throw opzioni::MissingValue(option.name, 1, 0);
+  }
+
+  std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
+    auto const it = std::ranges::find_if(program.args, [&flag](auto const &a) { return a.name == flag; });
+    if (it == program.args.end()) {
+      throw opzioni::UnknownArgument(flag);
+    }
+    if (it->type != ArgType::FLG) {
+      throw opzioni::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+    }
+
+    view.options[it->name] = "";
+    return 1;
+  }
+
+  std::size_t assign_short_flags(ArgsView &view, std::string_view const flags) const {
+    for (std::size_t i = 0; i < flags.size(); ++i) {
+      auto const flag = flags.substr(i, 1);
+      auto const it = std::ranges::find_if(program.args, [&flag](auto const &a) { return a.abbrev == flag; });
+      if (it == program.args.end()) {
+        throw opzioni::UnknownArgument(flag);
+      }
+      if (it->type != ArgType::FLG) {
+        throw opzioni::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+      }
+
+      // value lookup is by name, not abbrev
+      view.options[it->name] = "";
+    }
+    return 1;
   }
 
   auto get_args_map(ArgsView const &view) const {
@@ -267,8 +319,7 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
     }
 
     // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
-    // TODO: return {whole_arg.substr(2), std::nullopt};
-    return {"", std::nullopt}; // tmply considered not an option
+    return {whole_arg.substr(2), std::nullopt};
   }
 
   // not an option
