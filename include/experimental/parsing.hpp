@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <any>
+#include <cctype>
 #include <map>
 #include <print>
 #include <span>
@@ -114,7 +115,6 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
           view.positionals.emplace_back(arg);
           ++current_positional_idx;
           ++index;
-        // TODO: fix conflict between -O2-like options and -fvx-like options
         } else if (auto const option = try_parse_option(arg); option.value.has_value()) {
           view.options[option.name] = *option.value;
           index += 1; // TODO: tmply only accepting options with their values "glued" together
@@ -216,8 +216,9 @@ constexpr bool looks_positional(std::string_view const whole_arg) noexcept {
 
 constexpr std::string_view get_if_short_flags(std::string_view const whole_arg) noexcept {
   auto const names = whole_arg.substr(1);
+  auto const all_chars = std::ranges::all_of(names, [](char const c) { return std::isalpha(c); });
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 1 && names.length() >= 1)
+  if (num_of_dashes == 1 && names.length() >= 1 && all_chars)
     return names;
   return {};
 }
@@ -247,7 +248,7 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
       return {"", std::nullopt}; // tmply considered not an option
     }
 
-    if (whole_arg.length() > 2) {
+    if (whole_arg.length() > 2 && std::isupper(name[0])) {
       // only followed by some value, e.g. `-O2`
       return {name, whole_arg.substr(2)};
     }
