@@ -204,10 +204,8 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
         if (idx_pos < view.positionals.size()) {
           map.args[ArgName] = opzioni::convert<T>(view.positionals[idx_pos]);
           idx_pos += 1;
-        } else if (arg.is_required) {
-          // TODO
-          throw "missing positional";
         }
+        // check for arg being required is done in a later step
         break;
       }
       case ArgType::OPT: {
@@ -216,10 +214,8 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
         if (opt != view.options.end()) {
           std::print("OPT {} found, value: {}\n", ArgName.data, opt->second);
           map.args[ArgName] = opzioni::convert<T>(opt->second);
-        } else if (arg.is_required) {
-          // TODO
-          throw "missing option";
         }
+        // check for arg being required is done in a later step
         break;
       }
       case ArgType::FLG: {
@@ -228,6 +224,19 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
         break;
       }
     }
+  }
+
+  void check_contains_required(ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> const &map) {
+    using std::ranges::transform;
+    using std::views::filter;
+    auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
+    auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
+    auto is_required = [](auto const &arg) { return arg.is_required; };
+    std::vector<std::string_view> missing_arg_names;
+    auto insert = std::back_inserter(missing_arg_names);
+    transform(program.args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+    if (!missing_arg_names.empty())
+      throw opzioni::MissingRequiredArguments(missing_arg_names);
   }
 };
 
@@ -247,6 +256,8 @@ auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &progra
   }
 
   auto const map = parser.get_args_map(view);
+  // done separately from `get_args_map` in order to report all missing required args
+  parser.check_contains_required(map);
 
   // auto map = parse_args(program, args);
   // check_contains_required(program, map);
