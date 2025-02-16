@@ -140,7 +140,7 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
       return 1;
     }
 
-    auto const it = std::ranges::find_if(program.args, [&option](auto const &a) { return a.name == option.name; });
+    auto const it = std::ranges::find_if(program.args, [&option](auto const &a) { return option.name == a.name || option.name == a.abbrev; });
     if (it == program.args.end()) {
       throw opzioni::UnknownArgument(option.name);
     }
@@ -149,10 +149,12 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
     }
 
     if (args.size() > 1 && looks_positional(args[1])) {
-      view.options[option.name] = args[1];
+      // value lookup is by name, not abbrev
+      view.options[it->name] = args[1];
       return 2;
     }
 
+    // report error using the name/abbrev the user used
     throw opzioni::MissingValue(option.name, 1, 0);
   }
 
@@ -316,9 +318,8 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
       return {name, whole_arg.substr(2)};
     }
 
-    // TODO: case left: has no value (next CLI argument could be it)
-    // return {name, std::nullopt};
-    return {"", std::nullopt}; // tmply considered not an option
+    // case left: has no value (next CLI argument could be it)
+    return {name, std::nullopt};
   }
 
   if (num_of_dashes == 2 && whole_arg.length() > 3) {
