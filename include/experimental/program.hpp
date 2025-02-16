@@ -46,11 +46,11 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   consteval auto Pos(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
     new_program.args[sizeof...(Names)] = Arg{
-        .type = ArgType::POS,
-        .name = Name,
-        .abbrev = "",
-        .help = meta.help,
-        .is_required = meta.is_required.value_or(true),
+      .type = ArgType::POS,
+      .name = Name,
+      .abbrev = "",
+      .help = meta.help,
+      .is_required = meta.is_required.value_or(true),
     };
     new_program.amount_pos += 1;
     return new_program;
@@ -58,6 +58,10 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 
   template <fixed_string Name, fixed_string Abbrev, typename T>
   consteval auto Opt(ArgMeta meta) {
+    // TODO: can we remove the trailing \n from fixed_string?
+    // TODO: add thorough validations
+    static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
+
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
     new_program.args[sizeof...(Names)] = Arg{
         .type = ArgType::OPT,
