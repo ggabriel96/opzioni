@@ -49,6 +49,8 @@ struct ArgsView {
   // start querying the program args?
   std::vector<std::string_view> positionals;
   std::map<std::string_view, std::string_view> options;
+
+  void print_debug() const noexcept;
 };
 
 template <typename...>
@@ -246,16 +248,7 @@ template <fixed_string... ArgNames, typename... ArgTypes>
 auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program, std::span<char const *> args) {
   auto parser  = ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>>(program);
   auto const view = parser.get_args_view(args);
-  std::print("positionals ({}):", view.positionals.size());
-  for (auto &&p : view.positionals) {
-    std::print(" {}", p);
-  }
-  std::print("\n");
-
-  std::print("options & flags:\n");
-  for (auto &&o : view.options) {
-    std::print("- {} = {}\n", o.first, o.second);
-  }
+  view.print_debug();
 
   auto const map = parser.get_args_map(view);
   // done separately from `get_args_map` in order to report all missing required args
