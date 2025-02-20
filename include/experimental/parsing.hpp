@@ -85,10 +85,12 @@ struct ArgParser;
 
 template <fixed_string... ArgNames, typename... ArgTypes>
 struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
+  using arg_names = StringList<ArgNames...>;
+  using arg_types = TypeList<ArgTypes...>;
 
-  Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program;
+  Program<arg_names, arg_types> const &program;
 
-  ArgParser(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program) : program(program) {}
+  ArgParser(Program<arg_names, arg_types> const &program) : program(program) {}
 
   // auto operator()(std::span<char const *> args) {
   //   ArgsMap map;
@@ -191,7 +193,7 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
   }
 
   auto get_args_map(ArgsView const &view) const {
-    auto map = ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>>{.exec_path = view.exec_path};
+    auto map = ArgsMap<arg_names, arg_types>{.exec_path = view.exec_path};
     std::size_t idx = sizeof...(ArgTypes) - 1;
     std::size_t idx_pos = 0;
     ((process<ArgNames>(idx, map, view, idx_pos), idx--), ...);
@@ -199,8 +201,8 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
   }
 
   template<fixed_string ArgName>
-  auto process(std::size_t idx, ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> &map, ArgsView const &view, std::size_t &idx_pos) const {
-    using T = GetType<ArgName, StringList<ArgNames...>, TypeList<ArgTypes...>>::type;
+  auto process(std::size_t idx, ArgsMap<arg_names, arg_types> &map, ArgsView const &view, std::size_t &idx_pos) const {
+    using T = GetType<ArgName, arg_names, arg_types>::type;
     auto const arg = program.args[idx];
     switch (arg.type) {
       case ArgType::POS: {
@@ -230,7 +232,7 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
     }
   }
 
-  void check_contains_required(ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> const &map) {
+  void check_contains_required(ArgsMap<arg_names, arg_types> const &map) {
     using std::ranges::transform;
     using std::views::filter;
     auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
@@ -254,8 +256,6 @@ auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &progra
   // done separately from `get_args_map` in order to report all missing required args
   parser.check_contains_required(map);
 
-  // auto map = parse_args(program, args);
-  // check_contains_required(program, map);
   return map;
 }
 
