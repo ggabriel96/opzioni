@@ -56,10 +56,10 @@ struct ArgsView {
 template <typename...>
 struct ArgsMap;
 
-template <fixed_string... ArgNames, typename... ArgTypes>
-struct ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> {
-  using arg_names = StringList<ArgNames...>;
-  using arg_types = TypeList<ArgTypes...>;
+template <fixed_string... Names, typename... Types>
+struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
+  using arg_names = StringList<Names...>;
+  using arg_types = TypeList<Types...>;
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
@@ -83,10 +83,10 @@ struct ArgsMap<StringList<ArgNames...>, TypeList<ArgTypes...>> {
 template <typename...>
 struct ArgParser;
 
-template <fixed_string... ArgNames, typename... ArgTypes>
-struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
-  using arg_names = StringList<ArgNames...>;
-  using arg_types = TypeList<ArgTypes...>;
+template <fixed_string... Names, typename... Types>
+struct ArgParser<StringList<Names...>, TypeList<Types...>> {
+  using arg_names = StringList<Names...>;
+  using arg_types = TypeList<Types...>;
 
   Program<arg_names, arg_types> const &program;
 
@@ -194,9 +194,9 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
 
   auto get_args_map(ArgsView const &view) const {
     auto map = ArgsMap<arg_names, arg_types>{.exec_path = view.exec_path};
-    std::size_t idx = sizeof...(ArgTypes) - 1;
+    std::size_t idx = sizeof...(Types) - 1;
     std::size_t idx_pos = 0;
-    ((process<ArgNames>(idx, map, view, idx_pos), idx--), ...);
+    ((process<Names>(idx, map, view, idx_pos), idx--), ...);
     return map;
   }
 
@@ -246,9 +246,9 @@ struct ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>> {
   }
 };
 
-template <fixed_string... ArgNames, typename... ArgTypes>
-auto parse(Program<StringList<ArgNames...>, TypeList<ArgTypes...>> const &program, std::span<char const *> args) {
-  auto parser  = ArgParser<StringList<ArgNames...>, TypeList<ArgTypes...>>(program);
+template <fixed_string... Names, typename... Types>
+auto parse(Program<StringList<Names...>, TypeList<Types...>> const &program, std::span<char const *> args) {
+  auto parser  = ArgParser<StringList<Names...>, TypeList<Types...>>(program);
   auto const view = parser.get_args_view(args);
   view.print_debug();
 
