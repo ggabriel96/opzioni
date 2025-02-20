@@ -21,4 +21,4 @@ format:
 		tests/*.cpp
 
 clean:
-	rm build/ -rf
+	rm -rf build/
