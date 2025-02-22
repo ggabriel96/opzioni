@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <any>
 #include <cctype>
+#include <concepts>
 #include <map>
 #include <print>
 #include <span>
@@ -38,6 +39,22 @@ constexpr bool looks_positional(std::string_view const) noexcept;
 constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
 constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 constexpr ParsedOption try_parse_option(std::string_view const) noexcept;
+
+template <typename... Ts>
+auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
+  return std::apply(
+    [&p](auto&&... elem) {
+      std::optional<ArgView> ret = std::nullopt;
+
+      (
+        (p(elem) ? (ret = elem, true) : (false)) || ...
+      );
+
+      return ret;
+    },
+    haystack
+  );
+}
 
 // +-----------------------+
 // |   main parsing code   |
@@ -144,8 +161,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
       return 1;
     }
 
-    auto const it = std::ranges::find_if(program.args, [&option](auto const &a) { return option.name == a.name || option.name == a.abbrev; });
-    if (it == program.args.end()) {
+    auto const it = FindArg(program.args, [&option](auto const &a) { return option.name == a.name || option.name == a.abbrev; });
+    if (!it) {
       throw opzioni::UnknownArgument(option.name);
     }
     if (it->type != ArgType::OPT) {
@@ -163,8 +180,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
-    auto const it = std::ranges::find_if(program.args, [&flag](auto const &a) { return a.name == flag; });
-    if (it == program.args.end()) {
+    auto const it = FindArg(program.args, [&flag](auto const &a) { return a.name == flag; });
+    if (!it) {
       throw opzioni::UnknownArgument(flag);
     }
     if (it->type != ArgType::FLG) {
@@ -178,8 +195,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   std::size_t assign_short_flags(ArgsView &view, std::string_view const flags) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
-      auto const it = std::ranges::find_if(program.args, [&flag](auto const &a) { return a.abbrev == flag; });
-      if (it == program.args.end()) {
+      auto const it = FindArg(program.args, [&flag](auto const &a) { return a.abbrev == flag; });
+      if (!it) {
         throw opzioni::UnknownArgument(flag);
       }
       if (it->type != ArgType::FLG) {
@@ -194,9 +211,9 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
 
   auto get_args_map(ArgsView const &view) const {
     auto map = ArgsMap<arg_names, arg_types>{.exec_path = view.exec_path};
-    std::size_t idx = sizeof...(Types) - 1;
-    std::size_t idx_pos = 0;
-    ((process<Names>(idx, map, view, idx_pos), idx--), ...);
+    // std::size_t idx = sizeof...(Types) - 1;
+    // std::size_t idx_pos = 0;
+    // ((process<Names>(idx, map, view, idx_pos), idx--), ...);
     return map;
   }
 
@@ -233,16 +250,16 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   void check_contains_required(ArgsMap<arg_names, arg_types> const &map) {
-    using std::ranges::transform;
-    using std::views::filter;
-    auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
-    auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-    auto is_required = [](auto const &arg) { return arg.is_required; };
-    std::vector<std::string_view> missing_arg_names;
-    auto insert = std::back_inserter(missing_arg_names);
-    transform(program.args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-    if (!missing_arg_names.empty())
-      throw opzioni::MissingRequiredArguments(missing_arg_names);
+    // using std::ranges::transform;
+    // using std::views::filter;
+    // auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
+    // auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
+    // auto is_required = [](auto const &arg) { return arg.is_required; };
+    // std::vector<std::string_view> missing_arg_names;
+    // auto insert = std::back_inserter(missing_arg_names);
+    // transform(program.args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
+    // if (!missing_arg_names.empty())
+    //   throw opzioni::MissingRequiredArguments(missing_arg_names);
   }
 };
 

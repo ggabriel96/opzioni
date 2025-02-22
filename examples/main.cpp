@@ -14,6 +14,9 @@ int main(int argc, char const *argv[]) {
                .Flg<"disable-content-trust">({.help = "Skip image verification"})
                .Flg<"quiet", "q">({.help = "Supress verbose output"});
 
+  // auto const r = FindArg(p.args, [](auto const view) { return view.name == "platform"; });
+  // std::print("{}\n", r->name);
+
   auto const map = parse(p, std::span<char const *>{argv, static_cast<size_t>(argc)});
   std::print("\nargs map (size {}):\n", map.args.size());
   std::print("name: {}\n", map.get<"name">());

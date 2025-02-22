@@ -21,7 +21,10 @@ std::string_view ToString(ArgType at) noexcept {
   }
 }
 
+template <typename T>
 struct Arg {
+  using value_type = T;
+
   ArgType type = ArgType::POS;
   std::string_view name{};
   std::string_view abbrev{};
@@ -44,7 +47,8 @@ struct Arg {
   std::string format_for_usage_summary() const noexcept;
 };
 
-constexpr bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
+template <typename T, typename U>
+constexpr bool operator<(Arg<T> const &lhs, Arg<U> const &rhs) noexcept {
   bool const lhs_is_positional = lhs.type == ArgType::POS;
   bool const rhs_is_positional = rhs.type == ArgType::POS;
 
@@ -57,10 +61,22 @@ constexpr bool operator<(Arg const &lhs, Arg const &rhs) noexcept {
   return lhs_is_positional; // sort positionals before other types
 }
 
-constexpr bool operator==(Arg const &lhs, Arg const &rhs) noexcept {
+template <typename T, typename U>
+constexpr bool operator==(Arg<T> const &lhs, Arg<U> const &rhs) noexcept {
   auto const same_name = lhs.name == rhs.name;
   auto const same_abbrev = lhs.has_abbrev() && rhs.has_abbrev() && lhs.abbrev == rhs.abbrev;
   return same_name || same_abbrev;
 }
+
+struct ArgView {
+  ArgType type = ArgType::POS;
+  std::string_view name{};
+  std::string_view abbrev{};
+  bool is_required = false;
+
+  template <typename T>
+  ArgView(Arg<T> const &other)
+    : type(other.type), name(other.name), abbrev(other.abbrev), is_required(other.is_required) {}
+};
 
 #endif

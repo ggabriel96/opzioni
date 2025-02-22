@@ -21,7 +21,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   std::string_view name{};
   std::string_view version{};
   std::string_view intro{};
-  std::array<Arg, sizeof...(Names)> args;
+  std::tuple<Arg<Types>...> args;
   std::size_t amount_pos = 0;
 
   consteval Program() = default;
@@ -33,7 +33,8 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     version = other.version;
     intro = other.intro;
     amount_pos = other.amount_pos;
-    std::copy_n(other.args.begin(), sizeof...(OtherNames), args.begin());
+    if constexpr (sizeof...(Names) == sizeof...(OtherNames))
+      args = other.args;
   }
 
   consteval auto Intro(std::string_view intro) const noexcept {
@@ -45,13 +46,13 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, typename T>
   consteval auto Pos(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args[sizeof...(Names)] = Arg{
+    new_program.args = std::tuple_cat(std::make_tuple(Arg<T>{
       .type = ArgType::POS,
       .name = Name,
       .abbrev = "",
       .help = meta.help,
       .is_required = meta.is_required.value_or(true),
-    };
+    }), args);
     new_program.amount_pos += 1;
     return new_program;
   }
@@ -63,13 +64,13 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
 
     Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args[sizeof...(Names)] = Arg{
+    new_program.args = std::tuple_cat(std::make_tuple(Arg<T>{
         .type = ArgType::OPT,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = meta.is_required.value_or(false),
-    };
+    }), args);
     return new_program;
   }
 
@@ -81,13 +82,13 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   template <fixed_string Name, fixed_string Abbrev = "">
   consteval auto Flg(ArgMeta meta) {
     Program<StringList<Name, Names...>, TypeList<bool, Types...>> new_program(*this);
-    new_program.args[sizeof...(Names)] = Arg{
+    new_program.args = std::tuple_cat(std::make_tuple(Arg<bool>{
         .type = ArgType::FLG,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = false,
-    };
+    }), args);
     return new_program;
   }
 
@@ -111,7 +112,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 
 consteval auto DefaultProgram(std::string_view name, std::string_view version = "") {
   auto p = Program<StringList<"help">, TypeList<bool>>(name);
-  p.args[0] = Arg{
+  std::get<0>(p.args) = Arg<bool>{
       .type = ArgType::FLG,
       .name = "help",
       .abbrev = "h",
