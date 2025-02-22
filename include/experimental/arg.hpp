@@ -18,6 +18,7 @@ std::string_view ToString(ArgType at) noexcept {
     case ArgType::POS: return "positional";
     case ArgType::OPT: return "option";
     case ArgType::FLG: return "flag";
+    default: return "unknown";
   }
 }
 
