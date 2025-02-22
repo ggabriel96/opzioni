@@ -156,17 +156,18 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   std::size_t assign_option(ArgsView &view, ParsedOption const option, std::span<char const *> args) const {
-    if (option.value) {
-      view.options[option.name] = *option.value;
-      return 1;
-    }
-
     auto const it = FindArg(program.args, [&option](auto const &a) { return option.name == a.name || option.name == a.abbrev; });
     if (!it) {
       throw opzioni::UnknownArgument(option.name);
     }
     if (it->type != ArgType::OPT) {
       throw opzioni::WrongType(option.name, ToString(it->type), ToString(ArgType::OPT));
+    }
+
+    if (option.value) {
+      // value lookup is by name, not abbrev
+      view.options[it->name] = *option.value;
+      return 1;
     }
 
     if (args.size() > 1 && looks_positional(args[1])) {
