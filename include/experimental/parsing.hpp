@@ -262,7 +262,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
       [&map, &missing_arg_names](auto&&... arg) {
         (void) // cast to void to suppress unused warning
         (
-          (!map.has(arg.name) && arg.is_required ? (missing_arg_names.push_back(arg.name), true) : (false)), ...
+          (!map.has(arg.name) && arg.is_required ? missing_arg_names.push_back(arg.name) : (void)0), ...
         );
       },
       program.args
