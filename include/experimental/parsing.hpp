@@ -46,6 +46,7 @@ auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
     [&p](auto&&... elem) {
       std::optional<ArgView> ret = std::nullopt;
 
+      (void) // cast to void to suppress unused warning
       (
         (p(elem) ? (ret = elem, true) : (false)) || ...
       );
