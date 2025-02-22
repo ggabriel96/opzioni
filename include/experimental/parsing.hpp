@@ -213,55 +213,63 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
 
   auto get_args_map(ArgsView const &view) const {
     auto map = ArgsMap<arg_names, arg_types>{.exec_path = view.exec_path};
-    // std::size_t idx = sizeof...(Types) - 1;
-    // std::size_t idx_pos = 0;
-    // ((process<Names>(idx, map, view, idx_pos), idx--), ...);
+    std::size_t pos_count = 0;
+
+    std::apply(
+      [this, &map, &view, &pos_count](auto&&... arg) {
+        (this->process(arg, map, view, pos_count), ...);
+      },
+      program.args
+    );
+
     return map;
   }
 
-  template<fixed_string ArgName>
-  auto process(std::size_t idx, ArgsMap<arg_names, arg_types> &map, ArgsView const &view, std::size_t &idx_pos) const {
-    using T = GetType<ArgName, arg_names, arg_types>::type;
-    auto const arg = program.args[idx];
+  template<typename T>
+  auto process(Arg<T> const &arg, ArgsMap<arg_names, arg_types> &map, ArgsView const &view, std::size_t &pos_count) const {
     switch (arg.type) {
       case ArgType::POS: {
-        std::print("process POS {}=={}, idx {}, idx_pos {}\n", ArgName.data, arg.name, idx, idx_pos);
-        if (idx_pos < view.positionals.size()) {
-          map.args[ArgName] = opzioni::convert<T>(view.positionals[idx_pos]);
-          idx_pos += 1;
+        std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
+        if (pos_count < view.positionals.size()) {
+          // all args, including positionals, are reversed in program.args
+          map.args[arg.name] = opzioni::convert<T>(view.positionals[view.positionals.size() - 1 - pos_count]);
+          pos_count += 1;
         }
         // check for arg being required is done in a later step
         break;
       }
       case ArgType::OPT: {
-        std::print("process OPT {}=={}, idx {}\n", ArgName.data, arg.name, idx);
-        auto const opt = view.options.find(ArgName);
+        std::print("process OPT {}\n", arg.name);
+        auto const opt = view.options.find(arg.name);
         if (opt != view.options.end()) {
-          std::print("OPT {} found, value: {}\n", ArgName.data, opt->second);
-          map.args[ArgName] = opzioni::convert<T>(opt->second);
+          std::print("OPT {} found, value: {}\n", arg.name, opt->second);
+          map.args[arg.name] = opzioni::convert<T>(opt->second);
         }
         // check for arg being required is done in a later step
         break;
       }
       case ArgType::FLG: {
-        std::print("process FLG {}=={}, idx {}\n", ArgName.data, arg.name, idx);
-        map.args[ArgName] = view.options.contains(ArgName);
+        std::print("process FLG {}\n", arg.name);
+        map.args[arg.name] = view.options.contains(arg.name);
         break;
       }
     }
   }
 
   void check_contains_required(ArgsMap<arg_names, arg_types> const &map) {
-    // using std::ranges::transform;
-    // using std::views::filter;
-    // auto get_name = [](auto const &arg) -> std::string_view { return arg.name; };
-    // auto wasnt_parsed = [&map](auto const &arg) { return !map.has(arg.name); };
-    // auto is_required = [](auto const &arg) { return arg.is_required; };
-    // std::vector<std::string_view> missing_arg_names;
-    // auto insert = std::back_inserter(missing_arg_names);
-    // transform(program.args | filter(wasnt_parsed) | filter(is_required), insert, get_name);
-    // if (!missing_arg_names.empty())
-    //   throw opzioni::MissingRequiredArguments(missing_arg_names);
+    std::vector<std::string_view> missing_arg_names;
+    std::apply(
+      [&map, &missing_arg_names](auto&&... arg) {
+        (void) // cast to void to suppress unused warning
+        (
+          (!map.has(arg.name) && arg.is_required ? (missing_arg_names.push_back(arg.name), true) : (false)), ...
+        );
+      },
+      program.args
+    );
+
+    if (!missing_arg_names.empty()) // all args, including positionals, are reversed in program.args
+      throw opzioni::MissingRequiredArguments(missing_arg_names | std::views::reverse);
   }
 };
 
@@ -331,6 +339,7 @@ constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexce
     }
 
     // case left: has no value (next CLI argument could be it)
+    // TODO: fix `-a -b` being parsed as option followed by value
     return {name, std::nullopt};
   }
 

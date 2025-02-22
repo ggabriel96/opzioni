@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 
+#include <ranges>
 #include <stdexcept>
 #include <string_view>
 
@@ -55,7 +56,7 @@ public:
 
 class MissingRequiredArguments : public UserError {
 public:
-  explicit MissingRequiredArguments(concepts::Container auto const &names)
+  explicit MissingRequiredArguments(std::ranges::range auto const &names)
       : UserError(fmt::format("Missing required arguments: `{}`", fmt::join(names, "`, `"))) {}
 };
 
