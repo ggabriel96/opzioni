@@ -233,7 +233,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
         if (pos_count < view.positionals.size()) {
           map.args[arg.name] = opzioni::convert<T>(view.positionals[pos_count]);
           pos_count += 1;
-        }
+        } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
         break;
       }
@@ -243,19 +243,20 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
         if (opt != view.options.end()) {
           std::print("OPT {} found, value: {}\n", arg.name, opt->second);
           map.args[arg.name] = opzioni::convert<T>(opt->second);
-        }
+        } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
         break;
       }
       case ArgType::FLG: {
         std::print("process FLG {}\n", arg.name);
-        map.args[arg.name] = view.options.contains(arg.name);
+        if (view.options.contains(arg.name)) map.args[arg.name] = true;
+        else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         break;
       }
     }
   }
 
-  void check_contains_required(ArgsMap<arg_names, arg_types> const &map) {
+  void check_contains_required(ArgsMap<arg_names, arg_types> const &map) const {
     std::vector<std::string_view> missing_arg_names;
     std::apply(
       [&map, &missing_arg_names](auto&&... arg) {

@@ -44,7 +44,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   }
 
   template <fixed_string Name, typename T>
-  consteval auto Pos(ArgMeta meta) {
+  consteval auto Pos(ArgMeta<T> meta) {
     Program<StringList<Names..., Name>, TypeList<Types..., T>> new_program(*this);
     new_program.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
       .type = ArgType::POS,
@@ -52,13 +52,14 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
       .abbrev = "",
       .help = meta.help,
       .is_required = meta.is_required.value_or(true),
+      .default_value = meta.default_value,
     }));
     new_program.amount_pos += 1;
     return new_program;
   }
 
   template <fixed_string Name, fixed_string Abbrev, typename T>
-  consteval auto Opt(ArgMeta meta) {
+  consteval auto Opt(ArgMeta<T> meta) {
     // TODO: can we remove the trailing \n from fixed_string?
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
@@ -70,17 +71,18 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = meta.is_required.value_or(false),
+        .default_value = meta.default_value,
     }));
     return new_program;
   }
 
   template <fixed_string Name, typename T>
-  consteval auto Opt(ArgMeta meta) {
+  consteval auto Opt(ArgMeta<T> meta) {
     return Opt<Name, "", T>(meta);
   }
 
   template <fixed_string Name, fixed_string Abbrev = "">
-  consteval auto Flg(ArgMeta meta) {
+  consteval auto Flg(ArgMeta<bool> meta) {
     Program<StringList<Names..., Name>, TypeList<Types..., bool>> new_program(*this);
     new_program.args = std::tuple_cat(args, std::make_tuple(Arg<bool>{
         .type = ArgType::FLG,
@@ -88,6 +90,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = false,
+        .default_value = meta.default_value.value_or(false),
     }));
     return new_program;
   }
