@@ -25,13 +25,9 @@
 // +---------------------+
 
 struct ParsedOption {
-  std::string_view name;
+  ArgView arg;
   // no string and empty string mean different things here
   std::optional<std::string_view> value;
-
-  bool is_valid() const noexcept {
-    return !name.empty();
-  }
 };
 
 constexpr bool is_dash_dash(std::string_view const) noexcept;
@@ -135,8 +131,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
         } else if (looks_positional(arg)) {
           index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
-        } else if (auto const option = try_parse_option(arg); !option.name.empty()) {
-          index += assign_option(view, option, args.subspan(index));
+        } else if (auto const option = try_parse_option(arg); option.has_value()) {
+          index += assign_option(view, *option, args.subspan(index));
         } else if (auto const flag = get_if_long_flag(arg); !flag.empty()) {
           index += assign_long_flag(view, flag);
         } else if (auto const flags = get_if_short_flags(arg); !flags.empty()) {
@@ -156,29 +152,73 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
     return 1;
   }
 
-  std::size_t assign_option(ArgsView &view, ParsedOption const option, std::span<char const *> args) const {
-    auto const it = FindArg(program.args, [&option](auto const &a) { return option.name == a.name || option.name == a.abbrev; });
-    if (!it) {
-      throw opzioni::UnknownArgument(option.name);
-    }
-    if (it->type != ArgType::OPT) {
-      throw opzioni::WrongType(option.name, ToString(it->type), ToString(ArgType::OPT));
-    }
+  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) noexcept {
+    auto const num_of_dashes = whole_arg.find_first_not_of('-');
+    auto const eq_idx = whole_arg.find('=', num_of_dashes);
+    bool const has_equals = eq_idx != std::string_view::npos;
+    if (num_of_dashes == 1) {
+      // short option, e.g. `-O`
+      auto const name = whole_arg.substr(1, 1);
+      auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
+      if (!it) return std::nullopt;
 
+      if (has_equals) {
+        if (whole_arg.length() > 3) {
+          // has equals followed by some value, e.g. `-O=2`
+          return ParsedOption{.arg = *it, .value = whole_arg.substr(3)};
+        }
+        // TODO: should this `-O=` be handled like this?
+        // return {name, ""};
+        return std::nullopt; // tmply considered not an option
+      }
+  
+      if (whole_arg.length() > 2 && std::isupper(name[0])) {
+        // only followed by some value, e.g. `-O2`
+        return ParsedOption{.arg = *it, .value = whole_arg.substr(2)};
+      }
+  
+      // case left: has no value (next CLI argument could be it)
+      return ParsedOption{.arg = *it, .value = std::nullopt};
+    }
+  
+    if (num_of_dashes == 2 && whole_arg.length() > 3) {
+      // long option, e.g. `--name`
+
+      if (has_equals) {
+        auto const name = whole_arg.substr(2, eq_idx - 2);
+        auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+        if (!it) return std::nullopt;
+
+        auto const value = whole_arg.substr(eq_idx + 1);
+        return ParsedOption{.arg = *it, .value = value};
+      }
+  
+      // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
+      auto const name = whole_arg.substr(2);
+      auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+      if (!it) return std::nullopt;
+      return ParsedOption{.arg = *it, .value = std::nullopt};
+    }
+  
+    // not an option
+    return std::nullopt;
+  }
+
+  std::size_t assign_option(ArgsView &view, ParsedOption const option, std::span<char const *> args) const {
     if (option.value) {
       // value lookup is by name, not abbrev
-      view.options[it->name] = *option.value;
+      view.options[option.arg.name] = *option.value;
       return 1;
     }
 
     if (args.size() > 1 && looks_positional(args[1])) {
       // value lookup is by name, not abbrev
-      view.options[it->name] = args[1];
+      view.options[option.arg.name] = args[1];
       return 2;
     }
 
     // report error using the name/abbrev the user used
-    throw opzioni::MissingValue(option.name, 1, 0);
+    throw opzioni::MissingValue(option.arg.name, 1, 0);
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
@@ -314,49 +354,6 @@ constexpr std::string_view get_if_long_flag(std::string_view const whole_arg) no
   if (num_of_dashes == 2 && name.length() >= 2)
     return name;
   return {};
-}
-
-constexpr ParsedOption try_parse_option(std::string_view const whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  auto const eq_idx = whole_arg.find('=', num_of_dashes);
-  bool const has_equals = eq_idx != std::string_view::npos;
-  if (num_of_dashes == 1) {
-    // short option, e.g. `-O`
-    auto const name = whole_arg.substr(1, 1);
-    if (has_equals) {
-      if (whole_arg.length() > 3) {
-        // has equals followed by some value, e.g. `-O=2`
-        return {name, whole_arg.substr(3)};
-      }
-      // TODO: should this `-O=` be handled like this?
-      // return {name, ""};
-      return {"", std::nullopt}; // tmply considered not an option
-    }
-
-    if (whole_arg.length() > 2 && std::isupper(name[0])) {
-      // only followed by some value, e.g. `-O2`
-      return {name, whole_arg.substr(2)};
-    }
-
-    // case left: has no value (next CLI argument could be it)
-    // TODO: fix `-a -b` being parsed as option followed by value
-    return {name, std::nullopt};
-  }
-
-  if (num_of_dashes == 2 && whole_arg.length() > 3) {
-    // long option, e.g. `--name`
-    if (has_equals) {
-      auto const name = whole_arg.substr(2, eq_idx - 2);
-      auto const value = whole_arg.substr(eq_idx + 1);
-      return {name, value};
-    }
-
-    // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
-    return {whole_arg.substr(2), std::nullopt};
-  }
-
-  // not an option
-  return {"", std::nullopt};
 }
 
 #endif
