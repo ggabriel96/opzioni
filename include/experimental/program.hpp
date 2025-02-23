@@ -45,14 +45,14 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 
   template <fixed_string Name, typename T>
   consteval auto Pos(ArgMeta meta) {
-    Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args = std::tuple_cat(std::make_tuple(Arg<T>{
+    Program<StringList<Names..., Name>, TypeList<Types..., T>> new_program(*this);
+    new_program.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
       .type = ArgType::POS,
       .name = Name,
       .abbrev = "",
       .help = meta.help,
       .is_required = meta.is_required.value_or(true),
-    }), args);
+    }));
     new_program.amount_pos += 1;
     return new_program;
   }
@@ -63,14 +63,14 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
 
-    Program<StringList<Name, Names...>, TypeList<T, Types...>> new_program(*this);
-    new_program.args = std::tuple_cat(std::make_tuple(Arg<T>{
+    Program<StringList<Names..., Name>, TypeList<Types..., T>> new_program(*this);
+    new_program.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
         .type = ArgType::OPT,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = meta.is_required.value_or(false),
-    }), args);
+    }));
     return new_program;
   }
 
@@ -81,14 +81,14 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 
   template <fixed_string Name, fixed_string Abbrev = "">
   consteval auto Flg(ArgMeta meta) {
-    Program<StringList<Name, Names...>, TypeList<bool, Types...>> new_program(*this);
-    new_program.args = std::tuple_cat(std::make_tuple(Arg<bool>{
+    Program<StringList<Names..., Name>, TypeList<Types..., bool>> new_program(*this);
+    new_program.args = std::tuple_cat(args, std::make_tuple(Arg<bool>{
         .type = ArgType::FLG,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = false,
-    }), args);
+    }));
     return new_program;
   }
 

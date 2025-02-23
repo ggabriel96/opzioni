@@ -231,8 +231,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
         if (pos_count < view.positionals.size()) {
-          // all args, including positionals, are reversed in program.args
-          map.args[arg.name] = opzioni::convert<T>(view.positionals[view.positionals.size() - 1 - pos_count]);
+          map.args[arg.name] = opzioni::convert<T>(view.positionals[pos_count]);
           pos_count += 1;
         }
         // check for arg being required is done in a later step
@@ -268,8 +267,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
       program.args
     );
 
-    if (!missing_arg_names.empty()) // all args, including positionals, are reversed in program.args
-      throw opzioni::MissingRequiredArguments(missing_arg_names | std::views::reverse);
+    if (!missing_arg_names.empty())
+      throw opzioni::MissingRequiredArguments(missing_arg_names);
   }
 };
 
