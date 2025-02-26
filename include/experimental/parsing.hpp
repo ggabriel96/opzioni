@@ -314,8 +314,11 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
 };
 
 template <fixed_string... Names, typename... Types>
+ArgParser(Program<StringList<Names...>, TypeList<Types...>> const &program) -> ArgParser<StringList<Names...>, TypeList<Types...>>;
+
+template <fixed_string... Names, typename... Types>
 auto parse(Program<StringList<Names...>, TypeList<Types...>> const &program, std::span<char const *> args) {
-  auto parser  = ArgParser<StringList<Names...>, TypeList<Types...>>(program);
+  auto parser  = ArgParser(program);
   auto const view = parser.get_args_view(args);
   view.print_debug();
 
