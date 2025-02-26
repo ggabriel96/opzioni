@@ -17,7 +17,7 @@ int main(int argc, char const *argv[]) {
   // auto const r = FindArg(p.args, [](auto const view) { return view.name == "platform"; });
   // std::print("{}\n", r->name);
 
-  auto const map = parse(p, std::span<char const *>{argv, static_cast<size_t>(argc)});
+  auto const map = parse(p, argc, argv);
   std::print("\nargs map (size {}):\n", map.args.size());
   std::print("name: {}\n", map.get<"name">());
   std::print("platform: {}\n", map.get<"platform">());
