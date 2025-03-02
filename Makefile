@@ -15,9 +15,7 @@ format:
 	clang-format --verbose -i \
 		examples/*.cpp \
 		include/*.hpp \
-		include/experimental/*.hpp \
 		src/*.cpp \
-		src/experimental/*.cpp \
 		tests/*.cpp
 
 clean:

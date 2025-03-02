@@ -1,6 +1,6 @@
 #include "converters.hpp"
 
-namespace opzioni {
+namespace opz {
 
 template <>
 auto convert<bool>(std::string_view value) -> bool {
@@ -24,4 +24,4 @@ auto convert<std::string>(std::string_view value) -> std::string {
   return std::string(value);
 }
 
-} // namespace opzioni
+} // namespace opz

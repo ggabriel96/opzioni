@@ -1,9 +1,6 @@
 #ifndef OPZIONI_CONVERTERS_H
 #define OPZIONI_CONVERTERS_H
 
-#include "exceptions.hpp"
-#include "types.hpp"
-
 #include <any>
 #include <cerrno>
 #include <charconv>
@@ -13,7 +10,10 @@
 
 #include <fmt/format.h>
 
-namespace opzioni {
+#include "concepts.hpp"
+#include "exceptions.hpp"
+
+namespace opz {
 
 template <typename TargetType>
 auto convert(std::string_view) -> TargetType;
@@ -61,6 +61,6 @@ auto convert(std::string_view value) -> Container {
   return container;
 }
 
-} // namespace opzioni
+} // namespace opz
 
 #endif // OPZIONI_CONVERTERS_H

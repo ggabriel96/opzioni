@@ -1,6 +1,6 @@
 #include <string>
 
-#include "experimental/all.hpp"
+#include "all.hpp"
 
 int main(int argc, char const *argv[]) {
   using namespace opz;

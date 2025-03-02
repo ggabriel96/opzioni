@@ -7,7 +7,7 @@
 
 #include <fmt/format.h>
 
-namespace opzioni {
+namespace opz {
 
 // Base class for exceptions thrown because of errors from the users of our library
 class ConsumerError : public std::logic_error {
@@ -83,6 +83,6 @@ public:
     : UserError(fmt::format("Argument `{}` is a known {}, but was provided as {}", name, expected_type, received_type)) {}
 };
 
-} // namespace opzioni
+} // namespace opz
 
 #endif // OPZIONI_EXCEPTIONS_H

@@ -14,10 +14,10 @@
 
 #include "converters.hpp"
 #include "exceptions.hpp"
-#include "experimental/command.hpp"
-#include "experimental/fixed_string.hpp"
-#include "experimental/string_list.hpp"
-#include "experimental/type_list.hpp"
+#include "command.hpp"
+#include "fixed_string.hpp"
+#include "string_list.hpp"
+#include "type_list.hpp"
 
 namespace opz {
 
@@ -82,7 +82,7 @@ struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
     using T = GetType<Name, arg_names, arg_types>::type;
     static_assert(!std::is_same_v< T, void >, "unknown parameter name");
     auto const val = args.find(Name);
-    if (val == args.end()) throw opzioni::ArgumentNotFound(Name.data);
+    if (val == args.end()) throw opz::ArgumentNotFound(Name.data);
     return std::any_cast<T>(val->second);
   }
 
@@ -136,7 +136,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
         } else if (auto const flags = get_if_short_flags(arg); !flags.empty()) {
           index += assign_short_flags(view, flags);
         } else {
-          throw opzioni::UnknownArgument(arg);
+          throw opz::UnknownArgument(arg);
         }
       }
     }
@@ -145,7 +145,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
   std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
     if (cur_pos_idx + 1 > cmd.amount_pos)
-      throw opzioni::UnexpectedPositional(args[0], cmd.amount_pos);
+      throw opz::UnexpectedPositional(args[0], cmd.amount_pos);
     view.positionals.emplace_back(args[0]);
     return 1;
   }
@@ -216,16 +216,16 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
     }
 
     // report error using the name/abbrev the user used
-    throw opzioni::MissingValue(option.arg.name, 1, 0);
+    throw opz::MissingValue(option.arg.name, 1, 0);
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
     auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) {
-      throw opzioni::UnknownArgument(flag);
+      throw opz::UnknownArgument(flag);
     }
     if (it->type != ArgType::FLG) {
-      throw opzioni::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+      throw opz::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
     }
 
     view.options[it->name] = "";
@@ -237,10 +237,10 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       auto const flag = flags.substr(i, 1);
       auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) {
-        throw opzioni::UnknownArgument(flag);
+        throw opz::UnknownArgument(flag);
       }
       if (it->type != ArgType::FLG) {
-        throw opzioni::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+        throw opz::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
       }
 
       // value lookup is by name, not abbrev
@@ -269,7 +269,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
         if (pos_count < view.positionals.size()) {
-          map.args[arg.name] = opzioni::convert<T>(view.positionals[pos_count]);
+          map.args[arg.name] = opz::convert<T>(view.positionals[pos_count]);
           pos_count += 1;
         } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
@@ -280,7 +280,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
         auto const opt = view.options.find(arg.name);
         if (opt != view.options.end()) {
           std::print("OPT {} found, value: {}\n", arg.name, opt->second);
-          map.args[arg.name] = opzioni::convert<T>(opt->second);
+          map.args[arg.name] = opz::convert<T>(opt->second);
         } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
         break;
@@ -307,7 +307,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
     );
 
     if (!missing_arg_names.empty())
-      throw opzioni::MissingRequiredArguments(missing_arg_names);
+      throw opz::MissingRequiredArguments(missing_arg_names);
   }
 };
 
