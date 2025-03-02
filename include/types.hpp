@@ -1,10 +1,8 @@
 #ifndef OPZIONI_TYPES_H
 #define OPZIONI_TYPES_H
 
-#include <concepts>
 #include <ranges>
 #include <string_view>
-#include <type_traits>
 #include <variant>
 #include <vector>
 

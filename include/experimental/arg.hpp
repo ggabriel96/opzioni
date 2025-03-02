@@ -1,7 +1,6 @@
 #ifndef OPZIONI_ARG_H
 #define OPZIONI_ARG_H
 
-#include <cstddef>
 #include <optional>
 #include <string_view>
 
