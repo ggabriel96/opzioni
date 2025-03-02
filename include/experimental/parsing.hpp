@@ -35,7 +35,6 @@ constexpr bool is_dash_dash(std::string_view const) noexcept;
 constexpr bool looks_positional(std::string_view const) noexcept;
 constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
 constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
-constexpr ParsedOption try_parse_option(std::string_view const) noexcept;
 
 template <typename... Ts>
 auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
