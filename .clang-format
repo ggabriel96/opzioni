@@ -7,4 +7,5 @@ AlignAfterOpenBracket: AlwaysBreak
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
+ContinuationIndentWidth: 2
 IndentCaseLabels: true

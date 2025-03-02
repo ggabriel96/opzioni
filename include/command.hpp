@@ -46,15 +46,15 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   consteval auto Pos(ArgMeta<T> meta) {
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
-        args,
-        std::make_tuple(Arg<T>{
-            .type = ArgType::POS,
-            .name = Name,
-            .abbrev = "",
-            .help = meta.help,
-            .is_required = meta.is_required.value_or(true),
-            .default_value = meta.default_value,
-        }));
+      args,
+      std::make_tuple(Arg<T>{
+        .type = ArgType::POS,
+        .name = Name,
+        .abbrev = "",
+        .help = meta.help,
+        .is_required = meta.is_required.value_or(true),
+        .default_value = meta.default_value,
+      }));
     new_cmd.amount_pos += 1;
     return new_cmd;
   }
@@ -67,15 +67,15 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
-        args,
-        std::make_tuple(Arg<T>{
-            .type = ArgType::OPT,
-            .name = Name,
-            .abbrev = Abbrev,
-            .help = meta.help,
-            .is_required = meta.is_required.value_or(false),
-            .default_value = meta.default_value,
-        }));
+      args,
+      std::make_tuple(Arg<T>{
+        .type = ArgType::OPT,
+        .name = Name,
+        .abbrev = Abbrev,
+        .help = meta.help,
+        .is_required = meta.is_required.value_or(false),
+        .default_value = meta.default_value,
+      }));
     return new_cmd;
   }
 
@@ -88,15 +88,15 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   consteval auto Flg(ArgMeta<bool> meta) {
     Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
-        args,
-        std::make_tuple(Arg<bool>{
-            .type = ArgType::FLG,
-            .name = Name,
-            .abbrev = Abbrev,
-            .help = meta.help,
-            .is_required = false,
-            .default_value = meta.default_value.value_or(false),
-        }));
+      args,
+      std::make_tuple(Arg<bool>{
+        .type = ArgType::FLG,
+        .name = Name,
+        .abbrev = Abbrev,
+        .help = meta.help,
+        .is_required = false,
+        .default_value = meta.default_value.value_or(false),
+      }));
     return new_cmd;
   }
 
@@ -121,11 +121,11 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
 consteval auto NewCmd(std::string_view name, std::string_view version = "") {
   auto p = Command<StringList<"help">, TypeList<bool>>(name, version);
   std::get<0>(p.args) = Arg<bool>{
-      .type = ArgType::FLG,
-      .name = "help",
-      .abbrev = "h",
-      .help = "Display this information",
-      .is_required = false,
+    .type = ArgType::FLG,
+    .name = "help",
+    .abbrev = "h",
+    .help = "Display this information",
+    .is_required = false,
   };
   return p;
 }

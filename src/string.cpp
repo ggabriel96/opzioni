@@ -16,7 +16,7 @@ std::string_view trim(std::string_view sv) noexcept {
 }
 
 auto limit_within(std::span<std::string_view> words, std::size_t const max_width) noexcept
-    -> std::vector<std::vector<std::string_view>> {
+  -> std::vector<std::vector<std::string_view>> {
   std::size_t cur_max = max_width;
   std::vector<std::vector<std::string_view>> lines(1);
   for (auto const &_word : words) {
@@ -33,7 +33,7 @@ auto limit_within(std::span<std::string_view> words, std::size_t const max_width
 }
 
 auto limit_within(std::string_view const text, std::size_t const max_width) noexcept
-    -> std::vector<std::vector<std::string_view>> {
+  -> std::vector<std::vector<std::string_view>> {
   auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
   std::vector<std::string_view> words;
   words.reserve(text.size());

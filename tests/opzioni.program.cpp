@@ -129,7 +129,7 @@ SCENARIO("setting general information", "[Program][defaults][info][setters]") {
 
     WHEN("intro, details, version, msg_width, and on_error are called") {
       constexpr auto program =
-          Program("program").intro("intro").details("details").version("1.0").msg_width(80).on_error(print_error);
+        Program("program").intro("intro").details("details").version("1.0").msg_width(80).on_error(print_error);
 
       THEN("all five should be changed") {
         REQUIRE(program.metadata.name == "program");
@@ -197,7 +197,7 @@ SCENARIO("adding arguments", "[Program][args]") {
 
     WHEN("multiple positionals are added") {
       constexpr auto program =
-          Program("program").add(Pos("pos5")).add(Pos("pos2")).add(Pos("pos4")).add(Pos("pos1")).add(Pos("pos3"));
+        Program("program").add(Pos("pos5")).add(Pos("pos2")).add(Pos("pos4")).add(Pos("pos1")).add(Pos("pos3"));
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 5); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -215,13 +215,13 @@ SCENARIO("adding arguments", "[Program][args]") {
 
     WHEN("other arguments are added before positionals") {
       constexpr auto program = Program("program")
-                                   .add(Flg("flg1"))
-                                   .add(Opt("opt2"))
-                                   .add(Pos("pos3"))
-                                   .add(Pos("pos1"))
-                                   .add(Pos("pos2"))
-                                   .add(Opt("opt1"))
-                                   .add(Flg("flg2"));
+                                 .add(Flg("flg1"))
+                                 .add(Opt("opt2"))
+                                 .add(Pos("pos3"))
+                                 .add(Pos("pos1"))
+                                 .add(Pos("pos2"))
+                                 .add(Opt("opt1"))
+                                 .add(Flg("flg2"));
 
       THEN("the size of args should match the number of arguments added") { REQUIRE(program.args.size() == 7); }
       THEN("cmds should not be changed") { REQUIRE(program.cmds.size() == 0); }
@@ -236,7 +236,7 @@ SCENARIO("adding arguments", "[Program][args]") {
       THEN("the rest of the arguments should be sorted lexicographically by name") {
         // also using is_sorted to check `operator<`
         REQUIRE(
-            std::is_sorted(std::next(program.args.begin(), program.metadata.positionals_amount), program.args.end()));
+          std::is_sorted(std::next(program.args.begin(), program.metadata.positionals_amount), program.args.end()));
         REQUIRE(program.args[3].name == "flg1");
         REQUIRE(program.args[4].name == "flg2");
         REQUIRE(program.args[5].name == "opt1");
@@ -425,19 +425,19 @@ SCENARIO("parsing", "[Program][parsing]") {
 
   GIVEN("a program with all kinds of arguments and a command") {
     constexpr static auto cmd =
-        Program("cmd").on_error(rethrow).add(Flg("f")).add(Pos("pos1")).add(Pos("cmd-pos")).add(Opt("long", "l"));
+      Program("cmd").on_error(rethrow).add(Flg("f")).add(Pos("pos1")).add(Pos("cmd-pos")).add(Opt("long", "l"));
 
     constexpr auto program = Program("program")
-                                 .on_error(rethrow)
-                                 .add(Pos("pos2"))
-                                 .add(Opt("long"))
-                                 .add(Flg("flg"))
-                                 .add(Opt("longer-opt", "l"))
-                                 .add(Pos("pos1"))
-                                 .add(Flg("glf", "g"))
-                                 .add(Flg("f"))
-                                 .add(Opt("o"))
-                                 .add(cmd);
+                               .on_error(rethrow)
+                               .add(Pos("pos2"))
+                               .add(Opt("long"))
+                               .add(Flg("flg"))
+                               .add(Opt("longer-opt", "l"))
+                               .add(Pos("pos1"))
+                               .add(Flg("glf", "g"))
+                               .add(Flg("f"))
+                               .add(Opt("o"))
+                               .add(cmd);
 
     WHEN("an empty argv is parsed") {
       std::array<char const *, 0> argv;
@@ -457,24 +457,24 @@ SCENARIO("parsing", "[Program][parsing]") {
 
     AND_WHEN("all arguments are parsed, all long names, positionals given last") {
       auto argv = std::array{
-          "./program",
-          "--long",
-          "long-val",
-          "--flg",
-          "--longer-opt",
-          "longer-opt-val",
-          "--glf",
-          "-f",
-          "-o",
-          "o-val",
-          "a",
-          "b",
-          "cmd",
-          "--long",
-          "long-val",
-          "-f",
-          "aa",
-          "bb"};
+        "./program",
+        "--long",
+        "long-val",
+        "--flg",
+        "--longer-opt",
+        "longer-opt-val",
+        "--glf",
+        "-f",
+        "-o",
+        "o-val",
+        "a",
+        "b",
+        "cmd",
+        "--long",
+        "long-val",
+        "-f",
+        "aa",
+        "bb"};
 
       auto const map = program(std::span(argv));
 

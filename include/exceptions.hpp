@@ -48,9 +48,9 @@ class DuplicateAssignment : public UserError {
 public:
   DuplicateAssignment(std::string_view name)
       : UserError(fmt::format(
-            "Attempt to assign argument `{}` failed because it was already set."
-            " Did you specify it more than once?",
-            name)) {}
+          "Attempt to assign argument `{}` failed because it was already set."
+          " Did you specify it more than once?",
+          name)) {}
 };
 
 class MissingRequiredArguments : public UserError {
@@ -63,15 +63,15 @@ class MissingValue : public UserError {
 public:
   MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
       : UserError(
-            fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
+          fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
 };
 
 class UnexpectedPositional : public UserError {
 public:
   UnexpectedPositional(std::string_view name, std::size_t expected_amount)
       : UserError(fmt::format(
-            "Unexpected positional argument `{}`. This program expects {} positional arguments", name,
-            expected_amount)) {}
+          "Unexpected positional argument `{}`. This program expects {} positional arguments", name, expected_amount)) {
+  }
 };
 
 class UnknownArgument : public UserError {
@@ -83,7 +83,7 @@ class WrongType : public UserError {
 public:
   WrongType(std::string_view name, std::string_view expected_type, std::string_view received_type)
       : UserError(
-            fmt::format("Argument `{}` is a known {}, but was provided as {}", name, expected_type, received_type)) {}
+          fmt::format("Argument `{}` is a known {}, but was provided as {}", name, expected_type, received_type)) {}
 };
 
 } // namespace opz

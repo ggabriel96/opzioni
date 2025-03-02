@@ -39,19 +39,19 @@ constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 template <typename... Ts>
 auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
   return std::apply(
-      [&p](auto &&...elem) {
-        std::optional<ArgView> ret = std::nullopt;
+    [&p](auto &&...elem) {
+      std::optional<ArgView> ret = std::nullopt;
 
-        // clang-format off
+      // clang-format off
         (void) // cast to void to suppress unused warning
         (
           (p(elem) ? (ret = elem, true) : (false)) || ...
         );
-        // clang-format on
+      // clang-format on
 
-        return ret;
-      },
-      haystack);
+      return ret;
+    },
+    haystack);
 }
 
 // +-----------------------+
@@ -317,7 +317,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
 template <fixed_string... Names, typename... Types>
 CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &)
-    -> CommandParser<StringList<Names...>, TypeList<Types...>>;
+  -> CommandParser<StringList<Names...>, TypeList<Types...>>;
 
 template <fixed_string... Names, typename... Types>
 auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
