@@ -15,15 +15,7 @@ struct ArgMeta {
 
 enum struct ArgType { POS, OPT, FLG };
 
-std::string_view ToString(ArgType at) noexcept {
-  switch (at)
-  {
-  case ArgType::POS: return "positional";
-  case ArgType::OPT: return "option";
-  case ArgType::FLG: return "flag";
-  default: return "unknown";
-  }
-}
+std::string_view ToString(ArgType at) noexcept;
 
 template <typename T>
 struct Arg {
