@@ -4,12 +4,9 @@ namespace opz {
 
 template <>
 auto convert<bool>(std::string_view value) -> bool {
-  if (value.empty())
-    throw ConversionError("empty string", "bool");
-  if (value == "1" || value == "true")
-    return true;
-  if (value == "0" || value == "false")
-    return false;
+  if (value.empty()) throw ConversionError("empty string", "bool");
+  if (value == "1" || value == "true") return true;
+  if (value == "0" || value == "false") return false;
   throw ConversionError(value, "bool");
 }
 

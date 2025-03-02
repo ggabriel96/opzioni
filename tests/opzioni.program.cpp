@@ -456,9 +456,25 @@ SCENARIO("parsing", "[Program][parsing]") {
     }
 
     AND_WHEN("all arguments are parsed, all long names, positionals given last") {
-      auto argv =
-          std::array{"./program", "--long", "long-val", "--flg", "--longer-opt", "longer-opt-val", "--glf", "-f", "-o",
-                     "o-val",     "a",      "b",        "cmd",   "--long",       "long-val",       "-f",    "aa", "bb"};
+      auto argv = std::array{
+          "./program",
+          "--long",
+          "long-val",
+          "--flg",
+          "--longer-opt",
+          "longer-opt-val",
+          "--glf",
+          "-f",
+          "-o",
+          "o-val",
+          "a",
+          "b",
+          "cmd",
+          "--long",
+          "long-val",
+          "-f",
+          "aa",
+          "bb"};
 
       auto const map = program(std::span(argv));
 

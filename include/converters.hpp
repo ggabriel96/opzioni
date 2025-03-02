@@ -20,19 +20,16 @@ auto convert(std::string_view) -> TargetType;
 
 template <concepts::Integer Int>
 auto convert(std::string_view arg_val) -> Int {
-  if (arg_val.empty())
-    throw ConversionError("empty string", "an integer type");
+  if (arg_val.empty()) throw ConversionError("empty string", "an integer type");
   Int integer = 0;
   auto const conv_result = std::from_chars(arg_val.data(), arg_val.data() + arg_val.size(), integer);
-  if (conv_result.ec == std::errc::invalid_argument)
-    throw ConversionError(arg_val, "an integer type");
+  if (conv_result.ec == std::errc::invalid_argument) throw ConversionError(arg_val, "an integer type");
   return integer;
 }
 
 template <std::floating_point Float>
 auto convert(std::string_view arg_val) -> Float {
-  if (arg_val.empty())
-    throw ConversionError("empty string", "a floating point type");
+  if (arg_val.empty()) throw ConversionError("empty string", "a floating point type");
   char *end = nullptr;
   Float const floatnum = [&arg_val, &end]() -> Float {
     if constexpr (std::is_same_v<Float, float>) {
@@ -45,8 +42,7 @@ auto convert(std::string_view arg_val) -> Float {
       return std::strtod(arg_val.data(), &end);
     }
   }();
-  if (errno == ERANGE || end == arg_val.data())
-    throw ConversionError(arg_val, "a floating point type");
+  if (errno == ERANGE || end == arg_val.data()) throw ConversionError(arg_val, "a floating point type");
   return floatnum;
 }
 

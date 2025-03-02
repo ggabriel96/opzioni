@@ -48,11 +48,9 @@ constexpr bool operator<(Arg<T> const &lhs, Arg<U> const &rhs) noexcept {
   bool const lhs_is_positional = lhs.type == ArgType::POS;
   bool const rhs_is_positional = rhs.type == ArgType::POS;
 
-  if (lhs_is_positional && rhs_is_positional)
-    return false; // don't move positionals relative to each other
+  if (lhs_is_positional && rhs_is_positional) return false; // don't move positionals relative to each other
 
-  if (!lhs_is_positional && !rhs_is_positional)
-    return lhs.name < rhs.name; // sort non-positionals by name
+  if (!lhs_is_positional && !rhs_is_positional) return lhs.name < rhs.name; // sort non-positionals by name
 
   return lhs_is_positional; // sort positionals before other types
 }
@@ -72,7 +70,7 @@ struct ArgView {
 
   template <typename T>
   ArgView(Arg<T> const &other)
-    : type(other.type), name(other.name), abbrev(other.abbrev), is_required(other.is_required) {}
+      : type(other.type), name(other.name), abbrev(other.abbrev), is_required(other.is_required) {}
 };
 
 } // namespace opz

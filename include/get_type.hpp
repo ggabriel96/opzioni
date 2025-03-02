@@ -21,8 +21,8 @@ struct GetType<Needle, StringList<Needle, Haystack...>, TypeList<NeedleType, Hay
     : TypeResult<NeedleType> {};
 
 // recursion case (keep looking)
-template <fixed_string Needle, fixed_string Other, fixed_string... Haystack, typename OtherType,
-          typename... HaystackTypes>
+template <
+    fixed_string Needle, fixed_string Other, fixed_string... Haystack, typename OtherType, typename... HaystackTypes>
 struct GetType<Needle, StringList<Other, Haystack...>, TypeList<OtherType, HaystackTypes...>>
     : GetType<Needle, StringList<Haystack...>, TypeList<HaystackTypes...>> {};
 

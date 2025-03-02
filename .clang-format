@@ -3,4 +3,8 @@ BasedOnStyle: LLVM
 ---
 Language: Cpp
 ColumnLimit: 120
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+IndentCaseLabels: true

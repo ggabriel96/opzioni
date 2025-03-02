@@ -388,8 +388,8 @@ SCENARIO("set_default_to", "[Arg]") {
   }
 
   GIVEN("an Arg without default_value and with default_setter") {
-    constexpr auto arg = Arg{.default_value = std::monostate{},
-                             .default_setter = [](ArgValue &argval) { argval.value = "from setter"; }};
+    constexpr auto arg = Arg{
+        .default_value = std::monostate{}, .default_setter = [](ArgValue &argval) { argval.value = "from setter"; }};
 
     WHEN("calling set_default_to with an empty ArgValue") {
       ArgValue argval{};

@@ -47,9 +47,10 @@ public:
 class DuplicateAssignment : public UserError {
 public:
   DuplicateAssignment(std::string_view name)
-      : UserError(fmt::format("Attempt to assign argument `{}` failed because it was already set."
-                              " Did you specify it more than once?",
-                              name)) {}
+      : UserError(fmt::format(
+            "Attempt to assign argument `{}` failed because it was already set."
+            " Did you specify it more than once?",
+            name)) {}
 };
 
 class MissingRequiredArguments : public UserError {
@@ -68,8 +69,9 @@ public:
 class UnexpectedPositional : public UserError {
 public:
   UnexpectedPositional(std::string_view name, std::size_t expected_amount)
-      : UserError(fmt::format("Unexpected positional argument `{}`. This program expects {} positional arguments", name,
-                              expected_amount)) {}
+      : UserError(fmt::format(
+            "Unexpected positional argument `{}`. This program expects {} positional arguments", name,
+            expected_amount)) {}
 };
 
 class UnknownArgument : public UserError {
@@ -80,7 +82,8 @@ public:
 class WrongType : public UserError {
 public:
   WrongType(std::string_view name, std::string_view expected_type, std::string_view received_type)
-    : UserError(fmt::format("Argument `{}` is a known {}, but was provided as {}", name, expected_type, received_type)) {}
+      : UserError(
+            fmt::format("Argument `{}` is a known {}, but was provided as {}", name, expected_type, received_type)) {}
 };
 
 } // namespace opz

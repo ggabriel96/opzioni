@@ -12,9 +12,9 @@
 #include <string_view>
 #include <vector>
 
+#include "command.hpp"
 #include "converters.hpp"
 #include "exceptions.hpp"
-#include "command.hpp"
 #include "fixed_string.hpp"
 #include "string_list.hpp"
 #include "type_list.hpp"
@@ -39,18 +39,19 @@ constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 template <typename... Ts>
 auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
   return std::apply(
-    [&p](auto&&... elem) {
-      std::optional<ArgView> ret = std::nullopt;
+      [&p](auto &&...elem) {
+        std::optional<ArgView> ret = std::nullopt;
 
-      (void) // cast to void to suppress unused warning
-      (
-        (p(elem) ? (ret = elem, true) : (false)) || ...
-      );
+        // clang-format off
+        (void) // cast to void to suppress unused warning
+        (
+          (p(elem) ? (ret = elem, true) : (false)) || ...
+        );
+        // clang-format on
 
-      return ret;
-    },
-    haystack
-  );
+        return ret;
+      },
+      haystack);
 }
 
 // +-----------------------+
@@ -77,10 +78,10 @@ struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
 
-  template<fixed_string Name>
+  template <fixed_string Name>
   typename GetType<Name, arg_names, arg_types>::type get() const {
     using T = GetType<Name, arg_names, arg_types>::type;
-    static_assert(!std::is_same_v< T, void >, "unknown parameter name");
+    static_assert(!std::is_same_v<T, void>, "unknown parameter name");
     auto const val = args.find(Name);
     if (val == args.end()) throw opz::ArgumentNotFound(Name.data);
     return std::any_cast<T>(val->second);
@@ -125,7 +126,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
             ++current_positional_idx;
           }
           index = args.size();
-        // else if is command...
+          // else if is command...
         } else if (looks_positional(arg)) {
           index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
@@ -144,8 +145,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
-    if (cur_pos_idx + 1 > cmd.amount_pos)
-      throw opz::UnexpectedPositional(args[0], cmd.amount_pos);
+    if (cur_pos_idx + 1 > cmd.amount_pos) throw opz::UnexpectedPositional(args[0], cmd.amount_pos);
     view.positionals.emplace_back(args[0]);
     return 1;
   }
@@ -253,18 +253,21 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
     auto map = ArgsMap<arg_names, arg_types>{.exec_path = view.exec_path};
     std::size_t pos_count = 0;
 
+    // clang-format off
     std::apply(
       [this, &map, &view, &pos_count](auto&&... arg) {
         (this->process(arg, map, view, pos_count), ...);
       },
       cmd.args
     );
+    // clang-format on
 
     return map;
   }
 
-  template<typename T>
-  auto process(Arg<T> const &arg, ArgsMap<arg_names, arg_types> &map, ArgsView const &view, std::size_t &pos_count) const {
+  template <typename T>
+  auto
+  process(Arg<T> const &arg, ArgsMap<arg_names, arg_types> &map, ArgsView const &view, std::size_t &pos_count) const {
     switch (arg.type) {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
@@ -296,6 +299,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
   void check_contains_required(ArgsMap<arg_names, arg_types> const &map) const {
     std::vector<std::string_view> missing_arg_names;
+    // clang-format off
     std::apply(
       [&map, &missing_arg_names](auto&&... arg) {
         (void) // cast to void to suppress unused warning
@@ -305,20 +309,21 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       },
       cmd.args
     );
+    // clang-format on
 
-    if (!missing_arg_names.empty())
-      throw opz::MissingRequiredArguments(missing_arg_names);
+    if (!missing_arg_names.empty()) throw opz::MissingRequiredArguments(missing_arg_names);
   }
 };
 
 template <fixed_string... Names, typename... Types>
-CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &) -> CommandParser<StringList<Names...>, TypeList<Types...>>;
+CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &)
+    -> CommandParser<StringList<Names...>, TypeList<Types...>>;
 
 template <fixed_string... Names, typename... Types>
 auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
   auto const args = std::span{argv, static_cast<std::size_t>(argc)};
 
-  auto parser  = CommandParser(cmd);
+  auto parser = CommandParser(cmd);
   auto const view = parser.get_args_view(args);
   view.print_debug();
 
@@ -346,16 +351,14 @@ constexpr std::string_view get_if_short_flags(std::string_view const whole_arg) 
   auto const names = whole_arg.substr(1);
   auto const all_chars = std::ranges::all_of(names, [](char const c) { return std::isalpha(c); });
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 1 && names.length() >= 1 && all_chars)
-    return names;
+  if (num_of_dashes == 1 && names.length() >= 1 && all_chars) return names;
   return {};
 }
 
 constexpr std::string_view get_if_long_flag(std::string_view const whole_arg) noexcept {
   auto const name = whole_arg.substr(2);
   auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 2 && name.length() >= 2)
-    return name;
+  if (num_of_dashes == 2 && name.length() >= 2) return name;
   return {};
 }
 
