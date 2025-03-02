@@ -1,8 +1,5 @@
 #include <string>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-
 #include "experimental/all.hpp"
 
 int main(int argc, char const *argv[]) {
@@ -14,9 +11,6 @@ int main(int argc, char const *argv[]) {
                .Flg<"disable-content-trust">({.help = "Skip image verification"})
                .Flg<"quiet", "q">({.help = "Supress verbose output"});
 
-  // auto const r = FindArg(p.args, [](auto const view) { return view.name == "platform"; });
-  // std::print("{}\n", r->name);
-
   auto const map = parse(p, argc, argv);
   std::print("\nargs map (size {}):\n", map.args.size());
   std::print("name: {}\n", map.get<"name">());
@@ -24,8 +18,4 @@ int main(int argc, char const *argv[]) {
   std::print("all-tags: {}\n", map.get<"all-tags">());
   std::print("disable-content-trust: {}\n", map.get<"disable-content-trust">());
   std::print("quiet: {}\n", map.get<"quiet">());
-
-  // p.SetValue<"age">(28);
-  // auto age = p.GetValue<"name">();
-  // fmt::print("name: [{}]\n", age.value_or(std::string()));
 }
