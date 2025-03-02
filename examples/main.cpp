@@ -5,7 +5,7 @@
 int main(int argc, char const *argv[]) {
   using namespace opz;
 
-  auto p = DefaultProgram("pull", "1.0")
+  auto p = NewCommand("pull", "1.0")
                .Intro("Pull an image or a repository from a registry")
                .Pos<"name", std::string>({.help = "The name of the image or repository to pull"})
                .Opt<"platform", std::string>({.help = "Set platform if server is multi-platform capable"})

@@ -14,8 +14,8 @@
 
 #include "converters.hpp"
 #include "exceptions.hpp"
+#include "experimental/command.hpp"
 #include "experimental/fixed_string.hpp"
-#include "experimental/program.hpp"
 #include "experimental/string_list.hpp"
 #include "experimental/type_list.hpp"
 
@@ -60,8 +60,7 @@ auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
 
 struct ArgsView {
   std::string_view exec_path{};
-  // TODO: put positionals and options on the same map when we
-  // start querying the program args?
+  // TODO: put positionals and options on the same map when we start querying the command args?
   std::vector<std::string_view> positionals;
   std::map<std::string_view, std::string_view> options;
 
@@ -96,16 +95,16 @@ struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
 };
 
 template <typename...>
-struct ArgParser;
+struct CommandParser;
 
 template <fixed_string... Names, typename... Types>
-struct ArgParser<StringList<Names...>, TypeList<Types...>> {
+struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
 
-  Program<arg_names, arg_types> const &program;
+  Command<arg_names, arg_types> const &cmd;
 
-  ArgParser(Program<arg_names, arg_types> const &program) : program(program) {}
+  CommandParser(Command<arg_names, arg_types> const &cmd) : cmd(cmd) {}
 
   // auto operator()(std::span<char const *> args) {
   //   ArgsMap map;
@@ -127,8 +126,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
             ++current_positional_idx;
           }
           index = args.size();
-          // } else if (auto cmd = is_command(program, arg); cmd != nullptr) {
-          //   index += assign_command(map, args.subspan(index), *cmd);
+        // else if is command...
         } else if (looks_positional(arg)) {
           index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
@@ -147,8 +145,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
-    if (cur_pos_idx + 1 > program.amount_pos)
-      throw opzioni::UnexpectedPositional(args[0], program.amount_pos);
+    if (cur_pos_idx + 1 > cmd.amount_pos)
+      throw opzioni::UnexpectedPositional(args[0], cmd.amount_pos);
     view.positionals.emplace_back(args[0]);
     return 1;
   }
@@ -160,7 +158,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
     if (num_of_dashes == 1) {
       // short option, e.g. `-O`
       auto const name = whole_arg.substr(1, 1);
-      auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
+      auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
 
       if (has_equals) {
@@ -187,7 +185,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
 
       if (has_equals) {
         auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+        auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
 
         auto const value = whole_arg.substr(eq_idx + 1);
@@ -196,7 +194,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+      auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
@@ -223,7 +221,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
-    auto const it = FindArg(program.args, [&flag](auto const &a) { return a.name == flag; });
+    auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) {
       throw opzioni::UnknownArgument(flag);
     }
@@ -238,7 +236,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
   std::size_t assign_short_flags(ArgsView &view, std::string_view const flags) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
-      auto const it = FindArg(program.args, [&flag](auto const &a) { return a.abbrev == flag; });
+      auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) {
         throw opzioni::UnknownArgument(flag);
       }
@@ -260,7 +258,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
       [this, &map, &view, &pos_count](auto&&... arg) {
         (this->process(arg, map, view, pos_count), ...);
       },
-      program.args
+      cmd.args
     );
 
     return map;
@@ -306,7 +304,7 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
           (!map.has(arg.name) && arg.is_required ? missing_arg_names.push_back(arg.name) : (void)0), ...
         );
       },
-      program.args
+      cmd.args
     );
 
     if (!missing_arg_names.empty())
@@ -315,13 +313,13 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
 };
 
 template <fixed_string... Names, typename... Types>
-ArgParser(Program<StringList<Names...>, TypeList<Types...>> const &program) -> ArgParser<StringList<Names...>, TypeList<Types...>>;
+CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &) -> CommandParser<StringList<Names...>, TypeList<Types...>>;
 
 template <fixed_string... Names, typename... Types>
-auto parse(Program<StringList<Names...>, TypeList<Types...>> const &program, int argc, char const *argv[]) {
-  auto const args = std::span<char const *>{argv, static_cast<std::size_t>(argc)};
+auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
+  auto const args = std::span{argv, static_cast<std::size_t>(argc)};
 
-  auto parser  = ArgParser(program);
+  auto parser  = CommandParser(cmd);
   auto const view = parser.get_args_view(args);
   view.print_debug();
 

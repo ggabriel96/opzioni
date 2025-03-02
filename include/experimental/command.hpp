@@ -1,5 +1,5 @@
-#ifndef OPZIONI_PROGRAM_H
-#define OPZIONI_PROGRAM_H
+#ifndef OPZIONI_COMMAND_H
+#define OPZIONI_COMMAND_H
 
 #include <optional>
 #include <tuple>
@@ -11,10 +11,10 @@
 namespace opz {
 
 template <typename...>
-struct Program;
+struct Command;
 
 template <fixed_string... Names, typename... Types>
-struct Program<StringList<Names...>, TypeList<Types...>> {
+struct Command<StringList<Names...>, TypeList<Types...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
 
@@ -24,11 +24,11 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   std::tuple<Arg<Types>...> args;
   std::size_t amount_pos = 0;
 
-  consteval Program() = default;
-  consteval Program(std::string_view name, std::string_view version = "") : name(name), version(version) {}
+  consteval Command() = default;
+  consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {}
 
   template <fixed_string... OtherNames, typename... OtherTypes>
-  consteval Program(Program<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
+  consteval Command(Command<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
     name = other.name;
     version = other.version;
     intro = other.intro;
@@ -45,8 +45,8 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 
   template <fixed_string Name, typename T>
   consteval auto Pos(ArgMeta<T> meta) {
-    Program<StringList<Names..., Name>, TypeList<Types..., T>> new_program(*this);
-    new_program.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
+    Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
+    new_cmd.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
       .type = ArgType::POS,
       .name = Name,
       .abbrev = "",
@@ -54,8 +54,8 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
       .is_required = meta.is_required.value_or(true),
       .default_value = meta.default_value,
     }));
-    new_program.amount_pos += 1;
-    return new_program;
+    new_cmd.amount_pos += 1;
+    return new_cmd;
   }
 
   template <fixed_string Name, fixed_string Abbrev, typename T>
@@ -64,8 +64,8 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
 
-    Program<StringList<Names..., Name>, TypeList<Types..., T>> new_program(*this);
-    new_program.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
+    Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
+    new_cmd.args = std::tuple_cat(args, std::make_tuple(Arg<T>{
         .type = ArgType::OPT,
         .name = Name,
         .abbrev = Abbrev,
@@ -73,7 +73,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .is_required = meta.is_required.value_or(false),
         .default_value = meta.default_value,
     }));
-    return new_program;
+    return new_cmd;
   }
 
   template <fixed_string Name, typename T>
@@ -83,8 +83,8 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
 
   template <fixed_string Name, fixed_string Abbrev = "">
   consteval auto Flg(ArgMeta<bool> meta) {
-    Program<StringList<Names..., Name>, TypeList<Types..., bool>> new_program(*this);
-    new_program.args = std::tuple_cat(args, std::make_tuple(Arg<bool>{
+    Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
+    new_cmd.args = std::tuple_cat(args, std::make_tuple(Arg<bool>{
         .type = ArgType::FLG,
         .name = Name,
         .abbrev = Abbrev,
@@ -92,7 +92,7 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
         .is_required = false,
         .default_value = meta.default_value.value_or(false),
     }));
-    return new_program;
+    return new_cmd;
   }
 
   // template<fixed_string Name>
@@ -113,8 +113,8 @@ struct Program<StringList<Names...>, TypeList<Types...>> {
   // }
 };
 
-consteval auto DefaultProgram(std::string_view name, std::string_view version = "") {
-  auto p = Program<StringList<"help">, TypeList<bool>>(name);
+consteval auto NewCommand(std::string_view name, std::string_view version = "") {
+  auto p = Command<StringList<"help">, TypeList<bool>>(name, version);
   std::get<0>(p.args) = Arg<bool>{
       .type = ArgType::FLG,
       .name = "help",
@@ -127,4 +127,4 @@ consteval auto DefaultProgram(std::string_view name, std::string_view version = 
 
 } // namespace opz
 
-#endif // OPZIONI_PROGRAM_H
+#endif // OPZIONI_COMMAND_H
