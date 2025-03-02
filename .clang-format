@@ -9,3 +9,4 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 ContinuationIndentWidth: 2
 IndentCaseLabels: true
+PackConstructorInitializers: NextLine

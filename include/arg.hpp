@@ -11,6 +11,7 @@ struct ArgMeta {
   std::string_view help{};
   std::optional<bool> is_required{};
   std::optional<T> default_value{};
+  std::optional<T> implicit_value{};
 };
 
 enum struct ArgType { POS, OPT, FLG };
@@ -27,20 +28,20 @@ struct Arg {
   std::string_view help{};
   bool is_required = false;
   std::optional<T> default_value{};
-  //   BuiltinVariant implicit_value{};
+  std::optional<T> implicit_value{};
   //   act::fn::Signature action_fn = act::fn::assign<std::string_view>;
   //   std::size_t gather_amount = 1;
   //   DefaultValueSetter default_setter = nullptr;
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.has_value(); }
-  //   constexpr bool has_implicit() const noexcept { return implicit_value.index() != 0; }
+  constexpr bool has_implicit() const noexcept { return implicit_value.has_value(); }
   constexpr bool is_positional() const noexcept { return type == ArgType::POS; }
 
-  std::string format_base_usage() const noexcept;
-  std::string format_for_help_description() const noexcept;
-  std::string format_for_help_index() const noexcept;
-  std::string format_for_usage_summary() const noexcept;
+  // std::string format_base_usage() const noexcept;
+  // std::string format_for_help_description() const noexcept;
+  // std::string format_for_help_index() const noexcept;
+  // std::string format_for_usage_summary() const noexcept;
 };
 
 template <typename T, typename U>
@@ -67,10 +68,15 @@ struct ArgView {
   std::string_view name{};
   std::string_view abbrev{};
   bool is_required = false;
+  bool has_implicit = false;
 
   template <typename T>
   ArgView(Arg<T> const &other)
-      : type(other.type), name(other.name), abbrev(other.abbrev), is_required(other.is_required) {}
+      : type(other.type),
+        name(other.name),
+        abbrev(other.abbrev),
+        is_required(other.is_required),
+        has_implicit(other.implicit_value.has_value()) {}
 };
 
 } // namespace opz

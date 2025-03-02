@@ -11,7 +11,7 @@ void ArgsView::print_debug() const noexcept {
 
   std::print("options & flags:\n");
   for (auto &&o : options) {
-    std::print("- {} = {}\n", o.first, o.second);
+    std::print("- {} = {}\n", o.first, o.second.value_or("<unset>"));
   }
 }
 

@@ -44,6 +44,9 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
 
   template <fixed_string Name, typename T = std::string_view>
   consteval auto Pos(ArgMeta<T> meta) {
+    if (meta.implicit_value.has_value())
+      throw "Positionals cannot use implicit value because they always take a value from the command-line";
+
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
@@ -54,6 +57,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
         .help = meta.help,
         .is_required = meta.is_required.value_or(true),
         .default_value = meta.default_value,
+        .implicit_value = std::nullopt,
       }));
     new_cmd.amount_pos += 1;
     return new_cmd;
@@ -75,6 +79,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
         .help = meta.help,
         .is_required = meta.is_required.value_or(false),
         .default_value = meta.default_value,
+        .implicit_value = meta.implicit_value,
       }));
     return new_cmd;
   }
@@ -96,6 +101,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
         .help = meta.help,
         .is_required = false,
         .default_value = meta.default_value.value_or(false),
+        .implicit_value = meta.implicit_value.value_or(true),
       }));
     return new_cmd;
   }

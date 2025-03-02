@@ -62,7 +62,7 @@ struct ArgsView {
   std::string_view exec_path{};
   // TODO: put positionals and options on the same map when we start querying the command args?
   std::vector<std::string_view> positionals;
-  std::map<std::string_view, std::string_view> options;
+  std::map<std::string_view, std::optional<std::string_view>> options;
 
   void print_debug() const noexcept;
 };
@@ -150,7 +150,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
     return 1;
   }
 
-  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) noexcept {
+  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
     auto const eq_idx = whole_arg.find('=', num_of_dashes);
     bool const has_equals = eq_idx != std::string_view::npos;
@@ -159,6 +159,9 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       auto const name = whole_arg.substr(1, 1);
       auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
+      if (it->type != ArgType::OPT) {
+        throw WrongType(name, ToString(it->type), ToString(ArgType::OPT));
+      }
 
       if (has_equals) {
         if (whole_arg.length() > 3) {
@@ -186,6 +189,9 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
         auto const name = whole_arg.substr(2, eq_idx - 2);
         auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
+        if (it->type != ArgType::OPT) {
+          throw WrongType(name, ToString(it->type), ToString(ArgType::OPT));
+        }
 
         auto const value = whole_arg.substr(eq_idx + 1);
         return ParsedOption{.arg = *it, .value = value};
@@ -195,6 +201,9 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       auto const name = whole_arg.substr(2);
       auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
+      if (it->type != ArgType::OPT) {
+        throw WrongType(name, ToString(it->type), ToString(ArgType::OPT));
+      }
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
 
@@ -215,20 +224,27 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       return 2;
     }
 
+    auto const it = FindArg(cmd.args, [&option](auto const &a) { return a.name == option.arg.name; });
+    if (it->has_implicit) {
+      // value lookup is by name, not abbrev
+      view.options[option.arg.name] = std::nullopt; // will assign implicit value later
+      return 1;
+    }
+
     // report error using the name/abbrev the user used
-    throw opz::MissingValue(option.arg.name, 1, 0);
+    throw MissingValue(option.arg.name, 1, 0);
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
     auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) {
-      throw opz::UnknownArgument(flag);
+      throw UnknownArgument(flag);
     }
     if (it->type != ArgType::FLG) {
-      throw opz::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+      throw WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
     }
 
-    view.options[it->name] = "";
+    view.options[it->name] = std::nullopt;
     return 1;
   }
 
@@ -237,14 +253,14 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       auto const flag = flags.substr(i, 1);
       auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) {
-        throw opz::UnknownArgument(flag);
+        throw UnknownArgument(flag);
       }
       if (it->type != ArgType::FLG) {
-        throw opz::WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+        throw WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
       }
 
       // value lookup is by name, not abbrev
-      view.options[it->name] = "";
+      view.options[it->name] = std::nullopt;
     }
     return 1;
   }
@@ -282,15 +298,16 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
         std::print("process OPT {}\n", arg.name);
         auto const opt = view.options.find(arg.name);
         if (opt != view.options.end()) {
-          std::print("OPT {} found, value: {}\n", arg.name, opt->second);
-          map.args[arg.name] = opz::convert<T>(opt->second);
+          std::print("OPT {} found, value: {}\n", arg.name, opt->second.value_or("<unset>"));
+          // already checked if it has implicit value during parsing
+          map.args[arg.name] = opt->second.has_value() ? opz::convert<T>(*opt->second) : *arg.implicit_value;
         } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
         break;
       }
       case ArgType::FLG: {
         std::print("process FLG {}\n", arg.name);
-        if (view.options.contains(arg.name)) map.args[arg.name] = true;
+        if (view.options.contains(arg.name)) map.args[arg.name] = *arg.implicit_value;
         else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         break;
       }
