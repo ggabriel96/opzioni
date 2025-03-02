@@ -360,4 +360,4 @@ constexpr std::string_view get_if_long_flag(std::string_view const whole_arg) no
   return {};
 }
 
-#endif
+#endif // OPZIONI_PARSING_H

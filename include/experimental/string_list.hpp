@@ -36,4 +36,4 @@ template <int Idx, fixed_string Needle, fixed_string Other, fixed_string... Hays
 struct IndexOfStr<Idx, Needle, StringList<Other, Haystack...>> : IndexOfStr<Idx + 1, Needle, StringList<Haystack...>> {
 };
 
-#endif
+#endif // OPZIONI_STRING_LIST_H

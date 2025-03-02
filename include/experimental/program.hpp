@@ -125,4 +125,4 @@ consteval auto DefaultProgram(std::string_view name, std::string_view version = 
   return p;
 }
 
-#endif
+#endif // OPZIONI_PROGRAM_H

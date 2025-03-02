@@ -24,4 +24,4 @@ template <fixed_string Needle, fixed_string Other, fixed_string... Haystack, typ
 struct GetType<Needle, StringList<Other, Haystack...>, TypeList<OtherType, HaystackTypes...>>
     : GetType<Needle, StringList<Haystack...>, TypeList<HaystackTypes...>> {};
 
-#endif
+#endif // OPZIONI_GET_TYPE_H

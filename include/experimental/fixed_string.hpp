@@ -18,4 +18,4 @@ struct fixed_string {
   constexpr operator std::string_view() const noexcept { return data; }
 };
 
-#endif
+#endif // OPZIONI_FIXED_STRING_H
