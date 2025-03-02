@@ -42,7 +42,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return p;
   }
 
-  template <fixed_string Name, typename T>
+  template <fixed_string Name, typename T = std::string_view>
   consteval auto Pos(ArgMeta<T> meta) {
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
@@ -59,7 +59,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return new_cmd;
   }
 
-  template <fixed_string Name, fixed_string Abbrev, typename T>
+  template <fixed_string Name, fixed_string Abbrev, typename T = std::string_view>
   consteval auto Opt(ArgMeta<T> meta) {
     // TODO: can we remove the trailing \n from fixed_string?
     // TODO: add thorough validations
@@ -79,7 +79,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return new_cmd;
   }
 
-  template <fixed_string Name, typename T>
+  template <fixed_string Name, typename T = std::string_view>
   consteval auto Opt(ArgMeta<T> meta) {
     return Opt<Name, "", T>(meta);
   }

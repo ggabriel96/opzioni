@@ -1,5 +1,3 @@
-#include <string>
-
 #include "all.hpp"
 
 int main(int argc, char const *argv[]) {
@@ -7,8 +5,8 @@ int main(int argc, char const *argv[]) {
 
   auto p = NewCmd("pull", "1.0")
              .Intro("Pull an image or a repository from a registry")
-             .Pos<"name", std::string>({.help = "The name of the image or repository to pull"})
-             .Opt<"platform", std::string>({.help = "Set platform if server is multi-platform capable"})
+             .Pos<"name">({.help = "The name of the image or repository to pull"})
+             .Opt<"platform">({.help = "Set platform if server is multi-platform capable"})
              .Flg<"all-tags", "a">({.help = "Download all tagged images in the repository"})
              .Flg<"disable-content-trust">({.help = "Skip image verification"})
              .Flg<"quiet", "q">({.help = "Supress verbose output"});
