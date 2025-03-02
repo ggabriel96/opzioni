@@ -113,7 +113,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   // }
 };
 
-consteval auto NewCommand(std::string_view name, std::string_view version = "") {
+consteval auto NewCmd(std::string_view name, std::string_view version = "") {
   auto p = Command<StringList<"help">, TypeList<bool>>(name, version);
   std::get<0>(p.args) = Arg<bool>{
       .type = ArgType::FLG,
