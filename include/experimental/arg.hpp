@@ -4,6 +4,8 @@
 #include <optional>
 #include <string_view>
 
+namespace opz {
+
 template <typename T>
 struct ArgMeta {
   std::string_view help{};
@@ -81,5 +83,6 @@ struct ArgView {
     : type(other.type), name(other.name), abbrev(other.abbrev), is_required(other.is_required) {}
 };
 
-#endif
+} // namespace opz
+
 #endif // OPZIONI_ARG_H

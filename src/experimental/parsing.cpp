@@ -1,5 +1,7 @@
 #include "experimental/parsing.hpp"
 
+namespace opz {
+
 void ArgsView::print_debug() const noexcept {
   std::print("positionals ({}):", positionals.size());
   for (auto &&p : positionals) {
@@ -12,3 +14,5 @@ void ArgsView::print_debug() const noexcept {
     std::print("- {} = {}\n", o.first, o.second);
   }
 }
+
+} // namespace opz

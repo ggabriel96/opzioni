@@ -19,6 +19,8 @@
 #include "experimental/string_list.hpp"
 #include "experimental/type_list.hpp"
 
+namespace opz {
+
 // +---------------------+
 // |      fwd decls      |
 // +---------------------+
@@ -125,8 +127,8 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
             ++current_positional_idx;
           }
           index = args.size();
-        // } else if (auto cmd = is_command(program, arg); cmd != nullptr) {
-        //   index += assign_command(map, args.subspan(index), *cmd);
+          // } else if (auto cmd = is_command(program, arg); cmd != nullptr) {
+          //   index += assign_command(map, args.subspan(index), *cmd);
         } else if (looks_positional(arg)) {
           index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
@@ -170,16 +172,16 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
         // return {name, ""};
         return std::nullopt; // tmply considered not an option
       }
-  
+
       if (whole_arg.length() > 2 && std::isupper(name[0])) {
         // only followed by some value, e.g. `-O2`
         return ParsedOption{.arg = *it, .value = whole_arg.substr(2)};
       }
-  
+
       // case left: has no value (next CLI argument could be it)
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
-  
+
     if (num_of_dashes == 2 && whole_arg.length() > 3) {
       // long option, e.g. `--name`
 
@@ -191,14 +193,14 @@ struct ArgParser<StringList<Names...>, TypeList<Types...>> {
         auto const value = whole_arg.substr(eq_idx + 1);
         return ParsedOption{.arg = *it, .value = value};
       }
-  
+
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
       auto const it = FindArg(program.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
-  
+
     // not an option
     return std::nullopt;
   }
@@ -359,5 +361,7 @@ constexpr std::string_view get_if_long_flag(std::string_view const whole_arg) no
     return name;
   return {};
 }
+
+} // namespace opz
 
 #endif // OPZIONI_PARSING_H

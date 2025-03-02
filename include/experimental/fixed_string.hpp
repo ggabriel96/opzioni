@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <string_view>
 
+namespace opz {
+
 template <size_t N>
 struct fixed_string {
   char data[N];
@@ -17,5 +19,7 @@ struct fixed_string {
 
   constexpr operator std::string_view() const noexcept { return data; }
 };
+
+} // namespace opz
 
 #endif // OPZIONI_FIXED_STRING_H

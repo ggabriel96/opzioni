@@ -3,6 +3,8 @@
 
 #include "experimental/fixed_string.hpp"
 
+namespace opz {
+
 template <fixed_string...>
 struct StringList;
 
@@ -35,5 +37,7 @@ struct IndexOfStr<Idx, Needle, StringList<Needle, Haystack...>> : std::integral_
 template <int Idx, fixed_string Needle, fixed_string Other, fixed_string... Haystack>
 struct IndexOfStr<Idx, Needle, StringList<Other, Haystack...>> : IndexOfStr<Idx + 1, Needle, StringList<Haystack...>> {
 };
+
+} // namespace opz
 
 #endif // OPZIONI_STRING_LIST_H

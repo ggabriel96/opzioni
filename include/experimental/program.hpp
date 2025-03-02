@@ -1,14 +1,14 @@
 #ifndef OPZIONI_PROGRAM_H
 #define OPZIONI_PROGRAM_H
 
-#include <array>
 #include <optional>
 #include <tuple>
-#include <type_traits>
 
 #include "experimental/arg.hpp"
 #include "experimental/fixed_string.hpp"
 #include "experimental/get_type.hpp"
+
+namespace opz {
 
 template <typename...>
 struct Program;
@@ -124,5 +124,7 @@ consteval auto DefaultProgram(std::string_view name, std::string_view version = 
   };
   return p;
 }
+
+} // namespace opz
 
 #endif // OPZIONI_PROGRAM_H

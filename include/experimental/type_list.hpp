@@ -1,6 +1,8 @@
 #ifndef OPZIONI_TYPE_LIST_H
 #define OPZIONI_TYPE_LIST_H
 
+namespace opz {
+
 template <typename...>
 struct TypeList;
 
@@ -16,5 +18,7 @@ struct IndexOfType<Idx, T, TypeList<T, Ts...>> : std::integral_constant<int, Idx
 
 template <int Idx, typename T, typename U, typename... Ts>
 struct IndexOfType<Idx, T, TypeList<U, Ts...>> : IndexOfType<Idx + 1, T, TypeList<Ts...>> {};
+
+} // namespace opz
 
 #endif // OPZIONI_TYPE_LIST_H

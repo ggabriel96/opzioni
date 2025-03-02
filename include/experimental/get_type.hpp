@@ -4,6 +4,8 @@
 #include "experimental/string_list.hpp"
 #include "experimental/type_list.hpp"
 
+namespace opz {
+
 template <typename T>
 struct TypeResult {
   using type = T;
@@ -23,5 +25,7 @@ template <fixed_string Needle, fixed_string Other, fixed_string... Haystack, typ
           typename... HaystackTypes>
 struct GetType<Needle, StringList<Other, Haystack...>, TypeList<OtherType, HaystackTypes...>>
     : GetType<Needle, StringList<Haystack...>, TypeList<HaystackTypes...>> {};
+
+} // namespace opz
 
 #endif // OPZIONI_GET_TYPE_H
