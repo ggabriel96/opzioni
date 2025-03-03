@@ -224,8 +224,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
       return 2;
     }
 
-    auto const it = FindArg(cmd.args, [&option](auto const &a) { return a.name == option.arg.name; });
-    if (it->has_implicit) {
+    if (option.arg.has_implicit) {
       // value lookup is by name, not abbrev
       view.options[option.arg.name] = std::nullopt; // will assign implicit value later
       return 1;
