@@ -2,7 +2,7 @@
 
 namespace opz {
 
-std::string_view ToString(ArgType at) noexcept {
+std::string_view to_string(ArgType const at) noexcept {
   switch (at) {
     case ArgType::POS:
       return "positional";

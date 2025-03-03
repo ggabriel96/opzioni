@@ -37,7 +37,7 @@ constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
 constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 
 template <typename... Ts>
-auto FindArg(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
+auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
   return std::apply(
     [&p](auto &&...elem) {
       std::optional<ArgView> ret = std::nullopt;
@@ -157,10 +157,11 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
     if (num_of_dashes == 1) {
       // short option, e.g. `-O`
       auto const name = whole_arg.substr(1, 1);
-      auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
+      auto const it =
+        find_arg_if(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
-        throw WrongType(name, ToString(it->type), ToString(ArgType::OPT));
+        throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
       }
 
       if (has_equals) {
@@ -187,10 +188,11 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
       if (has_equals) {
         auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+        auto const it =
+          find_arg_if(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
         if (it->type != ArgType::OPT) {
-          throw WrongType(name, ToString(it->type), ToString(ArgType::OPT));
+          throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
         }
 
         auto const value = whole_arg.substr(eq_idx + 1);
@@ -199,10 +201,10 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it = FindArg(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+      auto const it = find_arg_if(cmd.args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
-        throw WrongType(name, ToString(it->type), ToString(ArgType::OPT));
+        throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
       }
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
@@ -235,12 +237,12 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
-    auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.name == flag; });
+    auto const it = find_arg_if(cmd.args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) {
       throw UnknownArgument(flag);
     }
     if (it->type != ArgType::FLG) {
-      throw WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+      throw WrongType(flag, to_string(it->type), to_string(ArgType::FLG));
     }
 
     view.options[it->name] = std::nullopt;
@@ -250,12 +252,12 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   std::size_t assign_short_flags(ArgsView &view, std::string_view const flags) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
-      auto const it = FindArg(cmd.args, [&flag](auto const &a) { return a.abbrev == flag; });
+      auto const it = find_arg_if(cmd.args, [&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) {
         throw UnknownArgument(flag);
       }
       if (it->type != ArgType::FLG) {
-        throw WrongType(flag, ToString(it->type), ToString(ArgType::FLG));
+        throw WrongType(flag, to_string(it->type), to_string(ArgType::FLG));
       }
 
       // value lookup is by name, not abbrev

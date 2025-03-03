@@ -16,7 +16,7 @@ struct ArgMeta {
 
 enum struct ArgType { POS, OPT, FLG };
 
-std::string_view ToString(ArgType at) noexcept;
+std::string_view to_string(ArgType const at) noexcept;
 
 template <typename T>
 struct Arg {
@@ -36,7 +36,6 @@ struct Arg {
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.has_value(); }
   constexpr bool has_implicit() const noexcept { return implicit_value.has_value(); }
-  constexpr bool is_positional() const noexcept { return type == ArgType::POS; }
 
   // std::string format_base_usage() const noexcept;
   // std::string format_for_help_description() const noexcept;

@@ -20,7 +20,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
 
   std::string_view name{};
   std::string_view version{};
-  std::string_view intro{};
+  std::string_view introduction{};
   std::tuple<Arg<Types>...> args;
   std::size_t amount_pos = 0;
 
@@ -31,19 +31,19 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   consteval Command(Command<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
     name = other.name;
     version = other.version;
-    intro = other.intro;
+    introduction = other.introduction;
     amount_pos = other.amount_pos;
     if constexpr (sizeof...(Names) == sizeof...(OtherNames)) args = other.args;
   }
 
-  consteval auto Intro(std::string_view intro) const noexcept {
+  consteval auto intro(std::string_view intro) const noexcept {
     auto p = *this;
-    p.intro = intro;
+    p.introduction = intro;
     return p;
   }
 
   template <FixedString Name, typename T = std::string_view>
-  consteval auto Pos(ArgMeta<T> meta) {
+  consteval auto pos(ArgMeta<T> meta) {
     if (meta.implicit_value.has_value())
       throw "Positionals cannot use implicit value because they always take a value from the command-line";
 
@@ -64,7 +64,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
-  consteval auto Opt(ArgMeta<T> meta) {
+  consteval auto opt(ArgMeta<T> meta) {
     // TODO: can we remove the trailing \n from FixedString?
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
@@ -85,12 +85,12 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   }
 
   template <FixedString Name, typename T = std::string_view>
-  consteval auto Opt(ArgMeta<T> meta) {
-    return Opt<Name, "", T>(meta);
+  consteval auto opt(ArgMeta<T> meta) {
+    return opt<Name, "", T>(meta);
   }
 
   template <FixedString Name, FixedString Abbrev = "">
-  consteval auto Flg(ArgMeta<bool> meta) {
+  consteval auto flg(ArgMeta<bool> meta) {
     Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
@@ -124,7 +124,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   // }
 };
 
-consteval auto NewCmd(std::string_view name, std::string_view version = "") {
+consteval auto new_cmd(std::string_view name, std::string_view version = "") {
   auto p = Command<StringList<"help">, TypeList<bool>>(name, version);
   std::get<0>(p.args) = Arg<bool>{
     .type = ArgType::FLG,
