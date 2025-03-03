@@ -5,20 +5,20 @@
 
 namespace opz {
 
-template <fixed_string...>
+template <FixedString...>
 struct StringList;
 
 // +--------------------------------+
 // |          InStringList          |
 // +--------------------------------+
 
-template <fixed_string, typename...>
+template <FixedString, typename...>
 struct InStringList : std::false_type {};
 
-template <fixed_string Needle, fixed_string... Haystack>
+template <FixedString Needle, FixedString... Haystack>
 struct InStringList<Needle, StringList<Needle, Haystack...>> : std::true_type {};
 
-template <fixed_string Needle, fixed_string Other, fixed_string... Haystack>
+template <FixedString Needle, FixedString Other, FixedString... Haystack>
 struct InStringList<Needle, StringList<Other, Haystack...>> : InStringList<Needle, StringList<Haystack...>> {};
 
 // +--------------------------------+
@@ -26,15 +26,15 @@ struct InStringList<Needle, StringList<Other, Haystack...>> : InStringList<Needl
 // +--------------------------------+
 
 // base case (str not found)
-template <int Idx, fixed_string, typename...>
+template <int Idx, FixedString, typename...>
 struct IndexOfStr : std::integral_constant<int, -1> {};
 
 // base case (str found)
-template <int Idx, fixed_string Needle, fixed_string... Haystack>
+template <int Idx, FixedString Needle, FixedString... Haystack>
 struct IndexOfStr<Idx, Needle, StringList<Needle, Haystack...>> : std::integral_constant<int, Idx> {};
 
 // recursive case (keep looking)
-template <int Idx, fixed_string Needle, fixed_string Other, fixed_string... Haystack>
+template <int Idx, FixedString Needle, FixedString Other, FixedString... Haystack>
 struct IndexOfStr<Idx, Needle, StringList<Other, Haystack...>> : IndexOfStr<Idx + 1, Needle, StringList<Haystack...>> {
 };
 

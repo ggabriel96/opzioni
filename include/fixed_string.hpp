@@ -7,11 +7,11 @@
 namespace opz {
 
 template <size_t N>
-struct fixed_string {
+struct FixedString {
   char data[N];
   std::size_t size = N;
 
-  constexpr fixed_string(char const (&input)[N]) {
+  constexpr FixedString(char const (&input)[N]) {
     for (size_t i{0}; i < N; ++i) {
       data[i] = input[i];
     }

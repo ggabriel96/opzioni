@@ -13,7 +13,7 @@ namespace opz {
 template <typename...>
 struct Command;
 
-template <fixed_string... Names, typename... Types>
+template <FixedString... Names, typename... Types>
 struct Command<StringList<Names...>, TypeList<Types...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
@@ -27,7 +27,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   consteval Command() = default;
   consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {}
 
-  template <fixed_string... OtherNames, typename... OtherTypes>
+  template <FixedString... OtherNames, typename... OtherTypes>
   consteval Command(Command<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
     name = other.name;
     version = other.version;
@@ -42,7 +42,7 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return p;
   }
 
-  template <fixed_string Name, typename T = std::string_view>
+  template <FixedString Name, typename T = std::string_view>
   consteval auto Pos(ArgMeta<T> meta) {
     if (meta.implicit_value.has_value())
       throw "Positionals cannot use implicit value because they always take a value from the command-line";
@@ -63,9 +63,9 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return new_cmd;
   }
 
-  template <fixed_string Name, fixed_string Abbrev, typename T = std::string_view>
+  template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
   consteval auto Opt(ArgMeta<T> meta) {
-    // TODO: can we remove the trailing \n from fixed_string?
+    // TODO: can we remove the trailing \n from FixedString?
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
 
@@ -84,12 +84,12 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return new_cmd;
   }
 
-  template <fixed_string Name, typename T = std::string_view>
+  template <FixedString Name, typename T = std::string_view>
   consteval auto Opt(ArgMeta<T> meta) {
     return Opt<Name, "", T>(meta);
   }
 
-  template <fixed_string Name, fixed_string Abbrev = "">
+  template <FixedString Name, FixedString Abbrev = "">
   consteval auto Flg(ArgMeta<bool> meta) {
     Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
@@ -106,14 +106,14 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
     return new_cmd;
   }
 
-  // template<fixed_string Name>
+  // template<FixedString Name>
   // constexpr std::optional<typename GetType<Name, arg_names, arg_types>::type> GetValue() const noexcept {
   //   using ValueIdx = IndexOfStr<0, Name, arg_names>;
   //   static_assert(ValueIdx::value != -1, "unknown parameter name");
   //   return std::get<ValueIdx::value>(values);
   // }
 
-  // template<fixed_string Name, typename V>
+  // template<FixedString Name, typename V>
   // void SetValue(V value) noexcept {
   //   using T = GetType<Name, arg_names, arg_types>::type;
   //   static_assert(!std::is_same_v< T, void >, "unknown parameter name");

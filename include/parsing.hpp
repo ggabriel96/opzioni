@@ -70,7 +70,7 @@ struct ArgsView {
 template <typename...>
 struct ArgsMap;
 
-template <fixed_string... Names, typename... Types>
+template <FixedString... Names, typename... Types>
 struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
@@ -78,7 +78,7 @@ struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
 
-  template <fixed_string Name>
+  template <FixedString Name>
   typename GetType<Name, arg_names, arg_types>::type get() const {
     using T = GetType<Name, arg_names, arg_types>::type;
     static_assert(!std::is_same_v<T, void>, "unknown parameter name");
@@ -97,7 +97,7 @@ struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
 template <typename...>
 struct CommandParser;
 
-template <fixed_string... Names, typename... Types>
+template <FixedString... Names, typename... Types>
 struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
@@ -331,11 +331,11 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   }
 };
 
-template <fixed_string... Names, typename... Types>
+template <FixedString... Names, typename... Types>
 CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &)
   -> CommandParser<StringList<Names...>, TypeList<Types...>>;
 
-template <fixed_string... Names, typename... Types>
+template <FixedString... Names, typename... Types>
 auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
   auto const args = std::span{argv, static_cast<std::size_t>(argc)};
 

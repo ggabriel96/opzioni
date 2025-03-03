@@ -12,17 +12,17 @@ struct TypeResult {
 };
 
 // base case (type not found)
-template <fixed_string, typename...>
+template <FixedString, typename...>
 struct GetType : TypeResult<void> {};
 
 // base case (type found)
-template <fixed_string Needle, fixed_string... Haystack, typename NeedleType, typename... HaystackTypes>
+template <FixedString Needle, FixedString... Haystack, typename NeedleType, typename... HaystackTypes>
 struct GetType<Needle, StringList<Needle, Haystack...>, TypeList<NeedleType, HaystackTypes...>>
     : TypeResult<NeedleType> {};
 
 // recursion case (keep looking)
 template <
-  fixed_string Needle, fixed_string Other, fixed_string... Haystack, typename OtherType, typename... HaystackTypes>
+  FixedString Needle, FixedString Other, FixedString... Haystack, typename OtherType, typename... HaystackTypes>
 struct GetType<Needle, StringList<Other, Haystack...>, TypeList<OtherType, HaystackTypes...>>
     : GetType<Needle, StringList<Haystack...>, TypeList<HaystackTypes...>> {};
 
