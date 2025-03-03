@@ -16,7 +16,7 @@ fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
 include_dir = include_directories('include/')
 opzioni_lib = library(
     'explib',
-    ['src/all.cpp', 'src/arg.cpp', 'src/converters.cpp', 'src/parsing.cpp', 'src/string.cpp'],
+    ['src/all.cpp', 'src/arg.cpp', 'src/converters.cpp', 'src/parsing.cpp', 'src/strings.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true

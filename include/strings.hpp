@@ -1,5 +1,5 @@
-#ifndef OPZIONI_STRING_H
-#define OPZIONI_STRING_H
+#ifndef OPZIONI_STRINGS_H
+#define OPZIONI_STRINGS_H
 
 #include <algorithm>
 #include <concepts>
@@ -38,4 +38,4 @@ constexpr bool is_valid_abbrev(std::string_view abbrev) noexcept {
 
 } // namespace opz
 
-#endif // OPZIONI_STRING_H
+#endif // OPZIONI_STRINGS_H
