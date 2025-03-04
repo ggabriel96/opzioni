@@ -49,9 +49,9 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     return p;
   }
 
-  template <concepts::Command SubCmd>
-  consteval auto sub(SubCmd const &subcmd) const noexcept {
-    Command<StringList<Names...>, TypeList<Types...>, SubCmds..., SubCmd> new_cmd(*this);
+  template <concepts::Command NewSubCmd>
+  consteval auto sub(NewSubCmd const &subcmd) const noexcept {
+    Command<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmd> new_cmd(*this);
     new_cmd.subcmds = std::tuple_cat(subcmds, std::make_tuple(subcmd));
     return new_cmd;
   }
