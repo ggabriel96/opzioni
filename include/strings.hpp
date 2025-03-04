@@ -2,7 +2,6 @@
 #define OPZIONI_STRINGS_H
 
 #include <algorithm>
-#include <concepts>
 #include <span>
 #include <string>
 #include <string_view>

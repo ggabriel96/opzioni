@@ -155,7 +155,7 @@ struct CommandParser {
     return 1;
   }
 
-  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg, std::string_view cmd_name) {
+  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg, std::string_view const cmd_name) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
     auto const eq_idx = whole_arg.find('=', num_of_dashes);
     bool const has_equals = eq_idx != std::string_view::npos;
@@ -176,7 +176,7 @@ struct CommandParser {
         }
         // TODO: should this `-O=` be handled like this?
         // return {name, ""};
-        return std::nullopt; // tmply considered not an option
+        return std::nullopt; // temporarily not considered an option
       }
 
       if (whole_arg.length() > 2 && std::isupper(name[0])) {
@@ -219,7 +219,7 @@ struct CommandParser {
     return std::nullopt;
   }
 
-  std::size_t assign_option(ArgsView &view, ParsedOption const option, std::span<char const *> args) const {
+  std::size_t assign_option(ArgsView &view, ParsedOption const &option, std::span<char const *> args) const {
     if (option.value) {
       // value lookup is by name, not abbrev
       view.options[option.arg.name] = *option.value;

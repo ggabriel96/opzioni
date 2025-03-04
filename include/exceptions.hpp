@@ -1,7 +1,6 @@
 #ifndef OPZIONI_EXCEPTIONS_H
 #define OPZIONI_EXCEPTIONS_H
 
-#include <ranges>
 #include <stdexcept>
 #include <string_view>
 
