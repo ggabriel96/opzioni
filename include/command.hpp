@@ -12,10 +12,7 @@
 namespace opz {
 
 template <typename...>
-struct Command {
-  // TODO: how can we avoid this?
-  std::string_view name{};
-};
+struct Command;
 
 template <FixedString... Names, typename... Types, concepts::Command... SubCmds>
 struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
