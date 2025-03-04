@@ -35,7 +35,7 @@ struct ArgsMap {
   typename ArgsMapOf<typename Cmd::sub_cmd_types>::type sub_cmd{};
 
   template <FixedString Name>
-  typename GetType<Name, arg_names, arg_types>::type get() const {
+  [[nodiscard]] typename GetType<Name, arg_names, arg_types>::type get() const {
     using T = typename GetType<Name, arg_names, arg_types>::type;
     static_assert(!std::is_same_v<T, void>, "unknown parameter name");
     auto const val = args.find(Name);
@@ -45,9 +45,9 @@ struct ArgsMap {
 
   // TODO: get_or(<default value>)
 
-  bool has(std::string_view name) const noexcept { return args.contains(name); }
+  [[nodiscard]] bool has(std::string_view const name) const noexcept { return args.contains(name); }
 
-  auto size() const noexcept { return args.size(); }
+  [[nodiscard]] auto size() const noexcept { return args.size(); }
 };
 
 } // namespace opz
