@@ -106,12 +106,6 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
   CommandParser(Command<arg_names, arg_types> const &cmd) : cmd(cmd) {}
 
-  // auto operator()(std::span<char const *> args) {
-  //   ArgsMap map;
-  //   map.exec_path = args[0];
-  //   return map;
-  // }
-
   auto get_args_view(std::span<char const *> args) {
     ArgsView view;
     if (args.size() > 0) {
@@ -338,9 +332,7 @@ CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &)
   -> CommandParser<StringList<Names...>, TypeList<Types...>>;
 
 template <FixedString... Names, typename... Types>
-auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
-  auto const args = std::span{argv, static_cast<std::size_t>(argc)};
-
+auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
   auto const view = parser.get_args_view(args);
   view.print_debug();
@@ -350,6 +342,12 @@ auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int arg
   parser.check_contains_required(map);
 
   return map;
+}
+
+template <FixedString... Names, typename... Types>
+auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
+  auto const args = std::span{argv, static_cast<std::size_t>(argc)};
+  return parse(cmd, args);
 }
 
 // +---------------------+
