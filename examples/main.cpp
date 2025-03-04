@@ -26,7 +26,7 @@ void handle_pull_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
 constexpr static auto pull_cmd = new_cmd("pull", "1.0")
                                    .intro("Pull an image or a repository from a registry")
                                    .pos<"name">({.help = "The name of the image or repository to pull"})
-                                   .opt<"platform">({.help = "Set platform if server is multi-platform capable"})
+                                   .opt<"platform", "P">({.help = "Set platform if server is multi-platform capable"})
                                    .flg<"all-tags", "a">({.help = "Download all tagged images in the repository"})
                                    .flg<"disable-content-trust">({.help = "Skip image verification"})
                                    .flg<"quiet", "q">({.help = "Supress verbose output"})

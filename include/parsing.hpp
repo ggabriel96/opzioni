@@ -174,9 +174,8 @@ struct CommandParser {
           // has equals followed by some value, e.g. `-O=2`
           return ParsedOption{.arg = *it, .value = whole_arg.substr(3)};
         }
-        // TODO: should this `-O=` be handled like this?
-        // return {name, ""};
-        return std::nullopt; // temporarily not considered an option
+        // case left: things like `-O=`
+        return ParsedOption{.arg = *it, .value = ""};
       }
 
       if (whole_arg.length() > 2 && std::isupper(name[0])) {
