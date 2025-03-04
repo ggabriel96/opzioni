@@ -107,7 +107,7 @@ struct CommandParser {
           index = args.size();
         } else if (looks_positional(arg)) {
           // check if is command first
-          if (auto const idx = find_cmd(cmd_ref.get().subcmds, arg); idx != -1) {
+          if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, arg); idx != -1) {
             int i = 0;
             // clang-format off
             std::apply(
@@ -121,14 +121,13 @@ struct CommandParser {
                   ) || ...
                 );
               },
-              cmd_ref.get().subcmds
+              this->cmd_ref.get().subcmds
             );
             auto const rest = args.subspan(index);
-            view.subcmd = std::make_unique<ArgsView>(
-              std::visit(overloaded{
-                  [](std::monostate) { return ArgsView{}; },
-                  [rest](auto &p) { return p.get_args_view(rest); }
-                }, this->subparser));
+            std::visit(overloaded{
+              [](std::monostate) {},
+              [&view, rest](auto &p) { view.subcmd = std::make_unique<ArgsView>(p.get_args_view(rest)); }
+            }, this->subparser);
             index += rest.size();
             // clang-format on
           } else {
@@ -150,7 +149,8 @@ struct CommandParser {
   }
 
   std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
-    if (cur_pos_idx + 1 > cmd_ref.get().amount_pos) throw UnexpectedPositional(args[0], cmd_ref.get().amount_pos);
+    if (cur_pos_idx + 1 > this->cmd_ref.get().amount_pos)
+      throw UnexpectedPositional(args[0], this->cmd_ref.get().amount_pos);
     view.positionals.emplace_back(args[0]);
     return 1;
   }
@@ -162,8 +162,8 @@ struct CommandParser {
     if (num_of_dashes == 1) {
       // short option, e.g. `-O`
       auto const name = whole_arg.substr(1, 1);
-      auto const it =
-        find_arg_if(cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
+      auto const it = find_arg_if(
+        this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
         throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
@@ -193,8 +193,8 @@ struct CommandParser {
 
       if (has_equals) {
         auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it =
-          find_arg_if(cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+        auto const it = find_arg_if(
+          this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
         if (it->type != ArgType::OPT) {
           throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
@@ -206,8 +206,8 @@ struct CommandParser {
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it =
-        find_arg_if(cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+      auto const it = find_arg_if(
+        this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
         throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
@@ -243,7 +243,7 @@ struct CommandParser {
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
-    auto const it = find_arg_if(cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
+    auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) {
       throw UnknownArgument(flag);
     }
@@ -258,7 +258,7 @@ struct CommandParser {
   std::size_t assign_short_flags(ArgsView &view, std::string_view const flags) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
-      auto const it = find_arg_if(cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
+      auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) {
         throw UnknownArgument(flag);
       }
@@ -289,7 +289,7 @@ struct CommandParser {
               : (void)0), ...
         );
       },
-      cmd_ref.get().args
+      this->cmd_ref.get().args
     );
     // then options and flags
     std::apply(
@@ -304,7 +304,7 @@ struct CommandParser {
               : (void)0), ...
         );
       },
-      cmd_ref.get().args
+      this->cmd_ref.get().args
     );
 
     if (!missing_arg_names.empty())
@@ -328,7 +328,7 @@ struct CommandParser {
       [this, &map, &view, &pos_count](auto&&... arg) {
         (this->process(arg, map, view, pos_count), ...);
       },
-      cmd_ref.get().args
+      this->cmd_ref.get().args
     );
 
     if (view.subcmd != nullptr && !std::holds_alternative<std::monostate>(this->subparser)) {
