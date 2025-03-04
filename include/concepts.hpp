@@ -14,6 +14,12 @@ concept Container = std::ranges::range<T> && std::is_default_constructible_v<T> 
   { t.emplace_back(std::declval<typename T::value_type>()) } -> std::same_as<typename T::value_type &>;
 };
 
+template <typename T>
+concept Command = requires(T t) {
+  typename T::arg_names;
+  typename T::arg_types;
+};
+
 } // namespace opz::concepts
 
 #endif // OPZIONI_CONCEPTS_H

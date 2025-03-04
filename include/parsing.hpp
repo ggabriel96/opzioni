@@ -67,20 +67,17 @@ struct ArgsView {
   void print_debug() const noexcept;
 };
 
-template <typename...>
-struct ArgsMap;
-
-template <FixedString... Names, typename... Types>
-struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
-  using arg_names = StringList<Names...>;
-  using arg_types = TypeList<Types...>;
+template <concepts::Command Cmd>
+struct ArgsMap {
+  using arg_names = typename Cmd::arg_names;
+  using arg_types = typename Cmd::arg_types;
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
 
   template <FixedString Name>
   typename GetType<Name, arg_names, arg_types>::type get() const {
-    using T = GetType<Name, arg_names, arg_types>::type;
+    using T = typename GetType<Name, arg_names, arg_types>::type;
     static_assert(!std::is_same_v<T, void>, "unknown parameter name");
     auto const val = args.find(Name);
     if (val == args.end()) throw ArgumentNotFound(Name.data);
@@ -94,17 +91,14 @@ struct ArgsMap<StringList<Names...>, TypeList<Types...>> {
   auto size() const noexcept { return args.size(); }
 };
 
-template <typename...>
-struct CommandParser;
+template <concepts::Command Cmd>
+struct CommandParser {
+  using arg_names = typename Cmd::arg_names;
+  using arg_types = typename Cmd::arg_types;
 
-template <FixedString... Names, typename... Types>
-struct CommandParser<StringList<Names...>, TypeList<Types...>> {
-  using arg_names = StringList<Names...>;
-  using arg_types = TypeList<Types...>;
+  Cmd const &cmd;
 
-  Command<arg_names, arg_types> const &cmd;
-
-  CommandParser(Command<arg_names, arg_types> const &cmd) : cmd(cmd) {}
+  explicit CommandParser(Cmd const &cmd) : cmd(cmd) {}
 
   auto get_args_view(std::span<char const *> args) {
     ArgsView view;
@@ -261,7 +255,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   }
 
   auto get_args_map(ArgsView const &view) const {
-    auto map = ArgsMap<arg_names, arg_types>{.exec_path = view.exec_path};
+    auto map = ArgsMap<std::remove_reference_t<decltype(cmd)>>{.exec_path = view.exec_path};
     std::size_t pos_count = 0;
 
     // clang-format off
@@ -278,7 +272,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
 
   template <typename T>
   auto
-  process(Arg<T> const &arg, ArgsMap<arg_names, arg_types> &map, ArgsView const &view, std::size_t &pos_count) const {
+  process(Arg<T> const &arg, ArgsMap<std::remove_reference_t<decltype(cmd)>> &map, ArgsView const &view, std::size_t &pos_count) const {
     switch (arg.type) {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
@@ -309,7 +303,7 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
     }
   }
 
-  void check_contains_required(ArgsMap<arg_names, arg_types> const &map) const {
+  void check_contains_required(ArgsMap<std::remove_reference_t<decltype(cmd)>> const &map) const {
     std::vector<std::string_view> missing_arg_names;
     // clang-format off
     std::apply(
@@ -327,12 +321,8 @@ struct CommandParser<StringList<Names...>, TypeList<Types...>> {
   }
 };
 
-template <FixedString... Names, typename... Types>
-CommandParser(Command<StringList<Names...>, TypeList<Types...>> const &)
-  -> CommandParser<StringList<Names...>, TypeList<Types...>>;
-
-template <FixedString... Names, typename... Types>
-auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, std::span<char const *> args) {
+template <concepts::Command Cmd>
+auto parse(Cmd const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
   auto const view = parser.get_args_view(args);
   view.print_debug();
@@ -344,8 +334,8 @@ auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, std::sp
   return map;
 }
 
-template <FixedString... Names, typename... Types>
-auto parse(Command<StringList<Names...>, TypeList<Types...>> const &cmd, int argc, char const *argv[]) {
+template <concepts::Command Cmd>
+auto parse(Cmd const &cmd, int argc, char const *argv[]) {
   auto const args = std::span{argv, static_cast<std::size_t>(argc)};
   return parse(cmd, args);
 }
