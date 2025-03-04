@@ -53,8 +53,8 @@ int main(int argc, char const *argv[]) {
   auto docker_cmd = new_cmd("docker", "1.0")
     .opt<"config">({.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"})
     .flg<"debug", "D">({.help = "Enable debug mode"})
-    .with(exec_cmd)
-    .with(pull_cmd);
+    .sub(exec_cmd)
+    .sub(pull_cmd);
 
   auto const map = parse(docker_cmd, argc, argv);
   std::print("\n{} args map (size {}):\n", map.exec_path, map.size());

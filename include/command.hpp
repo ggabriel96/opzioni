@@ -50,7 +50,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   }
 
   template <concepts::Command SubCmd>
-  consteval auto with(SubCmd const &subcmd) const noexcept {
+  consteval auto sub(SubCmd const &subcmd) const noexcept {
     Command<StringList<Names...>, TypeList<Types...>, SubCmds..., SubCmd> new_cmd(*this);
     new_cmd.subcmds = std::tuple_cat(subcmds, std::make_tuple(subcmd));
     return new_cmd;
