@@ -105,33 +105,36 @@ struct CommandParser {
             ++current_positional_idx;
           }
           index = args.size();
-        } else if (auto const idx = find_cmd(cmd_ref.get().sub_cmds, arg); idx != -1) {
-          int i = 0;
-          // clang-format off
-          std::apply(
-            [&i, idx, this](auto&&... cmd) {
-              (void) // cast to void to suppress unused warning
-              (
-                (
-                  i == idx
-                    ? (this->sub_parser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
-                    : (++i, false)
-                ) || ...
-              );
-            },
-            cmd_ref.get().sub_cmds
-          );
-          auto const rest = args.subspan(index);
-          view.sub_cmd = std::make_unique<ArgsView>(
-            std::visit(overloaded{
-                [](std::monostate) { return ArgsView{}; },
-                [rest](auto &p) { return p.get_args_view(rest); }
-              }, this->sub_parser));
-          index += rest.size();
-          // clang-format on
         } else if (looks_positional(arg)) {
-          index += assign_positional(view, args.subspan(index), current_positional_idx);
-          ++current_positional_idx;
+          // check if is command first
+          if (auto const idx = find_cmd(cmd_ref.get().sub_cmds, arg); idx != -1) {
+            int i = 0;
+            // clang-format off
+            std::apply(
+              [&i, idx, this](auto&&... cmd) {
+                (void) // cast to void to suppress unused warning
+                (
+                  (
+                    i == idx
+                      ? (this->sub_parser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
+                      : (++i, false)
+                  ) || ...
+                );
+              },
+              cmd_ref.get().sub_cmds
+            );
+            auto const rest = args.subspan(index);
+            view.sub_cmd = std::make_unique<ArgsView>(
+              std::visit(overloaded{
+                  [](std::monostate) { return ArgsView{}; },
+                  [rest](auto &p) { return p.get_args_view(rest); }
+                }, this->sub_parser));
+            index += rest.size();
+            // clang-format on
+          } else {
+            index += assign_positional(view, args.subspan(index), current_positional_idx);
+            ++current_positional_idx;
+          }
         } else if (auto const option = try_parse_option(arg); option.has_value()) {
           index += assign_option(view, *option, args.subspan(index));
         } else if (auto const flag = get_if_long_flag(arg); !flag.empty()) {
