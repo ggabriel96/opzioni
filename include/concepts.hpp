@@ -18,7 +18,7 @@ template <typename T>
 concept Command = requires(T) {
   typename T::arg_names;
   typename T::arg_types;
-  typename T::sub_cmd_types;
+  typename T::subcmd_types;
 };
 
 } // namespace opz::concepts

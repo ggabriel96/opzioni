@@ -45,7 +45,7 @@ void handle_docker_subcmd(ArgsMap<decltype(pull_cmd)> const &map) {
       [](std::monostate) { std::print("monostate\n"); },
       [](auto const &sub_map) { handle_pull_subcmd(sub_map); },
     },
-    map.sub_cmd);
+    map.subcmd);
 }
 
 int main(int argc, char const *argv[]) {
@@ -58,5 +58,5 @@ int main(int argc, char const *argv[]) {
       [](std::monostate) { std::print("monostate\n"); },
       [](auto const &sub_map) { handle_docker_subcmd(sub_map); },
     },
-    map.sub_cmd);
+    map.subcmd);
 }

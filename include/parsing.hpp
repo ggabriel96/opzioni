@@ -87,7 +87,7 @@ struct CommandParser {
   using arg_types = typename Cmd::arg_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
-  typename CommandParserOf<typename Cmd::sub_cmd_types>::type sub_parser{};
+  typename CommandParserOf<typename Cmd::subcmd_types>::type subparser{};
 
   explicit CommandParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
@@ -107,7 +107,7 @@ struct CommandParser {
           index = args.size();
         } else if (looks_positional(arg)) {
           // check if is command first
-          if (auto const idx = find_cmd(cmd_ref.get().sub_cmds, arg); idx != -1) {
+          if (auto const idx = find_cmd(cmd_ref.get().subcmds, arg); idx != -1) {
             int i = 0;
             // clang-format off
             std::apply(
@@ -116,19 +116,19 @@ struct CommandParser {
                 (
                   (
                     i == idx
-                      ? (this->sub_parser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
+                      ? (this->subparser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
                       : (++i, false)
                   ) || ...
                 );
               },
-              cmd_ref.get().sub_cmds
+              cmd_ref.get().subcmds
             );
             auto const rest = args.subspan(index);
-            view.sub_cmd = std::make_unique<ArgsView>(
+            view.subcmd = std::make_unique<ArgsView>(
               std::visit(overloaded{
                   [](std::monostate) { return ArgsView{}; },
                   [rest](auto &p) { return p.get_args_view(rest); }
-                }, this->sub_parser));
+                }, this->subparser));
             index += rest.size();
             // clang-format on
           } else {
@@ -310,11 +310,11 @@ struct CommandParser {
     if (!missing_arg_names.empty())
       throw MissingRequiredArguments(view.exec_path, missing_arg_names);
 
-    if (view.sub_cmd != nullptr && !std::holds_alternative<std::monostate>(this->sub_parser)) {
+    if (view.subcmd != nullptr && !std::holds_alternative<std::monostate>(this->subparser)) {
       std::visit(overloaded {
         [](std::monostate) {},
-        [&view](auto const &p) { p.check_contains_required(*view.sub_cmd); }
-      }, this->sub_parser);
+        [&view](auto const &p) { p.check_contains_required(*view.subcmd); }
+      }, this->subparser);
     }
     // clang-format on
   }
@@ -331,11 +331,11 @@ struct CommandParser {
       cmd_ref.get().args
     );
 
-    if (view.sub_cmd != nullptr && !std::holds_alternative<std::monostate>(this->sub_parser)) {
+    if (view.subcmd != nullptr && !std::holds_alternative<std::monostate>(this->subparser)) {
       std::visit(overloaded {
         [](std::monostate) {},
-        [&map, &view](auto const &p) { map.sub_cmd = p.get_args_map(*view.sub_cmd); }
-      }, this->sub_parser);
+        [&map, &view](auto const &p) { map.subcmd = p.get_args_map(*view.subcmd); }
+      }, this->subparser);
     }
     // clang-format on
 

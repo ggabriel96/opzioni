@@ -21,7 +21,7 @@ template <FixedString... Names, typename... Types, concepts::Command... SubCmds>
 struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
-  using sub_cmd_types = TypeList<SubCmds...>;
+  using subcmd_types = TypeList<SubCmds...>;
 
   std::string_view name{};
   std::string_view version{};
@@ -30,7 +30,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   std::size_t amount_pos = 0;
 
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
-  std::tuple<SubCmds...> sub_cmds;
+  std::tuple<SubCmds...> subcmds;
 
   consteval Command() = default;
   explicit consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {}
@@ -42,8 +42,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     introduction = other.introduction;
     amount_pos = other.amount_pos;
     if constexpr (std::tuple_size_v<decltype(args)> == std::tuple_size_v<decltype(other.args)>) args = other.args;
-    if constexpr (std::tuple_size_v<decltype(sub_cmds)> == std::tuple_size_v<decltype(other.sub_cmds)>)
-      sub_cmds = other.sub_cmds;
+    if constexpr (std::tuple_size_v<decltype(subcmds)> == std::tuple_size_v<decltype(other.subcmds)>)
+      subcmds = other.subcmds;
   }
 
   consteval auto intro(std::string_view intro) const noexcept {
@@ -55,7 +55,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   template <concepts::Command SubCmd>
   consteval auto with(SubCmd const &subcmd) const noexcept {
     Command<StringList<Names...>, TypeList<Types...>, SubCmds..., SubCmd> new_cmd(*this);
-    new_cmd.sub_cmds = std::tuple_cat(sub_cmds, std::make_tuple(subcmd));
+    new_cmd.subcmds = std::tuple_cat(subcmds, std::make_tuple(subcmd));
     return new_cmd;
   }
 

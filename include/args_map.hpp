@@ -32,7 +32,7 @@ struct ArgsMap {
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
-  typename ArgsMapOf<typename Cmd::sub_cmd_types>::type sub_cmd{};
+  typename ArgsMapOf<typename Cmd::subcmd_types>::type subcmd{};
 
   template <FixedString Name>
   [[nodiscard]] typename GetType<Name, arg_names, arg_types>::type get() const {
