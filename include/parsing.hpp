@@ -102,7 +102,7 @@ struct CommandParser {
 
   auto get_args_view(std::span<char const *> args) {
     ArgsView view;
-    if (args.size() > 0) {
+    if (!args.empty()) {
       view.exec_path = std::string_view(args[0]);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
