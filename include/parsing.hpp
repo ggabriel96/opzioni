@@ -12,6 +12,7 @@
 #include <string_view>
 #include <vector>
 
+#include "args_view.hpp"
 #include "command.hpp"
 #include "converters.hpp"
 #include "exceptions.hpp"
@@ -71,15 +72,6 @@ int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) {
 // |   main parsing code   |
 // +-----------------------+
 
-struct ArgsView {
-  std::string_view exec_path{};
-  // TODO: put positionals and options on the same map when we start querying the command args?
-  std::vector<std::string_view> positionals;
-  std::map<std::string_view, std::optional<std::string_view>> options;
-  std::unique_ptr<ArgsView> sub_cmd{}; // unique_ptr because ArgsView is still not a complete type at this line
-
-  void print_debug() const noexcept;
-};
 
 template <concepts::Command>
 struct ArgsMap;
