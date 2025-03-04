@@ -77,7 +77,7 @@ struct CommandParser;
 template <typename...>
 struct CommandParserOf;
 template <concepts::Command... Cmds>
-struct CommandParserOf<std::tuple<Cmds...>> {
+struct CommandParserOf<TypeList<Cmds...>> {
   using type = std::variant<std::monostate, CommandParser<Cmds const>...>;
 };
 
@@ -87,7 +87,7 @@ struct CommandParser {
   using arg_types = typename Cmd::arg_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
-  typename CommandParserOf<decltype(cmd_ref.get().sub_cmds)>::type sub_parser{};
+  typename CommandParserOf<typename Cmd::sub_cmd_types>::type sub_parser{};
 
   explicit CommandParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
