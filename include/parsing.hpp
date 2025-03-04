@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <any>
 #include <cctype>
-#include <concepts>
 #include <functional>
 #include <map>
 #include <print>
@@ -12,11 +11,11 @@
 #include <string_view>
 #include <vector>
 
+#include "args_map.hpp"
 #include "args_view.hpp"
-#include "command.hpp"
+#include "concepts.hpp"
 #include "converters.hpp"
 #include "exceptions.hpp"
-#include "fixed_string.hpp"
 #include "variant.hpp"
 
 namespace opz {
@@ -71,42 +70,6 @@ int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) {
 // +-----------------------+
 // |   main parsing code   |
 // +-----------------------+
-
-
-template <concepts::Command>
-struct ArgsMap;
-
-template <typename...>
-struct ArgsMapOf;
-template <concepts::Command... Cmds>
-struct ArgsMapOf<TypeList<Cmds...>> {
-  using type = std::variant<std::monostate, ArgsMap<Cmds const>...>;
-};
-
-template <concepts::Command Cmd>
-struct ArgsMap {
-  using arg_names = typename Cmd::arg_names;
-  using arg_types = typename Cmd::arg_types;
-
-  std::string_view exec_path{};
-  std::map<std::string_view, std::any> args;
-  typename ArgsMapOf<typename Cmd::sub_cmd_types>::type sub_cmd{};
-
-  template <FixedString Name>
-  typename GetType<Name, arg_names, arg_types>::type get() const {
-    using T = typename GetType<Name, arg_names, arg_types>::type;
-    static_assert(!std::is_same_v<T, void>, "unknown parameter name");
-    auto const val = args.find(Name);
-    if (val == args.end()) throw ArgumentNotFound(Name.data);
-    return std::any_cast<T>(val->second);
-  }
-
-  // TODO: get_or(<default value>)
-
-  bool has(std::string_view name) const noexcept { return args.contains(name); }
-
-  auto size() const noexcept { return args.size(); }
-};
 
 template <concepts::Command>
 struct CommandParser;
