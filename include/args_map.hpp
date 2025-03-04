@@ -43,8 +43,6 @@ struct ArgsMap {
     return std::any_cast<T>(val->second);
   }
 
-  // TODO: get_or(<default value>)
-
   [[nodiscard]] bool has(std::string_view const name) const noexcept { return args.contains(name); }
 
   [[nodiscard]] auto size() const noexcept { return args.size(); }

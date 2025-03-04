@@ -10,7 +10,6 @@ namespace opz {
 
 struct ArgsView {
   std::string_view exec_path{};
-  // TODO: put positionals and options on the same map when we start querying the command args?
   std::vector<std::string_view> positionals;
   std::map<std::string_view, std::optional<std::string_view>> options;
   std::unique_ptr<ArgsView> subcmd{}; // unique_ptr because ArgsView is still not a complete type at this line
