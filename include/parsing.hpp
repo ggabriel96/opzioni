@@ -255,7 +255,7 @@ struct CommandParser {
   }
 
   auto get_args_map(ArgsView const &view) const {
-    auto map = ArgsMap<std::remove_reference_t<decltype(cmd)>>{.exec_path = view.exec_path};
+    auto map = ArgsMap<Cmd>{.exec_path = view.exec_path};
     std::size_t pos_count = 0;
 
     // clang-format off
@@ -272,7 +272,7 @@ struct CommandParser {
 
   template <typename T>
   auto
-  process(Arg<T> const &arg, ArgsMap<std::remove_reference_t<decltype(cmd)>> &map, ArgsView const &view, std::size_t &pos_count) const {
+  process(Arg<T> const &arg, ArgsMap<Cmd> &map, ArgsView const &view, std::size_t &pos_count) const {
     switch (arg.type) {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
@@ -303,7 +303,7 @@ struct CommandParser {
     }
   }
 
-  void check_contains_required(ArgsMap<std::remove_reference_t<decltype(cmd)>> const &map) const {
+  void check_contains_required(ArgsMap<Cmd> const &map) const {
     std::vector<std::string_view> missing_arg_names;
     // clang-format off
     std::apply(
