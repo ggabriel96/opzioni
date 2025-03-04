@@ -55,8 +55,8 @@ public:
 
 class MissingRequiredArguments : public UserError {
 public:
-  explicit MissingRequiredArguments(std::ranges::range auto const &names)
-      : UserError(fmt::format("Missing required arguments: `{}`", fmt::join(names, "`, `"))) {}
+  explicit MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names)
+      : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `"))) {}
 };
 
 class MissingValue : public UserError {

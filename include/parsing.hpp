@@ -272,6 +272,53 @@ struct CommandParser {
     return 1;
   }
 
+  void check_contains_required(ArgsView const &view) const {
+    std::vector<std::string_view> missing_arg_names;
+    // clang-format off
+    // check positionals first
+    std::size_t visited_pos_count = 0;
+    std::apply(
+      [&view, &visited_pos_count, &missing_arg_names](auto&&... arg) {
+        (void) // cast to void to suppress unused warning
+        (
+          (
+            arg.type == ArgType::POS
+            && arg.is_required
+            && (++visited_pos_count > view.positionals.size())
+              ? missing_arg_names.push_back(arg.name)
+              : (void)0), ...
+        );
+      },
+      cmd_ref.get().args
+    );
+    // then options and flags
+    std::apply(
+      [&view, &missing_arg_names](auto&&... arg) {
+        (void) // cast to void to suppress unused warning
+        (
+          (
+            arg.type != ArgType::POS
+            && arg.is_required
+            && !view.options.contains(arg.name)
+              ? missing_arg_names.push_back(arg.name)
+              : (void)0), ...
+        );
+      },
+      cmd_ref.get().args
+    );
+
+    if (!missing_arg_names.empty())
+      throw MissingRequiredArguments(view.exec_path, missing_arg_names);
+
+    if (view.sub_cmd != nullptr && !std::holds_alternative<std::monostate>(this->sub_parser)) {
+      std::visit(overloaded {
+        [](std::monostate) {},
+        [&view](auto const &p) { p.check_contains_required(*view.sub_cmd); }
+      }, this->sub_parser);
+    }
+    // clang-format on
+  }
+
   auto get_args_map(ArgsView const &view) const {
     auto map = ArgsMap<Cmd>{.exec_path = view.exec_path};
     std::size_t pos_count = 0;
@@ -287,9 +334,7 @@ struct CommandParser {
     if (view.sub_cmd != nullptr && !std::holds_alternative<std::monostate>(this->sub_parser)) {
       std::visit(overloaded {
         [](std::monostate) {},
-        [&map, &view](auto const &p) {
-          map.sub_cmd = p.get_args_map(*view.sub_cmd);
-        }
+        [&map, &view](auto const &p) { map.sub_cmd = p.get_args_map(*view.sub_cmd); }
       }, this->sub_parser);
     }
     // clang-format on
@@ -328,34 +373,6 @@ struct CommandParser {
       }
     }
   }
-
-  void check_contains_required(ArgsMap<Cmd> const &map) const {
-    std::vector<std::string_view> missing_arg_names;
-    // clang-format off
-    std::apply(
-      [&map, &missing_arg_names](auto&&... arg) {
-        (void) // cast to void to suppress unused warning
-        (
-          (!map.has(arg.name) && arg.is_required ? missing_arg_names.push_back(arg.name) : (void)0), ...
-        );
-      },
-      cmd_ref.get().args
-    );
-    // clang-format on
-
-    if (!missing_arg_names.empty()) throw MissingRequiredArguments(missing_arg_names);
-
-    // TODO:
-    // if (!std::holds_alternative<std::monostate>(map.sub_cmd) &&
-    // !std::holds_alternative<std::monostate>(this->sub_parser)) {
-    //   std::visit(
-    //     overloaded {
-    //       [](std::monostate) {},
-    //       [&map](auto const &p) { p.check_contains_required(*map.sub_cmd); }
-    //     },
-    //     this->sub_parser);
-    // }
-  }
 };
 
 template <concepts::Command Cmd>
@@ -363,10 +380,10 @@ auto parse(Cmd const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
   auto const view = parser.get_args_view(args);
   view.print_debug();
+  // done separately in order to report all missing required args
+  parser.check_contains_required(view);
 
   auto const map = parser.get_args_map(view);
-  // done separately from `get_args_map` in order to report all missing required args
-  parser.check_contains_required(map);
 
   return map;
 }
