@@ -150,6 +150,8 @@ consteval auto new_cmd(std::string_view name, std::string_view version = "") {
     .abbrev = "h",
     .help = "Display this information",
     .is_required = false,
+    .default_value = false,
+    .implicit_value = true,
   };
   return p;
 }
