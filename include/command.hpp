@@ -80,9 +80,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
   consteval auto opt(ArgMeta<T> meta) {
-    // TODO: can we remove the trailing \n from FixedString?
     // TODO: add thorough validations
-    static_assert(Abbrev.size <= 2, "Abbreviations must be a single character");
+    static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
     if (meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
@@ -107,6 +106,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev = "">
   consteval auto flg(ArgMeta<bool> meta) {
+    static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
     if (meta.is_required) throw "Flags cannot be required";
 
     Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
