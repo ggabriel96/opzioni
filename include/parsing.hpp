@@ -134,14 +134,14 @@ struct CommandParser {
             index += assign_positional(view, args.subspan(index), current_positional_idx);
             ++current_positional_idx;
           }
-        } else if (auto const option = try_parse_option(arg); option.has_value()) {
+        } else if (auto const option = try_parse_option(arg, view.exec_path); option.has_value()) {
           index += assign_option(view, *option, args.subspan(index));
         } else if (auto const flag = get_if_long_flag(arg); !flag.empty()) {
           index += assign_long_flag(view, flag);
         } else if (auto const flags = get_if_short_flags(arg); !flags.empty()) {
           index += assign_short_flags(view, flags);
         } else {
-          throw UnknownArgument(arg);
+          throw UnknownArgument(view.exec_path, arg);
         }
       }
     }
@@ -150,12 +150,12 @@ struct CommandParser {
 
   std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
     if (cur_pos_idx + 1 > this->cmd_ref.get().amount_pos)
-      throw UnexpectedPositional(args[0], this->cmd_ref.get().amount_pos);
+      throw UnexpectedPositional(view.exec_path, args[0], this->cmd_ref.get().amount_pos);
     view.positionals.emplace_back(args[0]);
     return 1;
   }
 
-  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) {
+  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg, std::string_view cmd_name) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
     auto const eq_idx = whole_arg.find('=', num_of_dashes);
     bool const has_equals = eq_idx != std::string_view::npos;
@@ -166,7 +166,7 @@ struct CommandParser {
         this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
-        throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
+        throw WrongType(cmd_name, name, to_string(it->type), to_string(ArgType::OPT));
       }
 
       if (has_equals) {
@@ -197,7 +197,7 @@ struct CommandParser {
           this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
         if (it->type != ArgType::OPT) {
-          throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
+          throw WrongType(cmd_name, name, to_string(it->type), to_string(ArgType::OPT));
         }
 
         auto const value = whole_arg.substr(eq_idx + 1);
@@ -210,7 +210,7 @@ struct CommandParser {
         this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
-        throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
+        throw WrongType(cmd_name, name, to_string(it->type), to_string(ArgType::OPT));
       }
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
@@ -239,16 +239,16 @@ struct CommandParser {
     }
 
     // report error using the name/abbrev the user used
-    throw MissingValue(option.arg.name, 1, 0);
+    throw MissingValue(view.exec_path, option.arg.name, 1, 0);
   }
 
   std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
     auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) {
-      throw UnknownArgument(flag);
+      throw UnknownArgument(view.exec_path, flag);
     }
     if (it->type != ArgType::FLG) {
-      throw WrongType(flag, to_string(it->type), to_string(ArgType::FLG));
+      throw WrongType(view.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
     }
 
     view.options[it->name] = std::nullopt;
@@ -260,10 +260,10 @@ struct CommandParser {
       auto const flag = flags.substr(i, 1);
       auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) {
-        throw UnknownArgument(flag);
+        throw UnknownArgument(view.exec_path, flag);
       }
       if (it->type != ArgType::FLG) {
-        throw WrongType(flag, to_string(it->type), to_string(ArgType::FLG));
+        throw WrongType(view.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
       }
 
       // value lookup is by name, not abbrev
