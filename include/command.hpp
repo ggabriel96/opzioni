@@ -108,6 +108,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev = "">
   consteval auto flg(ArgMeta<bool> meta) {
+    if (meta.is_required) throw "Flags cannot be required";
+
     Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
