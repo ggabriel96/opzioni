@@ -16,6 +16,7 @@
 #include "converters.hpp"
 #include "exceptions.hpp"
 #include "fixed_string.hpp"
+#include "variant.hpp"
 
 namespace opz {
 
@@ -80,6 +81,16 @@ struct ArgsView {
   void print_debug() const noexcept;
 };
 
+template <concepts::Command>
+struct ArgsMap;
+
+template <typename...>
+struct ArgsMapOf;
+template <concepts::Command... Cmds>
+struct ArgsMapOf<TypeList<Cmds...>> {
+  using type = std::variant<std::monostate, ArgsMap<Cmds const>...>;
+};
+
 template <concepts::Command Cmd>
 struct ArgsMap {
   using arg_names = typename Cmd::arg_names;
@@ -87,6 +98,7 @@ struct ArgsMap {
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
+  typename ArgsMapOf<typename Cmd::sub_cmd_types>::type sub_cmd{};
 
   template <FixedString Name>
   typename GetType<Name, arg_names, arg_types>::type get() const {
@@ -112,11 +124,6 @@ struct CommandParserOf;
 template <concepts::Command... Cmds>
 struct CommandParserOf<std::tuple<Cmds...>> {
   using type = std::variant<std::monostate, CommandParser<Cmds const>...>;
-};
-
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
 };
 
 template <concepts::Command Cmd>
@@ -150,19 +157,23 @@ struct CommandParser {
             [&i, idx, this](auto&&... cmd) {
               (void) // cast to void to suppress unused warning
               (
-                (i == idx ? (this->sub_parser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true) : (++i, false)) || ...
+                (
+                  i == idx
+                    ? (this->sub_parser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
+                    : (++i, false)
+                ) || ...
               );
             },
             cmd_ref.get().sub_cmds
           );
-          // clang-format on
           auto const rest = args.subspan(index);
           view.sub_cmd = std::make_unique<ArgsView>(
             std::visit(overloaded{
-              [](std::monostate) { return ArgsView{}; },
-              [rest](auto &p) { return p.get_args_view(rest); }
-            }, this->sub_parser));
+                [](std::monostate) { return ArgsView{}; },
+                [rest](auto &p) { return p.get_args_view(rest); }
+              }, this->sub_parser));
           index += rest.size();
+          // clang-format on
         } else if (looks_positional(arg)) {
           index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
@@ -314,6 +325,15 @@ struct CommandParser {
       },
       cmd_ref.get().args
     );
+
+    if (view.sub_cmd != nullptr && !std::holds_alternative<std::monostate>(this->sub_parser)) {
+      std::visit(overloaded {
+        [](std::monostate) {},
+        [&map, &view](auto const &p) {
+          map.sub_cmd = p.get_args_map(*view.sub_cmd);
+        }
+      }, this->sub_parser);
+    }
     // clang-format on
 
     return map;
@@ -366,6 +386,17 @@ struct CommandParser {
     // clang-format on
 
     if (!missing_arg_names.empty()) throw MissingRequiredArguments(missing_arg_names);
+
+    // TODO:
+    // if (!std::holds_alternative<std::monostate>(map.sub_cmd) &&
+    // !std::holds_alternative<std::monostate>(this->sub_parser)) {
+    //   std::visit(
+    //     overloaded {
+    //       [](std::monostate) {},
+    //       [&map](auto const &p) { p.check_contains_required(*map.sub_cmd); }
+    //     },
+    //     this->sub_parser);
+    // }
   }
 };
 

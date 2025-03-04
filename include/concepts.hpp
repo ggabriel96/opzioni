@@ -15,9 +15,10 @@ concept Container = std::ranges::range<T> && std::is_default_constructible_v<T> 
 };
 
 template <typename T>
-concept Command = requires(T t) {
+concept Command = requires(T) {
   typename T::arg_names;
   typename T::arg_types;
+  typename T::sub_cmd_types;
 };
 
 } // namespace opz::concepts
