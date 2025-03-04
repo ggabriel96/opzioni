@@ -5,18 +5,23 @@
 #include <tuple>
 
 #include "arg.hpp"
+#include "concepts.hpp"
 #include "fixed_string.hpp"
 #include "get_type.hpp"
 
 namespace opz {
 
 template <typename...>
-struct Command;
+struct Command {
+  // TODO: how can we avoid this?
+  std::string_view name{};
+};
 
-template <FixedString... Names, typename... Types>
-struct Command<StringList<Names...>, TypeList<Types...>> {
+template <FixedString... Names, typename... Types, concepts::Command... SubCmds>
+struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
+  using sub_cmd_types = TypeList<SubCmds...>;
 
   std::string_view name{};
   std::string_view version{};
@@ -24,22 +29,34 @@ struct Command<StringList<Names...>, TypeList<Types...>> {
   std::tuple<Arg<Types>...> args;
   std::size_t amount_pos = 0;
 
-  consteval Command() = default;
-  consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {}
+  // TODO: make it not store whole objects in the tuple (reference_wrapper?)
+  std::tuple<SubCmds...> sub_cmds;
 
-  template <FixedString... OtherNames, typename... OtherTypes>
-  consteval Command(Command<StringList<OtherNames...>, TypeList<OtherTypes...>> const &other) {
+  consteval Command() = default;
+  explicit consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {}
+
+  template <concepts::Command Cmd>
+  consteval Command(Cmd const &other) {
     name = other.name;
     version = other.version;
     introduction = other.introduction;
     amount_pos = other.amount_pos;
-    if constexpr (sizeof...(Names) == sizeof...(OtherNames)) args = other.args;
+    if constexpr (std::tuple_size_v<decltype(args)> == std::tuple_size_v<decltype(other.args)>) args = other.args;
+    if constexpr (std::tuple_size_v<decltype(sub_cmds)> == std::tuple_size_v<decltype(other.sub_cmds)>)
+      sub_cmds = other.sub_cmds;
   }
 
   consteval auto intro(std::string_view intro) const noexcept {
     auto p = *this;
     p.introduction = intro;
     return p;
+  }
+
+  template <concepts::Command SubCmd>
+  consteval auto with(SubCmd const &subcmd) const noexcept {
+    Command<StringList<Names...>, TypeList<Types...>, SubCmds..., SubCmd> new_cmd(*this);
+    new_cmd.sub_cmds = std::tuple_cat(sub_cmds, std::make_tuple(subcmd));
+    return new_cmd;
   }
 
   template <FixedString Name, typename T = std::string_view>

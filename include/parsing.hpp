@@ -52,6 +52,20 @@ auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p
     haystack);
 }
 
+template <concepts::Command... Cmds>
+int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) {
+  return std::apply(
+    [name](auto &&...elem) {
+      int idx = 0, ret = -1;
+
+      (void) // cast to void to suppress unused warning
+        ((elem.name == name ? (ret = idx, true) : (++idx, false)) || ...);
+
+      return ret;
+    },
+    haystack);
+}
+
 // +-----------------------+
 // |   main parsing code   |
 // +-----------------------+
@@ -61,6 +75,7 @@ struct ArgsView {
   // TODO: put positionals and options on the same map when we start querying the command args?
   std::vector<std::string_view> positionals;
   std::map<std::string_view, std::optional<std::string_view>> options;
+  std::unique_ptr<ArgsView> sub_cmd{}; // unique_ptr because ArgsView is still not a complete type at this line
 
   void print_debug() const noexcept;
 };
@@ -89,12 +104,28 @@ struct ArgsMap {
   auto size() const noexcept { return args.size(); }
 };
 
+template <concepts::Command>
+struct CommandParser;
+
+template <typename...>
+struct CommandParserOf;
+template <concepts::Command... Cmds>
+struct CommandParserOf<std::tuple<Cmds...>> {
+  using type = std::variant<std::monostate, CommandParser<Cmds const>...>;
+};
+
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+
 template <concepts::Command Cmd>
 struct CommandParser {
   using arg_names = typename Cmd::arg_names;
   using arg_types = typename Cmd::arg_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
+  typename CommandParserOf<decltype(cmd_ref.get().sub_cmds)>::type sub_parser{};
 
   explicit CommandParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
@@ -112,7 +143,26 @@ struct CommandParser {
             ++current_positional_idx;
           }
           index = args.size();
-          // else if is command...
+        } else if (auto const idx = find_cmd(cmd_ref.get().sub_cmds, arg); idx != -1) {
+          int i = 0;
+          // clang-format off
+          std::apply(
+            [&i, idx, this](auto&&... cmd) {
+              (void) // cast to void to suppress unused warning
+              (
+                (i == idx ? (this->sub_parser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true) : (++i, false)) || ...
+              );
+            },
+            cmd_ref.get().sub_cmds
+          );
+          // clang-format on
+          auto const rest = args.subspan(index);
+          view.sub_cmd = std::make_unique<ArgsView>(
+            std::visit(overloaded{
+              [](std::monostate) { return ArgsView{}; },
+              [rest](auto &p) { return p.get_args_view(rest); }
+            }, this->sub_parser));
+          index += rest.size();
         } else if (looks_positional(arg)) {
           index += assign_positional(view, args.subspan(index), current_positional_idx);
           ++current_positional_idx;
@@ -187,7 +237,8 @@ struct CommandParser {
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it = find_arg_if(cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+      auto const it =
+        find_arg_if(cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
       if (it->type != ArgType::OPT) {
         throw WrongType(name, to_string(it->type), to_string(ArgType::OPT));
@@ -269,8 +320,7 @@ struct CommandParser {
   }
 
   template <typename T>
-  auto
-  process(Arg<T> const &arg, ArgsMap<Cmd> &map, ArgsView const &view, std::size_t &pos_count) const {
+  auto process(Arg<T> const &arg, ArgsMap<Cmd> &map, ArgsView const &view, std::size_t &pos_count) const {
     switch (arg.type) {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
