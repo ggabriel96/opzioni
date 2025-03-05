@@ -19,6 +19,12 @@ void assign_to(ArgsMap<Cmd const> &map, std::string_view const name, T const && 
 }
 
 template <concepts::Command Cmd>
+void print_help(Cmd const &cmd) {
+  fmt::print("{} HELP PLACEHOLDER\n", cmd.name);
+  std::exit(0);
+}
+
+template <concepts::Command Cmd>
 void print_version(Cmd const &cmd) {
   fmt::print("{} {}\n", cmd.name, cmd.version);
   std::exit(0);
@@ -31,6 +37,9 @@ void apply_action(Cmd const &cmd, ArgsMap<Cmd const> &map, Arg<T> const &arg, st
   switch (arg.action) {
     case Action::ASSIGN:
       actions::assign_to(map, arg.name, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
+      break;
+    case Action::PRINT_HELP:
+      actions::print_help(cmd);
       break;
     case Action::PRINT_VERSION:
       actions::print_version(cmd);

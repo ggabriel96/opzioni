@@ -322,6 +322,9 @@ struct CommandParser {
     std::size_t pos_count = 0;
 
     // clang-format off
+    // TODO: this processes args in the order they were added to the program spec
+    // instead of the one they were inputted from CLI, which may cause weird behaviors
+    // (see ./cmd --version --help)
     std::apply(
       [this, &map, &view, &pos_count](auto&&... arg) {
         (this->process(arg, map, view, pos_count), ...);
