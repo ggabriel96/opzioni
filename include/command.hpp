@@ -74,6 +74,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
         .is_required = meta.is_required.value_or(true),
         .default_value = meta.default_value,
         .implicit_value = std::nullopt,
+        .action = meta.action,
       }));
     new_cmd.amount_pos += 1;
     return new_cmd;
@@ -96,6 +97,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
         .is_required = meta.is_required.value_or(false),
         .default_value = meta.default_value,
         .implicit_value = meta.implicit_value,
+        .action = meta.action,
       }));
     return new_cmd;
   }
@@ -121,6 +123,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
         .is_required = false,
         .default_value = meta.default_value.value_or(false),
         .implicit_value = meta.implicit_value.value_or(true),
+        .action = meta.action,
       }));
     return new_cmd;
   }
@@ -153,6 +156,7 @@ consteval auto new_cmd(std::string_view name, std::string_view version = "") {
     .is_required = false,
     .default_value = false,
     .implicit_value = true,
+    .action = Action::PRINT_HELP,
   };
   return p;
 }

@@ -29,6 +29,7 @@ struct ArgMeta {
   std::optional<bool> is_required{};
   std::optional<T> default_value{};
   std::optional<T> implicit_value{};
+  Action action = Action::ASSIGN;
 };
 
 std::string_view to_string(ArgType const at) noexcept;
