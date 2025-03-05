@@ -11,6 +11,7 @@ namespace opz {
 struct ArgsView {
   std::string_view exec_path{};
   std::vector<std::string_view> positionals;
+  // TODO: change std::optional to std::vector so that Action::COUNT/APPEND/etc work
   std::map<std::string_view, std::optional<std::string_view>> options;
   std::unique_ptr<ArgsView> subcmd{}; // unique_ptr because ArgsView is still not a complete type at this line
 

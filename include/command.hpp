@@ -85,6 +85,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
     if (meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
+    if (meta.action == Action::COUNT && !concepts::Integer<T>) throw "The count action only works with integer types";
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
@@ -107,25 +108,34 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     return opt<Name, "", T>(meta);
   }
 
-  template <FixedString Name, FixedString Abbrev = "">
-  consteval auto flg(ArgMeta<bool> meta) {
+  template <FixedString Name, FixedString Abbrev, typename T = bool>
+  consteval auto flg(ArgMeta<T> meta) {
     static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
     if (meta.is_required) throw "Flags cannot be required";
+    // TODO: can we try to be smart about default implicit values of other types?
+    if (!std::is_same_v<T, bool> && !meta.implicit_value)
+      throw "Non-boolean flags require that the implicit value is specified";
+    if (meta.action == Action::COUNT && !concepts::Integer<T>) throw "The count action only works with integer types";
 
-    Command<StringList<Names..., Name>, TypeList<Types..., bool>> new_cmd(*this);
+    Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
-      std::make_tuple(Arg<bool>{
+      std::make_tuple(Arg<T>{
         .type = ArgType::FLG,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = false,
-        .default_value = meta.default_value.value_or(false),
+        .default_value = meta.default_value.value_or(T{}),
         .implicit_value = meta.implicit_value.value_or(true),
         .action = meta.action,
       }));
     return new_cmd;
+  }
+
+  template <FixedString Name, typename T = bool>
+  consteval auto flg(ArgMeta<T> meta) {
+    return flg<Name, "", T>(meta);
   }
 
   // template<FixedString Name>

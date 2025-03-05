@@ -55,7 +55,7 @@ int main(int argc, char const *argv[]) {
     new_cmd("docker", "1.0")
       .opt<"config">(
         {.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"})
-      .flg<"debug", "D">({.help = "Enable debug mode"})
+      .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = Action::COUNT})
       .flg<"version", "v">({.help = "Display the command version", .action = Action::PRINT_VERSION})
       .sub(exec_cmd)
       .sub(pull_cmd);
