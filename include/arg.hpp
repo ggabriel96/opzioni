@@ -4,7 +4,24 @@
 #include <optional>
 #include <string_view>
 
+#include "converters.hpp"
+
 namespace opz {
+
+enum struct ArgType { POS, OPT, FLG };
+
+enum struct Action {
+  APPEND,
+  ASSIGN,
+  COUNT,
+  CSV,
+  PRINT_HELP,
+  PRINT_VERSION,
+};
+
+// +---------------------------------+
+// |             ArgMeta             |
+// +---------------------------------+
 
 template <typename T>
 struct ArgMeta {
@@ -14,9 +31,11 @@ struct ArgMeta {
   std::optional<T> implicit_value{};
 };
 
-enum struct ArgType { POS, OPT, FLG };
-
 std::string_view to_string(ArgType const at) noexcept;
+
+// +---------------------------------+
+// |               Arg               |
+// +---------------------------------+
 
 template <typename T>
 struct Arg {
@@ -29,9 +48,8 @@ struct Arg {
   bool is_required = false;
   std::optional<T> default_value{};
   std::optional<T> implicit_value{};
-  //   act::fn::Signature action_fn = act::fn::assign<std::string_view>;
+  Action action = Action::ASSIGN;
   //   std::size_t gather_amount = 1;
-  //   DefaultValueSetter default_setter = nullptr;
 
   constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   constexpr bool has_default() const noexcept { return default_value.has_value(); }
@@ -61,6 +79,10 @@ constexpr bool operator==(Arg<T> const &lhs, Arg<U> const &rhs) noexcept {
   auto const same_abbrev = lhs.has_abbrev() && rhs.has_abbrev() && lhs.abbrev == rhs.abbrev;
   return same_name || same_abbrev;
 }
+
+// +---------------------------------+
+// |             ArgView             |
+// +---------------------------------+
 
 struct ArgView {
   ArgType type = ArgType::POS;

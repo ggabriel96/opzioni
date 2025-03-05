@@ -27,6 +27,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   std::size_t amount_pos = 0;
 
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
+  // TODO: make them const?
   std::tuple<SubCmds...> subcmds;
 
   consteval Command() = default;

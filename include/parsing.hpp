@@ -2,15 +2,14 @@
 #define OPZIONI_PARSING_H
 
 #include <algorithm>
-#include <any>
 #include <cctype>
-#include <functional>
 #include <map>
 #include <print>
 #include <span>
 #include <string_view>
 #include <vector>
 
+#include "actions.hpp"
 #include "args_map.hpp"
 #include "args_view.hpp"
 #include "concepts.hpp"
@@ -54,7 +53,7 @@ auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p
 }
 
 template <concepts::Command... Cmds>
-int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) {
+int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) { // TODO: add const to Cmds...?
   return std::apply(
     [name](auto &&...elem) {
       int idx = 0, ret = -1;
@@ -319,7 +318,7 @@ struct CommandParser {
   }
 
   auto get_args_map(ArgsView const &view) const {
-    auto map = ArgsMap<Cmd>{.exec_path = view.exec_path};
+    auto map = ArgsMap<Cmd const>{.exec_path = view.exec_path};
     std::size_t pos_count = 0;
 
     // clang-format off
@@ -342,12 +341,12 @@ struct CommandParser {
   }
 
   template <typename T>
-  auto process(Arg<T> const &arg, ArgsMap<Cmd> &map, ArgsView const &view, std::size_t &pos_count) const {
+  auto process(Arg<T> const &arg, ArgsMap<Cmd const> &map, ArgsView const &view, std::size_t &pos_count) const {
     switch (arg.type) {
       case ArgType::POS: {
         std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
         if (pos_count < view.positionals.size()) {
-          map.args[arg.name] = convert<T>(view.positionals[pos_count]);
+          apply_action(this->cmd_ref.get(), map, arg, view.positionals[pos_count]);
           pos_count += 1;
         } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
@@ -359,14 +358,14 @@ struct CommandParser {
         if (opt != view.options.end()) {
           std::print("OPT {} found, value: {}\n", arg.name, opt->second.value_or("<unset>"));
           // already checked if it has implicit value during parsing
-          map.args[arg.name] = opt->second.has_value() ? convert<T>(*opt->second) : *arg.implicit_value;
+          apply_action(this->cmd_ref.get(), map, arg, opt->second);
         } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         // check for arg being required is done in a later step
         break;
       }
       case ArgType::FLG: {
         std::print("process FLG {}\n", arg.name);
-        if (view.options.contains(arg.name)) map.args[arg.name] = *arg.implicit_value;
+        if (view.options.contains(arg.name)) apply_action(this->cmd_ref.get(), map, arg, std::nullopt);
         else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
         break;
       }
