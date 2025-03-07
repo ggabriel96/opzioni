@@ -12,11 +12,12 @@ namespace opz {
 constexpr char nl = '\n';
 constexpr std::string_view whitespace = " \f\n\r\t\v";
 
-std::string_view trim(std::string_view) noexcept;
+std::string trim(std::string_view) noexcept;
 
-auto limit_within(std::span<std::string_view> words, std::size_t const max_width) noexcept
-  -> std::vector<std::vector<std::string_view>>;
-auto limit_within(std::string_view const, std::size_t const) noexcept -> std::vector<std::vector<std::string_view>>;
+auto limit_within(std::span<std::string>, std::size_t const) noexcept
+  -> std::vector<std::vector<std::string>>;
+auto limit_within(std::string_view const, std::size_t const) noexcept
+  -> std::vector<std::vector<std::string>>;
 
 std::string limit_string_within(std::string_view const, std::size_t const) noexcept;
 

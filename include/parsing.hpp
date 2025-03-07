@@ -381,10 +381,12 @@ auto parse(Cmd const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
   auto const view = parser.get_args_view(args);
   view.print_debug();
-  // done separately in order to report all missing required args
-  parser.check_contains_required(view);
 
   auto const map = parser.get_args_map(view);
+  // 1) check_contains_required done separately in order to report all missing required args;
+  // 2) also done after get_args_map in order to allow things such as `--help` to work
+  // without actually requiring the required arguments
+  parser.check_contains_required(view);
 
   return map;
 }

@@ -7,35 +7,34 @@
 
 namespace opz {
 
-std::string_view trim(std::string_view sv) noexcept {
+std::string trim(std::string_view sv) noexcept {
   auto const begin = sv.find_first_not_of(whitespace);
-  auto const end = sv.size() - sv.find_last_not_of(whitespace) - 1;
-  sv.remove_prefix(std::min(begin, sv.size()));
-  sv.remove_suffix(std::min(end, sv.size()));
-  return sv;
+  auto const end = sv.find_last_not_of(whitespace);
+  return {sv, begin, end + 1 - begin};
 }
 
-auto limit_within(std::span<std::string_view> words, std::size_t const max_width) noexcept
-  -> std::vector<std::vector<std::string_view>> {
+auto limit_within(std::span<std::string> words, std::size_t const max_width) noexcept
+  -> std::vector<std::vector<std::string>> {
   std::size_t cur_max = max_width;
-  std::vector<std::vector<std::string_view>> lines(1);
-  for (auto const &_word : words) {
-    auto const word = trim(_word);
-    if (word.length() < cur_max) {
-      lines.back().push_back(word);
-      cur_max -= (word.length() + 1); // +1 for space in between
+  std::vector<std::vector<std::string>> lines(1);
+  for (auto const &word : words) {
+    auto const trimmed_word = trim(word);
+    if (trimmed_word.length() < cur_max) {
+      lines.back().emplace_back(trimmed_word);
+      cur_max -= (trimmed_word.length() + 1); // +1 for space in between
     } else {
-      lines.push_back({word});
-      cur_max = max_width - word.length();
+      lines.emplace_back();
+      lines.back().emplace_back(trimmed_word);
+      cur_max = max_width - trimmed_word.length();
     }
   }
   return lines;
 }
 
 auto limit_within(std::string_view const text, std::size_t const max_width) noexcept
-  -> std::vector<std::vector<std::string_view>> {
-  auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
-  std::vector<std::string_view> words;
+  -> std::vector<std::vector<std::string>> {
+  auto const range2str_view = [](auto const &r) { return std::string(&*r.begin(), std::ranges::distance(r)); };
+  std::vector<std::string> words;
   words.reserve(text.size());
   for (auto const word : text | std::views::split(' ')) {
     words.push_back(range2str_view(word));

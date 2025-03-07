@@ -1,6 +1,7 @@
 #ifndef OPZIONI_ACTIONS_HPP
 #define OPZIONI_ACTIONS_HPP
 
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
@@ -8,6 +9,7 @@
 #include "arg.hpp"
 #include "args_map.hpp"
 #include "concepts.hpp"
+#include "formatting.hpp"
 
 namespace opz {
 
@@ -27,7 +29,18 @@ void count(ArgsMap<Cmd const> &map, std::string_view const name, I const &implic
 
 template <concepts::Command Cmd>
 void print_help(Cmd const &cmd) {
-  fmt::print("{} HELP PLACEHOLDER\n", cmd.name);
+  HelpFormatter formatter(cmd);
+  formatter.print_title();
+  if (!cmd.introduction.empty()) {
+    std::cout << nl;
+    formatter.print_intro();
+  }
+  std::cout << nl;
+  formatter.print_long_usage();
+  std::cout << nl;
+  formatter.print_help();
+  std::cout << nl;
+  formatter.print_details();
   std::exit(0);
 }
 

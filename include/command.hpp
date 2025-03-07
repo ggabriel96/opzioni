@@ -26,6 +26,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   std::tuple<Arg<Types>...> args;
   std::size_t amount_pos = 0;
 
+  std::size_t msg_width = 100; // TODO: expose
+
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
   // TODO: make them const?
   std::tuple<SubCmds...> subcmds;
