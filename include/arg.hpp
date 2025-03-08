@@ -62,6 +62,7 @@ struct Arg {
 // +---------------------------------+
 
 struct ArgView {
+  std::size_t tuple_idx{};
   ArgType type = ArgType::POS;
   std::string_view name{};
   std::string_view abbrev{};
@@ -69,8 +70,9 @@ struct ArgView {
   bool has_implicit = false;
 
   template <typename T>
-  ArgView(Arg<T> const &other)
-      : type(other.type),
+  ArgView(std::size_t tuple_idx, Arg<T> const &other)
+      : tuple_idx(tuple_idx),
+        type(other.type),
         name(other.name),
         abbrev(other.abbrev),
         is_required(other.is_required),

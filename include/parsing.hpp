@@ -11,9 +11,7 @@
 
 #include "actions.hpp"
 #include "args_map.hpp"
-#include "args_view.hpp"
 #include "concepts.hpp"
-#include "converters.hpp"
 #include "exceptions.hpp"
 #include "variant.hpp"
 
@@ -38,15 +36,12 @@ template <typename... Ts>
 auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
   return std::apply(
     [&p](auto &&...elem) {
+      std::size_t idx = 0;
       std::optional<ArgView> ret = std::nullopt;
-
       // clang-format off
         (void) // cast to void to suppress unused warning
-        (
-          (p(elem) ? (ret = elem, true) : (false)) || ...
-        );
+        ((p(elem) ? (ret = ArgView(idx, elem), true) : (++idx, false)) || ...);
       // clang-format on
-
       return ret;
     },
     haystack);
@@ -57,10 +52,8 @@ int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) { // TODO: add
   return std::apply(
     [name](auto &&...elem) {
       int idx = 0, ret = -1;
-
       (void) // cast to void to suppress unused warning
-        ((elem.name == name ? (ret = idx, true) : (++idx, false)) || ...);
-
+      ((elem.name == name ? (ret = idx, true) : (++idx, false)) || ...);
       return ret;
     },
     haystack);
@@ -82,6 +75,7 @@ struct CommandParserOf<TypeList<Cmds...>> {
 
 template <concepts::Command Cmd>
 struct CommandParser {
+  using cmd_type = Cmd;
   using arg_names = typename Cmd::arg_names;
   using arg_types = typename Cmd::arg_types;
 
@@ -90,67 +84,79 @@ struct CommandParser {
 
   explicit CommandParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
-  auto get_args_view(std::span<char const *> args) {
-    ArgsView view;
+  auto get_args_map(std::span<char const *> args) {
+    auto map = ArgsMap<Cmd const>();
     if (!args.empty()) {
-      view.exec_path = std::string_view(args[0]);
+      map.exec_path = std::string_view(args[0]);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
-        auto const arg = std::string_view(args[index]);
-        if (is_dash_dash(arg)) {
+        auto const cli_arg = std::string_view(args[index]);
+        if (is_dash_dash(cli_arg)) {
           // +1 to ignore the dash-dash
           for (std::size_t offset = index + 1; offset < args.size();) {
-            offset += assign_positional(view, args.subspan(offset), current_positional_idx);
+            offset += assign_positional(map, args.subspan(offset), current_positional_idx);
             ++current_positional_idx;
           }
           index = args.size();
-        } else if (looks_positional(arg)) {
+        } else if (looks_positional(cli_arg)) {
           // check if is command first
-          if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, arg); idx != -1) {
+          if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, cli_arg); idx != -1) {
             int i = 0;
             // clang-format off
             std::apply(
               [&i, idx, this](auto&&... cmd) {
-                (void) // cast to void to suppress unused warning
-                (
-                  (
-                    i == idx
-                      ? (this->subparser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
-                      : (++i, false)
-                  ) || ...
-                );
+                (void)(( // cast to void to suppress unused warning
+                i == idx
+                  ? (this->subparser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
+                  : (++i, false)
+                ) || ...);
               },
               this->cmd_ref.get().subcmds
             );
             auto const rest = args.subspan(index);
-            std::visit(overloaded{
+            std::visit(overloaded {
               [](std::monostate) {},
-              [&view, rest](auto &p) { view.subcmd = std::make_unique<ArgsView>(p.get_args_view(rest)); }
+              [&map, rest](auto &p) { map.subcmd = p.get_args_map(rest); }
             }, this->subparser);
             index += rest.size();
             // clang-format on
           } else {
-            index += assign_positional(view, args.subspan(index), current_positional_idx);
+            index += assign_positional(map, args.subspan(index), current_positional_idx);
             ++current_positional_idx;
           }
-        } else if (auto const option = try_parse_option(arg, view.exec_path); option.has_value()) {
-          index += assign_option(view, *option, args.subspan(index));
-        } else if (auto const flag = get_if_long_flag(arg); !flag.empty()) {
-          index += assign_long_flag(view, flag);
-        } else if (auto const flags = get_if_short_flags(arg); !flags.empty()) {
-          index += assign_short_flags(view, flags);
+        } else if (auto const option = try_parse_option(cli_arg, map.exec_path); option.has_value()) {
+          index += assign_option(map, *option, args.subspan(index));
+        } else if (auto const flag = get_if_long_flag(cli_arg); !flag.empty()) {
+          index += assign_long_flag(map, flag);
+        } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
+          index += assign_short_flags(map, flags);
         } else {
-          throw UnknownArgument(view.exec_path, arg);
+          throw UnknownArgument(map.exec_path, cli_arg);
         }
       }
     }
-    return view;
+    return map;
   }
 
-  std::size_t assign_positional(ArgsView &view, std::span<char const *> args, std::size_t cur_pos_idx) const {
-    if (cur_pos_idx + 1 > this->cmd_ref.get().amount_pos)
-      throw UnexpectedPositional(view.exec_path, args[0], this->cmd_ref.get().amount_pos);
-    view.positionals.emplace_back(args[0]);
+  std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {
+    if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
+      throw UnexpectedPositional(map.exec_path, args[0], this->cmd_ref.get().amount_pos);
+
+    // clang-format off
+    std::size_t idx = 0;
+    std::apply(
+      [this, &map, args, cur_pos_idx, &idx](auto&&... arg) {
+        (void)(( // cast to void to suppress unused warning
+        arg.type == ArgType::POS
+          ? idx == cur_pos_idx
+            ? (apply_action(this->cmd_ref.get(), map, arg, args[0]), true)
+            : (++idx, false)
+          : false
+        ) || ...);
+      },
+      this->cmd_ref.get().args
+    );
+    // clang-format on
     return 1;
   }
 
@@ -164,9 +170,6 @@ struct CommandParser {
       auto const it = find_arg_if(
         this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
-      if (it->type != ArgType::OPT) {
-        throw WrongType(cmd_name, name, to_string(it->type), to_string(ArgType::OPT));
-      }
 
       if (has_equals) {
         if (whole_arg.length() > 3) {
@@ -194,9 +197,6 @@ struct CommandParser {
         auto const it = find_arg_if(
           this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
-        if (it->type != ArgType::OPT) {
-          throw WrongType(cmd_name, name, to_string(it->type), to_string(ArgType::OPT));
-        }
 
         auto const value = whole_arg.substr(eq_idx + 1);
         return ParsedOption{.arg = *it, .value = value};
@@ -207,9 +207,7 @@ struct CommandParser {
       auto const it = find_arg_if(
         this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
-      if (it->type != ArgType::OPT) {
-        throw WrongType(cmd_name, name, to_string(it->type), to_string(ArgType::OPT));
-      }
+
       return ParsedOption{.arg = *it, .value = std::nullopt};
     }
 
@@ -217,176 +215,148 @@ struct CommandParser {
     return std::nullopt;
   }
 
-  std::size_t assign_option(ArgsView &view, ParsedOption const &option, std::span<char const *> args) const {
-    if (option.value) {
-      // value lookup is by name, not abbrev
-      view.options[option.arg.name] = *option.value;
-      return 1;
-    }
+  std::size_t assign_option(ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args) const {
+    std::size_t ret = 1;
+    auto value = option.value
+      .or_else([args, &ret]() -> std::optional<std::string_view> {
+        if (args.size() > 1 && looks_positional(args[1])) {
+          ret = 2;
+          return args[1];
+        }
+        return std::nullopt;
+      });
 
-    if (args.size() > 1 && looks_positional(args[1])) {
-      // value lookup is by name, not abbrev
-      view.options[option.arg.name] = args[1];
-      return 2;
-    }
+    if (!value.has_value() && !option.arg.has_implicit)
+      throw MissingValue(map.exec_path, option.arg.name, 1, 0);
 
-    if (option.arg.has_implicit) {
-      // value lookup is by name, not abbrev
-      view.options[option.arg.name] = std::nullopt; // will assign implicit value later
-      return 1;
-    }
-
-    // report error using the name/abbrev the user used
-    throw MissingValue(view.exec_path, option.arg.name, 1, 0);
-  }
-
-  std::size_t assign_long_flag(ArgsView &view, std::string_view const flag) const {
-    auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
-    if (!it) {
-      throw UnknownArgument(view.exec_path, flag);
-    }
-    if (it->type != ArgType::FLG) {
-      throw WrongType(view.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
-    }
-
-    view.options[it->name] = std::nullopt;
-    return 1;
-  }
-
-  std::size_t assign_short_flags(ArgsView &view, std::string_view const flags) const {
-    for (std::size_t i = 0; i < flags.size(); ++i) {
-      auto const flag = flags.substr(i, 1);
-      auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
-      if (!it) {
-        throw UnknownArgument(view.exec_path, flag);
-      }
-      if (it->type != ArgType::FLG) {
-        throw WrongType(view.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
-      }
-
-      // value lookup is by name, not abbrev
-      view.options[it->name] = std::nullopt;
-    }
-    return 1;
-  }
-
-  void check_contains_required(ArgsView const &view) const {
-    std::vector<std::string_view> missing_arg_names;
     // clang-format off
-    // check positionals first
-    std::size_t visited_pos_count = 0;
+    std::size_t idx = 0;
     std::apply(
-      [&view, &visited_pos_count, &missing_arg_names](auto&&... arg) {
-        (void) // cast to void to suppress unused warning
-        (
-          (
-            arg.type == ArgType::POS
-            && arg.is_required
-            && (++visited_pos_count > view.positionals.size())
-              ? missing_arg_names.push_back(arg.name)
-              : (void)0), ...
-        );
+      [this, &map, &option, &value, &idx](auto&&... arg) {
+        (void)(( // cast to void to suppress unused warning
+        idx == option.arg.tuple_idx
+          ? (value.has_value() || arg.has_implicit())
+            ? (apply_action(this->cmd_ref.get(), map, arg, value), true)
+            : (false)
+          : (++idx, false)
+        ) || ...);
       },
       this->cmd_ref.get().args
     );
-    // then options and flags
+    // clang-format on
+
+    return ret;
+  }
+
+  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag) const {
+    auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
+    if (!it) throw UnknownArgument(map.exec_path, flag);
+    if (it->type != ArgType::FLG) {
+      throw WrongType(map.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
+    }
+
+    // clang-format off
+    std::size_t idx = 0;
     std::apply(
-      [&view, &missing_arg_names](auto&&... arg) {
-        (void) // cast to void to suppress unused warning
-        (
-          (
-            arg.type != ArgType::POS
-            && arg.is_required
-            && !view.options.contains(arg.name)
-              ? missing_arg_names.push_back(arg.name)
-              : (void)0), ...
-        );
+      [this, &map, &it, &idx](auto&&... arg) {
+        (void)(( // cast to void to suppress unused warning
+        idx == it->tuple_idx
+          ? (apply_action(this->cmd_ref.get(), map, arg, std::nullopt), true)
+          : (++idx, false)
+        ) || ...);
+      },
+      this->cmd_ref.get().args
+    );
+    // clang-format on
+
+    return 1;
+  }
+
+  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags) const {
+    for (std::size_t i = 0; i < flags.size(); ++i) {
+      auto const flag = flags.substr(i, 1);
+      auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
+      if (!it) throw UnknownArgument(map.exec_path, flag);
+      if (it->type != ArgType::FLG) {
+        throw WrongType(map.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
+      }
+
+      // clang-format off
+      std::size_t idx = 0;
+      std::apply(
+        [this, &map, &it, &idx](auto&&... arg) {
+          (void)(( // cast to void to suppress unused warning
+          idx == it->tuple_idx
+            ? (apply_action(this->cmd_ref.get(), map, arg, std::nullopt), true)
+            : (++idx, false)
+          ) || ...);
+        },
+        this->cmd_ref.get().args
+      );
+      // clang-format on
+    }
+    return 1;
+  }
+
+  void check_contains_required(ArgsMap<Cmd const> const &map) const {
+    std::vector<std::string_view> missing_arg_names;
+    // clang-format off
+    std::apply(
+      [&map, &missing_arg_names](auto&&... arg) {
+        (void)(( // cast to void to suppress unused warning
+          arg.is_required && !map.has(arg.name)
+            ? missing_arg_names.push_back(arg.name)
+            : (void)0
+        ), ...);
       },
       this->cmd_ref.get().args
     );
 
     if (!missing_arg_names.empty())
-      throw MissingRequiredArguments(view.exec_path, missing_arg_names);
+      throw MissingRequiredArguments(map.exec_path, missing_arg_names);
 
-    if (view.subcmd != nullptr && !std::holds_alternative<std::monostate>(this->subparser)) {
+    if (map.has_subcmd()) {
       std::visit(overloaded {
         [](std::monostate) {},
-        [&view](auto const &p) { p.check_contains_required(*view.subcmd); }
+        [&map](auto const &p) { p.check_contains_required(std::get<ArgsMap<typename std::remove_reference_t<decltype(p)>::cmd_type>>(map.subcmd)); }
       }, this->subparser);
     }
     // clang-format on
   }
 
-  auto get_args_map(ArgsView const &view) const {
-    auto map = ArgsMap<Cmd const>{.exec_path = view.exec_path};
-    std::size_t pos_count = 0;
-
+  void set_defaults(ArgsMap<Cmd const> &map) const {
     // clang-format off
-    // TODO: this processes args in the order they were added to the program spec
-    // instead of the one they were inputted from CLI, which may cause weird behaviors
-    // (see ./cmd --version --help)
     std::apply(
-      [this, &map, &view, &pos_count](auto&&... arg) {
-        (this->process(arg, map, view, pos_count), ...);
+      [&map](auto&&... arg) {
+        (void)(( // cast to void to suppress unused warning
+          arg.has_default() && !map.has(arg.name)
+            ? (map.args[arg.name] = *arg.default_value, (void)0)
+            : (void)0
+        ), ...);
       },
       this->cmd_ref.get().args
     );
 
-    if (view.subcmd != nullptr && !std::holds_alternative<std::monostate>(this->subparser)) {
+    if (map.has_subcmd()) {
       std::visit(overloaded {
         [](std::monostate) {},
-        [&map, &view](auto const &p) { map.subcmd = p.get_args_map(*view.subcmd); }
+        [&map](auto &p) { p.set_defaults(std::get<ArgsMap<typename std::remove_reference_t<decltype(p)>::cmd_type>>(map.subcmd)); }
       }, this->subparser);
     }
     // clang-format on
-
-    return map;
-  }
-
-  template <typename T>
-  auto process(Arg<T> const &arg, ArgsMap<Cmd const> &map, ArgsView const &view, std::size_t &pos_count) const {
-    switch (arg.type) {
-      case ArgType::POS: {
-        std::print("process POS {}, pos_count {}\n", arg.name, pos_count);
-        if (pos_count < view.positionals.size()) {
-          apply_action(this->cmd_ref.get(), map, arg, view.positionals[pos_count]);
-          pos_count += 1;
-        } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
-        // check for arg being required is done in a later step
-        break;
-      }
-      case ArgType::OPT: {
-        std::print("process OPT {}\n", arg.name);
-        auto const opt = view.options.find(arg.name);
-        if (opt != view.options.end()) {
-          std::print("OPT {} found, value: {}\n", arg.name, opt->second.value_or("<unset>"));
-          // already checked if it has implicit value during parsing
-          apply_action(this->cmd_ref.get(), map, arg, opt->second);
-        } else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
-        // check for arg being required is done in a later step
-        break;
-      }
-      case ArgType::FLG: {
-        std::print("process FLG {}\n", arg.name);
-        if (view.options.contains(arg.name)) apply_action(this->cmd_ref.get(), map, arg, std::nullopt);
-        else if (arg.has_default()) map.args[arg.name] = *arg.default_value;
-        break;
-      }
-    }
   }
 };
 
 template <concepts::Command Cmd>
 auto parse(Cmd const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
-  auto const view = parser.get_args_view(args);
-  view.print_debug();
+  auto map = parser.get_args_map(args);
 
-  auto const map = parser.get_args_map(view);
   // 1) check_contains_required done separately in order to report all missing required args;
   // 2) also done after get_args_map in order to allow things such as `--help` to work
   // without actually requiring the required arguments
-  parser.check_contains_required(view);
+  parser.check_contains_required(map);
+  parser.set_defaults(map);
 
   return map;
 }

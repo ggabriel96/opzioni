@@ -4,7 +4,6 @@
 #include <any>
 #include <map>
 #include <string_view>
-#include <type_traits>
 #include <variant>
 
 #include "concepts.hpp"
@@ -27,6 +26,7 @@ struct ArgsMapOf<TypeList<Cmds...>> {
 
 template <concepts::Command Cmd>
 struct ArgsMap {
+  using cmd_type = Cmd;
   using arg_names = typename Cmd::arg_names;
   using arg_types = typename Cmd::arg_types;
 
@@ -44,6 +44,8 @@ struct ArgsMap {
   }
 
   [[nodiscard]] bool has(std::string_view const name) const noexcept { return args.contains(name); }
+
+  [[nodiscard]] bool has_subcmd() const noexcept { return !std::holds_alternative<std::monostate>(subcmd); }
 
   [[nodiscard]] auto size() const noexcept { return args.size(); }
 };
