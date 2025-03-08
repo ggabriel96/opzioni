@@ -12,12 +12,10 @@ namespace opz {
 constexpr char nl = '\n';
 constexpr std::string_view whitespace = " \f\n\r\t\v";
 
-std::string trim(std::string_view) noexcept;
-
+auto trim(std::string_view) noexcept -> std::string;
 auto limit_within(std::span<std::string>, std::size_t const) noexcept -> std::vector<std::vector<std::string>>;
 auto limit_within(std::string_view const, std::size_t const) noexcept -> std::vector<std::vector<std::string>>;
-
-std::string limit_string_within(std::string_view const, std::size_t const) noexcept;
+auto limit_string_within(std::string_view const, std::size_t const) noexcept -> std::string;
 
 constexpr bool is_alphabetic(char const ch) noexcept { return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'); }
 

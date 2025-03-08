@@ -7,7 +7,7 @@
 
 namespace opz {
 
-std::string trim(std::string_view sv) noexcept {
+auto trim(std::string_view sv) noexcept -> std::string {
   auto const begin = sv.find_first_not_of(whitespace);
   auto const end = sv.find_last_not_of(whitespace);
   return {sv, begin, end + 1 - begin};
@@ -33,16 +33,15 @@ auto limit_within(std::span<std::string> words, std::size_t const max_width) noe
 
 auto limit_within(std::string_view const text, std::size_t const max_width) noexcept
   -> std::vector<std::vector<std::string>> {
-  auto const range2str_view = [](auto const &r) { return std::string(&*r.begin(), std::ranges::distance(r)); };
   std::vector<std::string> words;
-  words.reserve(text.size());
+  words.reserve(text.size()); // TODO: keep this reserve?
   for (auto const word : text | std::views::split(' ')) {
-    words.push_back(range2str_view(word));
+    words.emplace_back(word.begin(), std::ranges::distance(word));
   }
   return limit_within(std::span(words), max_width);
 }
 
-std::string limit_string_within(std::string_view const text, std::size_t const max_width) noexcept {
+auto limit_string_within(std::string_view const text, std::size_t const max_width) noexcept -> std::string {
   auto const split_lines = limit_within(text, max_width);
   auto const lines = split_lines | std::views::transform([](auto const &words) { return fmt::join(words, " "); });
   return fmt::format("{}", fmt::join(lines, "\n"));
