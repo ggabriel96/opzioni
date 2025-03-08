@@ -49,6 +49,7 @@ auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p
 
 template <concepts::Command... Cmds>
 int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) { // TODO: add const to Cmds...?
+  // clang-format off
   return std::apply(
     [name](auto &&...elem) {
       int idx = 0, ret = -1;
@@ -57,6 +58,7 @@ int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) { // TODO: add
       return ret;
     },
     haystack);
+  // clang-format on
 }
 
 // +-----------------------+
@@ -217,17 +219,15 @@ struct CommandParser {
 
   std::size_t assign_option(ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args) const {
     std::size_t ret = 1;
-    auto value = option.value
-      .or_else([args, &ret]() -> std::optional<std::string_view> {
-        if (args.size() > 1 && looks_positional(args[1])) {
-          ret = 2;
-          return args[1];
-        }
-        return std::nullopt;
-      });
+    auto value = option.value.or_else([args, &ret]() -> std::optional<std::string_view> {
+      if (args.size() > 1 && looks_positional(args[1])) {
+        ret = 2;
+        return args[1];
+      }
+      return std::nullopt;
+    });
 
-    if (!value.has_value() && !option.arg.has_implicit)
-      throw MissingValue(map.exec_path, option.arg.name, 1, 0);
+    if (!value.has_value() && !option.arg.has_implicit) throw MissingValue(map.exec_path, option.arg.name, 1, 0);
 
     // clang-format off
     std::size_t idx = 0;

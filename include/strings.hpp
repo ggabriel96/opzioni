@@ -14,10 +14,8 @@ constexpr std::string_view whitespace = " \f\n\r\t\v";
 
 std::string trim(std::string_view) noexcept;
 
-auto limit_within(std::span<std::string>, std::size_t const) noexcept
-  -> std::vector<std::vector<std::string>>;
-auto limit_within(std::string_view const, std::size_t const) noexcept
-  -> std::vector<std::vector<std::string>>;
+auto limit_within(std::span<std::string>, std::size_t const) noexcept -> std::vector<std::vector<std::string>>;
+auto limit_within(std::string_view const, std::size_t const) noexcept -> std::vector<std::vector<std::string>>;
 
 std::string limit_string_within(std::string_view const, std::size_t const) noexcept;
 
