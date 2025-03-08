@@ -8,7 +8,7 @@ project(
 # +--------------+
 # | Dependencies |
 # +--------------+
-fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
+fmt_dep = dependency('fmt', version: ['>=11.1.1', '<12.0.0'])
 
 # +--------------------+
 # | Library definition |

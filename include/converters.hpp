@@ -1,9 +1,11 @@
 #ifndef OPZIONI_CONVERTERS_H
 #define OPZIONI_CONVERTERS_H
 
+#include <algorithm>
 #include <any>
 #include <cerrno>
 #include <charconv>
+#include <cstdlib>
 #include <ranges>
 #include <string_view>
 

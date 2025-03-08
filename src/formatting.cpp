@@ -39,7 +39,7 @@ namespace opz {
 
 [[nodiscard]] std::string ArgHelpEntry::format_for_help_description() const noexcept {
   return fmt::format(
-    this->help,
+    fmt::runtime(help),
     fmt::arg("name", name),
     fmt::arg("abbrev", abbrev),
     fmt::arg("default_value", default_value.value_or("")),

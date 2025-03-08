@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace opz {
 
