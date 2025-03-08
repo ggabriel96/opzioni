@@ -17,6 +17,7 @@ enum struct Action {
   CSV,
   PRINT_HELP,
   PRINT_VERSION,
+  // TODO: custom user actions?
 };
 
 // +---------------------------------+
