@@ -75,7 +75,15 @@ bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
 // |             HelpFormatter             |
 // +---------------------------------------+
 
-void HelpFormatter::print_title() const noexcept { fmt::print("{} {}\n", name, version); }
+void HelpFormatter::print_title() const noexcept {
+  fmt::print(
+    "{: <{}}{}{: >{}}\n",
+    parent_cmds_names,
+    parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
+    name,
+    version,
+    version.size() + static_cast<int>(!version.empty()));
+}
 
 void HelpFormatter::print_intro() const noexcept {
   if (introduction.length() <= msg_width) {
@@ -85,7 +93,7 @@ void HelpFormatter::print_intro() const noexcept {
   }
 }
 
-void HelpFormatter::print_long_usage() const noexcept {
+void HelpFormatter::print_usage() const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
   using std::views::drop, std::views::filter, std::views::take;
@@ -94,17 +102,18 @@ void HelpFormatter::print_long_usage() const noexcept {
   words.reserve(1 + args.size() + cmds.size());
 
   auto insert = std::back_inserter(words);
-  words.emplace_back(name);
+  words.emplace_back(fmt::format(
+    "{: <{}}{}", parent_cmds_names, parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()), name));
   transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage_summary);
   transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage_summary);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().format_for_usage_summary()));
+    words.push_back(format("{{{}}}", cmds.front().format_for_help_index()));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().format_for_usage_summary()));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &CmdHelpEntry::format_for_usage_summary);
-    words.push_back(format("{}}}", cmds.back().format_for_usage_summary()));
+    words.push_back(format("{{{},", cmds.front().format_for_help_index()));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &CmdHelpEntry::format_for_help_index);
+    words.push_back(format("{}}}", cmds.back().format_for_help_index()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces

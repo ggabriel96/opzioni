@@ -66,7 +66,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     if (meta.implicit_value.has_value())
       throw "Implicit value cannot be used with positionals because they always take a value from the command-line";
     if (meta.action == Action::COUNT || meta.action == Action::PRINT_HELP || meta.action == Action::PRINT_VERSION)
-      throw "The COUNT, PRINT_HELP, and PRINT_VERSION actions cannot be used with positionals because they always take a value from the command-line";
+      throw "The COUNT, PRINT_HELP, and PRINT_VERSION actions cannot be used with positionals because they always take "
+            "a value from the command-line";
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
@@ -96,7 +97,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
       if (!meta.implicit_value.has_value()) throw "The COUNT action requires an implicit value";
     }
     if (meta.action == Action::PRINT_HELP || meta.action == Action::PRINT_VERSION)
-      throw "The PRINT_HELP and PRINT_VERSION actions cannot be used with options because they always take a value from the command-line";
+      throw "The PRINT_HELP and PRINT_VERSION actions cannot be used with options because they always take a value "
+            "from the command-line";
     if (meta.action == Action::APPEND || meta.action == Action::CSV) {
       if (!concepts::Container<T>)
         throw "The APPEND and CSV actions require that the argument type satisfy the opz::concepts::Container concept";

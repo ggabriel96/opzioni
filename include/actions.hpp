@@ -15,6 +15,10 @@ namespace opz {
 
 namespace actions {
 
+struct ExtraInfo {
+  std::string_view parent_cmds_names{};
+};
+
 template <concepts::Command Cmd, typename T>
 void assign_to(ArgsMap<Cmd const> &map, Arg<T> const &arg, T const &&value) {
   auto const [_, inserted] = map.args.try_emplace(arg.name, value);
@@ -42,15 +46,15 @@ void csv(ArgsMap<Cmd const> &map, Arg<C> const &arg, C const &&value) {
 }
 
 template <concepts::Command Cmd>
-void print_help(Cmd const &cmd) {
-  HelpFormatter formatter(cmd);
+void print_help(Cmd const &cmd, std::string_view const parent_cmds_names) {
+  HelpFormatter formatter(cmd, parent_cmds_names);
   formatter.print_title();
   if (!cmd.introduction.empty()) {
     std::cout << nl;
     formatter.print_intro();
   }
   std::cout << nl;
-  formatter.print_long_usage();
+  formatter.print_usage();
   std::cout << nl;
   formatter.print_help();
   std::cout << nl;
@@ -68,7 +72,8 @@ void print_version(Cmd const &cmd) {
 
 template <concepts::Command Cmd, typename T>
 void apply_action(
-  Cmd const &cmd, ArgsMap<Cmd const> &map, Arg<T> const &arg, std::optional<std::string_view> const value) {
+  Cmd const &cmd, ArgsMap<Cmd const> &map, Arg<T> const &arg, std::optional<std::string_view> const value,
+  actions::ExtraInfo const extra_info) {
   switch (arg.action) {
     case Action::APPEND:
       if constexpr (concepts::Container<T>) {
@@ -97,7 +102,7 @@ void apply_action(
       break;
 
     case Action::PRINT_HELP:
-      actions::print_help(cmd);
+      actions::print_help(cmd, extra_info.parent_cmds_names);
       break;
 
     case Action::PRINT_VERSION:

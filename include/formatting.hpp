@@ -71,16 +71,18 @@ struct HelpFormatter {
   std::string_view name;
   std::string_view version;
   std::string_view introduction;
+  std::string_view parent_cmds_names{};
   std::vector<ArgHelpEntry> args;
   std::vector<CmdHelpEntry> cmds;
   std::size_t amount_pos;
   std::size_t msg_width;
 
   template <typename... CmdArgs> // don't really care about them here
-  explicit HelpFormatter(Command<CmdArgs...> const &cmd)
+  explicit HelpFormatter(Command<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
       : name(cmd.name),
         version(cmd.version),
         introduction(cmd.introduction),
+        parent_cmds_names(parent_cmds_names),
         amount_pos(cmd.amount_pos),
         msg_width(cmd.msg_width) {
     args.reserve(std::tuple_size_v<decltype(cmd.args)>);
@@ -100,7 +102,7 @@ struct HelpFormatter {
 
   void print_title() const noexcept;
   void print_intro() const noexcept;
-  void print_long_usage() const noexcept;
+  void print_usage() const noexcept;
   void print_help() const noexcept;
   void print_details() const noexcept;
   [[nodiscard]] std::size_t help_padding_size() const noexcept;
