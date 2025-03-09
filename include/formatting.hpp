@@ -34,6 +34,7 @@ struct CmdHelpEntry {
 struct ArgHelpEntry {
   ArgType type;
   std::string_view name;
+  std::string_view cmd_name;
   std::string_view abbrev;
   std::string_view help;
   bool is_required;
@@ -42,9 +43,10 @@ struct ArgHelpEntry {
   Action action;
 
   template <typename T>
-  explicit ArgHelpEntry(Arg<T> from)
+  ArgHelpEntry(std::string_view cmd_name, Arg<T> from)
       : type(from.type),
         name(from.name),
+        cmd_name(cmd_name),
         abbrev(from.abbrev),
         help(from.help),
         is_required(from.is_required),
@@ -84,7 +86,7 @@ struct HelpFormatter {
     args.reserve(std::tuple_size_v<decltype(cmd.args)>);
     // clang-format off
     std::apply( // cast to void to suppress unused warning
-      [this](auto&&... arg) { (void) ((this->args.emplace_back(arg)), ...); },
+      [this, &cmd](auto&&... arg) { (void) ((this->args.emplace_back(cmd.name, arg)), ...); },
       cmd.args
     );
     std::apply( // cast to void to suppress unused warning

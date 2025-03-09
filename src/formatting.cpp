@@ -42,6 +42,7 @@ namespace opz {
     fmt::runtime(help),
     fmt::arg("name", name),
     fmt::arg("abbrev", abbrev),
+    fmt::arg("cmd_name", cmd_name),
     fmt::arg("default_value", default_value.value_or("")),
     fmt::arg("implicit_value", implicit_value.value_or("")));
   // fmt::arg("gather_amount", gather_amount));
