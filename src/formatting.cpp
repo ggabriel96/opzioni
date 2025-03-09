@@ -6,15 +6,15 @@ namespace opz {
 // |             CmdHelpEntry             |
 // +--------------------------------------+
 
-[[nodiscard]] std::string CmdHelpEntry::format_for_help_description() const noexcept {
+[[nodiscard]] std::string CmdHelpEntry::format_for_usage() const noexcept { return std::string(name); }
+
+[[nodiscard]] std::string CmdHelpEntry::format_for_index_entry() const noexcept {
+  return std::string(name);
+}
+
+[[nodiscard]] std::string CmdHelpEntry::format_for_index_description() const noexcept {
   return std::string(introduction);
 }
-
-[[nodiscard]] std::string CmdHelpEntry::format_for_help_index() const noexcept {
-  return this->format_for_usage_summary();
-}
-
-[[nodiscard]] std::string CmdHelpEntry::format_for_usage_summary() const noexcept { return std::string(name); }
 
 // +--------------------------------------+
 // |             ArgHelpEntry             |
@@ -37,7 +37,21 @@ namespace opz {
   return fmt::format("{}{}", dashes, name);
 }
 
-[[nodiscard]] std::string ArgHelpEntry::format_for_help_description() const noexcept {
+[[nodiscard]] std::string ArgHelpEntry::format_for_usage() const noexcept {
+  auto format = format_base_usage();
+  if (type == ArgType::POS) format = "<" + format + ">";
+  if (!is_required) format = "[" + format + "]";
+  return format;
+}
+
+[[nodiscard]] std::string ArgHelpEntry::format_for_index_entry() const noexcept {
+  if (type == ArgType::POS) return format_base_usage();
+  if (has_abbrev()) return fmt::format("-{}, {}", abbrev, format_base_usage());
+  if (name.length() == 1) return format_base_usage();
+  return fmt::format("    {}", format_base_usage());
+}
+
+[[nodiscard]] std::string ArgHelpEntry::format_for_index_description() const noexcept {
   return fmt::format(
     fmt::runtime(help),
     fmt::arg("name", name),
@@ -46,20 +60,6 @@ namespace opz {
     fmt::arg("default_value", default_value.value_or("")),
     fmt::arg("implicit_value", implicit_value.value_or("")));
   // fmt::arg("gather_amount", gather_amount));
-}
-
-[[nodiscard]] std::string ArgHelpEntry::format_for_help_index() const noexcept {
-  if (type == ArgType::POS) return format_base_usage();
-  if (has_abbrev()) return fmt::format("-{}, {}", abbrev, format_base_usage());
-  if (name.length() == 1) return format_base_usage();
-  return fmt::format("    {}", format_base_usage());
-}
-
-[[nodiscard]] std::string ArgHelpEntry::format_for_usage_summary() const noexcept {
-  auto format = format_base_usage();
-  if (type == ArgType::POS) format = "<" + format + ">";
-  if (!is_required) format = "[" + format + "]";
-  return format;
 }
 
 bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
@@ -104,16 +104,16 @@ void HelpFormatter::print_usage() const noexcept {
   auto insert = std::back_inserter(words);
   words.emplace_back(fmt::format(
     "{: <{}}{}", parent_cmds_names, parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()), name));
-  transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage_summary);
-  transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage_summary);
+  transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage);
+  transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage);
 
   if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().format_for_help_index()));
+    words.push_back(format("{{{}}}", cmds.front().format_for_index_entry()));
   } else if (cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().format_for_help_index()));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &CmdHelpEntry::format_for_help_index);
-    words.push_back(format("{}}}", cmds.back().format_for_help_index()));
+    words.push_back(format("{{{},", cmds.front().format_for_index_entry()));
+    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &CmdHelpEntry::format_for_index_entry);
+    words.push_back(format("{}}}", cmds.back().format_for_index_entry()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
@@ -166,7 +166,7 @@ void HelpFormatter::print_details() const noexcept {
 
 [[nodiscard]] std::size_t HelpFormatter::help_padding_size() const noexcept {
   using std::views::transform;
-  auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_help_index().length(); };
+  auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_index_entry().length(); };
   std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
   std::size_t const required_length_cmds = cmds.empty() ? 0 : std::ranges::max(cmds | transform(required_length));
   return std::max(required_length_args, required_length_cmds);

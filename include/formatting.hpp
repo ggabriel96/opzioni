@@ -24,9 +24,9 @@ struct CmdHelpEntry {
   template <typename... Ts>
   explicit CmdHelpEntry(Command<Ts...> from) : name(from.name), introduction(from.introduction) {}
 
-  [[nodiscard]] std::string format_for_help_description() const noexcept;
-  [[nodiscard]] std::string format_for_help_index() const noexcept;
-  [[nodiscard]] std::string format_for_usage_summary() const noexcept;
+  [[nodiscard]] std::string format_for_usage() const noexcept;
+  [[nodiscard]] std::string format_for_index_entry() const noexcept;
+  [[nodiscard]] std::string format_for_index_description() const noexcept;
 
   auto operator<=>(CmdHelpEntry const &other) const noexcept { return name <=> other.name; }
 };
@@ -60,9 +60,9 @@ struct ArgHelpEntry {
   [[nodiscard]] bool has_implicit() const noexcept;
 
   [[nodiscard]] std::string format_base_usage() const noexcept;
-  [[nodiscard]] std::string format_for_help_description() const noexcept;
-  [[nodiscard]] std::string format_for_help_index() const noexcept;
-  [[nodiscard]] std::string format_for_usage_summary() const noexcept;
+  [[nodiscard]] std::string format_for_usage() const noexcept;
+  [[nodiscard]] std::string format_for_index_entry() const noexcept;
+  [[nodiscard]] std::string format_for_index_description() const noexcept;
 
   bool operator<(ArgHelpEntry const &other) const noexcept;
 };
@@ -109,13 +109,13 @@ struct HelpFormatter {
 
   void print_arg_help(auto const &arg, std::size_t const padding_size) const noexcept {
     using std::views::drop;
-    auto const description = arg.format_for_help_description();
+    auto const description = arg.format_for_index_description();
     // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
     // then -4 again because we add 4 spaces between the arg usage and description
     auto const description_lines = limit_within(description, msg_width - padding_size - 8 - 4);
 
     fmt::print(
-      "    {:<{}}    {}\n", arg.format_for_help_index(), padding_size, fmt::join(description_lines.front(), " "));
+      "    {:<{}}    {}\n", arg.format_for_index_entry(), padding_size, fmt::join(description_lines.front(), " "));
 
     for (auto const &line : description_lines | drop(1)) {
       // the same 4 spaces of left margin, then additional 4 spaces of indentation
