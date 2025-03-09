@@ -139,7 +139,7 @@ void HelpFormatter::print_help() const noexcept {
   }
 
   if (!cmds.empty()) {
-    fmt::print("{}Commands:\n", pending_nl);
+    fmt::print("{}Subcommands:\n", pending_nl);
     for (auto const &arg : cmds) {
       print_arg_help(arg, padding_size);
     }
