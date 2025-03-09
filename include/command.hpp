@@ -29,7 +29,6 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   std::size_t msg_width = 100; // TODO: expose
 
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
-  // TODO: make them const?
   std::tuple<SubCmds...> subcmds;
 
   consteval Command() = default;

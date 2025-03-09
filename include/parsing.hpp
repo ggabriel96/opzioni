@@ -33,7 +33,7 @@ constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
 constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 
 template <typename... Ts>
-auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p) {
+auto find_arg_if(std::tuple<Arg<Ts>...> const haystack, std::predicate<ArgView> auto p) {
   return std::apply(
     [&p](auto &&...elem) {
       std::size_t idx = 0;
@@ -48,7 +48,7 @@ auto find_arg_if(std::tuple<Arg<Ts>...> haystack, std::predicate<ArgView> auto p
 }
 
 template <concepts::Command... Cmds>
-int find_cmd(std::tuple<Cmds...> haystack, std::string_view name) { // TODO: add const to Cmds...?
+int find_cmd(std::tuple<Cmds...> const haystack, std::string_view const name) {
   // clang-format off
   return std::apply(
     [name](auto &&...elem) {
