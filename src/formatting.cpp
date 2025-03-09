@@ -8,9 +8,7 @@ namespace opz {
 
 [[nodiscard]] std::string CmdHelpEntry::format_for_usage() const noexcept { return std::string(name); }
 
-[[nodiscard]] std::string CmdHelpEntry::format_for_index_entry() const noexcept {
-  return std::string(name);
-}
+[[nodiscard]] std::string CmdHelpEntry::format_for_index_entry() const noexcept { return std::string(name); }
 
 [[nodiscard]] std::string CmdHelpEntry::format_for_index_description() const noexcept {
   return std::string(introduction);
