@@ -99,7 +99,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
       if (!concepts::Container<T>)
         throw "The APPEND and CSV actions require that the argument type satisfy the opz::concepts::Container concept";
       if (meta.implicit_value.has_value())
-        throw "The APPEND and CSV actions do not work with implicit value since they require a value from the command-line";
+        throw "The APPEND and CSV actions do not work with implicit value since they require a value from the "
+              "command-line";
     }
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);

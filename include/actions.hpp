@@ -38,7 +38,7 @@ void count(ArgsMap<Cmd const> &map, std::string_view const name, I const &implic
 
 template <concepts::Command Cmd, concepts::Container C>
 void csv(ArgsMap<Cmd const> &map, Arg<C> const &arg, C const &&value) {
-    assign_to(map, arg, std::forward<C const>(value));
+  assign_to(map, arg, std::forward<C const>(value));
 }
 
 template <concepts::Command Cmd>
@@ -74,8 +74,7 @@ void apply_action(
       if constexpr (concepts::Container<T>) {
         if (!value.has_value()) throw MissingValue(map.exec_path, arg.name, 1, 0);
         actions::append_to<Cmd, T>(map, arg, convert<typename T::value_type>(*value));
-      }
-      else throw std::logic_error("TODO: APPEND apply_action called with non-container type leaked to runtime");
+      } else throw std::logic_error("TODO: APPEND apply_action called with non-container type leaked to runtime");
       break;
 
     case Action::ASSIGN:
@@ -87,16 +86,14 @@ void apply_action(
       if constexpr (concepts::Integer<T>) {
         if (value.has_value()) throw MissingValue(map.exec_path, arg.name, 1, 0);
         actions::count(map, arg.name, *arg.implicit_value);
-      }
-      else throw std::logic_error("TODO: COUNT apply_action called with non-integer type leaked to runtime");
+      } else throw std::logic_error("TODO: COUNT apply_action called with non-integer type leaked to runtime");
       break;
 
     case Action::CSV:
       if constexpr (concepts::Container<T>) {
         if (!value.has_value()) throw MissingValue(map.exec_path, arg.name, 1, 0);
         actions::csv(map, arg, convert<T>(*value));
-      }
-      else throw std::logic_error("TODO: CSV apply_action called with non-container type leaked to runtime");
+      } else throw std::logic_error("TODO: CSV apply_action called with non-container type leaked to runtime");
       break;
 
     case Action::PRINT_HELP:
