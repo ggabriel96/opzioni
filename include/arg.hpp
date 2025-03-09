@@ -35,6 +35,22 @@ struct ArgMeta {
 
 std::string_view to_string(ArgType const at) noexcept;
 
+constexpr static ArgMeta<bool> default_help = {
+  .help = "Display this information",
+  .is_required = false,
+  .default_value = false,
+  .implicit_value = true,
+  .action = Action::PRINT_HELP,
+};
+
+constexpr static ArgMeta<bool> default_version = {
+  .help = "Display {cmd_name}'s version",
+  .is_required = false,
+  .default_value = false,
+  .implicit_value = true,
+  .action = Action::PRINT_VERSION,
+};
+
 // +---------------------------------+
 // |               Arg               |
 // +---------------------------------+

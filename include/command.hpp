@@ -176,18 +176,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 };
 
 consteval auto new_cmd(std::string_view name, std::string_view version = "") {
-  auto p = Command<StringList<"help">, TypeList<bool>>(name, version);
-  std::get<0>(p.args) = Arg<bool>{
-    .type = ArgType::FLG,
-    .name = "help",
-    .abbrev = "h",
-    .help = "Display this information",
-    .is_required = false,
-    .default_value = false,
-    .implicit_value = true,
-    .action = Action::PRINT_HELP,
-  };
-  return p;
+  return Command<StringList<>, TypeList<>>(name, version);
 }
 
 } // namespace opz
