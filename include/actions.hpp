@@ -16,15 +16,29 @@ namespace opz {
 namespace actions {
 
 template <concepts::Command Cmd, typename T>
-void assign_to(ArgsMap<Cmd const> &map, std::string_view const name, T const &&value) {
-  auto [it, inserted] = map.args.try_emplace(name, value);
-  if (!inserted) throw DuplicateAssignment(name);
+void assign_to(ArgsMap<Cmd const> &map, Arg<T> const &arg, T const &&value) {
+  auto const [_, inserted] = map.args.try_emplace(arg.name, value);
+  if (!inserted) throw UnexpectedValue(map.exec_path, arg.name, 1, 2);
+}
+
+template <concepts::Command Cmd, concepts::Container C>
+void append_to(ArgsMap<Cmd const> &map, Arg<C> const &arg, typename C::value_type const &&value) {
+  if (auto it = map.args.find(arg.name); it != map.args.end()) {
+    std::any_cast<C &>(it->second).emplace_back(value);
+  } else {
+    assign_to(map, arg, C{value});
+  }
 }
 
 template <concepts::Command Cmd, concepts::Integer I>
 void count(ArgsMap<Cmd const> &map, std::string_view const name, I const &implicit_value) {
   auto [it, inserted] = map.args.try_emplace(name, implicit_value);
-  if (!inserted) it->second = std::any_cast<I>(it->second) + implicit_value;
+  if (!inserted) std::any_cast<I &>(it->second) += implicit_value;
+}
+
+template <concepts::Command Cmd, concepts::Container C>
+void csv(ArgsMap<Cmd const> &map, Arg<C> const &arg, C const &&value) {
+    assign_to(map, arg, std::forward<C const>(value));
 }
 
 template <concepts::Command Cmd>
@@ -56,21 +70,43 @@ template <concepts::Command Cmd, typename T>
 void apply_action(
   Cmd const &cmd, ArgsMap<Cmd const> &map, Arg<T> const &arg, std::optional<std::string_view> const value) {
   switch (arg.action) {
-    case Action::ASSIGN:
-      actions::assign_to(map, arg.name, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
-      break;
-    case Action::COUNT:
-      if constexpr (concepts::Integer<T>) actions::count(map, arg.name, *arg.implicit_value);
-      else {
-        throw std::logic_error("TODO: apply_action called with non-integer type leaked to runtime");
+    case Action::APPEND:
+      if constexpr (concepts::Container<T>) {
+        if (!value.has_value()) throw MissingValue(map.exec_path, arg.name, 1, 0);
+        actions::append_to<Cmd, T>(map, arg, convert<typename T::value_type>(*value));
       }
+      else throw std::logic_error("TODO: APPEND apply_action called with non-container type leaked to runtime");
       break;
+
+    case Action::ASSIGN:
+      if (!value.has_value() && !arg.has_implicit()) throw MissingValue(map.exec_path, arg.name, 1, 0);
+      actions::assign_to(map, arg, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
+      break;
+
+    case Action::COUNT:
+      if constexpr (concepts::Integer<T>) {
+        if (value.has_value()) throw MissingValue(map.exec_path, arg.name, 1, 0);
+        actions::count(map, arg.name, *arg.implicit_value);
+      }
+      else throw std::logic_error("TODO: COUNT apply_action called with non-integer type leaked to runtime");
+      break;
+
+    case Action::CSV:
+      if constexpr (concepts::Container<T>) {
+        if (!value.has_value()) throw MissingValue(map.exec_path, arg.name, 1, 0);
+        actions::csv(map, arg, convert<T>(*value));
+      }
+      else throw std::logic_error("TODO: CSV apply_action called with non-container type leaked to runtime");
+      break;
+
     case Action::PRINT_HELP:
       actions::print_help(cmd);
       break;
+
     case Action::PRINT_VERSION:
       actions::print_version(cmd);
       break;
+
     default:
       break;
   }

@@ -64,6 +64,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     if (meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
     if (meta.implicit_value.has_value())
       throw "Positionals cannot use implicit value because they always take a value from the command-line";
+    if (meta.action == Action::COUNT)
+      throw "Positionals cannot use the COUNT action because they always take a value from the command-line";
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
@@ -87,7 +89,16 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
     if (meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
-    if (meta.action == Action::COUNT && !concepts::Integer<T>) throw "The count action only works with integer types";
+    if (meta.action == Action::COUNT) {
+      if (!concepts::Integer<T>) throw "The COUNT action only works with integer types";
+      if (!meta.implicit_value.has_value()) throw "The COUNT action requires an implicit value";
+    }
+    if (meta.action == Action::APPEND || meta.action == Action::CSV) {
+      if (!concepts::Container<T>)
+        throw "The APPEND and CSV actions require that the argument type satisfy the opz::concepts::Container concept";
+      if (meta.implicit_value.has_value())
+        throw "The APPEND and CSV actions do not work with implicit value since they require a value from the command-line";
+    }
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
@@ -117,7 +128,10 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     // TODO: can we try to be smart about default implicit values of other types?
     if (!std::is_same_v<T, bool> && !meta.implicit_value)
       throw "Non-boolean flags require that the implicit value is specified";
-    if (meta.action == Action::COUNT && !concepts::Integer<T>) throw "The count action only works with integer types";
+    if (meta.action == Action::COUNT) {
+      if (!concepts::Integer<T>) throw "The COUNT action only works with integer types";
+      if (!meta.implicit_value.has_value()) throw "The COUNT action requires an implicit value";
+    }
 
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(

@@ -51,9 +51,10 @@ template <concepts::Container Container>
 auto convert(std::string_view value) -> Container {
   Container container;
   if (!value.empty()) {
-    auto const range2str_view = [](auto const &r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); };
-    auto const values = value | std::views::split(',') | std::views::transform(range2str_view);
-    std::ranges::transform(values, std::back_inserter(container), &convert<typename Container::value_type>);
+    for (auto const val : value | std::views::split(',')) {
+      std::string_view const v{val.begin(), val.end()};
+      container.emplace_back(convert<typename Container::value_type>(v));
+    }
   }
   return container;
 }
