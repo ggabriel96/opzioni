@@ -61,7 +61,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, typename T = std::string_view>
   consteval auto pos(ArgMeta<T> meta) {
-    if (meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
+    if (meta.is_required.value_or(false) && meta.default_value.has_value())
+      throw "Required arguments cannot have default values";
     if (meta.implicit_value.has_value())
       throw "Positionals cannot use implicit value because they always take a value from the command-line";
     if (meta.action == Action::COUNT)
@@ -88,7 +89,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto opt(ArgMeta<T> meta) {
     // TODO: add thorough validations
     static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
-    if (meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
+    if (meta.is_required.value_or(false) && meta.default_value.has_value())
+      throw "Required arguments cannot have default values";
     if (meta.action == Action::COUNT) {
       if (!concepts::Integer<T>) throw "The COUNT action only works with integer types";
       if (!meta.implicit_value.has_value()) throw "The COUNT action requires an implicit value";
@@ -124,7 +126,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   template <FixedString Name, FixedString Abbrev, typename T = bool>
   consteval auto flg(ArgMeta<T> meta) {
     static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
-    if (meta.is_required) throw "Flags cannot be required";
+    if (meta.is_required.value_or(false)) throw "Flags cannot be required";
     // TODO: can we try to be smart about default implicit values of other types?
     if (!std::is_same_v<T, bool> && !meta.implicit_value)
       throw "Non-boolean flags require that the implicit value is specified";
