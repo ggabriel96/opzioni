@@ -126,14 +126,14 @@ struct CommandParser {
             index += assign_positional(map, args.subspan(index), current_positional_idx);
             ++current_positional_idx;
           }
-        } else if (auto const option = try_parse_option(cli_arg, map.exec_path); option.has_value()) {
+        } else if (auto const option = try_parse_option(cli_arg); option.has_value()) {
           index += assign_option(map, *option, args.subspan(index));
         } else if (auto const flag = get_if_long_flag(cli_arg); !flag.empty()) {
           index += assign_long_flag(map, flag);
         } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
           index += assign_short_flags(map, flags);
         } else {
-          throw UnknownArgument(map.exec_path, cli_arg);
+          throw UnknownArgument(this->cmd_ref.get().name, cli_arg);
         }
       }
     }
@@ -142,7 +142,7 @@ struct CommandParser {
 
   std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
-      throw UnexpectedPositional(map.exec_path, args[0], this->cmd_ref.get().amount_pos);
+      throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos);
 
     // clang-format off
     std::size_t idx = 0;
@@ -162,7 +162,7 @@ struct CommandParser {
     return 1;
   }
 
-  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg, std::string_view const cmd_name) {
+  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) {
     auto const num_of_dashes = whole_arg.find_first_not_of('-');
     auto const eq_idx = whole_arg.find('=', num_of_dashes);
     bool const has_equals = eq_idx != std::string_view::npos;
@@ -246,9 +246,9 @@ struct CommandParser {
 
   std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag) const {
     auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
-    if (!it) throw UnknownArgument(map.exec_path, flag);
+    if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
     if (it->type != ArgType::FLG) {
-      throw WrongType(map.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
+      throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG));
     }
 
     // clang-format off
@@ -272,9 +272,9 @@ struct CommandParser {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
       auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
-      if (!it) throw UnknownArgument(map.exec_path, flag);
+      if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
       if (it->type != ArgType::FLG) {
-        throw WrongType(map.exec_path, flag, to_string(it->type), to_string(ArgType::FLG));
+        throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG));
       }
 
       // clang-format off
@@ -309,7 +309,7 @@ struct CommandParser {
     );
 
     if (!missing_arg_names.empty())
-      throw MissingRequiredArguments(map.exec_path, missing_arg_names);
+      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names);
 
     if (map.has_subcmd()) {
       std::visit(overloaded {
