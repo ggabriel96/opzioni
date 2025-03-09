@@ -46,10 +46,9 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
       subcmds = other.subcmds;
   }
 
-  consteval auto intro(std::string_view intro) const noexcept {
-    auto p = *this;
-    p.introduction = intro;
-    return p;
+  consteval auto intro(std::string_view intro) noexcept {
+    this->introduction = intro;
+    return *this;
   }
 
   template <concepts::Command NewSubCmd>
