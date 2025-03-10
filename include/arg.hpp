@@ -70,6 +70,7 @@ struct Arg {
   std::optional<T> implicit_value{};
   Action action = Action::ASSIGN;
   //   std::size_t gather_amount = 1;
+  // TODO: add deprecated option
 
   [[nodiscard]] constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   [[nodiscard]] constexpr bool has_default() const noexcept { return default_value.has_value(); }
