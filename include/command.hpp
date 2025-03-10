@@ -8,6 +8,7 @@
 #include "concepts.hpp"
 #include "fixed_string.hpp"
 #include "get_type.hpp"
+#include "strings.hpp"
 
 namespace opz {
 
@@ -32,7 +33,9 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   std::tuple<SubCmds...> subcmds;
 
   consteval Command() = default;
-  explicit consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {}
+  explicit consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {
+    if (!is_valid_name(name)) throw "Command names must neither be empty nor contain any whitespace";
+  }
 
   template <concepts::Command Cmd>
   consteval Command(Cmd const &other) {
@@ -45,7 +48,9 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
       subcmds = other.subcmds;
   }
 
-  consteval auto intro(std::string_view intro) noexcept {
+  consteval auto intro(std::string_view intro) {
+    if (!is_valid_intro(intro))
+      throw "Command intros, if specified, must neither be empty nor start or end with whitespace";
     this->introduction = intro;
     return *this;
   }
@@ -59,14 +64,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, typename T = std::string_view>
   consteval auto pos(ArgMeta<T> meta) {
-    if (meta.is_required.value_or(false) && meta.default_value.has_value())
-      throw "Required arguments cannot have default values";
-    if (meta.implicit_value.has_value())
-      throw "Implicit value cannot be used with positionals because they always take a value from the command-line";
-    if (meta.action == Action::COUNT || meta.action == Action::PRINT_HELP || meta.action == Action::PRINT_VERSION)
-      throw "The COUNT, PRINT_HELP, and PRINT_VERSION actions cannot be used with positionals because they always take "
-            "a value from the command-line";
-
+    validate_common<Name, "">(meta);
+    validate_pos(meta);
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
@@ -86,25 +85,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
   consteval auto opt(ArgMeta<T> meta) {
-    // TODO: add thorough validations
-    static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
-    if (meta.is_required.value_or(false) && meta.default_value.has_value())
-      throw "Required arguments cannot have default values";
-    if (meta.action == Action::COUNT) {
-      if (!concepts::Integer<T>) throw "The COUNT action only works with integer types";
-      if (!meta.implicit_value.has_value()) throw "The COUNT action requires an implicit value";
-    }
-    if (meta.action == Action::PRINT_HELP || meta.action == Action::PRINT_VERSION)
-      throw "The PRINT_HELP and PRINT_VERSION actions cannot be used with options because they always take a value "
-            "from the command-line";
-    if (meta.action == Action::APPEND || meta.action == Action::CSV) {
-      if (!concepts::Container<T>)
-        throw "The APPEND and CSV actions require that the argument type satisfy the opz::concepts::Container concept";
-      if (meta.implicit_value.has_value())
-        throw "The APPEND and CSV actions do not work with implicit value since they require a value from the "
-              "command-line";
-    }
-
+    validate_common<Name, Abbrev>(meta);
+    validate_opt(meta);
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
@@ -128,16 +110,8 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev, typename T = bool>
   consteval auto flg(ArgMeta<T> meta) {
-    static_assert(Abbrev.size <= 1, "Abbreviations must be a single character");
-    if (meta.is_required.value_or(false)) throw "Flags cannot be required";
-    // TODO: can we try to be smart about default implicit values of other types?
-    if (!std::is_same_v<T, bool> && !meta.implicit_value)
-      throw "Non-boolean flags require that the implicit value is specified";
-    if (meta.action == Action::COUNT) {
-      if (!concepts::Integer<T>) throw "The COUNT action only works with integer types";
-      if (!meta.implicit_value.has_value()) throw "The COUNT action requires an implicit value";
-    }
-
+    validate_common<Name, Abbrev>(meta);
+    validate_flg(meta);
     Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
