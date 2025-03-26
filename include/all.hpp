@@ -3,7 +3,7 @@
 
 #include "actions.hpp"
 #include "arg.hpp"
-#include "command.hpp"
+#include "cmd.hpp"
 #include "fixed_string.hpp"
 #include "get_type.hpp"
 #include "parsing.hpp"

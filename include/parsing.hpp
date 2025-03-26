@@ -58,7 +58,7 @@ auto find_arg_if(std::tuple<Arg<Ts>...> const haystack, std::predicate<ArgView> 
     haystack);
 }
 
-template <concepts::Command... Cmds>
+template <concepts::Cmd... Cmds>
 int find_cmd(std::tuple<Cmds...> const haystack, std::string_view const name) {
   // clang-format off
   return std::apply(
@@ -82,17 +82,17 @@ struct ParsedOption {
 // |   main parsing code   |
 // +-----------------------+
 
-template <concepts::Command>
+template <concepts::Cmd>
 struct CommandParser;
 
 template <typename...>
 struct CommandParserOf;
-template <concepts::Command... Cmds>
+template <concepts::Cmd... Cmds>
 struct CommandParserOf<TypeList<Cmds...>> {
   using type = std::variant<std::monostate, CommandParser<Cmds const>...>;
 };
 
-template <concepts::Command Cmd>
+template <concepts::Cmd Cmd>
 struct CommandParser {
   using cmd_type = Cmd;
   using arg_names = typename Cmd::arg_names;
@@ -369,7 +369,7 @@ struct CommandParser {
   }
 };
 
-template <concepts::Command Cmd>
+template <concepts::Cmd Cmd>
 auto parse(Cmd const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
   auto map = parser.get_args_map(args);
@@ -383,7 +383,7 @@ auto parse(Cmd const &cmd, std::span<char const *> args) {
   return map;
 }
 
-template <concepts::Command Cmd>
+template <concepts::Cmd Cmd>
 auto parse(Cmd const &cmd, int argc, char const *argv[]) {
   auto const args = std::span{argv, static_cast<std::size_t>(argc)};
   return parse(cmd, args);

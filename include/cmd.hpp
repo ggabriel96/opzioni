@@ -13,10 +13,10 @@
 namespace opz {
 
 template <typename...>
-struct Command;
+struct Cmd;
 
-template <FixedString... Names, typename... Types, concepts::Command... SubCmds>
-struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
+template <FixedString... Names, typename... Types, concepts::Cmd... SubCmds>
+struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
   using subcmd_types = TypeList<SubCmds...>;
@@ -32,13 +32,13 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
   std::tuple<SubCmds...> subcmds;
 
-  consteval Command() = default;
-  explicit consteval Command(std::string_view name, std::string_view version = "") : name(name), version(version) {
+  consteval Cmd() = default;
+  explicit consteval Cmd(std::string_view name, std::string_view version = "") : name(name), version(version) {
     if (!is_valid_name(name)) throw "Command names must neither be empty nor contain any whitespace";
   }
 
-  template <concepts::Command Cmd>
-  consteval Command(Cmd const &other) {
+  template <concepts::Cmd OtherCmd>
+  consteval Cmd(OtherCmd const &other) {
     name = other.name;
     version = other.version;
     introduction = other.introduction;
@@ -55,9 +55,9 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     return *this;
   }
 
-  template <concepts::Command NewSubCmd>
+  template <concepts::Cmd NewSubCmd>
   consteval auto sub(NewSubCmd const &subcmd) const noexcept {
-    Command<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmd> new_cmd(*this);
+    Cmd<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmd> new_cmd(*this);
     new_cmd.subcmds = std::tuple_cat(subcmds, std::make_tuple(subcmd));
     return new_cmd;
   }
@@ -66,7 +66,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto pos(ArgMeta<T> meta) {
     validate_common<Name, "">(meta);
     validate_pos(meta);
-    Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
       std::make_tuple(Arg<T>{
@@ -87,7 +87,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto opt(ArgMeta<T> meta) {
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
-    Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
       std::make_tuple(Arg<T>{
@@ -112,7 +112,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto flg(ArgMeta<T> meta) {
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
-    Command<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
       std::make_tuple(Arg<T>{
@@ -152,7 +152,7 @@ struct Command<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 };
 
 consteval auto new_cmd(std::string_view name, std::string_view version = "") {
-  return Command<StringList<>, TypeList<>>(name, version);
+  return Cmd<StringList<>, TypeList<>>(name, version);
 }
 
 } // namespace opz

@@ -12,7 +12,7 @@
 #include <fmt/ranges.h>
 
 #include "arg.hpp"
-#include "command.hpp"
+#include "cmd.hpp"
 #include "strings.hpp"
 
 namespace opz {
@@ -22,7 +22,7 @@ struct CmdHelpEntry {
   std::string_view introduction{};
 
   template <typename... Ts>
-  explicit CmdHelpEntry(Command<Ts...> from) : name(from.name), introduction(from.introduction) {}
+  explicit CmdHelpEntry(Cmd<Ts...> from) : name(from.name), introduction(from.introduction) {}
 
   [[nodiscard]] std::string format_for_usage() const noexcept;
   [[nodiscard]] std::string format_for_index_entry() const noexcept;
@@ -76,7 +76,7 @@ struct HelpFormatter {
   std::size_t msg_width;
 
   template <typename... CmdArgs> // don't really care about them here
-  explicit HelpFormatter(Command<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+  explicit HelpFormatter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
       : name(cmd.name),
         version(cmd.version),
         introduction(cmd.introduction),
@@ -131,11 +131,11 @@ class FormatterGetter {
 
 public:
   template <typename... CmdArgs> // don't really care about them here
-  explicit FormatterGetter(Command<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+  explicit FormatterGetter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
       : cmd_ptr(&cmd),
         parent_cmds_names(parent_cmds_names),
         emplace([](std::optional<HelpFormatter> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
-          instance.emplace(*static_cast<Command<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
+          instance.emplace(*static_cast<Cmd<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
         }) {}
 
   [[nodiscard]] HelpFormatter const &get() noexcept {
