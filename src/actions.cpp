@@ -6,7 +6,7 @@
 namespace opz::act {
 
 void print_help(
-  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const,
+  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const &,
   CmdInfoGetter &info) {
   auto const &formatter = info.get();
   formatter.print_title();
@@ -24,7 +24,7 @@ void print_help(
 }
 
 void print_version(
-  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const,
+  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const &,
   CmdInfoGetter &info) {
   auto const &formatter = info.get();
   fmt::print("{} {}\n", formatter.name, formatter.version);
