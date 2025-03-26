@@ -108,14 +108,14 @@ struct CommandParser {
     auto map = ArgsMap<Cmd const>();
     if (!args.empty()) {
       map.exec_path = std::string_view(args[0]);
-      CmdInfoGetter fg(cmd_ref.get(), parent_cmds_names);
+      CmdInfoGetter info(cmd_ref.get(), parent_cmds_names);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
         auto const cli_arg = std::string_view(args[index]);
         if (is_dash_dash(cli_arg)) {
           // +1 to ignore the dash-dash
           for (std::size_t offset = index + 1; offset < args.size();) {
-            offset += assign_positional(map, args.subspan(offset), current_positional_idx, fg);
+            offset += assign_positional(map, args.subspan(offset), current_positional_idx, info);
             ++current_positional_idx;
           }
           index = args.size();
@@ -148,15 +148,15 @@ struct CommandParser {
             // clang-format on
             index += rest.size();
           } else {
-            index += assign_positional(map, args.subspan(index), current_positional_idx, fg);
+            index += assign_positional(map, args.subspan(index), current_positional_idx, info);
             ++current_positional_idx;
           }
         } else if (auto const option = try_parse_option(cli_arg); option.has_value()) {
-          index += assign_option(map, *option, args.subspan(index), fg);
+          index += assign_option(map, *option, args.subspan(index), info);
         } else if (auto const flag = get_if_long_flag(cli_arg); !flag.empty()) {
-          index += assign_long_flag(map, flag, fg);
+          index += assign_long_flag(map, flag, info);
         } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
-          index += assign_short_flags(map, flags, fg);
+          index += assign_short_flags(map, flags, info);
         } else {
           throw UnknownArgument(this->cmd_ref.get().name, cli_arg);
         }
@@ -166,7 +166,7 @@ struct CommandParser {
   }
 
   std::size_t assign_positional(
-    ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, CmdInfoGetter &fg
+    ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, CmdInfoGetter &info
   ) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
       throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos);
@@ -174,11 +174,11 @@ struct CommandParser {
     // clang-format off
     std::size_t idx = 0;
     std::apply(
-      [&idx, cur_pos_idx, &map, args, &fg](auto&&... arg) {
+      [&idx, cur_pos_idx, &map, args, &info](auto&&... arg) {
         (void)(( // cast to void to suppress unused warning
         arg.type == ArgType::POS
           ? idx == cur_pos_idx
-            ? (arg.action(map.args, arg, args[0], fg), true)
+            ? (arg.action(map.args, arg, args[0], info), true)
             : (++idx, false)
           : false
         ) || ...);
@@ -248,7 +248,7 @@ struct CommandParser {
   }
 
   std::size_t assign_option(
-    ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, CmdInfoGetter &fg
+    ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, CmdInfoGetter &info
   ) const {
     std::size_t ret = 1;
     auto value = option.value.or_else([args, &ret]() -> std::optional<std::string_view> {
@@ -262,10 +262,10 @@ struct CommandParser {
     // clang-format off
     std::size_t idx = 0;
     std::apply(
-      [&idx,  &option, &map, &value, &fg](auto&&... arg) {
+      [&idx,  &option, &map, &value, &info](auto&&... arg) {
         (void)(( // cast to void to suppress unused warning
         idx == option.arg.tuple_idx
-          ? (arg.action(map.args, arg, value, fg), true)
+          ? (arg.action(map.args, arg, value, info), true)
           : (++idx, false)
         ) || ...);
       },
@@ -276,7 +276,7 @@ struct CommandParser {
     return ret;
   }
 
-  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, CmdInfoGetter &fg) const {
+  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, CmdInfoGetter &info) const {
     auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
     if (it->type != ArgType::FLG) {
@@ -286,10 +286,10 @@ struct CommandParser {
     // clang-format off
     std::size_t idx = 0;
     std::apply(
-      [&idx, &it, &map, &fg](auto&&... arg) {
+      [&idx, &it, &map, &info](auto&&... arg) {
         (void)(( // cast to void to suppress unused warning
         idx == it->tuple_idx
-          ? (arg.action(map.args, arg, std::nullopt, fg), true)
+          ? (arg.action(map.args, arg, std::nullopt, info), true)
           : (++idx, false)
         ) || ...);
       },
@@ -300,7 +300,7 @@ struct CommandParser {
     return 1;
   }
 
-  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, CmdInfoGetter &fg) const {
+  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, CmdInfoGetter &info) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
       auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
@@ -312,10 +312,10 @@ struct CommandParser {
       // clang-format off
       std::size_t idx = 0;
       std::apply(
-        [&idx, &it, &map, &fg](auto&&... arg) {
+        [&idx, &it, &map, &info](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
           idx == it->tuple_idx
-            ? (arg.action(map.args, arg, std::nullopt, fg), true)
+            ? (arg.action(map.args, arg, std::nullopt, info), true)
             : (++idx, false)
           ) || ...);
         },
