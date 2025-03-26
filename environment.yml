@@ -2,8 +2,8 @@
 # conda env create -f environment.yml
 name: "opzioni"
 dependencies:
-  - clang-tools=19
   - gxx=14
+  - clang-tools=20
   - make
   - meson=1.6
   - ninja=1.12
