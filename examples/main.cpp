@@ -25,7 +25,8 @@ void handle_docker_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
     overloaded{
       [](std::monostate) { std::print("parsed no further subcommand\n"); },
     },
-    map.subcmd);
+    map.subcmd
+  );
 }
 
 constexpr static auto pull_cmd = new_cmd("pull")
@@ -48,14 +49,16 @@ void handle_docker_subcmd(ArgsMap<decltype(pull_cmd)> const &map) {
     overloaded{
       [](std::monostate) { std::print("parsed no further subcommand\n"); },
     },
-    map.subcmd);
+    map.subcmd
+  );
 }
 
 int main(int argc, char const *argv[]) {
   auto docker_cmd =
     new_cmd("docker", "1.0")
       .opt<"config">(
-        {.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"})
+        {.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"}
+      )
       .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = act::count})
       .flg<"help", "h">(default_help)
       .flg<"version", "v">(default_version)
@@ -71,5 +74,6 @@ int main(int argc, char const *argv[]) {
       [](std::monostate) { std::print("parsed no further subcommand\n"); },
       [](auto const &sub_map) { handle_docker_subcmd(sub_map); },
     },
-    map.subcmd);
+    map.subcmd
+  );
 }

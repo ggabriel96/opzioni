@@ -24,8 +24,11 @@ void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T> const &arg
 
 template <concepts::Container C>
 void append(
-  std::map<std::string_view, std::any> &args_map, Arg<C> const &arg, std::optional<std::string_view> const &value,
-  CmdInfoGetter &) {
+  std::map<std::string_view, std::any> &args_map,
+  Arg<C> const &arg,
+  std::optional<std::string_view> const &value,
+  CmdInfoGetter &
+) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
   auto const converted_value = convert<typename C::value_type>(*value);
   if (auto it = args_map.find(arg.name); it != args_map.end()) {
@@ -37,16 +40,22 @@ void append(
 
 template <typename T>
 void assign(
-  std::map<std::string_view, std::any> &args_map, Arg<T> const &arg, std::optional<std::string_view> const &value,
-  CmdInfoGetter &) {
+  std::map<std::string_view, std::any> &args_map,
+  Arg<T> const &arg,
+  std::optional<std::string_view> const &value,
+  CmdInfoGetter &
+) {
   if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
   detail::assign_to(args_map, arg, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
 }
 
 template <concepts::Integer I>
 void count(
-  std::map<std::string_view, std::any> &args_map, Arg<I> const &arg, std::optional<std::string_view> const &value,
-  CmdInfoGetter &) {
+  std::map<std::string_view, std::any> &args_map,
+  Arg<I> const &arg,
+  std::optional<std::string_view> const &value,
+  CmdInfoGetter &
+) {
   if (value.has_value()) throw MissingValue(arg.name, 1, 0);
   auto [it, inserted] = args_map.try_emplace(arg.name, *arg.implicit_value);
   if (!inserted) std::any_cast<I &>(it->second) += *arg.implicit_value;
@@ -54,8 +63,11 @@ void count(
 
 template <concepts::Container C>
 void csv(
-  std::map<std::string_view, std::any> &args_map, Arg<C> const &arg, std::optional<std::string_view> const &value,
-  CmdInfoGetter &) {
+  std::map<std::string_view, std::any> &args_map,
+  Arg<C> const &arg,
+  std::optional<std::string_view> const &value,
+  CmdInfoGetter &
+) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
   detail::assign_to(args_map, arg, convert<C>(*value));
 }

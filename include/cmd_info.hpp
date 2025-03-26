@@ -113,7 +113,8 @@ struct CmdInfo {
     auto const description_lines = limit_within(description, msg_width - padding_size - 8 - 4);
 
     fmt::print(
-      "    {:<{}}    {}\n", arg.format_for_index_entry(), padding_size, fmt::join(description_lines.front(), " "));
+      "    {:<{}}    {}\n", arg.format_for_index_entry(), padding_size, fmt::join(description_lines.front(), " ")
+    );
 
     for (auto const &line : description_lines | drop(1)) {
       // the same 4 spaces of left margin, then additional 4 spaces of indentation

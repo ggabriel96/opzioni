@@ -56,7 +56,8 @@ namespace opz {
     fmt::arg("abbrev", abbrev),
     fmt::arg("cmd_name", cmd_name),
     fmt::arg("default_value", default_value.value_or("")),
-    fmt::arg("implicit_value", implicit_value.value_or("")));
+    fmt::arg("implicit_value", implicit_value.value_or(""))
+  );
   // fmt::arg("gather_amount", gather_amount));
 }
 
@@ -80,7 +81,8 @@ void CmdInfo::print_title() const noexcept {
     parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
     name,
     version,
-    version.size() + static_cast<int>(!version.empty()));
+    version.size() + static_cast<int>(!version.empty())
+  );
 }
 
 void CmdInfo::print_intro() const noexcept {
@@ -100,8 +102,11 @@ void CmdInfo::print_usage() const noexcept {
   words.reserve(1 + args.size() + sub_cmds.size());
 
   auto insert = std::back_inserter(words);
-  words.emplace_back(fmt::format(
-    "{: <{}}{}", parent_cmds_names, parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()), name));
+  words.emplace_back(
+    fmt::format(
+      "{: <{}}{}", parent_cmds_names, parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()), name
+    )
+  );
   transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage);
   transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage);
 

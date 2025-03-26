@@ -55,7 +55,8 @@ auto find_arg_if(std::tuple<Arg<Ts>...> const haystack, std::predicate<ArgView> 
       // clang-format on
       return ret;
     },
-    haystack);
+    haystack
+  );
 }
 
 template <concepts::Cmd... Cmds>
@@ -82,13 +83,10 @@ struct ParsedOption {
 // |   main parsing code   |
 // +-----------------------+
 
-template <concepts::Cmd>
-struct CommandParser;
+template <concepts::Cmd> struct CommandParser;
 
-template <typename...>
-struct CommandParserOf;
-template <concepts::Cmd... Cmds>
-struct CommandParserOf<TypeList<Cmds...>> {
+template <typename...> struct CommandParserOf;
+template <concepts::Cmd... Cmds> struct CommandParserOf<TypeList<Cmds...>> {
   using type = std::variant<std::monostate, CommandParser<Cmds const>...>;
 };
 
@@ -128,7 +126,8 @@ struct CommandParser {
               "{: <{}}{}",
               parent_cmds_names,
               parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
-              this->cmd_ref.get().name);
+              this->cmd_ref.get().name
+            );
             int i = 0;
             // clang-format off
             std::apply(
@@ -167,7 +166,8 @@ struct CommandParser {
   }
 
   std::size_t assign_positional(
-    ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, CmdInfoGetter &fg) const {
+    ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, CmdInfoGetter &fg
+  ) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
       throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos);
 
@@ -196,8 +196,9 @@ struct CommandParser {
     if (num_of_dashes == 1) {
       // short option, e.g. `-O`
       auto const name = whole_arg.substr(1, 1);
-      auto const it = find_arg_if(
-        this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
+      auto const it = find_arg_if(this->cmd_ref.get().args, [name](auto const &a) {
+        return a.type == ArgType::OPT && name == a.abbrev;
+      });
       if (!it) return std::nullopt;
 
       if (has_equals) {
@@ -223,8 +224,9 @@ struct CommandParser {
 
       if (has_equals) {
         auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it = find_arg_if(
-          this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+        auto const it = find_arg_if(this->cmd_ref.get().args, [name](auto const &a) {
+          return a.type == ArgType::OPT && name == a.name;
+        });
         if (!it) return std::nullopt;
 
         auto const value = whole_arg.substr(eq_idx + 1);
@@ -233,8 +235,9 @@ struct CommandParser {
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it = find_arg_if(
-        this->cmd_ref.get().args, [name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
+      auto const it = find_arg_if(this->cmd_ref.get().args, [name](auto const &a) {
+        return a.type == ArgType::OPT && name == a.name;
+      });
       if (!it) return std::nullopt;
 
       return ParsedOption{.arg = *it, .value = std::nullopt};
@@ -245,7 +248,8 @@ struct CommandParser {
   }
 
   std::size_t assign_option(
-    ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, CmdInfoGetter &fg) const {
+    ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, CmdInfoGetter &fg
+  ) const {
     std::size_t ret = 1;
     auto value = option.value.or_else([args, &ret]() -> std::optional<std::string_view> {
       if (args.size() > 1 && looks_positional(args[1])) {

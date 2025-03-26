@@ -12,8 +12,7 @@
 
 namespace opz {
 
-template <typename...>
-struct Cmd;
+template <typename...> struct Cmd;
 
 template <FixedString... Names, typename... Types, concepts::Cmd... SubCmds>
 struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
@@ -69,16 +68,19 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
-      std::make_tuple(Arg<T>{
-        .type = ArgType::POS,
-        .name = Name,
-        .abbrev = "",
-        .help = meta.help,
-        .is_required = meta.is_required.value_or(true),
-        .default_value = meta.default_value,
-        .implicit_value = std::nullopt,
-        .action = meta.action,
-      }));
+      std::make_tuple(
+        Arg<T>{
+          .type = ArgType::POS,
+          .name = Name,
+          .abbrev = "",
+          .help = meta.help,
+          .is_required = meta.is_required.value_or(true),
+          .default_value = meta.default_value,
+          .implicit_value = std::nullopt,
+          .action = meta.action,
+        }
+      )
+    );
     new_cmd.amount_pos += 1;
     return new_cmd;
   }
@@ -90,16 +92,19 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
-      std::make_tuple(Arg<T>{
-        .type = ArgType::OPT,
-        .name = Name,
-        .abbrev = Abbrev,
-        .help = meta.help,
-        .is_required = meta.is_required.value_or(false),
-        .default_value = meta.default_value,
-        .implicit_value = meta.implicit_value,
-        .action = meta.action,
-      }));
+      std::make_tuple(
+        Arg<T>{
+          .type = ArgType::OPT,
+          .name = Name,
+          .abbrev = Abbrev,
+          .help = meta.help,
+          .is_required = meta.is_required.value_or(false),
+          .default_value = meta.default_value,
+          .implicit_value = meta.implicit_value,
+          .action = meta.action,
+        }
+      )
+    );
     return new_cmd;
   }
 
@@ -115,16 +120,19 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
     new_cmd.args = std::tuple_cat(
       args,
-      std::make_tuple(Arg<T>{
-        .type = ArgType::FLG,
-        .name = Name,
-        .abbrev = Abbrev,
-        .help = meta.help,
-        .is_required = false,
-        .default_value = meta.default_value.value_or(T{}),
-        .implicit_value = meta.implicit_value.value_or(true),
-        .action = meta.action,
-      }));
+      std::make_tuple(
+        Arg<T>{
+          .type = ArgType::FLG,
+          .name = Name,
+          .abbrev = Abbrev,
+          .help = meta.help,
+          .is_required = false,
+          .default_value = meta.default_value.value_or(T{}),
+          .implicit_value = meta.implicit_value.value_or(true),
+          .action = meta.action,
+        }
+      )
+    );
     return new_cmd;
   }
 

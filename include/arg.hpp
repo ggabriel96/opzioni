@@ -20,37 +20,48 @@ struct CmdInfo;
 // |       forward declarations       |
 // +----------------------------------+
 
-template <typename>
-struct Arg;
-
 class CmdInfoGetter;
+template <typename> struct Arg;
 
 namespace act {
 
 template <concepts::Container C>
-void append(std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view> const &, CmdInfoGetter &);
+void append(
+  std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view> const &, CmdInfoGetter &
+);
 
 template <typename T>
-void assign(std::map<std::string_view, std::any> &, Arg<T> const &, std::optional<std::string_view> const &, CmdInfoGetter &);
+void assign(
+  std::map<std::string_view, std::any> &, Arg<T> const &, std::optional<std::string_view> const &, CmdInfoGetter &
+);
 
 template <concepts::Integer I>
-void count(std::map<std::string_view, std::any> &, Arg<I> const &, std::optional<std::string_view> const &, CmdInfoGetter &);
+void count(
+  std::map<std::string_view, std::any> &, Arg<I> const &, std::optional<std::string_view> const &, CmdInfoGetter &
+);
 
 template <concepts::Container C>
-void csv(std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view> const &, CmdInfoGetter &);
+void csv(
+  std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view> const &, CmdInfoGetter &
+);
 
 void print_help(
-  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const &, CmdInfoGetter &);
+  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const &, CmdInfoGetter &
+);
 
 void print_version(
-  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const &, CmdInfoGetter &);
+  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const &, CmdInfoGetter &
+);
 
 } // namespace act
 
 template <typename T>
 using ActionFn = void (*)(
-  std::map<std::string_view, std::any> &args_map, Arg<T> const &arg, std::optional<std::string_view> const &value,
-  CmdInfoGetter &info);
+  std::map<std::string_view, std::any> &args_map,
+  Arg<T> const &arg,
+  std::optional<std::string_view> const &value,
+  CmdInfoGetter &info
+);
 
 // +---------------------------------+
 // |             ArgMeta             |
@@ -154,8 +165,8 @@ constexpr void validate_opt(ArgMeta<T> const &meta) {
   }
   if constexpr (std::is_same_v<T, bool>) {
     if (meta.action == act::print_help || meta.action == act::print_version)
-      throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not options because they always "
-            "take a value from the command-line)";
+      throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not options because they "
+            "always take a value from the command-line)";
   }
 }
 

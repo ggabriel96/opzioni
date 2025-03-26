@@ -2,11 +2,18 @@
 BasedOnStyle: LLVM
 ---
 Language: Cpp
-ColumnLimit: 120
-AlignAfterOpenBracket: AlwaysBreak
+Standard: c++20
+ColumnLimit: 119
+
+AlignAfterOpenBracket: BlockIndent
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
-AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
+BinPackParameters: OnePerLine
+BreakAfterAttributes: Leave
+BreakBeforeConceptDeclarations: Always
+BreakTemplateDeclarations: Leave
 ContinuationIndentWidth: 2
 IndentCaseLabels: true
 PackConstructorInitializers: NextLine

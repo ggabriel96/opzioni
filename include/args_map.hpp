@@ -14,13 +14,10 @@
 
 namespace opz {
 
-template <concepts::Cmd>
-struct ArgsMap;
+template <concepts::Cmd> struct ArgsMap;
 
-template <typename...>
-struct ArgsMapOf;
-template <concepts::Cmd... Cmds>
-struct ArgsMapOf<TypeList<Cmds...>> {
+template <typename...> struct ArgsMapOf;
+template <concepts::Cmd... Cmds> struct ArgsMapOf<TypeList<Cmds...>> {
   using type = std::variant<std::monostate, ArgsMap<Cmds const>...>;
 };
 
