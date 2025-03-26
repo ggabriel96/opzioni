@@ -11,6 +11,7 @@
 namespace opz {
 
 enum struct ArgType { POS, OPT, FLG };
+std::string_view to_string(ArgType const at) noexcept;
 
 enum struct Action {
   APPEND,
@@ -34,8 +35,6 @@ struct ArgMeta {
   std::optional<T> implicit_value{};
   Action action = Action::ASSIGN;
 };
-
-std::string_view to_string(ArgType const at) noexcept;
 
 constexpr static ArgMeta<bool> default_help = {
   .help = "Display this information",
