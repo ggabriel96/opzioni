@@ -14,7 +14,7 @@ namespace opz {
 enum struct ArgType { POS, OPT, FLG };
 std::string_view to_string(ArgType const at) noexcept;
 
-struct HelpFormatter;
+struct CmdInfo;
 
 // +----------------------------------+
 // |       forward declarations       |
@@ -23,34 +23,34 @@ struct HelpFormatter;
 template <typename>
 struct Arg;
 
-class FormatterGetter;
+class CmdInfoGetter;
 
 namespace act {
 
 template <concepts::Container C>
-void append(std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view>, FormatterGetter &);
+void append(std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view>, CmdInfoGetter &);
 
 template <typename T>
-void assign(std::map<std::string_view, std::any> &, Arg<T> const &, std::optional<std::string_view>, FormatterGetter &);
+void assign(std::map<std::string_view, std::any> &, Arg<T> const &, std::optional<std::string_view>, CmdInfoGetter &);
 
 template <concepts::Integer I>
-void count(std::map<std::string_view, std::any> &, Arg<I> const &, std::optional<std::string_view>, FormatterGetter &);
+void count(std::map<std::string_view, std::any> &, Arg<I> const &, std::optional<std::string_view>, CmdInfoGetter &);
 
 template <concepts::Container C>
-void csv(std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view>, FormatterGetter &);
+void csv(std::map<std::string_view, std::any> &, Arg<C> const &, std::optional<std::string_view>, CmdInfoGetter &);
 
 void print_help(
-  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view>, FormatterGetter &);
+  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view>, CmdInfoGetter &);
 
 void print_version(
-  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view>, FormatterGetter &);
+  std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view>, CmdInfoGetter &);
 
 } // namespace act
 
 template <typename T>
 using ActionFn = void (*)(
   std::map<std::string_view, std::any> &args_map, Arg<T> const &arg, std::optional<std::string_view> const value,
-  FormatterGetter &formatter_getter);
+  CmdInfoGetter &info);
 
 // +---------------------------------+
 // |             ArgMeta             |

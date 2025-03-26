@@ -65,18 +65,18 @@ struct ArgHelpEntry {
   bool operator<(ArgHelpEntry const &other) const noexcept;
 };
 
-struct HelpFormatter {
+struct CmdInfo {
   std::string_view name;
   std::string_view version;
   std::string_view introduction;
   std::string_view parent_cmds_names{};
   std::vector<ArgHelpEntry> args;
-  std::vector<CmdHelpEntry> cmds;
+  std::vector<CmdHelpEntry> sub_cmds;
   std::size_t amount_pos;
   std::size_t msg_width;
 
   template <typename... CmdArgs> // don't really care about them here
-  explicit HelpFormatter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+  explicit CmdInfo(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
       : name(cmd.name),
         version(cmd.version),
         introduction(cmd.introduction),
@@ -90,12 +90,12 @@ struct HelpFormatter {
       cmd.args
     );
     std::apply( // cast to void to suppress unused warning
-      [this](auto&&... cmd) { (void) ((this->cmds.emplace_back(cmd)), ...); },
+      [this](auto&&... cmd) { (void) ((this->sub_cmds.emplace_back(cmd)), ...); },
       cmd.subcmds
     );
     // clang-format on
     std::sort(args.begin(), args.end());
-    std::sort(cmds.begin(), cmds.end());
+    std::sort(sub_cmds.begin(), sub_cmds.end());
   }
 
   void print_title() const noexcept;
@@ -122,23 +122,23 @@ struct HelpFormatter {
   }
 };
 
-class FormatterGetter {
+class CmdInfoGetter {
   void const *cmd_ptr;
   std::string_view parent_cmds_names;
-  void (*emplace)(std::optional<HelpFormatter> &, void const *, std::string_view);
+  void (*emplace)(std::optional<CmdInfo> &, void const *, std::string_view);
 
-  std::optional<HelpFormatter> instance{};
+  std::optional<CmdInfo> instance{};
 
 public:
   template <typename... CmdArgs> // don't really care about them here
-  explicit FormatterGetter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+  explicit CmdInfoGetter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
       : cmd_ptr(&cmd),
         parent_cmds_names(parent_cmds_names),
-        emplace([](std::optional<HelpFormatter> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
+        emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
           instance.emplace(*static_cast<Cmd<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
         }) {}
 
-  [[nodiscard]] HelpFormatter const &get() noexcept {
+  [[nodiscard]] CmdInfo const &get() noexcept {
     if (!instance) emplace(instance, cmd_ptr, parent_cmds_names);
     return *instance;
   }

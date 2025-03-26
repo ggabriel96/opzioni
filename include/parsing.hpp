@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "args_map.hpp"
+#include "cmd_info.hpp"
 #include "concepts.hpp"
 #include "exceptions.hpp"
-#include "formatting.hpp"
 #include "variant.hpp"
 
 namespace opz {
@@ -110,7 +110,7 @@ struct CommandParser {
     auto map = ArgsMap<Cmd const>();
     if (!args.empty()) {
       map.exec_path = std::string_view(args[0]);
-      FormatterGetter fg(cmd_ref.get(), parent_cmds_names);
+      CmdInfoGetter fg(cmd_ref.get(), parent_cmds_names);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
         auto const cli_arg = std::string_view(args[index]);
@@ -166,7 +166,8 @@ struct CommandParser {
     return map;
   }
 
-  std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, FormatterGetter &fg) const {
+  std::size_t assign_positional(
+    ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, CmdInfoGetter &fg) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
       throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos);
 
@@ -243,7 +244,8 @@ struct CommandParser {
     return std::nullopt;
   }
 
-  std::size_t assign_option(ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, FormatterGetter &fg) const {
+  std::size_t assign_option(
+    ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, CmdInfoGetter &fg) const {
     std::size_t ret = 1;
     auto value = option.value.or_else([args, &ret]() -> std::optional<std::string_view> {
       if (args.size() > 1 && looks_positional(args[1])) {
@@ -270,7 +272,7 @@ struct CommandParser {
     return ret;
   }
 
-  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, FormatterGetter &fg) const {
+  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, CmdInfoGetter &fg) const {
     auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
     if (it->type != ArgType::FLG) {
@@ -294,7 +296,7 @@ struct CommandParser {
     return 1;
   }
 
-  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, FormatterGetter &fg) const {
+  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, CmdInfoGetter &fg) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
       auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });

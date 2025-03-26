@@ -1,4 +1,4 @@
-#include "formatting.hpp"
+#include "cmd_info.hpp"
 
 namespace opz {
 
@@ -70,10 +70,10 @@ bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
 }
 
 // +---------------------------------------+
-// |             HelpFormatter             |
+// |                CmdInfo                |
 // +---------------------------------------+
 
-void HelpFormatter::print_title() const noexcept {
+void CmdInfo::print_title() const noexcept {
   fmt::print(
     "{: <{}}{}{: >{}}\n",
     parent_cmds_names,
@@ -83,7 +83,7 @@ void HelpFormatter::print_title() const noexcept {
     version.size() + static_cast<int>(!version.empty()));
 }
 
-void HelpFormatter::print_intro() const noexcept {
+void CmdInfo::print_intro() const noexcept {
   if (introduction.length() <= msg_width) {
     fmt::print("{}\n", introduction);
   } else {
@@ -91,13 +91,13 @@ void HelpFormatter::print_intro() const noexcept {
   }
 }
 
-void HelpFormatter::print_usage() const noexcept {
+void CmdInfo::print_usage() const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
   using std::views::drop, std::views::filter, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + args.size() + cmds.size());
+  words.reserve(1 + args.size() + sub_cmds.size());
 
   auto insert = std::back_inserter(words);
   words.emplace_back(fmt::format(
@@ -105,13 +105,13 @@ void HelpFormatter::print_usage() const noexcept {
   transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage);
   transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage);
 
-  if (cmds.size() == 1) {
-    words.push_back(format("{{{}}}", cmds.front().format_for_index_entry()));
-  } else if (cmds.size() > 1) {
+  if (sub_cmds.size() == 1) {
+    words.push_back(format("{{{}}}", sub_cmds.front().format_for_index_entry()));
+  } else if (sub_cmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", cmds.front().format_for_index_entry()));
-    transform(cmds | drop(1) | take(cmds.size() - 2), insert, &CmdHelpEntry::format_for_index_entry);
-    words.push_back(format("{}}}", cmds.back().format_for_index_entry()));
+    words.push_back(format("{{{},", sub_cmds.front().format_for_index_entry()));
+    transform(sub_cmds | drop(1) | take(sub_cmds.size() - 2), insert, &CmdHelpEntry::format_for_index_entry);
+    words.push_back(format("{}}}", sub_cmds.back().format_for_index_entry()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
@@ -122,7 +122,7 @@ void HelpFormatter::print_usage() const noexcept {
   }
 }
 
-void HelpFormatter::print_help() const noexcept {
+void CmdInfo::print_help() const noexcept {
   std::string_view pending_nl;
   // using same padding size for all arguments so they stay aligned
   auto const padding_size = help_padding_size();
@@ -145,15 +145,15 @@ void HelpFormatter::print_help() const noexcept {
     pending_nl = "";
   }
 
-  if (!cmds.empty()) {
+  if (!sub_cmds.empty()) {
     fmt::print("{}Subcommands:\n", pending_nl);
-    for (auto const &arg : cmds) {
+    for (auto const &arg : sub_cmds) {
       print_arg_help(arg, padding_size);
     }
   }
 }
 
-void HelpFormatter::print_details() const noexcept {
+void CmdInfo::print_details() const noexcept {
   // if (details.empty())
   //   return;
   // if (details.length() <= msg_width)
@@ -162,11 +162,12 @@ void HelpFormatter::print_details() const noexcept {
   //   out << limit_string_within(details, msg_width) << nl;
 }
 
-[[nodiscard]] std::size_t HelpFormatter::help_padding_size() const noexcept {
+[[nodiscard]] std::size_t CmdInfo::help_padding_size() const noexcept {
   using std::views::transform;
   auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_index_entry().length(); };
   std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
-  std::size_t const required_length_cmds = cmds.empty() ? 0 : std::ranges::max(cmds | transform(required_length));
+  std::size_t const required_length_cmds =
+    sub_cmds.empty() ? 0 : std::ranges::max(sub_cmds | transform(required_length));
   return std::max(required_length_args, required_length_cmds);
   return 0;
 }

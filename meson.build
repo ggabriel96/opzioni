@@ -16,7 +16,7 @@ fmt_dep = dependency('fmt', version: ['>=11.1.1', '<12.0.0'])
 include_dir = include_directories('include/')
 opzioni_lib = library(
     'explib',
-    ['src/actions.cpp', 'src/arg.cpp', 'src/converters.cpp', 'src/formatting.cpp', 'src/strings.cpp'],
+    ['src/actions.cpp', 'src/arg.cpp', 'src/cmd_info.cpp', 'src/converters.cpp', 'src/strings.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true

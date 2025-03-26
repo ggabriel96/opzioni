@@ -1,5 +1,5 @@
 #include "actions.hpp"
-#include "formatting.hpp"
+#include "cmd_info.hpp"
 
 #include <iostream>
 
@@ -7,8 +7,8 @@ namespace opz::act {
 
 void print_help(
   std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const,
-  FormatterGetter &formatter_getter) {
-  auto const &formatter = formatter_getter.get();
+  CmdInfoGetter &info) {
+  auto const &formatter = info.get();
   formatter.print_title();
   if (!formatter.introduction.empty()) {
     std::cout << nl;
@@ -25,8 +25,8 @@ void print_help(
 
 void print_version(
   std::map<std::string_view, std::any> &, Arg<bool> const &, std::optional<std::string_view> const,
-  FormatterGetter &formatter_getter) {
-  auto const &formatter = formatter_getter.get();
+  CmdInfoGetter &info) {
+  auto const &formatter = info.get();
   fmt::print("{} {}\n", formatter.name, formatter.version);
   std::exit(0);
 }
