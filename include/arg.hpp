@@ -160,7 +160,7 @@ constexpr void validate_pos(ArgMeta<T> const &meta) {
 template <typename T>
 constexpr void validate_opt(ArgMeta<T> const &meta) {
   if constexpr (concepts::Integer<T>) {
-    if (meta.action == act::count<T> && !meta.implicit_value.has_value)
+    if (meta.action == act::count<T> && !meta.implicit_value.has_value())
       throw "The COUNT action requires an implicit value";
   }
   if constexpr (std::is_same_v<T, bool>) {
