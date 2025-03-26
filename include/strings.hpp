@@ -1,5 +1,5 @@
-#ifndef OPZIONI_STRINGS_H
-#define OPZIONI_STRINGS_H
+#ifndef OPZIONI_STRINGS_HPP
+#define OPZIONI_STRINGS_HPP
 
 #include <algorithm>
 #include <span>
@@ -27,4 +27,4 @@ constexpr bool is_valid_intro(std::string_view intro) noexcept {
 
 } // namespace opz
 
-#endif // OPZIONI_STRINGS_H
+#endif // OPZIONI_STRINGS_HPP

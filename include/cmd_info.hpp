@@ -1,5 +1,5 @@
-#ifndef OPZIONI_FORMATTING_H
-#define OPZIONI_FORMATTING_H
+#ifndef OPZIONI_CMD_INFO_HPP
+#define OPZIONI_CMD_INFO_HPP
 
 #include <algorithm>
 #include <optional>
@@ -147,4 +147,4 @@ public:
 
 } // namespace opz
 
-#endif // OPZIONI_FORMATTING_H
+#endif // OPZIONI_CMD_INFO_HPP

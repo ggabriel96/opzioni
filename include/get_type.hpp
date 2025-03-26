@@ -1,5 +1,5 @@
-#ifndef OPZIONI_GET_TYPE_H
-#define OPZIONI_GET_TYPE_H
+#ifndef OPZIONI_GET_TYPE_HPP
+#define OPZIONI_GET_TYPE_HPP
 
 #include "string_list.hpp"
 #include "type_list.hpp"
@@ -32,4 +32,4 @@ struct GetType<Needle, StringList<Other, Haystack...>, TypeList<OtherType, Hayst
 
 } // namespace opz
 
-#endif // OPZIONI_GET_TYPE_H
+#endif // OPZIONI_GET_TYPE_HPP

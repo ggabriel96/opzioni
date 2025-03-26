@@ -1,5 +1,5 @@
-#ifndef OPZIONI_CONVERTERS_H
-#define OPZIONI_CONVERTERS_H
+#ifndef OPZIONI_CONVERTERS_HPP
+#define OPZIONI_CONVERTERS_HPP
 
 #include <algorithm>
 #include <any>
@@ -61,4 +61,4 @@ auto convert(std::string_view value) -> Container {
 
 } // namespace opz
 
-#endif // OPZIONI_CONVERTERS_H
+#endif // OPZIONI_CONVERTERS_HPP

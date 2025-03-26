@@ -1,5 +1,5 @@
-#ifndef OPZIONI_EXCEPTIONS_H
-#define OPZIONI_EXCEPTIONS_H
+#ifndef OPZIONI_EXCEPTIONS_HPP
+#define OPZIONI_EXCEPTIONS_HPP
 
 #include <stdexcept>
 #include <string_view>
@@ -96,4 +96,4 @@ public:
 
 } // namespace opz
 
-#endif // OPZIONI_EXCEPTIONS_H
+#endif // OPZIONI_EXCEPTIONS_HPP

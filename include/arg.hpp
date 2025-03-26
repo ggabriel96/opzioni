@@ -1,5 +1,5 @@
-#ifndef OPZIONI_ARG_H
-#define OPZIONI_ARG_H
+#ifndef OPZIONI_ARG_HPP
+#define OPZIONI_ARG_HPP
 
 #include <any>
 #include <map>
@@ -183,4 +183,4 @@ constexpr void validate_flg(ArgMeta<T> const &meta) {
 
 } // namespace opz
 
-#endif // OPZIONI_ARG_H
+#endif // OPZIONI_ARG_HPP

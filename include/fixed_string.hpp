@@ -1,5 +1,5 @@
-#ifndef OPZIONI_FIXED_STRING_H
-#define OPZIONI_FIXED_STRING_H
+#ifndef OPZIONI_FIXED_STRING_HPP
+#define OPZIONI_FIXED_STRING_HPP
 
 #include <cstddef>
 #include <string_view>
@@ -27,4 +27,4 @@ FixedString(char const (&)[N]) -> FixedString<N - 1>;
 
 } // namespace opz
 
-#endif // OPZIONI_FIXED_STRING_H
+#endif // OPZIONI_FIXED_STRING_HPP

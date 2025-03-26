@@ -1,5 +1,5 @@
-#ifndef OPZIONI_VARIANT_H
-#define OPZIONI_VARIANT_H
+#ifndef OPZIONI_VARIANT_HPP
+#define OPZIONI_VARIANT_HPP
 
 namespace opz {
 
@@ -10,4 +10,4 @@ struct overloaded : Ts... {
 
 } // namespace opz
 
-#endif // OPZIONI_VARIANT_H
+#endif // OPZIONI_VARIANT_HPP

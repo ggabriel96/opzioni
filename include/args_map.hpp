@@ -1,5 +1,5 @@
-#ifndef OPZIONI_ARGS_MAP_H
-#define OPZIONI_ARGS_MAP_H
+#ifndef OPZIONI_ARGS_MAP_HPP
+#define OPZIONI_ARGS_MAP_HPP
 
 #include <any>
 #include <map>
@@ -49,4 +49,4 @@ struct ArgsMap {
 
 } // namespace opz
 
-#endif // OPZIONI_ARGS_MAP_H
+#endif // OPZIONI_ARGS_MAP_HPP

@@ -1,5 +1,5 @@
-#ifndef OPZIONI_STRING_LIST_H
-#define OPZIONI_STRING_LIST_H
+#ifndef OPZIONI_STRING_LIST_HPP
+#define OPZIONI_STRING_LIST_HPP
 
 #include "fixed_string.hpp"
 
@@ -40,4 +40,4 @@ struct IndexOfStr<Idx, Needle, StringList<Other, Haystack...>> : IndexOfStr<Idx 
 
 } // namespace opz
 
-#endif // OPZIONI_STRING_LIST_H
+#endif // OPZIONI_STRING_LIST_HPP

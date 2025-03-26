@@ -1,5 +1,5 @@
-#ifndef OPZIONI_PARSING_H
-#define OPZIONI_PARSING_H
+#ifndef OPZIONI_PARSING_HPP
+#define OPZIONI_PARSING_HPP
 
 #include <algorithm>
 #include <cctype>
@@ -425,4 +425,4 @@ constexpr std::string_view get_if_long_flag(std::string_view const whole_arg) no
 
 } // namespace opz
 
-#endif // OPZIONI_PARSING_H
+#endif // OPZIONI_PARSING_HPP

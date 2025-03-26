@@ -1,5 +1,5 @@
-#ifndef OPZIONI_TYPE_LIST_H
-#define OPZIONI_TYPE_LIST_H
+#ifndef OPZIONI_TYPE_LIST_HPP
+#define OPZIONI_TYPE_LIST_HPP
 
 namespace opz {
 
@@ -46,4 +46,4 @@ struct Concat<TypeList<Lhs...>, TypeList<Rhs...>> {
 
 } // namespace opz
 
-#endif // OPZIONI_TYPE_LIST_H
+#endif // OPZIONI_TYPE_LIST_HPP

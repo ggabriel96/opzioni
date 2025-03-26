@@ -1,5 +1,5 @@
-#ifndef OPZIONI_CONCEPTS_H
-#define OPZIONI_CONCEPTS_H
+#ifndef OPZIONI_CONCEPTS_HPP
+#define OPZIONI_CONCEPTS_HPP
 
 #include <ranges>
 
@@ -23,4 +23,4 @@ concept Cmd = requires(T) {
 
 } // namespace opz::concepts
 
-#endif // OPZIONI_CONCEPTS_H
+#endif // OPZIONI_CONCEPTS_HPP

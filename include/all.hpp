@@ -1,5 +1,5 @@
-#ifndef OPZIONI_ALL_H
-#define OPZIONI_ALL_H
+#ifndef OPZIONI_ALL_HPP
+#define OPZIONI_ALL_HPP
 
 #include "actions.hpp"
 #include "arg.hpp"
@@ -10,4 +10,4 @@
 #include "string_list.hpp"
 #include "type_list.hpp"
 
-#endif // OPZIONI_ALL_H
+#endif // OPZIONI_ALL_HPP
