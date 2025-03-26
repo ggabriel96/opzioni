@@ -40,7 +40,6 @@ struct ArgHelpEntry {
   bool is_required;
   std::optional<std::string> default_value;
   std::optional<std::string> implicit_value;
-  Action action;
 
   template <typename T>
   ArgHelpEntry(std::string_view cmd_name, Arg<T> from)
@@ -49,8 +48,7 @@ struct ArgHelpEntry {
         cmd_name(cmd_name),
         abbrev(from.abbrev),
         help(from.help),
-        is_required(from.is_required),
-        action(from.action) {
+        is_required(from.is_required) {
     if (from.default_value) default_value = fmt::format("{}", *from.default_value);
     if (from.implicit_value) implicit_value = fmt::format("{}", *from.implicit_value);
   }
@@ -121,6 +119,28 @@ struct HelpFormatter {
       // the same 4 spaces of left margin, then additional 4 spaces of indentation
       fmt::print("    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
     }
+  }
+};
+
+class FormatterGetter {
+  void const *cmd_ptr;
+  std::string_view parent_cmds_names;
+  void (*emplace)(std::optional<HelpFormatter> &, void const *, std::string_view);
+
+  std::optional<HelpFormatter> instance{};
+
+public:
+  template <typename... CmdArgs> // don't really care about them here
+  explicit FormatterGetter(Command<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+      : cmd_ptr(&cmd),
+        parent_cmds_names(parent_cmds_names),
+        emplace([](std::optional<HelpFormatter> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
+          instance.emplace(*static_cast<Command<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
+        }) {}
+
+  [[nodiscard]] HelpFormatter const &get() noexcept {
+    if (!instance) emplace(instance, cmd_ptr, parent_cmds_names);
+    return *instance;
   }
 };
 

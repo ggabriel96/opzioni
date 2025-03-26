@@ -52,20 +52,16 @@ public:
 
 class MissingValue : public UserError {
 public:
-  MissingValue(
-    std::string_view cmd_name, std::string_view name, std::size_t expected_amount, std::size_t received_amount)
-      : UserError(fmt::format(
-          "Expected {} value(s) for argument `{}` of `{}`, got {}", expected_amount, name, cmd_name, received_amount)) {
-  }
+  MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
+      : UserError(
+          fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
 };
 
 class UnexpectedValue : public UserError {
 public:
-  UnexpectedValue(
-    std::string_view cmd_name, std::string_view name, std::size_t expected_amount, std::size_t received_amount)
-      : UserError(fmt::format(
-          "Expected {} value(s) for argument `{}` of `{}`, got {}", expected_amount, name, cmd_name, received_amount)) {
-  }
+  UnexpectedValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
+      : UserError(
+          fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)) {}
 };
 
 class UnexpectedPositional : public UserError {

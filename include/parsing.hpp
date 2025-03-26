@@ -3,16 +3,15 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <print>
 #include <span>
 #include <string_view>
 #include <vector>
 
-#include "actions.hpp"
 #include "args_map.hpp"
 #include "concepts.hpp"
 #include "exceptions.hpp"
+#include "formatting.hpp"
 #include "variant.hpp"
 
 namespace opz {
@@ -100,63 +99,65 @@ struct CommandParser {
   using arg_types = typename Cmd::arg_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
+  std::string_view parent_cmds_names;
+
   typename CommandParserOf<typename Cmd::subcmd_types>::type subparser{};
 
-  explicit CommandParser(Cmd const &cmd) : cmd_ref(cmd) {}
+  explicit CommandParser(Cmd const &cmd, std::string_view parent_cmds_names = "")
+      : cmd_ref(cmd), parent_cmds_names(parent_cmds_names) {}
 
-  auto get_args_map(std::span<char const *> args, std::string_view const parent_cmds_names) {
+  auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
     if (!args.empty()) {
       map.exec_path = std::string_view(args[0]);
+      FormatterGetter fg(cmd_ref.get(), parent_cmds_names);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
         auto const cli_arg = std::string_view(args[index]);
         if (is_dash_dash(cli_arg)) {
           // +1 to ignore the dash-dash
           for (std::size_t offset = index + 1; offset < args.size();) {
-            offset += assign_positional(map, args.subspan(offset), current_positional_idx);
+            offset += assign_positional(map, args.subspan(offset), current_positional_idx, fg);
             ++current_positional_idx;
           }
           index = args.size();
         } else if (looks_positional(cli_arg)) {
           // check if is command first
           if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, cli_arg); idx != -1) {
+            auto const new_parent_cmds_names = fmt::format(
+              "{: <{}}{}",
+              parent_cmds_names,
+              parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
+              this->cmd_ref.get().name);
             int i = 0;
             // clang-format off
             std::apply(
-              [&i, idx, this](auto&&... cmd) {
+              [&i, idx, this, &new_parent_cmds_names](auto&&... cmd) {
                 (void)(( // cast to void to suppress unused warning
                 i == idx
-                  ? (this->subparser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd), true)
+                  ? (this->subparser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd, new_parent_cmds_names), true)
                   : (++i, false)
                 ) || ...);
               },
               this->cmd_ref.get().subcmds
             );
-            // clang-format on
             auto const rest = args.subspan(index);
-            auto const parent_names = fmt::format(
-              "{: <{}}{}",
-              parent_cmds_names,
-              parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
-              this->cmd_ref.get().name);
-            // clang-format off
             std::visit(overloaded {
               [](std::monostate) {},
-              [&map, rest, &parent_names](auto &p) { map.subcmd = p.get_args_map(rest, parent_names); }
+              [&map, rest](auto &p) { map.subcmd = p.get_args_map(rest); }
             }, this->subparser);
             // clang-format on
             index += rest.size();
           } else {
-            index += assign_positional(map, args.subspan(index), current_positional_idx);
+            index += assign_positional(map, args.subspan(index), current_positional_idx, fg);
             ++current_positional_idx;
           }
         } else if (auto const option = try_parse_option(cli_arg); option.has_value()) {
-          index += assign_option(map, *option, args.subspan(index));
+          index += assign_option(map, *option, args.subspan(index), fg);
         } else if (auto const flag = get_if_long_flag(cli_arg); !flag.empty()) {
-          index += assign_long_flag(map, flag, parent_cmds_names);
+          index += assign_long_flag(map, flag, fg);
         } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
-          index += assign_short_flags(map, flags, parent_cmds_names);
+          index += assign_short_flags(map, flags, fg);
         } else {
           throw UnknownArgument(this->cmd_ref.get().name, cli_arg);
         }
@@ -165,18 +166,18 @@ struct CommandParser {
     return map;
   }
 
-  std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {
+  std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, FormatterGetter &fg) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
       throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos);
 
     // clang-format off
     std::size_t idx = 0;
     std::apply(
-      [this, &map, args, cur_pos_idx, &idx](auto&&... arg) {
+      [&idx, cur_pos_idx, &map, args, &fg](auto&&... arg) {
         (void)(( // cast to void to suppress unused warning
         arg.type == ArgType::POS
           ? idx == cur_pos_idx
-            ? (apply_action(this->cmd_ref.get(), map, arg, args[0], {}), true)
+            ? (arg.action(map.args, arg, args[0], fg), true)
             : (++idx, false)
           : false
         ) || ...);
@@ -242,7 +243,7 @@ struct CommandParser {
     return std::nullopt;
   }
 
-  std::size_t assign_option(ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args) const {
+  std::size_t assign_option(ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args, FormatterGetter &fg) const {
     std::size_t ret = 1;
     auto value = option.value.or_else([args, &ret]() -> std::optional<std::string_view> {
       if (args.size() > 1 && looks_positional(args[1])) {
@@ -255,10 +256,10 @@ struct CommandParser {
     // clang-format off
     std::size_t idx = 0;
     std::apply(
-      [this, &map, &option, &value, &idx](auto&&... arg) {
+      [&idx,  &option, &map, &value, &fg](auto&&... arg) {
         (void)(( // cast to void to suppress unused warning
         idx == option.arg.tuple_idx
-          ? (apply_action(this->cmd_ref.get(), map, arg, value, {}), true)
+          ? (arg.action(map.args, arg, value, fg), true)
           : (++idx, false)
         ) || ...);
       },
@@ -269,8 +270,7 @@ struct CommandParser {
     return ret;
   }
 
-  std::size_t assign_long_flag(
-    ArgsMap<Cmd const> &map, std::string_view const flag, std::string_view const parent_cmds_names) const {
+  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, FormatterGetter &fg) const {
     auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
     if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
     if (it->type != ArgType::FLG) {
@@ -280,10 +280,10 @@ struct CommandParser {
     // clang-format off
     std::size_t idx = 0;
     std::apply(
-      [this, &map, &it, &idx, parent_cmds_names](auto&&... arg) {
+      [&idx, &it, &map, &fg](auto&&... arg) {
         (void)(( // cast to void to suppress unused warning
         idx == it->tuple_idx
-          ? (apply_action(this->cmd_ref.get(), map, arg, std::nullopt, {.parent_cmds_names = parent_cmds_names}), true)
+          ? (arg.action(map.args, arg, std::nullopt, fg), true)
           : (++idx, false)
         ) || ...);
       },
@@ -294,8 +294,7 @@ struct CommandParser {
     return 1;
   }
 
-  std::size_t assign_short_flags(
-    ArgsMap<Cmd const> &map, std::string_view const flags, std::string_view const parent_cmds_names) const {
+  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, FormatterGetter &fg) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
       auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
@@ -307,10 +306,10 @@ struct CommandParser {
       // clang-format off
       std::size_t idx = 0;
       std::apply(
-        [this, &map, &it, &idx, parent_cmds_names](auto&&... arg) {
+        [&idx, &it, &map, &fg](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
           idx == it->tuple_idx
-            ? (apply_action(this->cmd_ref.get(), map, arg, std::nullopt, {.parent_cmds_names = parent_cmds_names}), true)
+            ? (arg.action(map.args, arg, std::nullopt, fg), true)
             : (++idx, false)
           ) || ...);
         },
@@ -373,7 +372,7 @@ struct CommandParser {
 template <concepts::Command Cmd>
 auto parse(Cmd const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
-  auto map = parser.get_args_map(args, "");
+  auto map = parser.get_args_map(args);
 
   // 1) check_contains_required done separately in order to report all missing required args;
   // 2) also done after get_args_map in order to allow things such as `--help` to work

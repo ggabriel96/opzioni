@@ -5,15 +5,14 @@
 
 using namespace opz;
 
-constexpr static auto exec_cmd =
-  new_cmd("exec")
-    .intro("Run a process in a running container")
-    .pos<"container">({.help = "Name of the target container"})
-    .pos<"command">({.help = "The command to run in the container"}) // TODO: use append+gather
-    .flg<"detach", "d">({.help = "Detached mode: run command in the background"})
-    .flg<"interactive", "i">({.help = "Keep STDIN open even if not attached"})
-    .flg<"tty", "t">({.help = "Allocate a pseudo-TTY"})
-    .flg<"help", "h">(default_help);
+constexpr static auto exec_cmd = new_cmd("exec")
+                                   .intro("Run a process in a running container")
+                                   .pos<"container">({.help = "Name of the target container"})
+                                   .pos<"command">({.help = "The command to run in the container"})
+                                   .flg<"detach", "d">({.help = "Detached mode: run command in the background"})
+                                   .flg<"interactive", "i">({.help = "Keep STDIN open even if not attached"})
+                                   .flg<"tty", "t">({.help = "Allocate a pseudo-TTY"})
+                                   .flg<"help", "h">(default_help);
 
 void handle_docker_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
   std::print("\n{} args map (size {}):\n", map.exec_path, map.size());
@@ -57,7 +56,7 @@ int main(int argc, char const *argv[]) {
     new_cmd("docker", "1.0")
       .opt<"config">(
         {.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"})
-      .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = Action::COUNT})
+      .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = act::count})
       .flg<"help", "h">(default_help)
       .flg<"version", "v">(default_version)
       .sub(exec_cmd)
