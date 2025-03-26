@@ -56,7 +56,7 @@ void count(
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
-  if (value.has_value()) throw MissingValue(arg.name, 1, 0);
+  if (value.has_value()) throw UnexpectedValue(arg.name, 0, 1);
   auto [it, inserted] = args_map.try_emplace(arg.name, *arg.implicit_value);
   if (!inserted) std::any_cast<I &>(it->second) += *arg.implicit_value;
 }

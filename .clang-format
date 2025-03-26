@@ -13,6 +13,7 @@ BinPackArguments: false
 BinPackParameters: OnePerLine
 BreakAfterAttributes: Leave
 BreakBeforeConceptDeclarations: Always
+BreakStringLiterals: false # avoid breaking them because the `throw` message in compilation errors would be truncated
 BreakTemplateDeclarations: Leave
 ContinuationIndentWidth: 2
 IndentCaseLabels: true

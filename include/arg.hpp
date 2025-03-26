@@ -135,38 +135,33 @@ constexpr void validate_common(ArgMeta<T> const &meta) {
 
   if constexpr (concepts::Container<T>) {
     if (meta.implicit_value.has_value() && (meta.action == act::append<T> || meta.action == act::csv<T>))
-      throw "The APPEND and CSV actions do not work with implicit value since they require a value from the "
-            "command-line";
+      throw "The APPEND and CSV actions do not work with implicit value since they require a value from the command-line";
   }
 }
 
 template <typename T>
 constexpr void validate_pos(ArgMeta<T> const &meta) {
   if (meta.implicit_value.has_value())
-    throw "Implicit value cannot be used with positionals because they always take an unidentified value from the "
-          "command-line";
+    throw "Implicit value cannot be used with positionals because they always take a value from the command-line";
   if constexpr (concepts::Integer<T>) {
     if (meta.action == act::count<T>)
-      throw "The COUNT action cannot be used with positionals because they always take an unidentified value from the "
-            "command-line";
+      throw "The COUNT action can only be used with flags because they count how many times an argument was provided; since a positional always takes a value from the command-line, it would be wrongly ignored";
   }
   if constexpr (std::is_same_v<T, bool>) {
     if (meta.action == act::print_help || meta.action == act::print_version)
-      throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not positionals because they "
-            "always take a value from the command-line)";
+      throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not positionals because they always take a value from the command-line)";
   }
 }
 
 template <typename T>
 constexpr void validate_opt(ArgMeta<T> const &meta) {
   if constexpr (concepts::Integer<T>) {
-    if (meta.action == act::count<T> && !meta.implicit_value.has_value())
-      throw "The COUNT action requires an implicit value";
+    if (meta.action == act::count<T>)
+      throw "The COUNT action can only be used with flags because they count how many times an argument was provided; since an option might take a value from the command-line, it would be wrongly ignored";
   }
   if constexpr (std::is_same_v<T, bool>) {
     if (meta.action == act::print_help || meta.action == act::print_version)
-      throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not options because they "
-            "always take a value from the command-line)";
+      throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not options because they might take a value from the command-line)";
   }
 }
 
