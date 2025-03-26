@@ -77,28 +77,6 @@ struct Arg {
 };
 
 // +---------------------------------+
-// |             ArgView             |
-// +---------------------------------+
-
-struct ArgView {
-  std::size_t tuple_idx{};
-  ArgType type = ArgType::POS;
-  std::string_view name{};
-  std::string_view abbrev{};
-  bool is_required = false;
-  bool has_implicit = false;
-
-  template <typename T>
-  ArgView(std::size_t tuple_idx, Arg<T> const &other)
-      : tuple_idx(tuple_idx),
-        type(other.type),
-        name(other.name),
-        abbrev(other.abbrev),
-        is_required(other.is_required),
-        has_implicit(other.implicit_value.has_value()) {}
-};
-
-// +---------------------------------+
 // |       ArgMeta validations       |
 // +---------------------------------+
 

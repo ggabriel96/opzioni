@@ -21,16 +21,28 @@ namespace opz {
 // |      fwd decls      |
 // +---------------------+
 
-struct ParsedOption {
-  ArgView arg;
-  // no string and empty string mean different things here
-  std::optional<std::string_view> value;
-};
-
 constexpr bool is_dash_dash(std::string_view const) noexcept;
 constexpr bool looks_positional(std::string_view const) noexcept;
 constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
 constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
+
+struct ArgView {
+  std::size_t tuple_idx{};
+  ArgType type = ArgType::POS;
+  std::string_view name{};
+  std::string_view abbrev{};
+  bool is_required = false;
+  bool has_implicit = false;
+
+  template <typename T>
+  ArgView(std::size_t tuple_idx, Arg<T> const &other)
+      : tuple_idx(tuple_idx),
+        type(other.type),
+        name(other.name),
+        abbrev(other.abbrev),
+        is_required(other.is_required),
+        has_implicit(other.implicit_value.has_value()) {}
+};
 
 template <typename... Ts>
 auto find_arg_if(std::tuple<Arg<Ts>...> const haystack, std::predicate<ArgView> auto p) {
@@ -60,6 +72,12 @@ int find_cmd(std::tuple<Cmds...> const haystack, std::string_view const name) {
     haystack);
   // clang-format on
 }
+
+struct ParsedOption {
+  ArgView arg;
+  // no string and empty string mean different things here
+  std::optional<std::string_view> value;
+};
 
 // +-----------------------+
 // |   main parsing code   |
