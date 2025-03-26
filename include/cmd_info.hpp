@@ -71,7 +71,7 @@ struct CmdInfo {
   std::string_view introduction;
   std::string_view parent_cmds_names{};
   std::vector<ArgHelpEntry> args;
-  std::vector<CmdHelpEntry> sub_cmds;
+  std::vector<CmdHelpEntry> subcmds;
   std::size_t amount_pos;
   std::size_t msg_width;
 
@@ -90,12 +90,12 @@ struct CmdInfo {
       cmd.args
     );
     std::apply( // cast to void to suppress unused warning
-      [this](auto&&... cmd) { (void) ((this->sub_cmds.emplace_back(cmd)), ...); },
+      [this](auto&&... cmd) { (void) ((this->subcmds.emplace_back(cmd)), ...); },
       cmd.subcmds
     );
     // clang-format on
     std::sort(args.begin(), args.end());
-    std::sort(sub_cmds.begin(), sub_cmds.end());
+    std::sort(subcmds.begin(), subcmds.end());
   }
 
   void print_title() const noexcept;

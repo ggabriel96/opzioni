@@ -99,7 +99,7 @@ void CmdInfo::print_usage() const noexcept {
   using std::views::drop, std::views::filter, std::views::take;
 
   std::vector<std::string> words;
-  words.reserve(1 + args.size() + sub_cmds.size());
+  words.reserve(1 + args.size() + subcmds.size());
 
   auto insert = std::back_inserter(words);
   words.emplace_back(
@@ -110,13 +110,13 @@ void CmdInfo::print_usage() const noexcept {
   transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage);
   transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage);
 
-  if (sub_cmds.size() == 1) {
-    words.push_back(format("{{{}}}", sub_cmds.front().format_for_index_entry()));
-  } else if (sub_cmds.size() > 1) {
+  if (subcmds.size() == 1) {
+    words.push_back(format("{{{}}}", subcmds.front().format_for_index_entry()));
+  } else if (subcmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
-    words.push_back(format("{{{},", sub_cmds.front().format_for_index_entry()));
-    transform(sub_cmds | drop(1) | take(sub_cmds.size() - 2), insert, &CmdHelpEntry::format_for_index_entry);
-    words.push_back(format("{}}}", sub_cmds.back().format_for_index_entry()));
+    words.push_back(format("{{{},", subcmds.front().format_for_index_entry()));
+    transform(subcmds | drop(1) | take(subcmds.size() - 2), insert, &CmdHelpEntry::format_for_index_entry);
+    words.push_back(format("{}}}", subcmds.back().format_for_index_entry()));
   }
 
   // -4 because we'll later print a left margin of 4 spaces
@@ -150,9 +150,9 @@ void CmdInfo::print_help() const noexcept {
     pending_nl = "";
   }
 
-  if (!sub_cmds.empty()) {
+  if (!subcmds.empty()) {
     fmt::print("{}Subcommands:\n", pending_nl);
-    for (auto const &arg : sub_cmds) {
+    for (auto const &arg : subcmds) {
       print_arg_help(arg, padding_size);
     }
   }
@@ -172,7 +172,7 @@ void CmdInfo::print_details() const noexcept {
   auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_index_entry().length(); };
   std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
   std::size_t const required_length_cmds =
-    sub_cmds.empty() ? 0 : std::ranges::max(sub_cmds | transform(required_length));
+    subcmds.empty() ? 0 : std::ranges::max(subcmds | transform(required_length));
   return std::max(required_length_args, required_length_cmds);
   return 0;
 }
