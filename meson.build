@@ -21,6 +21,13 @@ opzioni_lib = library(
     include_directories: include_dir,
     install: true
 )
+
+install_subdir(
+    'include/',
+    install_dir: get_option('includedir') / meson.project_name(),
+    strip_directory: true
+)
+
 # Make it usable as a Meson subproject.
 opzioni_dep = declare_dependency(
     dependencies: fmt_dep,
