@@ -1,5 +1,7 @@
 # opzioni
 
+### DOCS ARE OUTDATED; will be updated soon
+
 opzioni is a command line arguments parser library for C++.
 
 ## Goals
