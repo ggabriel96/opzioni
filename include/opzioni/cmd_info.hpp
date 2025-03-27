@@ -6,13 +6,14 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
 #include "opzioni/arg.hpp"
-#include "opzioni/cmd.hpp"
+#include "opzioni/concepts.hpp"
 #include "opzioni/strings.hpp"
 
 namespace opz {
@@ -21,8 +22,7 @@ struct CmdHelpEntry {
   std::string_view name{};
   std::string_view introduction{};
 
-  template <typename... Ts>
-  explicit CmdHelpEntry(Cmd<Ts...> from) : name(from.name), introduction(from.introduction) {}
+  explicit CmdHelpEntry(concepts::Cmd auto const &from) : name(from.name), introduction(from.introduction) {}
 
   [[nodiscard]] std::string format_for_usage() const noexcept;
   [[nodiscard]] std::string format_for_index_entry() const noexcept;
@@ -75,8 +75,7 @@ struct CmdInfo {
   std::size_t amount_pos;
   std::size_t msg_width;
 
-  template <typename... CmdArgs> // don't really care about them here
-  explicit CmdInfo(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+  explicit CmdInfo(concepts::Cmd auto const &cmd, std::string_view parent_cmds_names)
     : name(cmd.name),
       version(cmd.version),
       introduction(cmd.introduction),
@@ -131,12 +130,11 @@ class CmdInfoGetter {
   std::optional<CmdInfo> instance{};
 
 public:
-  template <typename... CmdArgs> // don't really care about them here
-  explicit CmdInfoGetter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
+  explicit CmdInfoGetter(concepts::Cmd auto const &cmd, std::string_view parent_cmds_names)
     : cmd_ptr(&cmd),
       parent_cmds_names(parent_cmds_names),
       emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
-        instance.emplace(*static_cast<Cmd<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
+        instance.emplace(*static_cast<std::remove_reference_t<decltype(cmd)> const *>(cmd_ptr), parent_cmds_names);
       }) {}
 
   [[nodiscard]] CmdInfo const &get() noexcept {

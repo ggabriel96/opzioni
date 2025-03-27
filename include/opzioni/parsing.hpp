@@ -6,6 +6,7 @@
 #include <print>
 #include <span>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 #include "opzioni/args_map.hpp"
