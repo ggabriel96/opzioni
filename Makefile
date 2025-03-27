@@ -14,7 +14,7 @@ test:
 format:
 	clang-format --verbose -i \
 		examples/*.cpp \
-		include/*.hpp \
+		include/opzioni/*.hpp \
 		src/*.cpp \
 		tests/*.cpp
 

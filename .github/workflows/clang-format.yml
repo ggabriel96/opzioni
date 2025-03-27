@@ -32,7 +32,7 @@ jobs:
         if: always()
 
       - name: Check include/
-        run: clang-format --dry-run --verbose -Werror include/*.hpp
+        run: clang-format --dry-run --verbose -Werror include/opzioni/*.hpp
         if: always()
 
       - name: Check src/
