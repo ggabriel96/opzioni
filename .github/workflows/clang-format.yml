@@ -24,6 +24,8 @@ jobs:
           activate-environment: opzioni
           auto-activate-base: false
           environment-file: environment.yml
+          channels: conda-forge
+          conda-remove-defaults: true
 
       - name: Check examples/
         run: clang-format --dry-run --verbose -Werror examples/*.cpp
