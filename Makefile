@@ -3,7 +3,7 @@
 all: setup-gcc build test
 
 setup-gcc:
-	meson setup --native-file conda-gcc.ini --wrap-mode forcefallback -Dexamples=True build/
+	meson setup --wrap-mode forcefallback -Dexamples=True build/
 
 build:
 	meson compile -C build/
