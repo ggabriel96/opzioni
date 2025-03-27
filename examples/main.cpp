@@ -66,7 +66,7 @@ int main(int argc, char const *argv[]) {
       .sub(pull_cmd);
 
   auto const map = parse(docker_cmd, argc, argv);
-  std::print("\n{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("{} args map (size {}):\n", map.exec_path, map.size());
   std::print("config: {}\n", map.get<"config">());
   std::print("debug: {}\n", map.get<"debug">());
   std::visit(
