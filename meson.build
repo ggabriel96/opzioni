@@ -27,6 +27,8 @@ install_subdir(
     install_dir: get_option('includedir') / meson.project_name(),
     strip_directory: true
 )
+pkg = import('pkgconfig')
+pkg.generate(opzioni_lib)
 
 # Make it usable as a Meson subproject.
 opzioni_dep = declare_dependency(
