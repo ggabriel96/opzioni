@@ -1,4 +1,4 @@
-#include "cmd_info.hpp"
+#include "opzioni/cmd_info.hpp"
 
 namespace opz {
 

@@ -8,11 +8,11 @@
 #include <string_view>
 #include <vector>
 
-#include "args_map.hpp"
-#include "cmd_info.hpp"
-#include "concepts.hpp"
-#include "exceptions.hpp"
-#include "variant.hpp"
+#include "opzioni/args_map.hpp"
+#include "opzioni/cmd_info.hpp"
+#include "opzioni/concepts.hpp"
+#include "opzioni/exceptions.hpp"
+#include "opzioni/variant.hpp"
 
 namespace opz {
 

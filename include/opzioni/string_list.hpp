@@ -1,7 +1,7 @@
 #ifndef OPZIONI_STRING_LIST_HPP
 #define OPZIONI_STRING_LIST_HPP
 
-#include "fixed_string.hpp"
+#include "opzioni/fixed_string.hpp"
 
 namespace opz {
 

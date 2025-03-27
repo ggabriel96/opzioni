@@ -24,7 +24,7 @@ opzioni_lib = library(
 
 install_subdir(
     'include/',
-    install_dir: get_option('includedir') / meson.project_name(),
+    install_dir: get_option('includedir'),
     strip_directory: true
 )
 pkg = import('pkgconfig')

@@ -1,8 +1,8 @@
 #ifndef OPZIONI_GET_TYPE_HPP
 #define OPZIONI_GET_TYPE_HPP
 
-#include "string_list.hpp"
-#include "type_list.hpp"
+#include "opzioni/string_list.hpp"
+#include "opzioni/type_list.hpp"
 
 namespace opz {
 

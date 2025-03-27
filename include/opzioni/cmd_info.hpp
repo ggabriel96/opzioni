@@ -11,9 +11,9 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include "arg.hpp"
-#include "cmd.hpp"
-#include "strings.hpp"
+#include "opzioni/arg.hpp"
+#include "opzioni/cmd.hpp"
+#include "opzioni/strings.hpp"
 
 namespace opz {
 
