@@ -174,7 +174,6 @@ void CmdInfo::print_details() const noexcept {
   std::size_t const required_length_cmds =
     subcmds.empty() ? 0 : std::ranges::max(subcmds | transform(required_length));
   return std::max(required_length_args, required_length_cmds);
-  return 0;
 }
 
 } // namespace opz
