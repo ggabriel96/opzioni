@@ -1,15 +1,9 @@
-# for use with conda (https://docs.conda.io/en/latest/miniconda.html):
+# for use with conda (https://github.com/conda-forge/miniforge):
 # conda env create -f environment.yml
 name: "opzioni"
-channels:
-  - conda-forge
-  - defaults
 dependencies:
-  - clang-tools=10
-  - gxx_impl_linux-64=10
+  - gxx=14
+  - clang-tools=20
   - make
-  - meson=0.59
-  - ninja=1.10
-variables:
-  NM: x86_64-conda-linux-gnu-nm
-  READELF: x86_64-conda-linux-gnu-readelf
+  - meson=1.6
+  - ninja=1.12

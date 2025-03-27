@@ -1,69 +1,79 @@
-#include <string_view>
-#include <vector>
+#include <print>
+#include <variant>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include "opzioni/all.hpp"
 
-#include "opzioni.hpp"
+using namespace opz;
+
+constexpr static auto exec_cmd = new_cmd("exec")
+                                   .intro("Run a process in a running container")
+                                   .pos<"container">({.help = "Name of the target container"})
+                                   .pos<"command">({.help = "The command to run in the container"})
+                                   .flg<"detach", "d">({.help = "Detached mode: run command in the background"})
+                                   .flg<"interactive", "i">({.help = "Keep STDIN open even if not attached"})
+                                   .flg<"tty", "t">({.help = "Allocate a pseudo-TTY"})
+                                   .flg<"help", "h">(default_help);
+
+void handle_docker_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
+  std::print("\n{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("container: {}\n", map.get<"container">());
+  std::print("command: {}\n", map.get<"command">());
+  std::print("detach: {}\n", map.get<"detach">());
+  std::print("interactive: {}\n", map.get<"interactive">());
+  std::print("tty: {}\n", map.get<"tty">());
+  std::visit(
+    overloaded{
+      [](std::monostate) { std::print("parsed no further subcommand\n"); },
+    },
+    map.subcmd
+  );
+}
+
+constexpr static auto pull_cmd = new_cmd("pull")
+                                   .intro("Pull an image or a repository from a registry")
+                                   .pos<"name">({.help = "The name of the image or repository to pull"})
+                                   .flg<"all-tags", "a">({.help = "Download all tagged images in the repository"})
+                                   .flg<"disable-content-trust">({.help = "Skip image verification"})
+                                   .opt<"platform", "P">({.help = "Set platform if server is multi-platform capable"})
+                                   .flg<"quiet", "q">({.help = "Supress verbose output"})
+                                   .flg<"help", "h">(default_help);
+
+void handle_docker_subcmd(ArgsMap<decltype(pull_cmd)> const &map) {
+  std::print("\n{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("name: {}\n", map.get<"name">());
+  std::print("all-tags: {}\n", map.get<"all-tags">());
+  std::print("disable-content-trust: {}\n", map.get<"disable-content-trust">());
+  std::print("platform: {}\n", map.get<"platform">());
+  std::print("quiet: {}\n", map.get<"quiet">());
+  std::visit(
+    overloaded{
+      [](std::monostate) { std::print("parsed no further subcommand\n"); },
+    },
+    map.subcmd
+  );
+}
 
 int main(int argc, char const *argv[]) {
-  using fmt::print;
-  using namespace opzioni;
+  auto docker_cmd =
+    new_cmd("docker", "1.0")
+      .opt<"config">(
+        {.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"}
+      )
+      .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = act::count})
+      .flg<"help", "h">(default_help)
+      .flg<"version", "v">(default_version)
+      .sub(exec_cmd)
+      .sub(pull_cmd);
 
-  constexpr auto program =
-      Program("main")
-          .version("1.0")
-          .intro("A short example illustrating opzioni's simpler features")
-          .details("This example only covers simple positionals, options, and flags. For examples of more"
-                   " complicated parse actions or subcommands, please take a look at the other examples.")
-          .add(Help())
-          .add(Version())
-          .add(Pos("name").help("Your first name"))
-          .add(Opt("double", "d").help("A double. Default: {default_value}").action(Assign<double>().otherwise(7.11)))
-          .add(Opt("last-name").help("Your last name"))
-          .add(Opt("o")
-                   .help("We also support having short names only. Default: {default_value}")
-                   .action(Assign().otherwise("oh")))
-          .add(Opt("num", "n")
-                   .help("Creates a vector of numbers with each appearence of this argument. Default: {default_value}")
-                   .action(Append<int>()))
-          .add(Opt("csv")
-                   .help("In contrast to `Append`, this will create a vector of numbers from a single "
-                         "comma-separated list of values. Default: {default_value}")
-                   .action(List<int>()))
-          .add(Opt("verbose", "v")
-                   .help("Level of verbosity. "
-                         "Sets to {implicit_value} if given without a value (e.g. -{abbrev}). Default: {default_value}")
-                   .action(Assign<int>().implicitly(1).otherwise(0)))
-          .add(Flg("append", "a")
-                   .help(
-                       "The equivalent of Python's argparse `append_const`: will append {implicit_value} every time it "
-                       "appears in the CLI. Default: {default_value}")
-                   .action(Append<int>().implicitly(1)))
-          .add(Flg("flag", "f")
-                   .help("The equivalent of Python's argparse `store_const`: will store \"{implicit_value}\" if it "
-                         "appears in the CLI. Default: {default_value}")
-                   .action(Assign().implicitly("do something!").otherwise("nope")))
-          .add(Counter("t").help("We also support flags with only short names. This argument counts how many times it "
-                                 "appears in the CLI. Default: {default_value}"))
-          .add(Opt("woo", "w").help("Woo").action(Append<int>().gather(3)));
-
-  auto const args = program(argc, argv);
-  print("\nCommand path: {}\n", args.exec_path);
-  print("Number of arguments: {}\n", args.size());
-
-  print("name: {}\n", args.as<std::string_view>("name"));
-
-  print("double: {}\n", args.as<double>("double"));
-  // illustrating how one could handle arguments without default values
-  print("last-name: {}\n", args.has("last-name") ? args.as<std::string_view>("last-name") : "no last name");
-  print("o: {}\n", args.as<std::string_view>("o"));
-  print("num: {}\n", args.as<std::vector<int>>("num"));
-  print("csv: {}\n", args.as<std::vector<int>>("csv"));
-  print("woo: {}\n", args.as<std::vector<int>>("woo"));
-  print("verbose: {}\n", args.as<int>("verbose"));
-
-  print("append: {}\n", args.has("append") ? args.as<std::vector<int>>("append") : std::vector<int>{});
-  print("flag: {}\n", args.as<std::string_view>("flag"));
-  print("t: {}\n", args.as<std::size_t>("t"));
+  auto const map = parse(docker_cmd, argc, argv);
+  std::print("{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("config: {}\n", map.get<"config">());
+  std::print("debug: {}\n", map.get<"debug">());
+  std::visit(
+    overloaded{
+      [](std::monostate) { std::print("parsed no further subcommand\n"); },
+      [](auto const &sub_map) { handle_docker_subcmd(sub_map); },
+    },
+    map.subcmd
+  );
 }

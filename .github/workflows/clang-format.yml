@@ -9,28 +9,30 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Cache conda packages
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           CACHE_VERSION: 0
         with:
           path: ~/conda_pkgs_dir
           key: conda-v${{ env.CACHE_VERSION }}-${{ runner.os }}-${{ hashFiles('environment.yml') }}
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: opzioni
           auto-activate-base: false
           environment-file: environment.yml
+          channels: conda-forge
+          conda-remove-defaults: "true"
 
       - name: Check examples/
         run: clang-format --dry-run --verbose -Werror examples/*.cpp
         if: always()
 
       - name: Check include/
-        run: clang-format --dry-run --verbose -Werror include/*.hpp
+        run: clang-format --dry-run --verbose -Werror include/opzioni/*.hpp
         if: always()
 
       - name: Check src/

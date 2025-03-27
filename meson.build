@@ -1,14 +1,14 @@
 project(
     'opzioni', 'cpp',
-    version: '0.50.0',
+    version: '0.90.0',
     license: 'BSL-1.0',
-    default_options: ['cpp_std=c++20', 'buildtype=debug']
+    default_options: ['cpp_std=c++23', 'buildtype=debug']
 )
 
 # +--------------+
 # | Dependencies |
 # +--------------+
-fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
+fmt_dep = dependency('fmt', version: ['>=11.1.1', '<12.0.0'])
 
 # +--------------------+
 # | Library definition |
@@ -16,11 +16,20 @@ fmt_dep = dependency('fmt', version: ['>=7.0.3', '<8.0.0'])
 include_dir = include_directories('include/')
 opzioni_lib = library(
     'opzioni',
-    ['src/converters.cpp', 'src/opzioni.cpp', 'src/string.cpp'],
+    ['src/actions.cpp', 'src/arg.cpp', 'src/cmd_info.cpp', 'src/converters.cpp', 'src/strings.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true
 )
+
+install_subdir(
+    'include/',
+    install_dir: get_option('includedir'),
+    strip_directory: true
+)
+pkg = import('pkgconfig')
+pkg.generate(opzioni_lib)
+
 # Make it usable as a Meson subproject.
 opzioni_dep = declare_dependency(
     dependencies: fmt_dep,
@@ -31,7 +40,7 @@ opzioni_dep = declare_dependency(
 # +-------+
 # | Tests |
 # +-------+
-subdir('tests/')
+# subdir('tests/')
 
 # +----------+
 # | Examples |
