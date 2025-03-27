@@ -14,8 +14,6 @@ namespace opz {
 enum struct ArgType { POS, OPT, FLG };
 std::string_view to_string(ArgType const at) noexcept;
 
-struct CmdInfo;
-
 // +----------------------------------+
 // |       forward declarations       |
 // +----------------------------------+
