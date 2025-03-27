@@ -71,6 +71,12 @@ int main(int argc, char const *argv[]) {
 
 That gives us:
 
+1. Type deduction of arguments (note the use of `auto`):
+
+    ```cpp
+    auto const name = map.get<"name">();
+    ```
+
 1. Automatic help with `--help` or `-h`
 
     ```
