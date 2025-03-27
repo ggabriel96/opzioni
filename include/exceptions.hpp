@@ -47,39 +47,37 @@ public:
 class MissingRequiredArguments : public UserError {
 public:
   explicit MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names)
-      : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `"))) {}
+    : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `"))) {}
 };
 
 class MissingValue : public UserError {
 public:
   MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
-      : UserError(
-          fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)
-        ) {}
+    : UserError(
+        fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)
+      ) {}
 };
 
 class UnexpectedValue : public UserError {
 public:
   UnexpectedValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
-      : UserError(
-          fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)
-        ) {}
+    : UserError(
+        fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)
+      ) {}
 };
 
 class UnexpectedPositional : public UserError {
 public:
   UnexpectedPositional(std::string_view cmd_name, std::string_view name, std::size_t expected_amount)
-      : UserError(
-          fmt::format(
-            "Unexpected positional argument for `{}`: `{}` ({} are expected)", cmd_name, name, expected_amount
-          )
-        ) {}
+    : UserError(
+        fmt::format("Unexpected positional argument for `{}`: `{}` ({} are expected)", cmd_name, name, expected_amount)
+      ) {}
 };
 
 class UnknownArgument : public UserError {
 public:
   UnknownArgument(std::string_view cmd_name, std::string_view name)
-      : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name)) {}
+    : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name)) {}
 };
 
 class WrongType : public UserError {
@@ -87,11 +85,11 @@ public:
   WrongType(
     std::string_view cmd_name, std::string_view name, std::string_view expected_type, std::string_view received_type
   )
-      : UserError(
-          fmt::format(
-            "Argument `{}` is a known {} of `{}`, but was provided as {}", name, expected_type, cmd_name, received_type
-          )
-        ) {}
+    : UserError(
+        fmt::format(
+          "Argument `{}` is a known {} of `{}`, but was provided as {}", name, expected_type, cmd_name, received_type
+        )
+      ) {}
 };
 
 } // namespace opz

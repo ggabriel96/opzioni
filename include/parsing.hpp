@@ -35,12 +35,12 @@ struct ArgView {
 
   template <typename T>
   ArgView(std::size_t tuple_idx, Arg<T> const &other)
-      : tuple_idx(tuple_idx),
-        type(other.type),
-        name(other.name),
-        abbrev(other.abbrev),
-        is_required(other.is_required),
-        has_implicit(other.implicit_value.has_value()) {}
+    : tuple_idx(tuple_idx),
+      type(other.type),
+      name(other.name),
+      abbrev(other.abbrev),
+      is_required(other.is_required),
+      has_implicit(other.implicit_value.has_value()) {}
 };
 
 template <typename... Ts>
@@ -102,7 +102,7 @@ struct CommandParser {
   typename CommandParserOf<typename Cmd::subcmd_types>::type subparser{};
 
   explicit CommandParser(Cmd const &cmd, std::string_view parent_cmds_names = "")
-      : cmd_ref(cmd), parent_cmds_names(parent_cmds_names) {}
+    : cmd_ref(cmd), parent_cmds_names(parent_cmds_names) {}
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();

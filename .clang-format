@@ -13,8 +13,10 @@ BinPackArguments: false
 BinPackParameters: OnePerLine
 BreakAfterAttributes: Leave
 BreakBeforeConceptDeclarations: Always
+BreakConstructorInitializers: BeforeColon
 BreakStringLiterals: false # avoid breaking them because the `throw` message in compilation errors would be truncated
 BreakTemplateDeclarations: Leave
+ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2
 IndentCaseLabels: true
 PackConstructorInitializers: NextLine

@@ -18,7 +18,7 @@ struct GetType : TypeResult<void> {};
 // base case (type found)
 template <FixedString Needle, FixedString... Haystack, typename NeedleType, typename... HaystackTypes>
 struct GetType<Needle, StringList<Needle, Haystack...>, TypeList<NeedleType, HaystackTypes...>>
-    : TypeResult<NeedleType> {};
+  : TypeResult<NeedleType> {};
 
 // recursion case (keep looking)
 template <
@@ -28,7 +28,7 @@ template <
   typename OtherType,
   typename... HaystackTypes>
 struct GetType<Needle, StringList<Other, Haystack...>, TypeList<OtherType, HaystackTypes...>>
-    : GetType<Needle, StringList<Haystack...>, TypeList<HaystackTypes...>> {};
+  : GetType<Needle, StringList<Haystack...>, TypeList<HaystackTypes...>> {};
 
 } // namespace opz
 

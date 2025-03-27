@@ -43,12 +43,12 @@ struct ArgHelpEntry {
 
   template <typename T>
   ArgHelpEntry(std::string_view cmd_name, Arg<T> from)
-      : type(from.type),
-        name(from.name),
-        cmd_name(cmd_name),
-        abbrev(from.abbrev),
-        help(from.help),
-        is_required(from.is_required) {
+    : type(from.type),
+      name(from.name),
+      cmd_name(cmd_name),
+      abbrev(from.abbrev),
+      help(from.help),
+      is_required(from.is_required) {
     if (from.default_value) default_value = fmt::format("{}", *from.default_value);
     if (from.implicit_value) implicit_value = fmt::format("{}", *from.implicit_value);
   }
@@ -77,12 +77,12 @@ struct CmdInfo {
 
   template <typename... CmdArgs> // don't really care about them here
   explicit CmdInfo(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
-      : name(cmd.name),
-        version(cmd.version),
-        introduction(cmd.introduction),
-        parent_cmds_names(parent_cmds_names),
-        amount_pos(cmd.amount_pos),
-        msg_width(cmd.msg_width) {
+    : name(cmd.name),
+      version(cmd.version),
+      introduction(cmd.introduction),
+      parent_cmds_names(parent_cmds_names),
+      amount_pos(cmd.amount_pos),
+      msg_width(cmd.msg_width) {
     args.reserve(std::tuple_size_v<decltype(cmd.args)>);
     // clang-format off
     std::apply( // cast to void to suppress unused warning
@@ -133,11 +133,11 @@ class CmdInfoGetter {
 public:
   template <typename... CmdArgs> // don't really care about them here
   explicit CmdInfoGetter(Cmd<CmdArgs...> const &cmd, std::string_view parent_cmds_names)
-      : cmd_ptr(&cmd),
-        parent_cmds_names(parent_cmds_names),
-        emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
-          instance.emplace(*static_cast<Cmd<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
-        }) {}
+    : cmd_ptr(&cmd),
+      parent_cmds_names(parent_cmds_names),
+      emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
+        instance.emplace(*static_cast<Cmd<CmdArgs...> const *>(cmd_ptr), parent_cmds_names);
+      }) {}
 
   [[nodiscard]] CmdInfo const &get() noexcept {
     if (!instance) emplace(instance, cmd_ptr, parent_cmds_names);
