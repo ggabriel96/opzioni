@@ -20,32 +20,25 @@ The goals of this library, in order of importance, are:
     It's also very closely related to the previous goal.
     We should be able to detect most errors at compile-time and provide decent diagnostics.
 
-1. **_Try_ not to repeat yourself.**
+1. **Don't repeat yourself.**
 
-    When specifying a CLI, if some information was already given to the library, that same information should not be needed again.
-    For example, if the type of an argument was already specified, the user should not be asked to tell the type again.
-    Unfortunately that is very hard, so some places still require duplicate information.
+    When specifying the CLI, if some information was already given to the library, that same information should not be needed again.
+    For example, the type of an argument is always known during setup, so the user should not be asked to inform the type when querying that argument.
 
 1. **Be bleeding-edge.**
 
-    This library requires C++20.
-    That limits a lot its potential users, but also allows for the use of the new and powerful features of C++.
+    This isn't really a goal, but a fact: this library requires C++23.
+    That limits a lot its potential users (so there are plans to at least go back to C++20),
+    but also allows for the use of the new and powerful features of C++.
     It also helps to accomplish the previous goals.
 
 ## Disclaimer
 
 - This is a **personal project** with **no promise of maintainability** for the time being.
 
-    I started it to learn more about C++ and its new features.
+- I have just rewritten the entire library, so **it is neither stable nor production-ready**.
 
-- Although it is *not* in *early* development, since I'm working on it for months and iterated over it many times,
-    **it is not stable or production-ready**.
-
-- There are **many unit tests missing**.
-
-- I frequently changed the interface of the library and I'm **not afraid of changing it radically again** if I think it would improve the UX.
-
-    Another example is the names of the `namespaces` and what is in them.
+- There are **no unit tests** (since the rewrite).
 
 - There is *a lot* of polish and optimization work to do.
 
@@ -53,29 +46,26 @@ The goals of this library, in order of importance, are:
 
 ## Sneak peek
 
-The code below is a fully working example, taken from [`examples/hello.cpp`][examples/hello], only reformatted and with quotes changed to angle brackets in the `#include`.
+The code below is a fully working example, taken from [`examples/hello.cpp`](examples/hello.cpp),
+only with quotes changed to angle brackets in the `#include`.
 Feel free to take a look at the other, more complex, examples in the same directory.
 
 ```cpp
-#include <iostream>
-#include <string_view>
+#include <print>
+#include <variant>
 
-#include <opzioni.hpp>
+#include <opzioni/all.hpp>
 
 int main(int argc, char const *argv[]) {
-  using namespace opzioni;
+  auto hello_cmd = opz::new_cmd("hello", "1.0")
+                     .intro("Greeting people since the dawn of computing")
+                     .pos<"name">({.help = "Your name please, so I can greet you"})
+                     .flg<"help", "h">(opz::default_help)
+                     .flg<"version", "v">(opz::default_version);
 
-  constexpr auto hello =
-    Program("hello")
-      .version("0.1")
-      .intro("Greeting people since the dawn of computing")
-      .add(Pos("name").help("Your name please, so I can greet you"))
-      .add(Help())
-      .add(Version());
-
-  auto const args = hello(argc, argv);
-  std::string_view const name = args["name"];
-  std::cout << "Hello, " << name << "!\n";
+  auto const map = opz::parse(hello_cmd, argc, argv);
+  auto const name = map.get<"name">();
+  std::print("Hello, {}!\n", name);
 }
 ```
 
@@ -85,36 +75,33 @@ That gives us:
 
     ```
     $ ./build/examples/hello -h
-    hello 0.1
+    hello 1.0
 
     Greeting people since the dawn of computing
 
     Usage:
         hello <name> [--help] [--version]
-
+    
     Positionals:
         name             Your name please, so I can greet you
 
     Options & Flags:
         -h, --help       Display this information
-        -V, --version    Display the software version
+        -v, --version    Display hello's version
     ```
 
-1. Automatic version with `--version` or `-V`
+1. Automatic version with `--version` or `-v`
 
     ```
-    $ ./build/examples/hello -V
-    hello 0.1
+    $ ./build/examples/hello -v
+    hello 1.0
     ```
 
-1. Automatic error handling
+1. Automatic error handling (_WIP_)
 
     ```
     $ ./build/examples/hello Gabriel Galli
-    Unexpected positional argument `Galli`. This program expects 1 positional arguments
-
-    Usage:
-        hello <name> [--help] [--version]
+    libc++abi: terminating due to uncaught exception of type opz::UnexpectedPositional: Unexpected positional argument for `hello`: `Galli` (1 are expected)
     ```
 
 1. And finally:
@@ -131,8 +118,9 @@ Meanwhile, it is kinda straightforward to build it locally, since just a simple 
 The build system is the awesome [Meson](https://mesonbuild.com/).
 
 1. Download and install conda if you haven't already.
-    Just grab a suitable installer from [here](https://docs.conda.io/en/latest/miniconda.html) and run it.
-    There's also an install guide [here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
+
+    You can either use [miniforge](https://conda-forge.org) (recommended, personally),
+    or [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).
 
 1. Clone this repository:
 
@@ -163,7 +151,7 @@ Feel free to inspect it and not use it.
 
 ## License
 
-opzioni's license is the [Boost Software License (BSL) 1.0][license].
+opzioni's license is the [Boost Software License (BSL) 1.0](LICENSE).
 
 This means you are **free to use** this library **as you wish** and see fit.
 
@@ -176,11 +164,3 @@ In other words, **there is no need to bundle opzioni's license with your binary*
 [![](docs/src/assets/images/jetbrains-variant-3.svg)](https://www.jetbrains.com/?from=opzioni)
 
 Thank you to [JetBrains](https://www.jetbrains.com/?from=opzioni) for supporting this project by providing free access to its products as part of the Open Source Licenses program.
-
-<!-- links -->
-[issues/5]: https://github.com/ggabriel96/opzioni/issues/5
-[examples/hello]: https://github.com/ggabriel96/opzioni/blob/main/examples/hello.cpp
-[.devcontainer]: https://github.com/ggabriel96/opzioni/blob/main/.devcontainer/
-[Makefile]: https://github.com/ggabriel96/opzioni/blob/main/Makefile
-[shell.nix]: https://github.com/ggabriel96/opzioni/blob/main/shell.nix
-[license]: https://github.com/ggabriel96/opzioni/blob/main/LICENSE
