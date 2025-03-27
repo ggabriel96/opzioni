@@ -376,17 +376,12 @@ struct CommandParser {
   }
 };
 
-template <concepts::Cmd Cmd>
-auto parse(Cmd const &cmd, std::span<char const *> args) {
+auto parse(concepts::Cmd auto const &cmd, std::span<char const *> args) {
   auto parser = CommandParser(cmd);
   auto map = parser.get_args_map(args);
-
-  // 1) check_contains_required done separately in order to report all missing required args;
-  // 2) also done after get_args_map in order to allow things such as `--help` to work
-  // without actually requiring the required arguments
+  // check_contains_required done separately in order to report all missing required args
   parser.check_contains_required(map);
   parser.set_defaults(map);
-
   return map;
 }
 
