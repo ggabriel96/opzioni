@@ -6,11 +6,24 @@
 
 #include "opzioni/arg.hpp"
 #include "opzioni/concepts.hpp"
+#include "opzioni/exceptions.hpp"
 #include "opzioni/fixed_string.hpp"
 #include "opzioni/get_type.hpp"
+#include "opzioni/parsing.hpp"
 #include "opzioni/strings.hpp"
 
 namespace opz {
+
+int print_error(UserError &) noexcept;
+int print_error_and_usage(UserError &) noexcept;
+int rethrow(UserError &);
+
+using ErrorHandler = int (*)(UserError &);
+
+struct ExtraConfig {
+  std::optional<std::size_t> msg_width{};
+  std::optional<ErrorHandler> error_handler{};
+};
 
 template <typename...> struct Cmd;
 
@@ -23,11 +36,11 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   std::string_view name{};
   std::string_view version{};
   std::string_view introduction{};
+  std::size_t msg_width{100};
+  ErrorHandler error_handler{print_error_and_usage};
+
+  std::size_t amount_pos{0};
   std::tuple<Arg<Types>...> args;
-  std::size_t amount_pos = 0;
-
-  std::size_t msg_width = 100; // TODO: expose
-
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
   std::tuple<SubCmds...> subcmds;
 
@@ -37,20 +50,34 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   }
 
   template <concepts::Cmd OtherCmd>
-  consteval Cmd(OtherCmd const &other) {
+  explicit consteval Cmd(OtherCmd const &other) {
     name = other.name;
     version = other.version;
     introduction = other.introduction;
+    msg_width = other.msg_width;
+    error_handler = other.error_handler;
     amount_pos = other.amount_pos;
     if constexpr (std::tuple_size_v<decltype(args)> == std::tuple_size_v<decltype(other.args)>) args = other.args;
     if constexpr (std::tuple_size_v<decltype(subcmds)> == std::tuple_size_v<decltype(other.subcmds)>)
       subcmds = other.subcmds;
   }
 
-  consteval auto intro(std::string_view intro) {
+  consteval auto &intro(std::string_view intro) {
     if (!is_valid_intro(intro))
       throw "Command intros, if specified, must neither be empty nor start or end with whitespace";
     this->introduction = intro;
+    return *this;
+  }
+
+  consteval auto &with(ExtraConfig cfg) {
+    if (cfg.msg_width.has_value()) {
+      if (*cfg.msg_width == 0) throw "The message width must be greater than zero";
+      this->msg_width = *cfg.msg_width;
+    }
+    if (cfg.error_handler.has_value()) {
+      if (*cfg.error_handler == nullptr) throw "The error handler cannot be null";
+      this->error_handler = *cfg.error_handler;
+    }
     return *this;
   }
 
@@ -139,6 +166,14 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   template <FixedString Name, typename T = bool>
   consteval auto flg(ArgMeta<T> meta) {
     return flg<Name, "", T>(meta);
+  }
+
+  auto operator()(int argc, char const *argv[]) const noexcept {
+    try {
+      return parse(*this, argc, argv);
+    } catch (UserError &ue) {
+      std::exit(this->error_handler(ue));
+    }
   }
 };
 

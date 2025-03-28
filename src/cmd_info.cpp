@@ -74,8 +74,9 @@ bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
 // |                CmdInfo                |
 // +---------------------------------------+
 
-void CmdInfo::print_title() const noexcept {
+void CmdInfo::print_title(std::FILE *f) const noexcept {
   fmt::print(
+    f,
     "{: <{}}{}{: >{}}\n",
     parent_cmds_names,
     parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
@@ -85,15 +86,15 @@ void CmdInfo::print_title() const noexcept {
   );
 }
 
-void CmdInfo::print_intro() const noexcept {
+void CmdInfo::print_intro(std::FILE *f) const noexcept {
   if (introduction.length() <= msg_width) {
-    fmt::print("{}\n", introduction);
+    fmt::print(f, "{}\n", introduction);
   } else {
-    fmt::print("{}\n", limit_string_within(introduction, msg_width));
+    fmt::print(f, "{}\n", limit_string_within(introduction, msg_width));
   }
 }
 
-void CmdInfo::print_usage() const noexcept {
+void CmdInfo::print_usage(std::FILE *f) const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
   using std::views::drop, std::views::filter, std::views::take;
@@ -121,29 +122,29 @@ void CmdInfo::print_usage() const noexcept {
 
   // -4 because we'll later print a left margin of 4 spaces
   auto const split_lines = limit_within(std::span(words), msg_width - 4);
-  fmt::print("Usage:\n");
+  fmt::print(f, "Usage:\n");
   for (auto const &line : split_lines) {
-    fmt::print("    {}\n", join(line, " "));
+    fmt::print(f, "    {}\n", join(line, " "));
   }
 }
 
-void CmdInfo::print_help() const noexcept {
+void CmdInfo::print_help(std::FILE *f) const noexcept {
   std::string_view pending_nl;
   // using same padding size for all arguments so they stay aligned
   auto const padding_size = help_padding_size();
 
   if (amount_pos > 0) {
-    fmt::print("Positionals:\n");
+    fmt::print(f, "Positionals:\n");
     for (auto const &arg : args | std::views::take(amount_pos)) {
-      print_arg_help(arg, padding_size);
+      print_arg_help(arg, padding_size, f);
     }
     pending_nl = "\n";
   }
 
   if (args.size() > amount_pos) {
-    fmt::print("{}Options & Flags:\n", pending_nl);
+    fmt::print(f, "{}Options & Flags:\n", pending_nl);
     for (auto const &arg : args | std::views::drop(amount_pos)) {
-      print_arg_help(arg, padding_size);
+      print_arg_help(arg, padding_size, f);
     }
     pending_nl = "\n";
   } else {
@@ -151,14 +152,14 @@ void CmdInfo::print_help() const noexcept {
   }
 
   if (!subcmds.empty()) {
-    fmt::print("{}Subcommands:\n", pending_nl);
+    fmt::print(f, "{}Subcommands:\n", pending_nl);
     for (auto const &arg : subcmds) {
-      print_arg_help(arg, padding_size);
+      print_arg_help(arg, padding_size, f);
     }
   }
 }
 
-void CmdInfo::print_details() const noexcept {
+void CmdInfo::print_details(std::FILE *f) const noexcept {
   // if (details.empty())
   //   return;
   // if (details.length() <= msg_width)

@@ -6,7 +6,6 @@
 #include <print>
 #include <span>
 #include <string_view>
-#include <type_traits>
 #include <vector>
 
 #include "opzioni/args_map.hpp"
@@ -98,18 +97,17 @@ struct CommandParser {
   using arg_types = typename Cmd::arg_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
-  std::string_view parent_cmds_names;
+  CmdInfoGetter info;
 
   typename CommandParserOf<typename Cmd::subcmd_types>::type subparser{};
 
-  explicit CommandParser(Cmd const &cmd, std::string_view parent_cmds_names = "")
-    : cmd_ref(cmd), parent_cmds_names(parent_cmds_names) {}
+  explicit CommandParser(Cmd const &cmd, std::string const &parent_cmds_names = "")
+    : cmd_ref(cmd), info(cmd, parent_cmds_names) {}
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
     if (!args.empty()) {
       map.exec_path = std::string_view(args[0]);
-      CmdInfoGetter info(cmd_ref.get(), parent_cmds_names);
       std::size_t current_positional_idx = 0;
       for (std::size_t index = 1; index < args.size();) {
         auto const cli_arg = std::string_view(args[index]);
@@ -123,6 +121,7 @@ struct CommandParser {
         } else if (looks_positional(cli_arg)) {
           // check if is command first
           if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, cli_arg); idx != -1) {
+            auto const parent_cmds_names = this->info.get_parent_cmds_names();
             auto const new_parent_cmds_names = fmt::format(
               "{: <{}}{}",
               parent_cmds_names,
@@ -159,7 +158,7 @@ struct CommandParser {
         } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
           index += assign_short_flags(map, flags, info);
         } else {
-          throw UnknownArgument(this->cmd_ref.get().name, cli_arg);
+          throw UnknownArgument(this->cmd_ref.get().name, cli_arg, this->info);
         }
       }
     }
@@ -170,24 +169,28 @@ struct CommandParser {
     ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx, CmdInfoGetter &info
   ) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
-      throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos);
+      throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos, this->info);
 
-    // clang-format off
-    std::size_t idx = 0;
-    std::apply(
-      [&idx, cur_pos_idx, &map, args, &info](auto&&... arg) {
-        (void)(( // cast to void to suppress unused warning
-        arg.type == ArgType::POS
-          ? idx == cur_pos_idx
-            ? (arg.action(map.args, arg, args[0], info), true)
-            : (++idx, false)
-          : false
-        ) || ...);
-      },
-      this->cmd_ref.get().args
-    );
-    // clang-format on
-    return 1;
+    try {
+      std::size_t idx = 0;
+      // clang-format off
+      std::apply(
+        [&idx, cur_pos_idx, &map, args, &info](auto&&... arg) {
+          (void)(( // cast to void to suppress unused warning
+          arg.type == ArgType::POS
+            ? idx == cur_pos_idx
+              ? (arg.action(map.args, arg, args[0], info), true)
+              : (++idx, false)
+            : false
+          ) || ...);
+        },
+        this->cmd_ref.get().args
+      );
+      // clang-format on
+      return 1;
+    } catch (std::runtime_error const &e) {
+      throw UserError(e.what(), this->info);
+    }
   }
 
   std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) {
@@ -260,58 +263,36 @@ struct CommandParser {
       return std::nullopt;
     });
 
-    // clang-format off
-    std::size_t idx = 0;
-    std::apply(
-      [&idx,  &option, &map, &value, &info](auto&&... arg) {
-        (void)(( // cast to void to suppress unused warning
-        idx == option.arg.tuple_idx
-          ? (arg.action(map.args, arg, value, info), true)
-          : (++idx, false)
-        ) || ...);
-      },
-      this->cmd_ref.get().args
-    );
-    // clang-format on
-
-    return ret;
+    try {
+      std::size_t idx = 0;
+      // clang-format off
+      std::apply(
+        [&idx,  &option, &map, &value, &info](auto&&... arg) {
+          (void)(( // cast to void to suppress unused warning
+          idx == option.arg.tuple_idx
+            ? (arg.action(map.args, arg, value, info), true)
+            : (++idx, false)
+          ) || ...);
+        },
+        this->cmd_ref.get().args
+      );
+      // clang-format on
+      return ret;
+    } catch (std::runtime_error const &e) {
+      throw UserError(e.what(), this->info);
+    }
   }
 
   std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, CmdInfoGetter &info) const {
     auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
-    if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
+    if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, this->info);
     if (it->type != ArgType::FLG) {
-      throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG));
+      throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), this->info);
     }
 
-    // clang-format off
-    std::size_t idx = 0;
-    std::apply(
-      [&idx, &it, &map, &info](auto&&... arg) {
-        (void)(( // cast to void to suppress unused warning
-        idx == it->tuple_idx
-          ? (arg.action(map.args, arg, std::nullopt, info), true)
-          : (++idx, false)
-        ) || ...);
-      },
-      this->cmd_ref.get().args
-    );
-    // clang-format on
-
-    return 1;
-  }
-
-  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, CmdInfoGetter &info) const {
-    for (std::size_t i = 0; i < flags.size(); ++i) {
-      auto const flag = flags.substr(i, 1);
-      auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
-      if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag);
-      if (it->type != ArgType::FLG) {
-        throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG));
-      }
-
-      // clang-format off
+    try {
       std::size_t idx = 0;
+      // clang-format off
       std::apply(
         [&idx, &it, &map, &info](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
@@ -323,7 +304,40 @@ struct CommandParser {
         this->cmd_ref.get().args
       );
       // clang-format on
+      return 1;
+    } catch (std::runtime_error const &e) {
+      throw UserError(e.what(), this->info);
     }
+  }
+
+  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, CmdInfoGetter &info) const {
+    for (std::size_t i = 0; i < flags.size(); ++i) {
+      auto const flag = flags.substr(i, 1);
+      auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
+      if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, this->info);
+      if (it->type != ArgType::FLG) {
+        throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), this->info);
+      }
+
+      try {
+        std::size_t idx = 0;
+        // clang-format off
+        std::apply(
+          [&idx, &it, &map, &info](auto&&... arg) {
+            (void)(( // cast to void to suppress unused warning
+            idx == it->tuple_idx
+              ? (arg.action(map.args, arg, std::nullopt, info), true)
+              : (++idx, false)
+            ) || ...);
+          },
+          this->cmd_ref.get().args
+        );
+        // clang-format on
+      } catch (std::runtime_error const &e) {
+        throw UserError(e.what(), this->info);
+      }
+    }
+
     return 1;
   }
 
@@ -342,7 +356,7 @@ struct CommandParser {
     );
 
     if (!missing_arg_names.empty())
-      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names);
+      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, this->info);
 
     if (map.has_subcmd()) {
       std::visit(overloaded {

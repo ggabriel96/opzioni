@@ -2,6 +2,7 @@
 #define OPZIONI_CMD_INFO_HPP
 
 #include <algorithm>
+#include <cstdio>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -97,14 +98,14 @@ struct CmdInfo {
     std::sort(subcmds.begin(), subcmds.end());
   }
 
-  void print_title() const noexcept;
-  void print_intro() const noexcept;
-  void print_usage() const noexcept;
-  void print_help() const noexcept;
-  void print_details() const noexcept;
+  void print_title(std::FILE *f = stdout) const noexcept;
+  void print_intro(std::FILE *f = stdout) const noexcept;
+  void print_usage(std::FILE *f = stdout) const noexcept;
+  void print_help(std::FILE *f = stdout) const noexcept;
+  void print_details(std::FILE *f = stdout) const noexcept;
   [[nodiscard]] std::size_t help_padding_size() const noexcept;
 
-  void print_arg_help(auto const &arg, std::size_t const padding_size) const noexcept {
+  void print_arg_help(auto const &arg, std::size_t const padding_size, std::FILE *f = stdout) const noexcept {
     using std::views::drop;
     auto const description = arg.format_for_index_description();
     // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
@@ -117,23 +118,23 @@ struct CmdInfo {
 
     for (auto const &line : description_lines | drop(1)) {
       // the same 4 spaces of left margin, then additional 4 spaces of indentation
-      fmt::print("    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
+      fmt::print(f, "    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
     }
   }
 };
 
 class CmdInfoGetter {
   void const *cmd_ptr;
-  std::string_view parent_cmds_names;
-  void (*emplace)(std::optional<CmdInfo> &, void const *, std::string_view);
+  std::string parent_cmds_names; // not string_view to avoid dangling in the error handling scenario
+  void (*emplace)(std::optional<CmdInfo> &, void const *, std::string const &);
 
   std::optional<CmdInfo> instance{};
 
 public:
-  explicit CmdInfoGetter(concepts::Cmd auto const &cmd, std::string_view parent_cmds_names)
+  explicit CmdInfoGetter(concepts::Cmd auto const &cmd, std::string const &parent_cmds_names)
     : cmd_ptr(&cmd),
       parent_cmds_names(parent_cmds_names),
-      emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string_view parent_cmds_names) {
+      emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string const &parent_cmds_names) {
         instance.emplace(*static_cast<std::remove_reference_t<decltype(cmd)> const *>(cmd_ptr), parent_cmds_names);
       }) {}
 
@@ -141,6 +142,8 @@ public:
     if (!instance) emplace(instance, cmd_ptr, parent_cmds_names);
     return *instance;
   }
+
+  [[nodiscard]] std::string_view get_parent_cmds_names() const noexcept { return parent_cmds_names; }
 };
 
 } // namespace opz

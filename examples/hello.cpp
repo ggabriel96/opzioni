@@ -1,5 +1,4 @@
 #include <print>
-#include <variant>
 
 #include "opzioni/all.hpp"
 
@@ -10,7 +9,7 @@ int main(int argc, char const *argv[]) {
                      .flg<"help", "h">(opz::default_help)
                      .flg<"version", "v">(opz::default_version);
 
-  auto const map = opz::parse(hello_cmd, argc, argv);
+  auto const map = hello_cmd(argc, argv);
   auto const name = map.get<"name">();
   std::print("Hello, {}!\n", name);
 }
