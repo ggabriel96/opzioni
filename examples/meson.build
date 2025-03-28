@@ -3,7 +3,7 @@ hello = executable(
     dependencies: [fmt_dep, opzioni_dep]
 )
 
-main = executable(
-    'main', 'main.cpp',
+docker = executable(
+    'docker', 'docker.cpp',
     dependencies: [fmt_dep, opzioni_dep]
 )
