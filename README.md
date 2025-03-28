@@ -52,7 +52,6 @@ Feel free to take a look at the other, more complex, examples in the same direct
 
 ```cpp
 #include <print>
-#include <variant>
 
 #include <opzioni/all.hpp>
 
@@ -63,7 +62,7 @@ int main(int argc, char const *argv[]) {
                      .flg<"help", "h">(opz::default_help)
                      .flg<"version", "v">(opz::default_version);
 
-  auto const map = opz::parse(hello_cmd, argc, argv);
+  auto const map = hello_cmd(argc, argv);
   auto const name = map.get<"name">();
   std::print("Hello, {}!\n", name);
 }
@@ -87,7 +86,7 @@ That gives us:
 
     Usage:
         hello <name> [--help] [--version]
-    
+
     Positionals:
         name             Your name please, so I can greet you
 
@@ -103,11 +102,13 @@ That gives us:
     hello 1.0
     ```
 
-1. Automatic error handling (_WIP_)
+1. Automatic error handling
 
     ```
     $ ./build/examples/hello Gabriel Galli
-    libc++abi: terminating due to uncaught exception of type opz::UnexpectedPositional: Unexpected positional argument for `hello`: `Galli` (1 are expected)
+    Unexpected positional argument for `hello`: `Galli` (only 1 are expected)
+    Usage:
+        hello <name> [--help] [--version]
     ```
 
 1. And finally:
