@@ -50,17 +50,37 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   }
 
   template <concepts::Cmd OtherCmd>
-  explicit consteval Cmd(OtherCmd const &other) {
-    name = other.name;
-    version = other.version;
-    introduction = other.introduction;
-    msg_width = other.msg_width;
-    error_handler = other.error_handler;
-    amount_pos = other.amount_pos;
-    if constexpr (std::tuple_size_v<decltype(args)> == std::tuple_size_v<decltype(other.args)>) args = other.args;
-    if constexpr (std::tuple_size_v<decltype(subcmds)> == std::tuple_size_v<decltype(other.subcmds)>)
-      subcmds = other.subcmds;
-  }
+  explicit consteval Cmd(OtherCmd const &other)
+    : name(other.name),
+      version(other.version),
+      introduction(other.introduction),
+      msg_width(other.msg_width),
+      error_handler(other.error_handler),
+      amount_pos(other.amount_pos),
+      args(other.args),
+      subcmds(other.subcmds) {}
+
+  template <concepts::Cmd OtherCmd, typename T>
+  explicit consteval Cmd(OtherCmd const &other, Arg<T> new_arg)
+    : name(other.name),
+      version(other.version),
+      introduction(other.introduction),
+      msg_width(other.msg_width),
+      error_handler(other.error_handler),
+      amount_pos(other.amount_pos + static_cast<std::size_t>(new_arg.type == ArgType::POS)),
+      args(std::tuple_cat(other.args, std::make_tuple(new_arg))),
+      subcmds(other.subcmds) {}
+
+  template <concepts::Cmd OtherCmd, concepts::Cmd NewSubCmd>
+  explicit consteval Cmd(OtherCmd const &other, NewSubCmd const &new_subcmd)
+    : name(other.name),
+      version(other.version),
+      introduction(other.introduction),
+      msg_width(other.msg_width),
+      error_handler(other.error_handler),
+      amount_pos(other.amount_pos),
+      args(other.args),
+      subcmds(std::tuple_cat(other.subcmds, std::make_tuple(new_subcmd))) {}
 
   consteval auto &intro(std::string_view intro) {
     if (!is_valid_intro(intro))
@@ -83,8 +103,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <concepts::Cmd NewSubCmd>
   consteval auto sub(NewSubCmd const &subcmd) const noexcept {
-    Cmd<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmd> new_cmd(*this);
-    new_cmd.subcmds = std::tuple_cat(subcmds, std::make_tuple(subcmd));
+    Cmd<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmd> new_cmd(*this, subcmd);
     return new_cmd;
   }
 
@@ -92,23 +111,19 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto pos(ArgMeta<T> meta) {
     validate_common<Name, "">(meta);
     validate_pos(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
-    new_cmd.args = std::tuple_cat(
-      args,
-      std::make_tuple(
-        Arg<T>{
-          .type = ArgType::POS,
-          .name = Name,
-          .abbrev = "",
-          .help = meta.help,
-          .is_required = meta.is_required.value_or(true),
-          .default_value = meta.default_value,
-          .implicit_value = std::nullopt,
-          .action = meta.action,
-        }
-      )
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(
+      *this,
+      Arg<T>{
+        .type = ArgType::POS,
+        .name = Name,
+        .abbrev = "",
+        .help = meta.help,
+        .is_required = meta.is_required.value_or(true),
+        .default_value = meta.default_value,
+        .implicit_value = std::nullopt,
+        .action = meta.action,
+      }
     );
-    new_cmd.amount_pos += 1;
     return new_cmd;
   }
 
@@ -116,21 +131,18 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto opt(ArgMeta<T> meta) {
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
-    new_cmd.args = std::tuple_cat(
-      args,
-      std::make_tuple(
-        Arg<T>{
-          .type = ArgType::OPT,
-          .name = Name,
-          .abbrev = Abbrev,
-          .help = meta.help,
-          .is_required = meta.is_required.value_or(false),
-          .default_value = meta.default_value,
-          .implicit_value = meta.implicit_value,
-          .action = meta.action,
-        }
-      )
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(
+      *this,
+      Arg<T>{
+        .type = ArgType::OPT,
+        .name = Name,
+        .abbrev = Abbrev,
+        .help = meta.help,
+        .is_required = meta.is_required.value_or(false),
+        .default_value = meta.default_value,
+        .implicit_value = meta.implicit_value,
+        .action = meta.action,
+      }
     );
     return new_cmd;
   }
@@ -144,21 +156,18 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto flg(ArgMeta<T> meta) {
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(*this);
-    new_cmd.args = std::tuple_cat(
-      args,
-      std::make_tuple(
-        Arg<T>{
-          .type = ArgType::FLG,
-          .name = Name,
-          .abbrev = Abbrev,
-          .help = meta.help,
-          .is_required = false,
-          .default_value = meta.default_value.value_or(T{}),
-          .implicit_value = meta.implicit_value.value_or(true),
-          .action = meta.action,
-        }
-      )
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(
+      *this,
+      Arg<T>{
+        .type = ArgType::FLG,
+        .name = Name,
+        .abbrev = Abbrev,
+        .help = meta.help,
+        .is_required = false,
+        .default_value = meta.default_value.value_or(T{}),
+        .implicit_value = meta.implicit_value.value_or(true),
+        .action = meta.action,
+      }
     );
     return new_cmd;
   }
