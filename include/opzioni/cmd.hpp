@@ -103,12 +103,15 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <concepts::Cmd... NewSubCmds>
   consteval auto sub(NewSubCmds const &...subcmds) const noexcept {
+    // TODO: check these subcmds don't exist yet (by name)
     Cmd<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmds...> new_cmd(*this, subcmds...);
     return new_cmd;
   }
 
   template <FixedString Name, typename T = std::string_view>
   consteval auto pos(ArgMeta<T> meta) {
+    static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
+    // TODO: check there isn't another arg with same abbreviation
     validate_common<Name, "">(meta);
     validate_pos(meta);
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
@@ -129,6 +132,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
   consteval auto opt(ArgMeta<T> meta) {
+    static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
+    // TODO: check there isn't another arg with same abbreviation
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
@@ -154,6 +159,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   template <FixedString Name, FixedString Abbrev, typename T = bool>
   consteval auto flg(ArgMeta<T> meta) {
+    static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
+    // TODO: check there isn't another arg with same abbreviation
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
