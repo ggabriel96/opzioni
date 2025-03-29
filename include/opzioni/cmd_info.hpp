@@ -90,7 +90,7 @@ struct CmdInfo {
       cmd.args
     );
     std::apply( // cast to void to suppress unused warning
-      [this](auto&&... cmd) { (void) ((this->subcmds.emplace_back(cmd)), ...); },
+      [this](auto&&... cmd) { (void) ((this->subcmds.emplace_back(cmd.get())), ...); },
       cmd.subcmds
     );
     // clang-format on

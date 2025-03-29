@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <print>
 #include <span>
 #include <string_view>
@@ -60,13 +61,13 @@ auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::predicate<Arg
 }
 
 template <concepts::Cmd... Cmds>
-int find_cmd(std::tuple<Cmds...> const haystack, std::string_view const name) {
+int find_cmd(std::tuple<std::reference_wrapper<Cmds const>...> const haystack, std::string_view const name) {
   // clang-format off
   return std::apply(
     [name](auto &&...elem) {
       int idx = 0, ret = -1;
       (void) // cast to void to suppress unused warning
-      ((elem.name == name ? (ret = idx, true) : (++idx, false)) || ...);
+      ((elem.get().name == name ? (ret = idx, true) : (++idx, false)) || ...);
       return ret;
     },
     haystack);
@@ -134,7 +135,12 @@ struct CommandParser {
               [&i, idx, this, &new_parent_cmds_names](auto&&... cmd) {
                 (void)(( // cast to void to suppress unused warning
                 i == idx
-                  ? (this->subparser.template emplace<CommandParser<std::remove_reference_t<decltype(cmd)>>>(cmd, new_parent_cmds_names), true)
+                  ? (
+                      this->subparser.template emplace<
+                        CommandParser<typename std::remove_reference_t<decltype(cmd)>::type>
+                      >(cmd, new_parent_cmds_names),
+                      true
+                    )
                   : (++i, false)
                 ) || ...);
               },

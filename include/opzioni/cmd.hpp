@@ -1,6 +1,7 @@
 #ifndef OPZIONI_COMMAND_HPP
 #define OPZIONI_COMMAND_HPP
 
+#include <functional>
 #include <optional>
 #include <tuple>
 
@@ -41,8 +42,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 
   std::size_t amount_pos{0};
   std::tuple<Arg<Types> const...> args;
-  // TODO: make it not store whole objects in the tuple (reference_wrapper?)
-  std::tuple<SubCmds...> subcmds;
+  std::tuple<std::reference_wrapper<SubCmds const>...> subcmds;
 
   consteval Cmd() = default;
   explicit consteval Cmd(std::string_view name, std::string_view version = "") : name(name), version(version) {
@@ -80,7 +80,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
       error_handler(other.error_handler),
       amount_pos(other.amount_pos),
       args(other.args),
-      subcmds(std::tuple_cat(other.subcmds, std::make_tuple(new_subcmd))) {}
+      subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
 
   consteval auto &intro(std::string_view intro) {
     if (!is_valid_intro(intro))
