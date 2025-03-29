@@ -40,7 +40,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   ErrorHandler error_handler{print_error_and_usage};
 
   std::size_t amount_pos{0};
-  std::tuple<Arg<Types>...> args;
+  std::tuple<Arg<Types> const...> args;
   // TODO: make it not store whole objects in the tuple (reference_wrapper?)
   std::tuple<SubCmds...> subcmds;
 
