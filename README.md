@@ -87,10 +87,8 @@ That gives us:
     Usage:
         hello <name> [--help] [--version]
 
-    Positionals:
+    Arguments:
         name             Your name please, so I can greet you
-
-    Options & Flags:
         -h, --help       Display this information
         -v, --version    Display hello's version
     ```
