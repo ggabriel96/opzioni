@@ -111,7 +111,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto pos(ArgMeta<T> meta) {
     validate_common<Name, "">(meta);
     validate_pos(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
       *this,
       Arg<T>{
         .type = ArgType::POS,
@@ -131,7 +131,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto opt(ArgMeta<T> meta) {
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
       *this,
       Arg<T>{
         .type = ArgType::OPT,
@@ -156,7 +156,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   consteval auto flg(ArgMeta<T> meta) {
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
       *this,
       Arg<T>{
         .type = ArgType::FLG,
