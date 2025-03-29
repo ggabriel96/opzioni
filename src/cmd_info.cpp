@@ -133,17 +133,9 @@ void CmdInfo::print_help(std::FILE *f) const noexcept {
   // using same padding size for all arguments so they stay aligned
   auto const padding_size = help_padding_size();
 
-  if (amount_pos > 0) {
-    fmt::print(f, "Positionals:\n");
-    for (auto const &arg : args | std::views::take(amount_pos)) {
-      print_arg_help(arg, padding_size, f);
-    }
-    pending_nl = "\n";
-  }
-
-  if (args.size() > amount_pos) {
-    fmt::print(f, "{}Options & Flags:\n", pending_nl);
-    for (auto const &arg : args | std::views::drop(amount_pos)) {
+  if (!args.empty()) {
+    fmt::print(f, "Arguments:\n");
+    for (auto const &arg : args) {
       print_arg_help(arg, padding_size, f);
     }
     pending_nl = "\n";
