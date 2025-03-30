@@ -29,7 +29,7 @@ struct ExtraConfig {
 template <typename...> struct Cmd;
 
 template <FixedString... Names, typename... Types, concepts::Cmd... SubCmds>
-struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
+struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
   using subcmd_types = TypeList<SubCmds...>;
@@ -104,7 +104,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
   template <concepts::Cmd... NewSubCmds>
   consteval auto sub(NewSubCmds const &...subcmds) const noexcept {
     // TODO: check these subcmds don't exist yet (by name)
-    Cmd<StringList<Names...>, TypeList<Types...>, SubCmds..., NewSubCmds...> new_cmd(*this, subcmds...);
+    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds..., NewSubCmds...>> new_cmd(*this, subcmds...);
     return new_cmd;
   }
 
@@ -114,7 +114,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     // TODO: check there isn't another arg with same abbreviation
     validate_common<Name, "">(meta);
     validate_pos(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T>{
         .type = ArgType::POS,
@@ -136,7 +136,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     // TODO: check there isn't another arg with same abbreviation
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T>{
         .type = ArgType::OPT,
@@ -163,7 +163,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
     // TODO: check there isn't another arg with same abbreviation
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, SubCmds...> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T>{
         .type = ArgType::FLG,
@@ -194,7 +194,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
 };
 
 consteval auto new_cmd(std::string_view name, std::string_view version = "") {
-  return Cmd<StringList<>, TypeList<>>(name, version);
+  return Cmd<StringList<>, TypeList<>, TypeList<>>(name, version);
 }
 
 } // namespace opz
