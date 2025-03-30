@@ -82,14 +82,14 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, SubCmds...> {
       args(other.args),
       subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmds)...))) {}
 
-  consteval auto &intro(std::string_view intro) {
+  consteval auto intro(std::string_view intro) {
     if (!is_valid_intro(intro))
       throw "Command intros, if specified, must neither be empty nor start or end with whitespace";
     this->introduction = intro;
     return *this;
   }
 
-  consteval auto &with(ExtraConfig cfg) {
+  consteval auto with(ExtraConfig cfg) {
     if (cfg.msg_width.has_value()) {
       if (*cfg.msg_width == 0) throw "The message width must be greater than zero";
       this->msg_width = *cfg.msg_width;
