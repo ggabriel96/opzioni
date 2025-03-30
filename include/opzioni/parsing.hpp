@@ -61,7 +61,7 @@ auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::predicate<Arg
 }
 
 template <concepts::Cmd... Cmds>
-int find_cmd(std::tuple<std::reference_wrapper<Cmds const>...> const haystack, std::string_view const name) {
+int find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
   // clang-format off
   return std::apply(
     [name](auto &&...elem) {

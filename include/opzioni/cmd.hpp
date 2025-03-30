@@ -42,7 +42,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
 
   std::size_t amount_pos{0};
   std::tuple<Arg<Types> const...> args;
-  std::tuple<std::reference_wrapper<SubCmds const>...> subcmds;
+  std::tuple<std::reference_wrapper<SubCmds const> const...> subcmds;
 
   consteval Cmd() = default;
   explicit consteval Cmd(std::string_view name, std::string_view version = "") : name(name), version(version) {
