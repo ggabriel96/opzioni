@@ -186,7 +186,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
 
   auto operator()(int argc, char const *argv[]) const noexcept {
     try {
-      return parse(*this, argc, argv);
+      auto parser = CommandParser(*this);
+      return parser(argc, argv);
     } catch (UserError &ue) {
       std::exit(this->error_handler(ue));
     }

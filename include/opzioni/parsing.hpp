@@ -84,26 +84,37 @@ struct ParsedOption {
 // |   main parsing code   |
 // +-----------------------+
 
-template <concepts::Cmd> struct CommandParser;
-
-template <typename...> struct CommandParserOf;
-template <concepts::Cmd... Cmds> struct CommandParserOf<TypeList<Cmds...>> {
-  using type = std::variant<std::monostate, CommandParser<Cmds const>...>;
-};
-
 template <concepts::Cmd Cmd>
-struct CommandParser {
+class CommandParser {
+public:
   using cmd_type = Cmd;
   using arg_names = typename Cmd::arg_names;
   using arg_types = typename Cmd::arg_types;
+  using subcmd_types = typename Cmd::subcmd_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
   CmdInfoGetter info;
 
-  typename CommandParserOf<typename Cmd::subcmd_types>::type subparser{};
+  explicit CommandParser(Cmd const &cmd) : CommandParser(cmd, "") {}
 
-  explicit CommandParser(Cmd const &cmd, std::string const &parent_cmds_names = "")
-    : cmd_ref(cmd), info(cmd, parent_cmds_names) {}
+  ArgsMap<Cmd const> operator()(std::span<char const *> args) {
+    auto map = this->get_args_map(args);
+    // check_contains_required done separately in order to report all missing required args
+    this->check_contains_required(map);
+    this->set_defaults(map);
+    return map;
+  }
+
+  ArgsMap<Cmd const> operator()(int argc, char const *argv[]) {
+    auto const args = std::span{argv, static_cast<std::size_t>(argc)};
+    return (*this)(args);
+  }
+
+private:
+  template <concepts::Cmd>
+  friend class CommandParser;
+
+  CommandParser(Cmd const &cmd, std::string const &parent_cmds_names) : cmd_ref(cmd), info(cmd, parent_cmds_names) {}
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
@@ -130,27 +141,20 @@ struct CommandParser {
               this->cmd_ref.get().name
             );
             int i = 0;
+            auto const rest = args.subspan(index);
             // clang-format off
             std::apply(
-              [&i, idx, this, &new_parent_cmds_names](auto&&... cmd) {
+              [&i, idx, &map, rest, &new_parent_cmds_names](auto&&... cmd) {
                 (void)(( // cast to void to suppress unused warning
                 i == idx
-                  ? (
-                      this->subparser.template emplace<
-                        CommandParser<typename std::remove_reference_t<decltype(cmd)>::type>
-                      >(cmd, new_parent_cmds_names),
-                      true
-                    )
+                  ? (map.subcmd =
+                      CommandParser<typename std::remove_reference_t<decltype(cmd)>::type>(
+                        cmd.get(), new_parent_cmds_names)(rest), true)
                   : (++i, false)
                 ) || ...);
               },
               this->cmd_ref.get().subcmds
             );
-            auto const rest = args.subspan(index);
-            std::visit(overloaded {
-              [](std::monostate) {},
-              [&map, rest](auto &p) { map.subcmd = p.get_args_map(rest); }
-            }, this->subparser);
             // clang-format on
             index += rest.size();
           } else {
@@ -360,17 +364,10 @@ struct CommandParser {
       },
       this->cmd_ref.get().args
     );
+    // clang-format on
 
     if (!missing_arg_names.empty())
       throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, this->info);
-
-    if (map.has_subcmd()) {
-      std::visit(overloaded {
-        [](std::monostate) {},
-        [&map](auto const &p) { p.check_contains_required(std::get<ArgsMap<typename std::remove_reference_t<decltype(p)>::cmd_type>>(map.subcmd)); }
-      }, this->subparser);
-    }
-    // clang-format on
   }
 
   void set_defaults(ArgsMap<Cmd const> &map) const {
@@ -385,31 +382,9 @@ struct CommandParser {
       },
       this->cmd_ref.get().args
     );
-
-    if (map.has_subcmd()) {
-      std::visit(overloaded {
-        [](std::monostate) {},
-        [&map](auto &p) { p.set_defaults(std::get<ArgsMap<typename std::remove_reference_t<decltype(p)>::cmd_type>>(map.subcmd)); }
-      }, this->subparser);
-    }
     // clang-format on
   }
 };
-
-auto parse(concepts::Cmd auto const &cmd, std::span<char const *> args) {
-  auto parser = CommandParser(cmd);
-  auto map = parser.get_args_map(args);
-  // check_contains_required done separately in order to report all missing required args
-  parser.check_contains_required(map);
-  parser.set_defaults(map);
-  return map;
-}
-
-template <concepts::Cmd Cmd>
-auto parse(Cmd const &cmd, int argc, char const *argv[]) {
-  auto const args = std::span{argv, static_cast<std::size_t>(argc)};
-  return parse(cmd, args);
-}
 
 // +---------------------+
 // |   parsing helpers   |
