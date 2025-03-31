@@ -35,24 +35,28 @@ struct ArgView {
   bool has_implicit = false;
 
   template <typename T>
-  ArgView(std::size_t tuple_idx, Arg<T> const &other)
-    : tuple_idx(tuple_idx),
-      type(other.type),
-      name(other.name),
-      abbrev(other.abbrev),
-      is_required(other.is_required),
-      has_implicit(other.implicit_value.has_value()) {}
+  constexpr static ArgView from(std::size_t tuple_idx, Arg<T> const &other) {
+    return ArgView{
+      .tuple_idx = tuple_idx,
+      .type = other.type,
+      .name = other.name,
+      .abbrev = other.abbrev,
+      .is_required = other.is_required,
+      .has_implicit = other.implicit_value.has_value()
+    };
+  }
 };
 
 template <typename... Ts>
-auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::predicate<ArgView> auto p) {
+constexpr auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::predicate<ArgView> auto p) {
+  // TODO: use something like the frozen library instead of this
   return std::apply(
     [&p](auto &&...elem) {
       std::size_t idx = 0;
       std::optional<ArgView> ret = std::nullopt;
       // clang-format off
         (void) // cast to void to suppress unused warning
-        ((p(elem) ? (ret = ArgView(idx, elem), true) : (++idx, false)) || ...);
+        ((p(elem) ? (ret = ArgView::from(idx, elem), true) : (++idx, false)) || ...);
       // clang-format on
       return ret;
     },
@@ -61,7 +65,8 @@ auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::predicate<Arg
 }
 
 template <concepts::Cmd... Cmds>
-int find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
+constexpr int find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
+  // TODO: use something like the frozen library instead of this
   // clang-format off
   return std::apply(
     [name](auto &&...elem) {
