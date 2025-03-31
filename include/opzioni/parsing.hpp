@@ -85,7 +85,7 @@ struct ParsedOption {
 // +-----------------------+
 
 template <concepts::Cmd Cmd>
-class CommandParser {
+class CmdParser {
 public:
   using cmd_type = Cmd;
   using arg_names = typename Cmd::arg_names;
@@ -95,7 +95,7 @@ public:
   std::reference_wrapper<Cmd const> cmd_ref;
   CmdInfoGetter info;
 
-  explicit CommandParser(Cmd const &cmd) : CommandParser(cmd, "") {}
+  explicit CmdParser(Cmd const &cmd) : CmdParser(cmd, "") {}
 
   ArgsMap<Cmd const> operator()(std::span<char const *> args) {
     auto map = this->get_args_map(args);
@@ -112,9 +112,9 @@ public:
 
 private:
   template <concepts::Cmd>
-  friend class CommandParser;
+  friend class CmdParser;
 
-  CommandParser(Cmd const &cmd, std::string const &parent_cmds_names) : cmd_ref(cmd), info(cmd, parent_cmds_names) {}
+  CmdParser(Cmd const &cmd, std::string const &parent_cmds_names) : cmd_ref(cmd), info(cmd, parent_cmds_names) {}
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
@@ -148,7 +148,7 @@ private:
                 (void)(( // cast to void to suppress unused warning
                 i == idx
                   ? (map.subcmd =
-                      CommandParser<typename std::remove_reference_t<decltype(cmd)>::type>(
+                      CmdParser<typename std::remove_reference_t<decltype(cmd)>::type>(
                         cmd.get(), new_parent_cmds_names)(rest), true)
                   : (++i, false)
                 ) || ...);
