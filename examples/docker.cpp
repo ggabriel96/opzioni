@@ -62,7 +62,8 @@ int main(int argc, char const *argv[]) {
       .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = act::count})
       .flg<"help", "h">(default_help)
       .flg<"version", "v">(default_version)
-      .sub(exec_cmd, pull_cmd);
+      .sub(exec_cmd)
+      .sub(pull_cmd);
 
   auto const map = docker_cmd(argc, argv);
   std::print("{} args map (size {}):\n", map.exec_path, map.size());
