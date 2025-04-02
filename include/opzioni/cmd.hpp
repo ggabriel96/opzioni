@@ -111,7 +111,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   }
 
   template <FixedString Name, typename T = std::string_view>
-  consteval auto pos(ArgMeta<T> meta) {
+  consteval auto pos(ArgMeta<T> meta) const {
     validate_common<Name, "">(meta);
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
@@ -132,7 +132,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
-  consteval auto opt(ArgMeta<T> meta) {
+  consteval auto opt(ArgMeta<T> meta) const {
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
@@ -157,12 +157,12 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   }
 
   template <FixedString Name, typename T = std::string_view>
-  consteval auto opt(ArgMeta<T> meta) {
+  consteval auto opt(ArgMeta<T> meta) const {
     return opt<Name, "", T>(meta);
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = bool>
-  consteval auto flg(ArgMeta<T> meta) {
+  consteval auto flg(ArgMeta<T> meta) const {
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
@@ -187,7 +187,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   }
 
   template <FixedString Name, typename T = bool>
-  consteval auto flg(ArgMeta<T> meta) {
+  consteval auto flg(ArgMeta<T> meta) const {
     return flg<Name, "", T>(meta);
   }
 
