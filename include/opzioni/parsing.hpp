@@ -65,7 +65,8 @@ constexpr auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::pre
 }
 
 template <concepts::Cmd... Cmds>
-constexpr int find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
+constexpr int
+find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
   // TODO: use something like the frozen library instead of this
   // clang-format off
   return std::apply(
