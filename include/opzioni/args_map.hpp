@@ -19,6 +19,7 @@ template <concepts::Cmd> struct ArgsMap;
 template <typename...> struct ArgsMapOf;
 template <concepts::Cmd... Cmds> struct ArgsMapOf<TypeList<Cmds...>> {
   using type = std::variant<std::monostate, ArgsMap<Cmds const>...>;
+  // `const` above so that consumers may use decltype(cmd) without `std::remove_const_t` and friends
 };
 
 template <concepts::Cmd Cmd>
