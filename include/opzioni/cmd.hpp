@@ -102,8 +102,10 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   }
 
   template <concepts::Cmd NewSubCmd>
-  consteval auto sub(NewSubCmd const &subcmd) const noexcept {
-    // TODO: check these subcmds don't exist yet (by name)
+  consteval auto sub(NewSubCmd const &subcmd) const {
+    // TODO: with or without the check below, adding the same command twice (not just with duplicated name) causes a variant assignment compilation error
+    if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
+      throw "Subcommand with this name already exists";
     Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(*this, subcmd);
     return new_cmd;
   }
