@@ -71,8 +71,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
       args(std::tuple_cat(other.args, std::make_tuple(new_arg))),
       subcmds(other.subcmds) {}
 
-  template <concepts::Cmd OtherCmd, concepts::Cmd... NewSubCmds>
-  explicit consteval Cmd(OtherCmd const &other, NewSubCmds const &...new_subcmds)
+  template <concepts::Cmd OtherCmd, concepts::Cmd NewSubCmd>
+  explicit consteval Cmd(OtherCmd const &other, NewSubCmd const &new_subcmd)
     : name(other.name),
       version(other.version),
       introduction(other.introduction),
@@ -80,7 +80,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
       error_handler(other.error_handler),
       amount_pos(other.amount_pos),
       args(other.args),
-      subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmds)...))) {}
+      subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
 
   consteval auto intro(std::string_view intro) {
     if (!is_valid_intro(intro))
@@ -101,10 +101,10 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
     return *this;
   }
 
-  template <concepts::Cmd... NewSubCmds>
-  consteval auto sub(NewSubCmds const &...subcmds) const noexcept {
+  template <concepts::Cmd NewSubCmd>
+  consteval auto sub(NewSubCmd const &subcmd) const noexcept {
     // TODO: check these subcmds don't exist yet (by name)
-    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds..., NewSubCmds...>> new_cmd(*this, subcmds...);
+    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(*this, subcmd);
     return new_cmd;
   }
 
