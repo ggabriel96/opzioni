@@ -164,8 +164,7 @@ void CmdInfo::print_details(std::FILE *f) const noexcept {
   using std::views::transform;
   auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_index_entry().length(); };
   std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
-  std::size_t const required_length_cmds =
-    subcmds.empty() ? 0 : std::ranges::max(subcmds | transform(required_length));
+  std::size_t const required_length_cmds = subcmds.empty() ? 0 : std::ranges::max(subcmds | transform(required_length));
   return std::max(required_length_args, required_length_cmds);
 }
 

@@ -23,8 +23,7 @@ public:
 
 class ArgumentNotFound : public ConsumerError {
 public:
-  explicit ArgumentNotFound(std::string_view name)
-    : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
+  explicit ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
 };
 
 // +-------------+

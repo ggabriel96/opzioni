@@ -57,7 +57,7 @@ int main(int argc, char const *argv[]) {
   auto docker_cmd =
     new_cmd("docker", "1.0")
       .opt<"config">(
-        {.help = "Location of client config files (default {default_value})", .default_value = "~/.docker"}
+        {.help = "Location of client config files (default: \"{default_value}\")", .default_value = "~/.docker"}
       )
       .flg<"debug", "D", int>({.help = "Enable debug mode", .implicit_value = 1, .action = act::count})
       .flg<"help", "h">(default_help)
