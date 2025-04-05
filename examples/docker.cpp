@@ -23,7 +23,7 @@ void handle_docker_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
   std::print("tty: {}\n", map.get<"tty">());
   std::visit(
     overloaded{
-      [](std::monostate) { std::print("parsed no further subcommand\n"); },
+      [](opz::empty) { std::print("parsed no further subcommand\n"); },
     },
     map.subcmd
   );
@@ -47,7 +47,7 @@ void handle_docker_subcmd(ArgsMap<decltype(pull_cmd)> const &map) {
   std::print("quiet: {}\n", map.get<"quiet">());
   std::visit(
     overloaded{
-      [](std::monostate) { std::print("parsed no further subcommand\n"); },
+      [](opz::empty) { std::print("parsed no further subcommand\n"); },
     },
     map.subcmd
   );
@@ -71,7 +71,7 @@ int main(int argc, char const *argv[]) {
   std::print("debug: {}\n", map.get<"debug">());
   std::visit(
     overloaded{
-      [](std::monostate) { std::print("parsed no further subcommand\n"); },
+      [](opz::empty) { std::print("parsed no further subcommand\n"); },
       [](auto const &sub_map) { handle_docker_subcmd(sub_map); },
     },
     map.subcmd

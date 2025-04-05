@@ -9,5 +9,6 @@
 #include "opzioni/parsing.hpp"
 #include "opzioni/string_list.hpp"
 #include "opzioni/type_list.hpp"
+#include "opzioni/variant.hpp"
 
 #endif // OPZIONI_ALL_HPP
