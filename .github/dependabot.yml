@@ -1,9 +1,0 @@
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "docs/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "build"
-      include: "scope"
