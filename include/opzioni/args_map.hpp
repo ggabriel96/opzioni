@@ -32,7 +32,7 @@ struct ArgsMap {
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
-  typename ArgsMapOf<typename Cmd::subcmd_types>::type subcmd{};
+  typename ArgsMapOf<typename Cmd::subcmd_types>::type submap{};
 
   template <FixedString Name>
   [[nodiscard]] typename GetType<Name, arg_names, arg_types>::type get() const {
@@ -45,12 +45,12 @@ struct ArgsMap {
 
   template <concepts::Cmd SubCmd>
   [[nodiscard]] ArgsMap<SubCmd const> const *get(SubCmd const &) const noexcept {
-    return std::get_if<ArgsMap<SubCmd const>>(&subcmd);
+    return std::get_if<ArgsMap<SubCmd const>>(&submap);
   }
 
   [[nodiscard]] bool has(std::string_view const name) const noexcept { return args.contains(name); }
 
-  [[nodiscard]] bool has_subcmd() const noexcept { return !std::holds_alternative<empty>(subcmd); }
+  [[nodiscard]] bool has_submap() const noexcept { return !std::holds_alternative<empty>(submap); }
 
   [[nodiscard]] auto size() const noexcept { return args.size(); }
 };

@@ -25,7 +25,7 @@ void handle_docker_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
     overloaded{
       [](opz::empty) { std::print("parsed no further subcommand\n"); },
     },
-    map.subcmd
+    map.submap
   );
 }
 
@@ -49,7 +49,7 @@ void handle_docker_subcmd(ArgsMap<decltype(pull_cmd)> const &map) {
     overloaded{
       [](opz::empty) { std::print("parsed no further subcommand\n"); },
     },
-    map.subcmd
+    map.submap
   );
 }
 
@@ -72,8 +72,8 @@ int main(int argc, char const *argv[]) {
   std::visit(
     overloaded{
       [](opz::empty) { std::print("parsed no further subcommand\n"); },
-      [](auto const &sub_map) { handle_docker_subcmd(sub_map); },
+      [](auto const &submap) { handle_docker_subcmd(submap); },
     },
-    map.subcmd
+    map.submap
   );
 }

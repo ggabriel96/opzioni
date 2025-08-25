@@ -153,7 +153,7 @@ private:
               [&i, idx, &map, rest, &new_parent_cmds_names](auto&&... cmd) {
                 (void)(( // cast to void to suppress unused warning
                 i == idx
-                  ? (map.subcmd =
+                  ? (map.submap =
                       CmdParser<typename std::remove_reference_t<decltype(cmd)>::type>(
                         cmd.get(), new_parent_cmds_names)(rest), true)
                   : (++i, false)
