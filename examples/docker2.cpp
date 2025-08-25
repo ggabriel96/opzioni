@@ -40,7 +40,7 @@ int main(int argc, char const *argv[]) {
   std::print("config: {}\n", docker_map.get<"config">());
   std::print("debug: {}\n", docker_map.get<"debug">());
 
-  if (auto const *exec_map = std::get_if<ArgsMap<decltype(exec_cmd)>>(&docker_map.subcmd); exec_map != nullptr) {
+  if (auto const *exec_map = docker_map.get(exec_cmd); exec_map != nullptr) {
     std::print("\n{} args map (size {}):\n", exec_map->exec_path, exec_map->size());
     std::print("container: {}\n", exec_map->get<"container">());
     std::print("command: {}\n", exec_map->get<"command">());
@@ -50,7 +50,7 @@ int main(int argc, char const *argv[]) {
     std::print("parsed no further subcommand\n");
   }
 
-  if (auto const *pull_map = std::get_if<ArgsMap<decltype(pull_cmd)>>(&docker_map.subcmd); pull_map != nullptr) {
+  if (auto const *pull_map = docker_map.get(pull_cmd); pull_map != nullptr) {
     std::print("\n{} args map (size {}):\n", pull_map->exec_path, pull_map->size());
     std::print("name: {}\n", pull_map->get<"name">());
     std::print("all-tags: {}\n", pull_map->get<"all-tags">());

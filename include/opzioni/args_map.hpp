@@ -4,6 +4,7 @@
 #include <any>
 #include <map>
 #include <string_view>
+#include <type_traits>
 #include <variant>
 
 #include "opzioni/concepts.hpp"
@@ -40,6 +41,11 @@ struct ArgsMap {
     auto const val = args.find(Name);
     if (val == args.end()) throw ArgumentNotFound(Name.data);
     return std::any_cast<T>(val->second);
+  }
+
+  template <concepts::Cmd SubCmd>
+  [[nodiscard]] ArgsMap<SubCmd const> const *get(SubCmd const &) const noexcept {
+    return std::get_if<ArgsMap<SubCmd const>>(&subcmd);
   }
 
   [[nodiscard]] bool has(std::string_view const name) const noexcept { return args.contains(name); }
