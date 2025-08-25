@@ -7,3 +7,8 @@ docker = executable(
     'docker', 'docker.cpp',
     dependencies: [fmt_dep, opzioni_dep]
 )
+
+docker2 = executable(
+    'docker2', 'docker2.cpp',
+    dependencies: [fmt_dep, opzioni_dep]
+)
