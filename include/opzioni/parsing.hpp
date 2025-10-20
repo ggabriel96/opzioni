@@ -179,7 +179,7 @@ private:
           (void)(( // cast to void to suppress unused warning
           arg.type == ArgType::POS
             ? idx == cur_pos_idx
-              ? (act::process(map.args, arg, args[0], info), true)
+              ? (act::process(map, arg, args[0], info), true)
               : (++idx, false)
             : false
           ) || ...);
@@ -270,7 +270,7 @@ private:
         [&idx,  &option, &map, &value, &info](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
           idx == option.arg.tuple_idx
-            ? (act::process(map.args, arg, value, info), true)
+            ? (act::process(map, arg, value, info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -297,7 +297,7 @@ private:
         [&idx, &it, &map, &info](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
           idx == it->tuple_idx
-            ? (act::process(map.args, arg, std::nullopt, info), true)
+            ? (act::process(map, arg, std::nullopt, info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -326,7 +326,7 @@ private:
           [&idx, &it, &map, &info](auto&&... arg) {
             (void)(( // cast to void to suppress unused warning
             idx == it->tuple_idx
-              ? (act::process(map.args, arg, std::nullopt, info), true)
+              ? (act::process(map, arg, std::nullopt, info), true)
               : (++idx, false)
             ) || ...);
           },

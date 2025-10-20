@@ -2,11 +2,13 @@
 #define OPZIONI_ACTIONS_HPP
 
 #include <any>
+#include <iostream>
 #include <map>
 #include <optional>
 #include <string_view>
 
 #include "opzioni/arg.hpp"
+#include "opzioni/args_map.hpp"
 #include "opzioni/concepts.hpp"
 #include "opzioni/converters.hpp"
 
@@ -22,62 +24,96 @@ void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T, act::assig
 
 } // namespace detail
 
-template <typename T, typename Tag>
+template <concepts::Cmd Cmd, typename T, typename Tag>
 void process(
-  std::map<std::string_view, std::any> &,
+  ArgsMap<Cmd> &,
   Arg<T, Tag> const &,
   std::optional<std::string_view> const &,
   CmdInfoGetter &
 );
 
-template <concepts::Container C>
+template <concepts::Cmd Cmd, concepts::Container C>
 void process(
-  std::map<std::string_view, std::any> &args_map,
+  ArgsMap<Cmd> &args_map,
   Arg<C, act::append> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
   auto const converted_value = convert<typename C::value_type>(*value);
-  if (auto it = args_map.find(arg.name); it != args_map.end()) {
+  if (auto it = args_map.args.find(arg.name); it != args_map.args.end()) {
     std::any_cast<C &>(it->second).emplace_back(converted_value);
   } else {
-    detail::assign_to(args_map, arg, C{converted_value});
+    detail::assign_to(args_map.args, arg, C{converted_value});
   }
 }
 
-template <typename T>
+template <concepts::Cmd Cmd, typename T>
 void process(
-  std::map<std::string_view, std::any> &args_map,
+  ArgsMap<Cmd> &args_map,
   Arg<T, act::assign> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
   if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
-  detail::assign_to(args_map, arg, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
+  detail::assign_to(args_map.args, arg, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
 }
 
-template <concepts::Integer I>
+template <concepts::Cmd Cmd, concepts::Integer I>
 void process(
-  std::map<std::string_view, std::any> &args_map,
+  ArgsMap<Cmd> &args_map,
   Arg<I, act::count> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
   if (value.has_value()) throw UnexpectedValue(arg.name, 0, 1);
-  auto [it, inserted] = args_map.try_emplace(arg.name, *arg.implicit_value);
+  auto [it, inserted] = args_map.args.try_emplace(arg.name, *arg.implicit_value);
   if (!inserted) std::any_cast<I &>(it->second) += *arg.implicit_value;
 }
 
-template <concepts::Container C>
+template <concepts::Cmd Cmd, concepts::Container C>
 void process(
-  std::map<std::string_view, std::any> &args_map,
+  ArgsMap<Cmd> &args_map,
   Arg<C, act::csv> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
-  detail::assign_to(args_map, arg, convert<C>(*value));
+  detail::assign_to(args_map.args, arg, convert<C>(*value));
+}
+
+template<concepts::Cmd Cmd>
+void process(
+  ArgsMap<Cmd> &args_map,
+  Arg<bool, act::print_help> const &,
+  std::optional<std::string_view> const &,
+  CmdInfoGetter &info
+) {
+  auto const &formatter = info.get();
+  formatter.print_title();
+  if (!formatter.introduction.empty()) {
+    std::cout << nl;
+    formatter.print_intro();
+  }
+  std::cout << nl;
+  formatter.print_usage();
+  std::cout << nl;
+  formatter.print_help();
+  std::cout << nl;
+  formatter.print_details();
+  std::exit(0);
+}
+
+template<concepts::Cmd Cmd>
+void process(
+  ArgsMap<Cmd> &args_map,
+  Arg<bool, act::print_version> const &,
+  std::optional<std::string_view> const &,
+  CmdInfoGetter &info
+) {
+  auto const &formatter = info.get();
+  fmt::print("{} {}\n", formatter.name, formatter.version);
+  std::exit(0);
 }
 
 } // namespace opz::act
