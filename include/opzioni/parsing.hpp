@@ -26,6 +26,7 @@ constexpr bool looks_positional(std::string_view const) noexcept;
 constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
 constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 
+// TODO: is ArgView still necessary?
 struct ArgView {
   std::size_t tuple_idx{};
   ArgType type = ArgType::POS;
@@ -77,9 +78,6 @@ template <concepts::Cmd Cmd>
 class CmdParser {
 public:
   using cmd_type = Cmd;
-  using arg_names = typename Cmd::arg_names;
-  using arg_types = typename Cmd::arg_types;
-  using subcmd_types = typename Cmd::subcmd_types;
 
   std::reference_wrapper<Cmd const> cmd_ref;
   ExtraInfo extra_info;
