@@ -29,15 +29,15 @@ void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T, act::assig
 // TODO: give it a better name or move to specific namespace
 template <concepts::Cmd Cmd, typename T, typename Tag>
 void process(
-  Cmd const &, ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::string_view> const &, ExtraInfo const &
+  ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::string_view> const &, Cmd const &, ExtraInfo const &
 );
 
 template <concepts::Cmd Cmd, concepts::Container C>
 void process(
-  Cmd const &,
   ArgsMap<Cmd const> &args_map,
   Arg<C, act::append> const &arg,
   std::optional<std::string_view> const &value,
+  Cmd const &,
   ExtraInfo const &
 ) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
@@ -51,10 +51,10 @@ void process(
 
 template <concepts::Cmd Cmd, typename T>
 void process(
-  Cmd const &,
   ArgsMap<Cmd const> &args_map,
   Arg<T, act::assign> const &arg,
   std::optional<std::string_view> const &value,
+  Cmd const &,
   ExtraInfo const &
 ) {
   if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
@@ -63,10 +63,10 @@ void process(
 
 template <concepts::Cmd Cmd, concepts::Integer I>
 void process(
-  Cmd const &,
   ArgsMap<Cmd const> &args_map,
   Arg<I, act::count> const &arg,
   std::optional<std::string_view> const &value,
+  Cmd const &,
   ExtraInfo const &
 ) {
   if (value.has_value()) throw UnexpectedValue(arg.name, 0, 1);
@@ -76,10 +76,10 @@ void process(
 
 template <concepts::Cmd Cmd, concepts::Container C>
 void process(
-  Cmd const &,
   ArgsMap<Cmd const> &args_map,
   Arg<C, act::csv> const &arg,
   std::optional<std::string_view> const &value,
+  Cmd const &,
   ExtraInfo const &
 ) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
@@ -88,10 +88,10 @@ void process(
 
 template <concepts::Cmd Cmd>
 void process(
-  Cmd const &cmd,
   ArgsMap<Cmd const> &,
   Arg<bool, act::print_help> const &,
   std::optional<std::string_view> const &,
+  Cmd const &cmd,
   ExtraInfo const &info
 ) {
   auto const &formatter = CmdInfo(cmd, info.parent_cmds_names);
@@ -111,10 +111,10 @@ void process(
 
 template <concepts::Cmd Cmd>
 void process(
-  Cmd const &cmd,
   ArgsMap<Cmd const> &args_map,
   Arg<bool, act::print_version> const &,
   std::optional<std::string_view> const &,
+  Cmd const &cmd,
   ExtraInfo const &
 ) {
   fmt::print("{} {}\n", cmd.name, cmd.version);

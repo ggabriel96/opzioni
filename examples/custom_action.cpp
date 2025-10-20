@@ -6,10 +6,10 @@ struct double_action {};
 
 template <opz::concepts::Cmd Cmd>
 void process(
-  Cmd const &,
   opz::ArgsMap<Cmd const> &args_map,
   opz::Arg<int, double_action> const &arg,
   std::optional<std::string_view> const &value,
+  Cmd const &,
   opz::ExtraInfo const &
 ) {
   auto const val = opz::convert<int>(*value);

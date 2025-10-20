@@ -177,7 +177,7 @@ private:
           (void)(( // cast to void to suppress unused warning
           arg.type == ArgType::POS
             ? idx == cur_pos_idx
-              ? (process(this->cmd_ref.get(), map, arg, args[0], this->extra_info), true)
+              ? (process(map, arg, args[0], this->cmd_ref.get(), this->extra_info), true)
               : (++idx, false)
             : false
           ) || ...);
@@ -264,7 +264,7 @@ private:
           using namespace act;
           (void)(( // cast to void to suppress unused warning
           idx == option.arg.tuple_idx
-            ? (process(this->cmd_ref.get(), map, arg, value, this->extra_info), true)
+            ? (process(map, arg, value, this->cmd_ref.get(), this->extra_info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -292,7 +292,7 @@ private:
           using namespace act;
           (void)(( // cast to void to suppress unused warning
           idx == it->tuple_idx
-            ? (process(this->cmd_ref.get(), map, arg, std::nullopt, this->extra_info), true)
+            ? (process(map, arg, std::nullopt, this->cmd_ref.get(), this->extra_info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -322,7 +322,7 @@ private:
             using namespace act;
             (void)(( // cast to void to suppress unused warning
             idx == it->tuple_idx
-              ? (process(this->cmd_ref.get(), map, arg, std::nullopt, this->extra_info), true)
+              ? (process(map, arg, std::nullopt, this->cmd_ref.get(), this->extra_info), true)
               : (++idx, false)
             ) || ...);
           },
