@@ -33,8 +33,6 @@ struct TupleOf<TypeList<Ts...>> {
 template <concepts::Cmd Cmd>
 struct ArgsMap {
   using cmd_type = Cmd;
-  using arg_names = typename Cmd::arg_names;
-  using arg_types = typename Cmd::arg_types;
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
@@ -42,8 +40,8 @@ struct ArgsMap {
   typename ArgsMapOf<typename Cmd::subcmd_types>::type submap{};
 
   template <FixedString Name>
-  [[nodiscard]] typename GetType<Name, arg_names, arg_types>::type get() const {
-    using T = typename GetType<Name, arg_names, arg_types>::type;
+  [[nodiscard]] typename GetType<Name, typename cmd_type::arg_names, typename cmd_type::arg_types>::type get() const {
+    using T = typename GetType<Name, typename cmd_type::arg_names, typename cmd_type::arg_types>::type;
     static_assert(!std::is_same_v<T, void>, "unknown parameter name");
     auto const val = args.find(Name);
     if (val == args.end()) throw ArgumentNotFound(Name.data);
