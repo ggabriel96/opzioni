@@ -18,6 +18,7 @@ template <typename T>
 concept Cmd = requires(T) {
   typename T::arg_names;
   typename T::arg_types;
+  typename T::arg_tags;
   typename T::subcmd_types;
 };
 

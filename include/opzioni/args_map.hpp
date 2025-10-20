@@ -24,6 +24,12 @@ template <concepts::Cmd... Cmds> struct ArgsMapOf<TypeList<Cmds...>> {
   // `const` above so that consumers may use decltype(cmd) without `std::remove_const_t` and friends
 };
 
+template <typename...> struct TupleOf;
+template <typename ...Ts>
+struct TupleOf<TypeList<Ts...>> {
+  using type = std::tuple<std::optional<Ts>...>;
+};
+
 template <concepts::Cmd Cmd>
 struct ArgsMap {
   using cmd_type = Cmd;
@@ -32,6 +38,7 @@ struct ArgsMap {
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
+  // typename TupleOf<arg_types>::type argsx;
   typename ArgsMapOf<typename Cmd::subcmd_types>::type submap{};
 
   template <FixedString Name>

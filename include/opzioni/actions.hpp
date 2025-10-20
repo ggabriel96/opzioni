@@ -15,17 +15,25 @@ namespace opz::act {
 namespace detail {
 
 template <typename T>
-void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T> const &arg, T const &&value) {
+void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T, act::assign> const &arg, T const &&value) {
   auto const [_, inserted] = args_map.try_emplace(arg.name, value);
   if (!inserted) throw UnexpectedValue(arg.name, 1, 2);
 }
 
 } // namespace detail
 
+template <typename T, typename Tag>
+void process(
+  std::map<std::string_view, std::any> &,
+  Arg<T, Tag> const &,
+  std::optional<std::string_view> const &,
+  CmdInfoGetter &
+);
+
 template <concepts::Container C>
-void append(
+void process(
   std::map<std::string_view, std::any> &args_map,
-  Arg<C> const &arg,
+  Arg<C, act::append> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
@@ -39,9 +47,9 @@ void append(
 }
 
 template <typename T>
-void assign(
+void process(
   std::map<std::string_view, std::any> &args_map,
-  Arg<T> const &arg,
+  Arg<T, act::assign> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
@@ -50,9 +58,9 @@ void assign(
 }
 
 template <concepts::Integer I>
-void count(
+void process(
   std::map<std::string_view, std::any> &args_map,
-  Arg<I> const &arg,
+  Arg<I, act::count> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {
@@ -62,9 +70,9 @@ void count(
 }
 
 template <concepts::Container C>
-void csv(
+void process(
   std::map<std::string_view, std::any> &args_map,
-  Arg<C> const &arg,
+  Arg<C, act::csv> const &arg,
   std::optional<std::string_view> const &value,
   CmdInfoGetter &
 ) {

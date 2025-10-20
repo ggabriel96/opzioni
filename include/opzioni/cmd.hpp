@@ -28,10 +28,11 @@ struct ExtraConfig {
 
 template <typename...> struct Cmd;
 
-template <FixedString... Names, typename... Types, concepts::Cmd... SubCmds>
-struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
+template <FixedString... Names, typename... Types, typename... Tags, concepts::Cmd... SubCmds>
+struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds...>> {
   using arg_names = StringList<Names...>;
   using arg_types = TypeList<Types...>;
+  using arg_tags = TypeList<Tags...>;
   using subcmd_types = TypeList<SubCmds...>;
 
   std::string_view name{};
@@ -41,7 +42,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   ErrorHandler error_handler{print_error_and_usage};
 
   std::size_t amount_pos{0};
-  std::tuple<Arg<Types> const...> args;
+  std::tuple<Arg<Types, Tags> const...> args;
   std::tuple<std::reference_wrapper<SubCmds const> const...> subcmds;
 
   consteval Cmd() = default;
@@ -60,8 +61,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
       args(other.args),
       subcmds(other.subcmds) {}
 
-  template <concepts::Cmd OtherCmd, typename T>
-  explicit consteval Cmd(OtherCmd const &other, Arg<T> new_arg)
+  template <concepts::Cmd OtherCmd, typename T, typename Tag>
+  explicit consteval Cmd(OtherCmd const &other, Arg<T, Tag> new_arg)
     : name(other.name),
       version(other.version),
       introduction(other.introduction),
@@ -105,18 +106,18 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
   consteval auto sub(NewSubCmd const &subcmd) const {
     if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
       throw "Subcommand with this name already exists";
-    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(*this, subcmd);
+    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(*this, subcmd);
     return new_cmd;
   }
 
-  template <FixedString Name, typename T = std::string_view>
-  consteval auto pos(ArgMeta<T> meta) const {
+  template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
+  consteval auto pos(ArgMeta<T, Tag> meta) const {
     validate_common<Name, "">(meta);
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<SubCmds...>> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
-      Arg<T>{
+      Arg<T, Tag>{
         .type = ArgType::POS,
         .name = Name,
         .abbrev = "",
@@ -124,24 +125,23 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
         .is_required = meta.is_required.value_or(true),
         .default_value = meta.default_value,
         .implicit_value = std::nullopt,
-        .action = meta.action,
       }
     );
     return new_cmd;
   }
 
-  template <FixedString Name, FixedString Abbrev, typename T = std::string_view>
-  consteval auto opt(ArgMeta<T> meta) const {
+  template <FixedString Name, FixedString Abbrev, typename T = std::string_view, typename Tag = act::assign>
+  consteval auto opt(ArgMeta<T, Tag> meta) const {
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if (Abbrev.size > 0) {
-      auto const existing_arg = find_arg_if(args, [](auto const &arg) { return arg.abbrev == Abbrev; });
+      auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
       if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
     }
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<SubCmds...>> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
-      Arg<T>{
+      Arg<T, Tag>{
         .type = ArgType::OPT,
         .name = Name,
         .abbrev = Abbrev,
@@ -149,29 +149,28 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
         .is_required = meta.is_required.value_or(false),
         .default_value = meta.default_value,
         .implicit_value = meta.implicit_value,
-        .action = meta.action,
       }
     );
     return new_cmd;
   }
 
-  template <FixedString Name, typename T = std::string_view>
-  consteval auto opt(ArgMeta<T> meta) const {
-    return opt<Name, "", T>(meta);
+  template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
+  consteval auto opt(ArgMeta<T, Tag> meta) const {
+    return opt<Name, "", T, Tag>(meta);
   }
 
-  template <FixedString Name, FixedString Abbrev, typename T = bool>
-  consteval auto flg(ArgMeta<T> meta) const {
+  template <FixedString Name, FixedString Abbrev, typename T = bool, typename Tag = act::assign>
+  consteval auto flg(ArgMeta<T, Tag> meta) const {
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if (Abbrev.size > 0) {
-      auto const existing_arg = find_arg_if(args, [](auto const &arg) { return arg.abbrev == Abbrev; });
+      auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
       if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
     }
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<SubCmds...>> new_cmd(
+    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
-      Arg<T>{
+      Arg<T, Tag>{
         .type = ArgType::FLG,
         .name = Name,
         .abbrev = Abbrev,
@@ -179,15 +178,14 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
         .is_required = false,
         .default_value = meta.default_value.value_or(T{}),
         .implicit_value = meta.implicit_value.value_or(true),
-        .action = meta.action,
       }
     );
     return new_cmd;
   }
 
-  template <FixedString Name, typename T = bool>
-  consteval auto flg(ArgMeta<T> meta) const {
-    return flg<Name, "", T>(meta);
+  template <FixedString Name, typename T = bool, typename Tag = act::assign>
+  consteval auto flg(ArgMeta<T, Tag> meta) const {
+    return flg<Name, "", T, Tag>(meta);
   }
 
   auto operator()(int argc, char const *argv[]) const noexcept {
@@ -198,10 +196,26 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<SubCmds...>> {
       std::exit(this->error_handler(ue));
     }
   }
+
+  constexpr auto find_arg_if(std::predicate<ArgView> auto p) const noexcept {
+    // TODO: use something like the frozen library instead of this
+    return std::apply(
+      [&p](auto &&...elem) {
+        std::size_t idx = 0;
+        std::optional<ArgView> ret = std::nullopt;
+        // clang-format off
+          (void) // cast to void to suppress unused warning
+          ((p(elem) ? (ret = ArgView::from(idx, elem), true) : (++idx, false)) || ...);
+        // clang-format on
+        return ret;
+      },
+      this->args
+    );
+  }
 };
 
 consteval auto new_cmd(std::string_view name, std::string_view version = "") {
-  return Cmd<StringList<>, TypeList<>, TypeList<>>(name, version);
+  return Cmd<StringList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 
 } // namespace opz

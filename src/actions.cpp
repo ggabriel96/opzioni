@@ -1,13 +1,15 @@
 #include "opzioni/actions.hpp"
+#include "opzioni/arg.hpp"
 #include "opzioni/cmd_info.hpp"
 
 #include <iostream>
 
 namespace opz::act {
 
-void print_help(
+template<>
+void process(
   std::map<std::string_view, std::any> &,
-  Arg<bool> const &,
+  Arg<bool, act::print_help> const &,
   std::optional<std::string_view> const &,
   CmdInfoGetter &info
 ) {
@@ -26,9 +28,10 @@ void print_help(
   std::exit(0);
 }
 
-void print_version(
+template<>
+void process(
   std::map<std::string_view, std::any> &,
-  Arg<bool> const &,
+  Arg<bool, act::print_version> const &,
   std::optional<std::string_view> const &,
   CmdInfoGetter &info
 ) {

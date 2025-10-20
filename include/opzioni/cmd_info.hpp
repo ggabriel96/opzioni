@@ -42,8 +42,8 @@ struct ArgHelpEntry {
   std::optional<std::string> default_value;
   std::optional<std::string> implicit_value;
 
-  template <typename T>
-  ArgHelpEntry(std::string_view cmd_name, Arg<T> from)
+  template <typename T, typename Tag>
+  ArgHelpEntry(std::string_view cmd_name, Arg<T, Tag> from)
     : type(from.type),
       name(from.name),
       cmd_name(cmd_name),

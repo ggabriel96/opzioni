@@ -9,6 +9,7 @@
 #include <string_view>
 #include <vector>
 
+#include "opzioni/actions.hpp"
 #include "opzioni/args_map.hpp"
 #include "opzioni/cmd_info.hpp"
 #include "opzioni/concepts.hpp"
@@ -34,8 +35,8 @@ struct ArgView {
   bool is_required = false;
   bool has_implicit = false;
 
-  template <typename T>
-  constexpr static ArgView from(std::size_t tuple_idx, Arg<T> const &other) {
+  template <typename T, typename Tag>
+  constexpr static ArgView from(std::size_t tuple_idx, Arg<T, Tag> const &other) {
     return ArgView{
       .tuple_idx = tuple_idx,
       .type = other.type,
@@ -46,23 +47,6 @@ struct ArgView {
     };
   }
 };
-
-template <typename... Ts>
-constexpr auto find_arg_if(std::tuple<Arg<Ts> const...> const haystack, std::predicate<ArgView> auto p) {
-  // TODO: use something like the frozen library instead of this
-  return std::apply(
-    [&p](auto &&...elem) {
-      std::size_t idx = 0;
-      std::optional<ArgView> ret = std::nullopt;
-      // clang-format off
-        (void) // cast to void to suppress unused warning
-        ((p(elem) ? (ret = ArgView::from(idx, elem), true) : (++idx, false)) || ...);
-      // clang-format on
-      return ret;
-    },
-    haystack
-  );
-}
 
 template <concepts::Cmd... Cmds>
 constexpr int
@@ -195,7 +179,7 @@ private:
           (void)(( // cast to void to suppress unused warning
           arg.type == ArgType::POS
             ? idx == cur_pos_idx
-              ? (arg.action(map.args, arg, args[0], info), true)
+              ? (act::process(map.args, arg, args[0], info), true)
               : (++idx, false)
             : false
           ) || ...);
@@ -216,7 +200,7 @@ private:
     if (num_of_dashes == 1) {
       // short option, e.g. `-O`
       auto const name = whole_arg.substr(1, 1);
-      auto const it = find_arg_if(this->cmd_ref.get().args, [name](auto const &a) {
+      auto const it = this->cmd_ref.get().find_arg_if([name](auto const &a) {
         return a.type == ArgType::OPT && name == a.abbrev;
       });
       if (!it) return std::nullopt;
@@ -244,7 +228,7 @@ private:
 
       if (has_equals) {
         auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it = find_arg_if(this->cmd_ref.get().args, [name](auto const &a) {
+        auto const it = this->cmd_ref.get().find_arg_if([name](auto const &a) {
           return a.type == ArgType::OPT && name == a.name;
         });
         if (!it) return std::nullopt;
@@ -255,7 +239,7 @@ private:
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it = find_arg_if(this->cmd_ref.get().args, [name](auto const &a) {
+      auto const it = this->cmd_ref.get().find_arg_if([name](auto const &a) {
         return a.type == ArgType::OPT && name == a.name;
       });
       if (!it) return std::nullopt;
@@ -286,7 +270,7 @@ private:
         [&idx,  &option, &map, &value, &info](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
           idx == option.arg.tuple_idx
-            ? (arg.action(map.args, arg, value, info), true)
+            ? (act::process(map.args, arg, value, info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -300,7 +284,7 @@ private:
   }
 
   std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag, CmdInfoGetter &info) const {
-    auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.name == flag; });
+    auto const it = this->cmd_ref.get().find_arg_if([&flag](auto const &a) { return a.name == flag; });
     if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, this->info);
     if (it->type != ArgType::FLG) {
       throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), this->info);
@@ -313,7 +297,7 @@ private:
         [&idx, &it, &map, &info](auto&&... arg) {
           (void)(( // cast to void to suppress unused warning
           idx == it->tuple_idx
-            ? (arg.action(map.args, arg, std::nullopt, info), true)
+            ? (act::process(map.args, arg, std::nullopt, info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -329,7 +313,7 @@ private:
   std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags, CmdInfoGetter &info) const {
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
-      auto const it = find_arg_if(this->cmd_ref.get().args, [&flag](auto const &a) { return a.abbrev == flag; });
+      auto const it = this->cmd_ref.get().find_arg_if([&flag](auto const &a) { return a.abbrev == flag; });
       if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, this->info);
       if (it->type != ArgType::FLG) {
         throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), this->info);
@@ -342,7 +326,7 @@ private:
           [&idx, &it, &map, &info](auto&&... arg) {
             (void)(( // cast to void to suppress unused warning
             idx == it->tuple_idx
-              ? (arg.action(map.args, arg, std::nullopt, info), true)
+              ? (act::process(map.args, arg, std::nullopt, info), true)
               : (++idx, false)
             ) || ...);
           },
