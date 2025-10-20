@@ -175,10 +175,11 @@ private:
       // clang-format off
       std::apply(
         [this, &idx, cur_pos_idx, &map, args](auto&&... arg) {
+          using namespace act;
           (void)(( // cast to void to suppress unused warning
           arg.type == ArgType::POS
             ? idx == cur_pos_idx
-              ? (act::process(this->cmd_ref.get(), map, arg, args[0], this->extra_info), true)
+              ? (process(this->cmd_ref.get(), map, arg, args[0], this->extra_info), true)
               : (++idx, false)
             : false
           ) || ...);
@@ -265,9 +266,10 @@ private:
       // clang-format off
       std::apply(
         [this, &idx, &option, &map, &value](auto&&... arg) {
+          using namespace act;
           (void)(( // cast to void to suppress unused warning
           idx == option.arg.tuple_idx
-            ? (act::process(this->cmd_ref.get(), map, arg, value, this->extra_info), true)
+            ? (process(this->cmd_ref.get(), map, arg, value, this->extra_info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -292,9 +294,10 @@ private:
       // clang-format off
       std::apply(
         [this, &idx, &it, &map](auto&&... arg) {
+          using namespace act;
           (void)(( // cast to void to suppress unused warning
           idx == it->tuple_idx
-            ? (act::process(this->cmd_ref.get(), map, arg, std::nullopt, this->extra_info), true)
+            ? (process(this->cmd_ref.get(), map, arg, std::nullopt, this->extra_info), true)
             : (++idx, false)
           ) || ...);
         },
@@ -321,9 +324,10 @@ private:
         // clang-format off
         std::apply(
           [this, &idx, &it, &map](auto&&... arg) {
+            using namespace act;
             (void)(( // cast to void to suppress unused warning
             idx == it->tuple_idx
-              ? (act::process(this->cmd_ref.get(), map, arg, std::nullopt, this->extra_info), true)
+              ? (process(this->cmd_ref.get(), map, arg, std::nullopt, this->extra_info), true)
               : (++idx, false)
             ) || ...);
           },

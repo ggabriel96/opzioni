@@ -26,6 +26,7 @@ void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T, act::assig
 
 } // namespace detail
 
+// TODO: give it a better name or move to specific namespace
 template <concepts::Cmd Cmd, typename T, typename Tag>
 void process(Cmd const &, ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::string_view> const &, ExtraInfo const &);
 
