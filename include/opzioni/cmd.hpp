@@ -9,7 +9,6 @@
 #include "opzioni/concepts.hpp"
 #include "opzioni/exceptions.hpp"
 #include "opzioni/fixed_string.hpp"
-#include "opzioni/get_type.hpp"
 #include "opzioni/parsing.hpp"
 #include "opzioni/strings.hpp"
 

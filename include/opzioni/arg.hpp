@@ -18,7 +18,6 @@ std::string_view to_string(ArgType const at) noexcept;
 // |       forward declarations       |
 // +----------------------------------+
 
-class CmdInfoGetter;
 template <typename, typename> struct Arg;
 
 namespace act {

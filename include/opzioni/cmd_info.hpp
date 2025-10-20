@@ -70,13 +70,13 @@ struct CmdInfo {
   std::string_view name;
   std::string_view version;
   std::string_view introduction;
-  std::string_view parent_cmds_names{};
+  std::vector<std::string_view> parent_cmds_names;
   std::vector<ArgHelpEntry> args;
   std::vector<CmdHelpEntry> subcmds;
   std::size_t amount_pos;
   std::size_t msg_width;
 
-  explicit CmdInfo(concepts::Cmd auto const &cmd, std::string_view parent_cmds_names)
+  explicit CmdInfo(concepts::Cmd auto const &cmd, std::vector<std::string_view> const &parent_cmds_names)
     : name(cmd.name),
       version(cmd.version),
       introduction(cmd.introduction),
@@ -121,29 +121,6 @@ struct CmdInfo {
       fmt::print(f, "    {: >{}}        {}\n", ' ', padding_size, fmt::join(line, " "));
     }
   }
-};
-
-class CmdInfoGetter {
-  void const *cmd_ptr;
-  std::string parent_cmds_names; // not string_view to avoid dangling in the error handling scenario
-  void (*emplace)(std::optional<CmdInfo> &, void const *, std::string const &);
-
-  std::optional<CmdInfo> instance{};
-
-public:
-  explicit CmdInfoGetter(concepts::Cmd auto const &cmd, std::string const &parent_cmds_names)
-    : cmd_ptr(&cmd),
-      parent_cmds_names(parent_cmds_names),
-      emplace([](std::optional<CmdInfo> &instance, void const *cmd_ptr, std::string const &parent_cmds_names) {
-        instance.emplace(*static_cast<std::remove_reference_t<decltype(cmd)> const *>(cmd_ptr), parent_cmds_names);
-      }) {}
-
-  [[nodiscard]] CmdInfo const &get() noexcept {
-    if (!instance) emplace(instance, cmd_ptr, parent_cmds_names);
-    return *instance;
-  }
-
-  [[nodiscard]] std::string_view get_parent_cmds_names() const noexcept { return parent_cmds_names; }
 };
 
 } // namespace opz

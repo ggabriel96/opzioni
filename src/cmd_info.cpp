@@ -75,11 +75,12 @@ bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
 // +---------------------------------------+
 
 void CmdInfo::print_title(std::FILE *f) const noexcept {
+  if (!parent_cmds_names.empty()) {
+    fmt::print(f, "{} ", fmt::join(parent_cmds_names, " "));
+  }
   fmt::print(
     f,
-    "{: <{}}{}{: >{}}\n",
-    parent_cmds_names,
-    parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()),
+    "{}{: >{}}\n",
     name,
     version,
     version.size() + static_cast<int>(!version.empty())
@@ -101,13 +102,12 @@ void CmdInfo::print_usage(std::FILE *f) const noexcept {
 
   std::vector<std::string> words;
   words.reserve(1 + args.size() + subcmds.size());
+  for (auto const name : parent_cmds_names) {
+    words.emplace_back(name);
+  }
+  words.emplace_back(name);
 
   auto insert = std::back_inserter(words);
-  words.emplace_back(
-    fmt::format(
-      "{: <{}}{}", parent_cmds_names, parent_cmds_names.size() + static_cast<int>(!parent_cmds_names.empty()), name
-    )
-  );
   transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage);
   transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage);
 

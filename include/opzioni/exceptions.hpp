@@ -33,21 +33,21 @@ public:
 // Base class for exceptions thrown because of errors from the users of the CLI program
 class UserError : public std::runtime_error {
 public:
-  CmdInfoGetter info;
+  CmdInfo info; // TODO: save actual Cmd + ExtraInfo instead of CmdInfo?
 
-  UserError(std::string const &msg, CmdInfoGetter const &info) : std::runtime_error(msg), info(info) {}
+  UserError(std::string const &msg, CmdInfo const &info) : std::runtime_error(msg), info(info) {}
 };
 
 class MissingRequiredArguments : public UserError {
 public:
-  MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names, CmdInfoGetter const &info)
+  MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names, CmdInfo const &info)
     : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `")), info) {}
 };
 
 class UnexpectedPositional : public UserError {
 public:
   UnexpectedPositional(
-    std::string_view cmd_name, std::string_view name, std::size_t expected_amount, CmdInfoGetter const &info
+    std::string_view cmd_name, std::string_view name, std::size_t expected_amount, CmdInfo const &info
   )
     : UserError(
         fmt::format(
@@ -59,7 +59,7 @@ public:
 
 class UnknownArgument : public UserError {
 public:
-  UnknownArgument(std::string_view cmd_name, std::string_view name, CmdInfoGetter const &info)
+  UnknownArgument(std::string_view cmd_name, std::string_view name, CmdInfo const &info)
     : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name), info) {}
 };
 
@@ -70,7 +70,7 @@ public:
     std::string_view name,
     std::string_view expected_type,
     std::string_view received_type,
-    CmdInfoGetter const &info
+    CmdInfo const &info
   )
     : UserError(
         fmt::format(
