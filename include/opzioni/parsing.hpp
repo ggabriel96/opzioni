@@ -11,7 +11,7 @@
 
 #include "opzioni/actions.hpp"
 #include "opzioni/args_map.hpp"
-#include "opzioni/cmd_info.hpp"
+#include "opzioni/cmd_fmt.hpp"
 #include "opzioni/concepts.hpp"
 #include "opzioni/exceptions.hpp"
 
@@ -111,7 +111,7 @@ private:
     this->extra_info.parent_cmds_names.push_back(parent_cmd_name);
   }
 
-  auto get_cmd_info() const noexcept { return CmdInfo(this->cmd_ref.get(), this->extra_info); }
+  auto get_cmd_fmt() const noexcept { return CmdFmt(this->cmd_ref.get(), this->extra_info); }
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
@@ -157,7 +157,7 @@ private:
         } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
           index += assign_short_flags(map, flags);
         } else {
-          throw UnknownArgument(this->cmd_ref.get().name, cli_arg, get_cmd_info());
+          throw UnknownArgument(this->cmd_ref.get().name, cli_arg, get_cmd_fmt());
         }
       }
     }
@@ -166,7 +166,7 @@ private:
 
   std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {
     if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
-      throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos, get_cmd_info());
+      throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos, get_cmd_fmt());
 
     try {
       std::size_t idx = 0;
@@ -187,7 +187,7 @@ private:
       // clang-format on
       return 1;
     } catch (std::runtime_error const &e) {
-      throw UserError(e.what(), get_cmd_info());
+      throw UserError(e.what(), get_cmd_fmt());
     }
   }
 
@@ -273,15 +273,15 @@ private:
       // clang-format on
       return ret;
     } catch (std::runtime_error const &e) {
-      throw UserError(e.what(), get_cmd_info());
+      throw UserError(e.what(), get_cmd_fmt());
     }
   }
 
   std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag) const {
     auto const it = this->cmd_ref.get().find_arg_if([&flag](auto const &a) { return a.name == flag; });
-    if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_info());
+    if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_fmt());
     if (it->type != ArgType::FLG) {
-      throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), get_cmd_info());
+      throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), get_cmd_fmt());
     }
 
     try {
@@ -301,7 +301,7 @@ private:
       // clang-format on
       return 1;
     } catch (std::runtime_error const &e) {
-      throw UserError(e.what(), get_cmd_info());
+      throw UserError(e.what(), get_cmd_fmt());
     }
   }
 
@@ -309,9 +309,9 @@ private:
     for (std::size_t i = 0; i < flags.size(); ++i) {
       auto const flag = flags.substr(i, 1);
       auto const it = this->cmd_ref.get().find_arg_if([&flag](auto const &a) { return a.abbrev == flag; });
-      if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_info());
+      if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_fmt());
       if (it->type != ArgType::FLG) {
-        throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), get_cmd_info());
+        throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), get_cmd_fmt());
       }
 
       try {
@@ -330,7 +330,7 @@ private:
         );
         // clang-format on
       } catch (std::runtime_error const &e) {
-        throw UserError(e.what(), get_cmd_info());
+        throw UserError(e.what(), get_cmd_fmt());
       }
     }
 
@@ -353,7 +353,7 @@ private:
     // clang-format on
 
     if (!missing_arg_names.empty())
-      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, get_cmd_info());
+      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, get_cmd_fmt());
   }
 
   void set_defaults(ArgsMap<Cmd const> &map) const {

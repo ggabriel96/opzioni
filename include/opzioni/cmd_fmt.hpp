@@ -67,7 +67,7 @@ struct ArgHelpEntry {
   bool operator<(ArgHelpEntry const &other) const noexcept;
 };
 
-struct CmdInfo {
+struct CmdFmt {
   std::string_view name;
   std::string_view version;
   std::string_view introduction;
@@ -77,7 +77,7 @@ struct CmdInfo {
   std::size_t amount_pos;
   std::size_t msg_width;
 
-  CmdInfo(concepts::Cmd auto const &cmd, ExtraInfo const &extra_info)
+  CmdFmt(concepts::Cmd auto const &cmd, ExtraInfo const &extra_info)
     : name(cmd.name),
       version(cmd.version),
       introduction(cmd.introduction),

@@ -7,7 +7,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include "opzioni/cmd_info.hpp"
+#include "opzioni/cmd_fmt.hpp"
 
 namespace opz {
 
@@ -33,34 +33,34 @@ public:
 // Base class for exceptions thrown because of errors from the users of the CLI program
 class UserError : public std::runtime_error {
 public:
-  CmdInfo info;
+  CmdFmt formatter;
 
-  UserError(std::string const &msg, CmdInfo const &info) : std::runtime_error(msg), info(info) {}
+  UserError(std::string const &msg, CmdFmt const &formatter) : std::runtime_error(msg), formatter(formatter) {}
 };
 
 class MissingRequiredArguments : public UserError {
 public:
-  MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names, CmdInfo const &info)
-    : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `")), info) {}
+  MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names, CmdFmt const &formatter)
+    : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `")), formatter) {}
 };
 
 class UnexpectedPositional : public UserError {
 public:
   UnexpectedPositional(
-    std::string_view cmd_name, std::string_view name, std::size_t expected_amount, CmdInfo const &info
+    std::string_view cmd_name, std::string_view name, std::size_t expected_amount, CmdFmt const &formatter
   )
     : UserError(
         fmt::format(
           "Unexpected positional argument for `{}`: `{}` (only {} are expected)", cmd_name, name, expected_amount
         ),
-        info
+        formatter
       ) {}
 };
 
 class UnknownArgument : public UserError {
 public:
-  UnknownArgument(std::string_view cmd_name, std::string_view name, CmdInfo const &info)
-    : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name), info) {}
+  UnknownArgument(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
+    : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name), formatter) {}
 };
 
 class WrongType : public UserError {
@@ -70,13 +70,13 @@ public:
     std::string_view name,
     std::string_view expected_type,
     std::string_view received_type,
-    CmdInfo const &info
+    CmdFmt const &formatter
   )
     : UserError(
         fmt::format(
           "Argument `{}` is a known {} of `{}`, but was provided as {}", name, expected_type, cmd_name, received_type
         ),
-        info
+        formatter
       ) {}
 };
 

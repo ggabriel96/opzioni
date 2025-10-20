@@ -1,4 +1,4 @@
-#include "opzioni/cmd_info.hpp"
+#include "opzioni/cmd_fmt.hpp"
 
 namespace opz {
 
@@ -70,18 +70,18 @@ bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
   return lhs_is_positional;                                                     // sort positionals before other types
 }
 
-// +---------------------------------------+
-// |                CmdInfo                |
-// +---------------------------------------+
+// +--------------------------------------+
+// |                CmdFmt                |
+// +--------------------------------------+
 
-void CmdInfo::print_title(std::FILE *f) const noexcept {
+void CmdFmt::print_title(std::FILE *f) const noexcept {
   if (!parent_cmds_names.empty()) {
     fmt::print(f, "{} ", fmt::join(parent_cmds_names, " "));
   }
   fmt::print(f, "{}{: >{}}\n", name, version, version.size() + static_cast<int>(!version.empty()));
 }
 
-void CmdInfo::print_intro(std::FILE *f) const noexcept {
+void CmdFmt::print_intro(std::FILE *f) const noexcept {
   if (introduction.length() <= msg_width) {
     fmt::print(f, "{}\n", introduction);
   } else {
@@ -89,7 +89,7 @@ void CmdInfo::print_intro(std::FILE *f) const noexcept {
   }
 }
 
-void CmdInfo::print_usage(std::FILE *f) const noexcept {
+void CmdFmt::print_usage(std::FILE *f) const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
   using std::views::drop, std::views::filter, std::views::take;
@@ -122,7 +122,7 @@ void CmdInfo::print_usage(std::FILE *f) const noexcept {
   }
 }
 
-void CmdInfo::print_help(std::FILE *f) const noexcept {
+void CmdFmt::print_help(std::FILE *f) const noexcept {
   std::string_view pending_nl;
   // using same padding size for all arguments so they stay aligned
   auto const padding_size = help_padding_size();
@@ -145,7 +145,7 @@ void CmdInfo::print_help(std::FILE *f) const noexcept {
   }
 }
 
-void CmdInfo::print_details(std::FILE *f) const noexcept {
+void CmdFmt::print_details(std::FILE *f) const noexcept {
   // if (details.empty())
   //   return;
   // if (details.length() <= msg_width)
@@ -154,7 +154,7 @@ void CmdInfo::print_details(std::FILE *f) const noexcept {
   //   out << limit_string_within(details, msg_width) << nl;
 }
 
-[[nodiscard]] std::size_t CmdInfo::help_padding_size() const noexcept {
+[[nodiscard]] std::size_t CmdFmt::help_padding_size() const noexcept {
   using std::views::transform;
   auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_index_entry().length(); };
   std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));

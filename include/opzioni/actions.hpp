@@ -94,18 +94,18 @@ void process(
   Cmd const &cmd,
   ExtraInfo const &extra_info
 ) {
-  CmdInfo const cmd_info(cmd, extra_info);
-  cmd_info.print_title();
-  if (!cmd_info.introduction.empty()) {
+  CmdFmt const formatter(cmd, extra_info);
+  formatter.print_title();
+  if (!formatter.introduction.empty()) {
     std::cout << nl;
-    cmd_info.print_intro();
+    formatter.print_intro();
   }
   std::cout << nl;
-  cmd_info.print_usage();
+  formatter.print_usage();
   std::cout << nl;
-  cmd_info.print_help();
+  formatter.print_help();
   std::cout << nl;
-  cmd_info.print_details();
+  formatter.print_details();
   std::exit(0);
 }
 
