@@ -163,9 +163,3 @@ This means you are **free to use** this library **as you wish** and see fit.
 It is only needed to provide a copy of the license if the source is also being distributed.
 
 In other words, **there is no need to bundle opzioni's license with your binary**.
-
-## Acknowledgements
-
-[![](docs/src/assets/images/jetbrains-variant-3.svg)](https://www.jetbrains.com/?from=opzioni)
-
-Thank you to [JetBrains](https://www.jetbrains.com/?from=opzioni) for supporting this project by providing free access to its products as part of the Open Source Licenses program.
