@@ -111,9 +111,7 @@ private:
     this->extra_info.parent_cmds_names.push_back(parent_cmd_name);
   }
 
-  auto get_cmd_info() const noexcept {
-    return CmdInfo(this->cmd_ref.get(), this->extra_info.parent_cmds_names);
-  }
+  auto get_cmd_info() const noexcept { return CmdInfo(this->cmd_ref.get(), this->extra_info.parent_cmds_names); }
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
@@ -200,9 +198,8 @@ private:
     if (num_of_dashes == 1) {
       // short option, e.g. `-O`
       auto const name = whole_arg.substr(1, 1);
-      auto const it = this->cmd_ref.get().find_arg_if([name](auto const &a) {
-        return a.type == ArgType::OPT && name == a.abbrev;
-      });
+      auto const it =
+        this->cmd_ref.get().find_arg_if([name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
       if (!it) return std::nullopt;
 
       if (has_equals) {
@@ -228,9 +225,8 @@ private:
 
       if (has_equals) {
         auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it = this->cmd_ref.get().find_arg_if([name](auto const &a) {
-          return a.type == ArgType::OPT && name == a.name;
-        });
+        auto const it =
+          this->cmd_ref.get().find_arg_if([name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
         if (!it) return std::nullopt;
 
         auto const value = whole_arg.substr(eq_idx + 1);
@@ -239,9 +235,8 @@ private:
 
       // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
       auto const name = whole_arg.substr(2);
-      auto const it = this->cmd_ref.get().find_arg_if([name](auto const &a) {
-        return a.type == ArgType::OPT && name == a.name;
-      });
+      auto const it =
+        this->cmd_ref.get().find_arg_if([name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
       if (!it) return std::nullopt;
 
       return ParsedOption{.arg = *it, .value = std::nullopt};
@@ -357,7 +352,8 @@ private:
     );
     // clang-format on
 
-    if (!missing_arg_names.empty()) throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, get_cmd_info());
+    if (!missing_arg_names.empty())
+      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, get_cmd_info());
   }
 
   void set_defaults(ArgsMap<Cmd const> &map) const {

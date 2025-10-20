@@ -25,7 +25,7 @@ template <concepts::Cmd... Cmds> struct ArgsMapOf<TypeList<Cmds...>> {
 };
 
 template <typename...> struct TupleOf;
-template <typename ...Ts>
+template <typename... Ts>
 struct TupleOf<TypeList<Ts...>> {
   using type = std::tuple<std::optional<Ts>...>;
 };

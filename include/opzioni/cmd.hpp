@@ -105,7 +105,9 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   consteval auto sub(NewSubCmd const &subcmd) const {
     if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
       throw "Subcommand with this name already exists";
-    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(*this, subcmd);
+    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(
+      *this, subcmd
+    );
     return new_cmd;
   }
 

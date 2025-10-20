@@ -78,13 +78,7 @@ void CmdInfo::print_title(std::FILE *f) const noexcept {
   if (!parent_cmds_names.empty()) {
     fmt::print(f, "{} ", fmt::join(parent_cmds_names, " "));
   }
-  fmt::print(
-    f,
-    "{}{: >{}}\n",
-    name,
-    version,
-    version.size() + static_cast<int>(!version.empty())
-  );
+  fmt::print(f, "{}{: >{}}\n", name, version, version.size() + static_cast<int>(!version.empty()));
 }
 
 void CmdInfo::print_intro(std::FILE *f) const noexcept {

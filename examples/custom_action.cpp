@@ -5,11 +5,13 @@
 struct DoubleAction {};
 
 template <opz::concepts::Cmd Cmd>
-void process(Cmd const &,
+void process(
+  Cmd const &,
   opz::ArgsMap<Cmd const> &args_map,
   opz::Arg<int, DoubleAction> const &arg,
   std::optional<std::string_view> const &value,
-  opz::ExtraInfo const &) {
+  opz::ExtraInfo const &
+) {
   auto const val = opz::convert<int>(*value);
   auto const [_, inserted] = args_map.args.try_emplace(arg.name, 2 * val);
   if (!inserted) throw opz::UnexpectedValue(arg.name, 1, 2);

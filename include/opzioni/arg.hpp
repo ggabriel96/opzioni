@@ -21,7 +21,7 @@ std::string_view to_string(ArgType const at) noexcept;
 template <typename, typename> struct Arg;
 
 namespace act {
-  
+
 struct append {};
 struct assign {};
 struct count {};

@@ -28,10 +28,18 @@ void assign_to(std::map<std::string_view, std::any> &args_map, Arg<T, act::assig
 
 // TODO: give it a better name or move to specific namespace
 template <concepts::Cmd Cmd, typename T, typename Tag>
-void process(Cmd const &, ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::string_view> const &, ExtraInfo const &);
+void process(
+  Cmd const &, ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::string_view> const &, ExtraInfo const &
+);
 
 template <concepts::Cmd Cmd, concepts::Container C>
-void process(Cmd const &, ArgsMap<Cmd const> &args_map, Arg<C, act::append> const &arg, std::optional<std::string_view> const &value, ExtraInfo const &) {
+void process(
+  Cmd const &,
+  ArgsMap<Cmd const> &args_map,
+  Arg<C, act::append> const &arg,
+  std::optional<std::string_view> const &value,
+  ExtraInfo const &
+) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
   auto const converted_value = convert<typename C::value_type>(*value);
   if (auto it = args_map.args.find(arg.name); it != args_map.args.end()) {
@@ -42,26 +50,50 @@ void process(Cmd const &, ArgsMap<Cmd const> &args_map, Arg<C, act::append> cons
 }
 
 template <concepts::Cmd Cmd, typename T>
-void process(Cmd const &, ArgsMap<Cmd const> &args_map, Arg<T, act::assign> const &arg, std::optional<std::string_view> const &value, ExtraInfo const &) {
+void process(
+  Cmd const &,
+  ArgsMap<Cmd const> &args_map,
+  Arg<T, act::assign> const &arg,
+  std::optional<std::string_view> const &value,
+  ExtraInfo const &
+) {
   if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
   detail::assign_to(args_map.args, arg, arg.type != ArgType::FLG && value ? convert<T>(*value) : *arg.implicit_value);
 }
 
 template <concepts::Cmd Cmd, concepts::Integer I>
-void process(Cmd const &, ArgsMap<Cmd const> &args_map, Arg<I, act::count> const &arg, std::optional<std::string_view> const &value, ExtraInfo const &) {
+void process(
+  Cmd const &,
+  ArgsMap<Cmd const> &args_map,
+  Arg<I, act::count> const &arg,
+  std::optional<std::string_view> const &value,
+  ExtraInfo const &
+) {
   if (value.has_value()) throw UnexpectedValue(arg.name, 0, 1);
   auto [it, inserted] = args_map.args.try_emplace(arg.name, *arg.implicit_value);
   if (!inserted) std::any_cast<I &>(it->second) += *arg.implicit_value;
 }
 
 template <concepts::Cmd Cmd, concepts::Container C>
-void process(Cmd const &, ArgsMap<Cmd const> &args_map, Arg<C, act::csv> const &arg, std::optional<std::string_view> const &value, ExtraInfo const &) {
+void process(
+  Cmd const &,
+  ArgsMap<Cmd const> &args_map,
+  Arg<C, act::csv> const &arg,
+  std::optional<std::string_view> const &value,
+  ExtraInfo const &
+) {
   if (!value.has_value()) throw MissingValue(arg.name, 1, 0);
   detail::assign_to(args_map.args, arg, convert<C>(*value));
 }
 
-template<concepts::Cmd Cmd>
-void process(Cmd const &cmd, ArgsMap<Cmd const> &, Arg<bool, act::print_help> const &, std::optional<std::string_view> const &, ExtraInfo const &info) {
+template <concepts::Cmd Cmd>
+void process(
+  Cmd const &cmd,
+  ArgsMap<Cmd const> &,
+  Arg<bool, act::print_help> const &,
+  std::optional<std::string_view> const &,
+  ExtraInfo const &info
+) {
   auto const &formatter = CmdInfo(cmd, info.parent_cmds_names);
   formatter.print_title();
   if (!formatter.introduction.empty()) {
@@ -77,8 +109,14 @@ void process(Cmd const &cmd, ArgsMap<Cmd const> &, Arg<bool, act::print_help> co
   std::exit(0);
 }
 
-template<concepts::Cmd Cmd>
-void process(Cmd const &cmd, ArgsMap<Cmd const> &args_map, Arg<bool, act::print_version> const &, std::optional<std::string_view> const &, ExtraInfo const &) {
+template <concepts::Cmd Cmd>
+void process(
+  Cmd const &cmd,
+  ArgsMap<Cmd const> &args_map,
+  Arg<bool, act::print_version> const &,
+  std::optional<std::string_view> const &,
+  ExtraInfo const &
+) {
   fmt::print("{} {}\n", cmd.name, cmd.version);
   std::exit(0);
 }
