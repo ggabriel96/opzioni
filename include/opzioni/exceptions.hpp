@@ -41,7 +41,9 @@ public:
 class MissingRequiredArguments : public UserError {
 public:
   MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names, CmdFmt const &formatter)
-    : UserError(fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `")), formatter) {}
+    : UserError(
+        fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `")), formatter
+      ) {}
 };
 
 class UnexpectedPositional : public UserError {
