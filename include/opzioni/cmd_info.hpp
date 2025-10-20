@@ -15,6 +15,7 @@
 
 #include "opzioni/arg.hpp"
 #include "opzioni/concepts.hpp"
+#include "opzioni/extra.hpp"
 #include "opzioni/strings.hpp"
 
 namespace opz {
@@ -76,11 +77,11 @@ struct CmdInfo {
   std::size_t amount_pos;
   std::size_t msg_width;
 
-  explicit CmdInfo(concepts::Cmd auto const &cmd, std::vector<std::string_view> const &parent_cmds_names)
+  CmdInfo(concepts::Cmd auto const &cmd, ExtraInfo const &extra_info)
     : name(cmd.name),
       version(cmd.version),
       introduction(cmd.introduction),
-      parent_cmds_names(parent_cmds_names),
+      parent_cmds_names(extra_info.parent_cmds_names),
       amount_pos(cmd.amount_pos),
       msg_width(cmd.msg_width) {
     args.reserve(std::tuple_size_v<decltype(cmd.args)>);

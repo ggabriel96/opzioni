@@ -92,9 +92,9 @@ void process(
   Arg<bool, act::print_help> const &,
   std::optional<std::string_view> const &,
   Cmd const &cmd,
-  ExtraInfo const &info
+  ExtraInfo const &extra_info
 ) {
-  CmdInfo const cmd_info(cmd, info.parent_cmds_names);
+  CmdInfo const cmd_info(cmd, extra_info);
   cmd_info.print_title();
   if (!cmd_info.introduction.empty()) {
     std::cout << nl;

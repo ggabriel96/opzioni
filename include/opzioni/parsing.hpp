@@ -111,7 +111,7 @@ private:
     this->extra_info.parent_cmds_names.push_back(parent_cmd_name);
   }
 
-  auto get_cmd_info() const noexcept { return CmdInfo(this->cmd_ref.get(), this->extra_info.parent_cmds_names); }
+  auto get_cmd_info() const noexcept { return CmdInfo(this->cmd_ref.get(), this->extra_info); }
 
   auto get_args_map(std::span<char const *> args) {
     auto map = ArgsMap<Cmd const>();
