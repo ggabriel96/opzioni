@@ -33,7 +33,7 @@ public:
 // Base class for exceptions thrown because of errors from the users of the CLI program
 class UserError : public std::runtime_error {
 public:
-  CmdInfo info; // TODO: save actual Cmd + ExtraInfo instead of CmdInfo?
+  CmdInfo info;
 
   UserError(std::string const &msg, CmdInfo const &info) : std::runtime_error(msg), info(info) {}
 };
