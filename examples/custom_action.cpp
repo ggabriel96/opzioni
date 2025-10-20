@@ -2,13 +2,13 @@
 
 #include "opzioni/all.hpp"
 
-struct DoubleAction {};
+struct double_action {};
 
 template <opz::concepts::Cmd Cmd>
 void process(
   Cmd const &,
   opz::ArgsMap<Cmd const> &args_map,
-  opz::Arg<int, DoubleAction> const &arg,
+  opz::Arg<int, double_action> const &arg,
   std::optional<std::string_view> const &value,
   opz::ExtraInfo const &
 ) {
@@ -20,7 +20,7 @@ void process(
 int main(int argc, char const *argv[]) {
   auto twice_cmd = opz::new_cmd("twice", "1.0")
                      .intro("Boring example of a custom action that doubles a number")
-                     .pos<"number", int, DoubleAction>({.help = "Just an integer"})
+                     .pos<"number", int, double_action>({.help = "Just an integer"})
                      .flg<"help", "h">(opz::default_help)
                      .flg<"version", "v">(opz::default_version);
 
