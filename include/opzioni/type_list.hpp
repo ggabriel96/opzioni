@@ -1,6 +1,8 @@
 #ifndef OPZIONI_TYPE_LIST_HPP
 #define OPZIONI_TYPE_LIST_HPP
 
+#include <type_traits>
+
 namespace opz {
 
 template <typename...>
