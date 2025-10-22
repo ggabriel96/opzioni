@@ -7,9 +7,11 @@
 #include <functional>
 #include <span>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "opzioni/actions.hpp"
+#include "opzioni/arg.hpp"
 #include "opzioni/args_map.hpp"
 #include "opzioni/cmd_fmt.hpp"
 #include "opzioni/concepts.hpp"
@@ -20,6 +22,9 @@ namespace opz {
 // +---------------------+
 // |      fwd decls      |
 // +---------------------+
+
+// TODO: can I really use std::string_view here?
+using StringsMap = std::map<std::string_view, std::optional<std::vector<std::string_view>>>;
 
 constexpr bool is_dash_dash(std::string_view const) noexcept;
 constexpr bool looks_positional(std::string_view const) noexcept;
@@ -71,7 +76,23 @@ struct ParsedOption {
 };
 
 // +-----------------------+
-// |   main parsing code   |
+// |       ArgParser       |
+// +-----------------------+
+
+template <std::size_t Idx, concepts::Cmd Cmd>
+void xxx(Cmd const &cmd, ArgsMap<Cmd const> &args_map, StringsMap strings_map, ExtraInfo extra_info) {
+  auto const &arg = std::get<Idx>(cmd.args);
+  if (!strings_map.contains(arg.name)) return;
+  consume_arg<Idx>(args_map, arg, strings_map[arg.name], cmd, extra_info);
+}
+
+template <concepts::Cmd Cmd, std::size_t... Idxs>
+void xxy(Cmd const &cmd, ArgsMap<Cmd const> &args_map, StringsMap strings_map, ExtraInfo extra_info, std::index_sequence<Idxs...>) {
+  (xxx<Idxs>(cmd, args_map, strings_map, extra_info), ...);
+}
+
+// +-----------------------+
+// |       CmdParser       |
 // +-----------------------+
 
 template <concepts::Cmd Cmd>
@@ -86,6 +107,8 @@ public:
 
   ArgsMap<Cmd const> operator()(std::span<char const *> args) {
     auto map = this->get_args_map(args);
+    auto smap = this->get_strings_map(args);
+    this->process_strings_map(map, smap);
     // check_contains_required done separately in order to report all missing required args
     this->check_contains_required(map);
     this->set_defaults(map);
@@ -160,6 +183,19 @@ private:
       }
     }
     return map;
+  }
+
+  auto get_strings_map(std::span<char const *> args) {
+    auto map = StringsMap();
+    map["a"] = std::optional<std::vector<std::string_view>>(std::in_place_t{}, 1, "1");
+    map["b"] = std::optional<std::vector<std::string_view>>(std::in_place_t{}, 1, "2");
+    // map.emplace("a", std::in_place_t{}, 1, "1");
+    // map.emplace("b", std::in_place_t{}, 2, "2");
+    return map;
+  }
+
+  auto process_strings_map(ArgsMap<Cmd const> &map, StringsMap const &strings_map) {
+    xxy(this->cmd_ref.get(), map, strings_map, this->extra_info, std::make_index_sequence<std::tuple_size_v<decltype(this->cmd_ref.get().args)>>());
   }
 
   std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {

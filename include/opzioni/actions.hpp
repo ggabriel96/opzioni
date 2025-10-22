@@ -121,6 +121,27 @@ void process(
   std::exit(0);
 }
 
+template <int TupleIdx, concepts::Cmd Cmd, typename T, typename Tag>
+void consume_arg(
+  ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::vector<std::string_view>> const &, Cmd const &, ExtraInfo const &
+) {
+  std::cout << "base consume_arg\n";
+}
+
+template <int TupleIdx, concepts::Cmd Cmd, typename T>
+void consume_arg(
+  ArgsMap<Cmd const> &args_map,
+  Arg<T, act::assign> const &arg,
+  std::optional<std::vector<std::string_view>> const &value,
+  Cmd const &,
+  ExtraInfo const &
+) {
+  if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
+  if (value.has_value() && value->size() > 1) throw UnexpectedValue(arg.name, 1, value->size());
+  std::get<TupleIdx>(args_map.t_args) = arg.type != ArgType::FLG && value ? convert<T>((*value)[0]) : *arg.implicit_value;
+  std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.t_args) << '\n';
+}
+
 } // namespace opz::act
 
 #endif // OPZIONI_ACTIONS_HPP
