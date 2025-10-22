@@ -36,7 +36,7 @@ struct ArgsMap {
 
   std::string_view exec_path{};
   std::map<std::string_view, std::any> args;
-  // typename TupleOf<arg_types>::type argsx;
+  typename TupleOf<typename Cmd::arg_types>::type t_args;
   typename ArgsMapOf<typename Cmd::subcmd_types>::type submap{};
 
   template <FixedString Name>
