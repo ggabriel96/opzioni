@@ -76,22 +76,6 @@ struct ParsedOption {
 };
 
 // +-----------------------+
-// |       ArgParser       |
-// +-----------------------+
-
-template <std::size_t Idx, concepts::Cmd Cmd>
-void xxx(Cmd const &cmd, ArgsMap<Cmd const> &args_map, StringsMap strings_map, ExtraInfo extra_info) {
-  auto const &arg = std::get<Idx>(cmd.args);
-  if (!strings_map.contains(arg.name)) return;
-  consume_arg<Idx>(args_map, arg, strings_map[arg.name], cmd, extra_info);
-}
-
-template <concepts::Cmd Cmd, std::size_t... Idxs>
-void xxy(Cmd const &cmd, ArgsMap<Cmd const> &args_map, StringsMap strings_map, ExtraInfo extra_info, std::index_sequence<Idxs...>) {
-  (xxx<Idxs>(cmd, args_map, strings_map, extra_info), ...);
-}
-
-// +-----------------------+
 // |       CmdParser       |
 // +-----------------------+
 
@@ -106,9 +90,8 @@ public:
   explicit CmdParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
   ArgsMap<Cmd const> operator()(std::span<char const *> args) {
-    auto map = this->get_args_map(args);
-    auto smap = this->get_strings_map(args);
-    this->process_strings_map(map, smap);
+    auto const strings_map = this->get_strings_map(args);
+    auto map = this->get_args_map(strings_map);
     // check_contains_required done separately in order to report all missing required args
     this->check_contains_required(map);
     this->set_defaults(map);
@@ -194,8 +177,23 @@ private:
     return map;
   }
 
-  auto process_strings_map(ArgsMap<Cmd const> &map, StringsMap const &strings_map) {
-    xxy(this->cmd_ref.get(), map, strings_map, this->extra_info, std::make_index_sequence<std::tuple_size_v<decltype(this->cmd_ref.get().args)>>());
+  auto get_args_map(StringsMap const &strings_map) {
+    constexpr auto args_size = std::tuple_size_v<decltype(this->cmd_ref.get().args)>;
+    return process_strings_map(strings_map, this->extra_info, std::make_index_sequence<args_size>());
+  }
+
+  template <std::size_t... Is>
+  auto process_strings_map(StringsMap strings_map, ExtraInfo extra_info, std::index_sequence<Is...>) {
+    auto args_map = ArgsMap<Cmd const>();
+    (process_ith_arg<Is>(args_map, strings_map, extra_info), ...);
+    return args_map;
+  }
+
+  template <std::size_t I>
+  void process_ith_arg(ArgsMap<Cmd const> &args_map, StringsMap strings_map, ExtraInfo extra_info) {
+    auto const &arg = std::get<I>(this->cmd_ref.get().args);
+    if (!strings_map.contains(arg.name)) return;
+    consume_arg<I>(args_map, arg, strings_map[arg.name], this->cmd_ref.get(), extra_info);
   }
 
   std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {
