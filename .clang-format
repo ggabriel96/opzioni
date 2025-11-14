@@ -8,6 +8,8 @@ ColumnLimit: 120
 AlignAfterOpenBracket: BlockIndent
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortCaseExpressionOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 BinPackArguments: false
 BinPackParameters: OnePerLine
