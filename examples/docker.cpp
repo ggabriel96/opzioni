@@ -59,7 +59,7 @@ int main(int argc, char const *argv[]) {
       .opt<"config">(
         {.help = "Location of client config files (default: \"{default_value}\")", .default_value = "~/.docker"}
       )
-      .flg<"debug", "D", int, act::count>({.help = "Enable debug mode", .implicit_value = 1})
+      .flg<"debug", "d", int, act::count>({.help = "Enable debug mode", .implicit_value = 1})
       .flg<"help", "h">(default_help)
       .flg<"version", "v">(default_version)
       .sub(exec_cmd)

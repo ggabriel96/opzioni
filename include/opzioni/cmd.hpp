@@ -137,6 +137,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_opt(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if (Abbrev.size > 0) {
+      if (Abbrev.size > 1) throw "Abbreviations must be a single character";
+      if (Abbrev[0] < 'A' || Abbrev[0] > 'Z') throw "Option abbreviations must be uppercase";
       auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
       if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
     }
@@ -166,6 +168,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_flg(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if (Abbrev.size > 0) {
+      if (Abbrev.size > 1) throw "Abbreviations must be a single character";
+      if (Abbrev[0] < 'a' || Abbrev[0] > 'z') throw "Flag abbreviations must be lowercase";
       auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
       if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
     }
