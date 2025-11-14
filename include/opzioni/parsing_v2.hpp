@@ -13,15 +13,15 @@ constexpr static auto dash = '-';
 
 enum struct TokenType {
   PROG_NAME,
-  DASH, // -
-  DASH_DASH, // --
-  FLG_LONG, // --flag
-  FLG_MANY, // -xpto
-  FLG_SHORT, // -f
-  OPT_LONG_AND_VALUE, // --option=value
-  OPT_LONG, // --option
+  DASH,                // -
+  DASH_DASH,           // --
+  FLG_LONG,            // --flag
+  FLG_MANY,            // -xpto
+  FLG_SHORT,           // -f
+  OPT_LONG_AND_VALUE,  // --option=value
+  OPT_LONG,            // --option
   OPT_SHORT_AND_VALUE, // -Ovalue
-  IDENTIFIER, // positional, command, value after OPT_LONG
+  IDENTIFIER,          // positional, command, value after OPT_LONG
   END,
 };
 
@@ -36,7 +36,6 @@ std::string_view to_string(TokenType type) noexcept;
 
 class Scanner {
 public:
-
   Scanner(std::span<char const *> args) {
     this->tokens.reserve(args.size());
     this->args.reserve(args.size());

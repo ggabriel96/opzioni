@@ -38,26 +38,18 @@ std::vector<Token> Scanner::operator()() noexcept {
 
 /* private */
 
-[[nodiscard]] inline std::string_view const &Scanner::cur_arg() const noexcept {
-  return this->args[this->args_idx];
-}
+[[nodiscard]] inline std::string_view const &Scanner::cur_arg() const noexcept { return this->args[this->args_idx]; }
 
-[[nodiscard]] bool Scanner::is_cur_end() const noexcept {
-  return this->cur_col >= this->cur_arg().size();
-}
+[[nodiscard]] bool Scanner::is_cur_end() const noexcept { return this->cur_col >= this->cur_arg().size(); }
 
-[[nodiscard]] auto Scanner::advance() noexcept {
-  return this->cur_arg()[this->cur_col++];
-}
+[[nodiscard]] auto Scanner::advance() noexcept { return this->cur_arg()[this->cur_col++]; }
 
 [[nodiscard]] char Scanner::peek() const noexcept {
   if (this->is_cur_end()) return '\0';
   return this->cur_arg()[this->cur_col];
 }
 
-void Scanner::consume() noexcept {
-  this->cur_col += 1;
-}
+void Scanner::consume() noexcept { this->cur_col += 1; }
 
 [[nodiscard]] bool Scanner::match(char expected) noexcept {
   // if (this->is_cur_end()) return false;
@@ -85,12 +77,8 @@ void Scanner::scan_token() noexcept {
   } else this->try_short_opt();
 }
 
-void Scanner::try_long_opt() noexcept {
-  this->add_token(TokenType::OPT_LONG);
-}
+void Scanner::try_long_opt() noexcept { this->add_token(TokenType::OPT_LONG); }
 
-void Scanner::try_short_opt() noexcept {
-  this->add_token(TokenType::FLG_SHORT);
-}
+void Scanner::try_short_opt() noexcept { this->add_token(TokenType::FLG_SHORT); }
 
 } // namespace opz

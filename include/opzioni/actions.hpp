@@ -123,7 +123,11 @@ void process(
 
 template <int TupleIdx, concepts::Cmd Cmd, typename T, typename Tag>
 void consume_arg(
-  ArgsMap<Cmd const> &, Arg<T, Tag> const &, std::optional<std::vector<std::string_view>> const &, Cmd const &, ExtraInfo const &
+  ArgsMap<Cmd const> &,
+  Arg<T, Tag> const &,
+  std::optional<std::vector<std::string_view>> const &,
+  Cmd const &,
+  ExtraInfo const &
 ) {
   std::cout << "base consume_arg\n";
 }
@@ -138,7 +142,8 @@ void consume_arg(
 ) {
   if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
   if (value.has_value() && value->size() > 1) throw UnexpectedValue(arg.name, 1, value->size());
-  std::get<TupleIdx>(args_map.t_args) = arg.type != ArgType::FLG && value ? convert<T>((*value)[0]) : *arg.implicit_value;
+  std::get<TupleIdx>(args_map.t_args) =
+    arg.type != ArgType::FLG && value ? convert<T>((*value)[0]) : *arg.implicit_value;
   std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.t_args) << '\n';
 }
 

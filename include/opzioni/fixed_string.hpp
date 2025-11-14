@@ -18,9 +18,7 @@ struct FixedString {
     data[N] = '\0';
   }
 
-  constexpr char operator[](std::size_t idx) const noexcept {
-    return this->data[idx];
-  }
+  constexpr char operator[](std::size_t idx) const noexcept { return this->data[idx]; }
 
   // string_view does not generally store the trailing '\0'
   constexpr operator std::string_view() const noexcept { return {data, N}; }

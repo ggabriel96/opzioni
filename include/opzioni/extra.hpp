@@ -11,7 +11,6 @@ struct ExtraInfo {
   std::vector<std::string_view> parent_cmds_names;
 };
 
-
 template <typename T, typename... Ts>
 void set_at(std::tuple<Ts...> &tuple, T const &value, std::size_t tgt_idx) {
   std::size_t idx = 0;
