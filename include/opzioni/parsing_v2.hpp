@@ -15,21 +15,19 @@ enum struct TokenType {
   PROG_NAME,
   DASH,                // -
   DASH_DASH,           // --
-  FLG_LONG,            // --flag
-  FLG_MANY,            // -xpto
-  FLG_SHORT,           // -f
+  FLG,                 // -f (-xpto adds many of this)
+  OPT_OR_FLG_LONG,     // --option or --flag
   OPT_LONG_AND_VALUE,  // --option=value
-  OPT_LONG,            // --option
   OPT_SHORT_AND_VALUE, // -Ovalue
-  IDENTIFIER,          // positional, command, value after OPT_LONG
+  IDENTIFIER,          // positional, command, value after OPT_OR_FLG_LONG
   END,
 };
 
 struct Token {
   TokenType type;
-  std::string_view lexeme;
-  std::optional<std::string_view> value;
   std::uint32_t args_idx;
+  std::optional<std::string_view> name;
+  std::optional<std::string_view> value;
 };
 
 std::string_view to_string(TokenType type) noexcept;
@@ -62,10 +60,10 @@ private:
   void consume() noexcept;
   [[nodiscard]] bool match(char expected) noexcept;
 
-  void add_token(TokenType type, std::optional<std::string_view> value = std::nullopt) noexcept;
+  void add_token(TokenType type, std::optional<std::string_view> name = std::nullopt, std::optional<std::string_view> value = std::nullopt) noexcept;
   void scan_token() noexcept;
-  void try_long_opt() noexcept;
-  void try_short_opt() noexcept;
+  void long_opt() noexcept;
+  void short_opt() noexcept;
 };
 
 } // namespace opz

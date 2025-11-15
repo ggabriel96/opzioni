@@ -20,10 +20,10 @@ int main(int argc, char const *argv[]) {
   auto const tokens = scanner();
   for (auto const &tok : tokens) {
     std::print(
-      "idx={}: `{}`, type={}, value=`{}`\n",
+      "idx={}, type={}, name=`{}`, value=`{}`\n",
       tok.args_idx,
-      tok.lexeme,
       opz::to_string(tok.type),
+      tok.name.value_or("nil"),
       tok.value.value_or("nil")
     );
   }

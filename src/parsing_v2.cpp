@@ -7,11 +7,9 @@ std::string_view to_string(TokenType type) noexcept {
     case TokenType::PROG_NAME: return "PROG_NAME";
     case TokenType::DASH: return "DASH";
     case TokenType::DASH_DASH: return "DASH_DASH";
-    case TokenType::FLG_LONG: return "FLG_LONG";
-    case TokenType::FLG_MANY: return "FLG_MANY";
-    case TokenType::FLG_SHORT: return "FLG_SHORT";
+    case TokenType::FLG: return "FLG";
+    case TokenType::OPT_OR_FLG_LONG: return "OPT_OR_FLG_LONG";
     case TokenType::OPT_LONG_AND_VALUE: return "OPT_LONG_AND_VALUE";
-    case TokenType::OPT_LONG: return "OPT_LONG";
     case TokenType::OPT_SHORT_AND_VALUE: return "OPT_SHORT_AND_VALUE";
     case TokenType::IDENTIFIER: return "IDENTIFIER";
     case TokenType::END: return "END";
@@ -26,13 +24,13 @@ std::string_view to_string(TokenType type) noexcept {
 /* public */
 
 std::vector<Token> Scanner::operator()() noexcept {
-  this->add_token(TokenType::PROG_NAME);
+  this->add_token(TokenType::PROG_NAME, std::nullopt, this->cur_arg());
   for (this->args_idx = 1; this->args_idx < this->args.size(); ++this->args_idx) {
     this->cur_col = 0;
     this->scan_token();
   }
   // don't use add_token() because this->args_idx is not valid anymore
-  this->tokens.emplace_back(TokenType::END, "", std::nullopt, this->args_idx);
+  this->tokens.emplace_back(TokenType::END, this->args_idx, std::nullopt, std::nullopt);
   return this->tokens;
 }
 
@@ -42,7 +40,7 @@ std::vector<Token> Scanner::operator()() noexcept {
 
 [[nodiscard]] bool Scanner::is_cur_end() const noexcept { return this->cur_col >= this->cur_arg().size(); }
 
-[[nodiscard]] auto Scanner::advance() noexcept { return this->cur_arg()[this->cur_col++]; }
+[[nodiscard]] auto Scanner::advance() noexcept { return this->cur_arg().substr(this->cur_col++, 1); }
 
 [[nodiscard]] char Scanner::peek() const noexcept {
   if (this->is_cur_end()) return '\0';
@@ -59,26 +57,55 @@ void Scanner::consume() noexcept { this->cur_col += 1; }
   return true;
 }
 
-void Scanner::add_token(TokenType type, std::optional<std::string_view> value) noexcept {
-  this->tokens.emplace_back(type, this->cur_arg(), value, this->args_idx);
+void Scanner::add_token(TokenType type, std::optional<std::string_view> name, std::optional<std::string_view> value) noexcept {
+  this->tokens.emplace_back(type, this->args_idx, name, value);
 }
 
 void Scanner::scan_token() noexcept {
-  if (this->peek() != dash) {
+  if (!this->match(dash)) {
     this->add_token(TokenType::IDENTIFIER, this->cur_arg());
     return;
   }
 
-  this->consume();
   if (this->is_cur_end()) this->add_token(TokenType::DASH);
   else if (this->match(dash)) {
     if (this->is_cur_end()) this->add_token(TokenType::DASH_DASH);
-    else this->try_long_opt();
-  } else this->try_short_opt();
+    else this->long_opt();
+  } else this->short_opt();
 }
 
-void Scanner::try_long_opt() noexcept { this->add_token(TokenType::OPT_LONG); }
+void Scanner::long_opt() noexcept {
+  // -- was already consumed
+  // look for either: name=value or name
+  while (!this->is_cur_end() && this->peek() != '=') consume();
+  if (this->match('=')) {
+    // start at 2 to discard initial dash dash; -3 would be -1 but adds 2 because we start at 2
+    auto const name = this->cur_arg().substr(2, this->cur_col - 3);
+    auto const value = this->cur_arg().substr(this->cur_col);
+    this->add_token(TokenType::OPT_LONG_AND_VALUE, name, value);
+  } else {
+    this->add_token(TokenType::OPT_OR_FLG_LONG, this->cur_arg().substr(2)); // 2 to discard initial dash dash
+  }
+}
 
-void Scanner::try_short_opt() noexcept { this->add_token(TokenType::FLG_SHORT); }
+void Scanner::short_opt() noexcept {
+  // - was already consumed
+  // look for either: -Ovalue or -f or -xpto
+  if (auto const c = this->peek(); c >= 'A' && c <= 'Z') {
+    auto const name = this->advance();
+    auto const value = this->cur_arg().substr(this->cur_col);
+    this->add_token(TokenType::OPT_SHORT_AND_VALUE, name, value);
+    return;
+  }
+
+  if (this->cur_arg().length() == 2) {
+    this->add_token(TokenType::FLG, this->advance());
+    return;
+  }
+
+  while (!this->is_cur_end()) {
+    this->add_token(TokenType::FLG, this->advance());
+  }
+}
 
 } // namespace opz
