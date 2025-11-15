@@ -16,7 +16,7 @@ fmt_dep = dependency('fmt', version: ['>=11.1.1', '<12.0.0'])
 include_dir = include_directories('include/')
 opzioni_lib = library(
     'opzioni',
-    ['src/arg.cpp', 'src/cmd_fmt.cpp', 'src/converters.cpp', 'src/error.cpp', 'src/parsing_v2.cpp', 'src/strings.cpp'],
+    ['src/arg.cpp', 'src/cmd_fmt.cpp', 'src/converters.cpp', 'src/error.cpp', 'src/scanner.cpp', 'src/strings.cpp'],
     dependencies: fmt_dep,
     include_directories: include_dir,
     install: true

@@ -1,5 +1,5 @@
-#ifndef OPZIONI_PARSING_V2_HPP
-#define OPZIONI_PARSING_V2_HPP
+#ifndef OPZIONI_SCANNER_HPP
+#define OPZIONI_SCANNER_HPP
 
 #include <cstdint>
 #include <optional>
@@ -68,4 +68,4 @@ private:
 
 } // namespace opz
 
-#endif // OPZIONI_PARSING_V2_HPP
+#endif // OPZIONI_SCANNER_HPP
