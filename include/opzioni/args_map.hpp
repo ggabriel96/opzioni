@@ -72,14 +72,14 @@ struct ArgsMap {
   }
 
   template <int Idx>
-  [[nodiscard]] bool has() const noexcept {
+  [[nodiscard]] bool has_value() const noexcept {
     return std::get<Idx>(this->t_args).has_value();
   }
 
   template <FixedString Name>
-  [[nodiscard]] bool has() const noexcept {
+  [[nodiscard]] bool has_value() const noexcept {
     constexpr auto idx = this->idx_of<Name>();
-    return this->template has<idx>();
+    return this->has_value<idx>();
   }
 
   [[nodiscard]] bool has_submap() const noexcept { return !std::holds_alternative<empty>(submap); }

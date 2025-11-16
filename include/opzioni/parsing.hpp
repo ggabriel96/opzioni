@@ -219,7 +219,7 @@ private:
         break;
       }
     }
-    if (!args_map.template has<I>()) {
+    if (!args_map.template has_value<I>()) {
       if (arg.is_required)
         throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
       if (arg.has_default())
