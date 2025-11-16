@@ -173,6 +173,9 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
       if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
     }
+    std::optional<T> default_implicit_value = std::nullopt;
+    if constexpr (std::is_same_v<T, bool>) default_implicit_value.emplace(true);
+    else if constexpr (concepts::Integer<T>) default_implicit_value.emplace(T{});
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
@@ -182,7 +185,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
         .help = meta.help,
         .is_required = false,
         .default_value = meta.default_value.value_or(T{}),
-        .implicit_value = meta.implicit_value.value_or(true),
+        // the following dereference will not crash because we are validating non-bool non-int flags have implicit_value
+        .implicit_value = meta.implicit_value.value_or(*default_implicit_value),
       }
     );
     return new_cmd;

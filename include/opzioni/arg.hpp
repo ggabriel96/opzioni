@@ -134,12 +134,9 @@ constexpr void validate_opt(ArgMeta<T, Tag> const &meta) {
 template <typename T, typename Tag>
 constexpr void validate_flg(ArgMeta<T, Tag> const &meta) {
   if (meta.is_required.value_or(false)) throw "Flags cannot be required";
-  if (!std::is_same_v<T, bool> && !meta.implicit_value.has_value())
-    throw "Non-boolean flags require that the implicit value is specified";
-  if constexpr (concepts::Integer<T>) {
-    if (std::is_same_v<Tag, act::count> && !meta.implicit_value.has_value())
-      throw "The COUNT action requires an implicit value";
-  } else if (std::is_same_v<Tag, act::count>) {
+  if (!std::is_same_v<T, bool> && !concepts::Integer<T> && !meta.implicit_value.has_value())
+    throw "Flags that are neither boolean nor integer types require that the implicit value is specified";
+  if constexpr (std::is_same_v<Tag, act::count> && !concepts::Integer<T>) {
     throw "The COUNT action cannot be used with non-integer types";
   }
 }

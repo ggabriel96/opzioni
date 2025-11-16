@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
                      .pos<"pos2">({.help = "Positional 2"})
                      .opt<"opt1", "O", std::vector<int>, opz::act::append>({.help = "Option 1"})
                      .flg<"flg1", "f">({.help = "Flag 1"})
-                     .flg<"flg2", "g", int, opz::act::count>({.help = "Flag 1", .implicit_value = 1})
+                     .flg<"flg2", "g", int, opz::act::count>({.help = "Flag 1"})
                      .flg<"help", "h">(opz::default_help)
                      .flg<"version", "v">(opz::default_version);
 
