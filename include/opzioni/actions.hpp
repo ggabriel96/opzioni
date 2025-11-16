@@ -197,6 +197,19 @@ void consume_arg(
   // std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.args) << '\n';
 }
 
+template <int TupleIdx, concepts::Cmd Cmd, concepts::Integer I>
+void consume_arg(
+  ArgsMap<Cmd const> &args_map, Arg<I, act::count> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
+) {
+  if (value.index() != flg_idx) {
+    auto received_amount = 1;
+    if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr) received_amount = vals->get().size();
+      throw UnexpectedValue(arg.name, 0, received_amount);
+  }
+  auto const flg_amount = std::get<flg_idx>(value);
+  std::get<TupleIdx>(args_map.args) = flg_amount;
+}
+
 } // namespace opz::act
 
 #endif // OPZIONI_ACTIONS_HPP
