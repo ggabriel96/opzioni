@@ -1,8 +1,6 @@
 #ifndef OPZIONI_PARSING_HPP
 #define OPZIONI_PARSING_HPP
 
-#include <algorithm>
-#include <cctype>
 #include <cstddef>
 #include <functional>
 #include <span>
@@ -10,26 +8,18 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include "opzioni/actions.hpp"
 #include "opzioni/arg.hpp"
 #include "opzioni/args_map.hpp"
 #include "opzioni/cmd_fmt.hpp"
 #include "opzioni/concepts.hpp"
 #include "opzioni/exceptions.hpp"
+#include "opzioni/scanner.hpp"
 
 namespace opz {
-
-// +---------------------+
-// |      fwd decls      |
-// +---------------------+
-
-// TODO: can I really use std::string_view here?
-using StringsMap = std::map<std::string_view, std::optional<std::vector<std::string_view>>>;
-
-constexpr bool is_dash_dash(std::string_view const) noexcept;
-constexpr bool looks_positional(std::string_view const) noexcept;
-constexpr std::string_view get_if_short_flags(std::string_view const) noexcept;
-constexpr std::string_view get_if_long_flag(std::string_view const) noexcept;
 
 // TODO: is ArgView still necessary?
 struct ArgView {
@@ -69,12 +59,6 @@ find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack,
   // clang-format on
 }
 
-struct ParsedOption {
-  ArgView arg;
-  // no string and empty string mean different things here
-  std::optional<std::string_view> value;
-};
-
 // +-----------------------+
 // |       CmdParser       |
 // +-----------------------+
@@ -90,11 +74,11 @@ public:
   explicit CmdParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
   ArgsMap<Cmd const> operator()(std::span<char const *> args) {
-    auto const strings_map = this->get_strings_map(args);
+    auto scanner = Scanner(args);
+    auto const tokens = scanner();
+    auto const strings_map = this->get_strings_map(args, tokens);
+    // TODO: check we did not receive unknown arguments (throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_fmt());)
     auto map = this->get_args_map(strings_map);
-    // check_contains_required done separately in order to report all missing required args
-    this->check_contains_required(map);
-    this->set_defaults(map);
     return map;
   }
 
@@ -117,63 +101,46 @@ private:
 
   auto get_cmd_fmt() const noexcept { return CmdFmt(this->cmd_ref.get(), this->extra_info); }
 
-  auto get_args_map(std::span<char const *> args) {
-    auto map = ArgsMap<Cmd const>();
-    if (!args.empty()) {
-      map.exec_path = std::string_view(args[0]);
-      std::size_t current_positional_idx = 0;
-      for (std::size_t index = 1; index < args.size();) {
-        auto const cli_arg = std::string_view(args[index]);
-        if (is_dash_dash(cli_arg)) {
-          // +1 to ignore the dash-dash
-          for (std::size_t offset = index + 1; offset < args.size();) {
-            offset += assign_positional(map, args.subspan(offset), current_positional_idx);
-            ++current_positional_idx;
-          }
-          index = args.size();
-        } else if (looks_positional(cli_arg)) {
-          // check if is command first
-          if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, cli_arg); idx != -1) {
-            auto const rest = args.subspan(index);
-            int i = 0;
-            // clang-format off
-            std::apply(
-              [this, &i, idx, &map, rest](auto&&... cmd) {
-                (void)(( // cast to void to suppress unused warning
-                i == idx
-                  ? (map.submap = CmdParser<typename std::remove_reference_t<decltype(cmd)>::type>(
-                      cmd.get(), this->extra_info, this->cmd_ref.get().name)(rest), true)
-                  : (++i, false)
-                ) || ...);
-              },
-              this->cmd_ref.get().subcmds
-            );
-            // clang-format on
-            index += rest.size();
-          } else {
-            index += assign_positional(map, args.subspan(index), current_positional_idx);
-            ++current_positional_idx;
-          }
-        } else if (auto const option = try_parse_option(cli_arg); option.has_value()) {
-          index += assign_option(map, *option, args.subspan(index));
-        } else if (auto const flag = get_if_long_flag(cli_arg); !flag.empty()) {
-          index += assign_long_flag(map, flag);
-        } else if (auto const flags = get_if_short_flags(cli_arg); !flags.empty()) {
-          index += assign_short_flags(map, flags);
-        } else {
-          throw UnknownArgument(this->cmd_ref.get().name, cli_arg, get_cmd_fmt());
+  auto get_strings_map(std::span<char const *> args, std::vector<Token> const &tokens) {
+    auto map = StringsMap();
+    if (!tokens.empty()) { // should never happen
+      for (std::size_t index = 0; index < tokens.size(); ++index) {
+        auto const &tok = tokens[index];
+        switch (tok.type) {
+          case TokenType::PROG_NAME:
+            map.exec_path = *tok.value;
+            break;
+          case TokenType::DASH: // TODO: dash is a regular identifier?
+            break;
+          case TokenType::DASH_DASH:
+            // +1 to ignore the dash-dash
+            for (std::size_t offset = index + 1; offset < tokens.size(); ++offset) {
+              map.positionals.push_back(args[offset]);
+            }
+            index = tokens.size(); // break below refers to the switch, not the for loop
+            break;
+          case TokenType::FLG:
+            map.flags[*tok.name] += 1;
+            break;
+          case TokenType::OPT_OR_FLG_LONG:
+            // the case of `--option value` may have the value as "the next positional"
+            if (index + 1 < tokens.size() && tokens[index + 1].type == TokenType::IDENTIFIER) {
+              // consider the next token as both possible option value and possible positional below (don't skip next index)
+              map.options[*tok.name].emplace_back(*tokens[index + 1].value);
+            } else {
+              map.flags[*tok.name] += 1;
+            }
+            break;
+          case TokenType::OPT_LONG_AND_VALUE: [[fallthrough]];
+          case TokenType::OPT_SHORT_AND_VALUE:
+            map.options[*tok.name].emplace_back(*tok.value);
+            break;
+          case TokenType::IDENTIFIER:
+            map.positionals.push_back(*tok.value);
+            break;
         }
       }
     }
-    return map;
-  }
-
-  auto get_strings_map(std::span<char const *> args) {
-    auto map = StringsMap();
-    map["a"] = std::optional<std::vector<std::string_view>>(std::in_place_t{}, 1, "1");
-    map["b"] = std::optional<std::vector<std::string_view>>(std::in_place_t{}, 1, "2");
-    // map.emplace("a", std::in_place_t{}, 1, "1");
-    // map.emplace("b", std::in_place_t{}, 2, "2");
     return map;
   }
 
@@ -183,254 +150,83 @@ private:
   }
 
   template <std::size_t... Is>
-  auto process_strings_map(StringsMap strings_map, ExtraInfo extra_info, std::index_sequence<Is...>) {
+  auto process_strings_map(StringsMap const &strings_map, ExtraInfo extra_info, std::index_sequence<Is...>) {
     auto args_map = ArgsMap<Cmd const>();
-    (process_ith_arg<Is>(args_map, strings_map, extra_info), ...);
+    std::size_t cur_pos_idx = 0;
+    try {
+      (process_ith_arg<Is>(args_map, strings_map, extra_info, cur_pos_idx), ...);
+    } catch (std::runtime_error const &e) {
+      throw UserError(e.what(), get_cmd_fmt());
+    }
     return args_map;
   }
 
   template <std::size_t I>
-  void process_ith_arg(ArgsMap<Cmd const> &args_map, StringsMap strings_map, ExtraInfo extra_info) {
+  void process_ith_arg(ArgsMap<Cmd const> &args_map, StringsMap const &strings_map, ExtraInfo extra_info, std::size_t &cur_pos_idx) {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
-    if (!strings_map.contains(arg.name)) return;
-    consume_arg<I>(args_map, arg, strings_map[arg.name], this->cmd_ref.get(), extra_info);
-  }
+    switch (arg.type) {
+      case ArgType::FLG: {
+        std::size_t flg_count = 0;
+        if (auto const it = strings_map.flags.find(arg.name); it != strings_map.flags.end())
+          flg_count += it->second;
+        else if (auto const it = strings_map.flags.find(arg.abbrev); it != strings_map.flags.end())
+          flg_count += it->second;
 
-  std::size_t assign_positional(ArgsMap<Cmd const> &map, std::span<char const *> args, std::size_t cur_pos_idx) const {
-    if (cur_pos_idx >= this->cmd_ref.get().amount_pos)
-      throw UnexpectedPositional(this->cmd_ref.get().name, args[0], this->cmd_ref.get().amount_pos, get_cmd_fmt());
+        // also search in options because every long option followed by a positional is considered
+        // as an option followed by its value, but it may be a flag followed by a positional
+        if (auto const it = strings_map.options.find(arg.name); it != strings_map.options.end())
+          flg_count += it->second.size();
+        else if (auto const it = strings_map.options.find(arg.abbrev); it != strings_map.options.end())
+          flg_count += it->second.size();
 
-    try {
-      std::size_t idx = 0;
-      // clang-format off
-      std::apply(
-        [this, &idx, cur_pos_idx, &map, args](auto&&... arg) {
-          using namespace act;
-          (void)(( // cast to void to suppress unused warning
-          arg.type == ArgType::POS
-            ? idx == cur_pos_idx
-              ? (process(map, arg, args[0], this->cmd_ref.get(), this->extra_info), true)
-              : (++idx, false)
-            : false
-          ) || ...);
-        },
-        this->cmd_ref.get().args
-      );
-      // clang-format on
-      return 1;
-    } catch (std::runtime_error const &e) {
-      throw UserError(e.what(), get_cmd_fmt());
-    }
-  }
-
-  std::optional<ParsedOption> try_parse_option(std::string_view const whole_arg) {
-    auto const num_of_dashes = whole_arg.find_first_not_of('-');
-    auto const eq_idx = whole_arg.find('=', num_of_dashes);
-    bool const has_equals = eq_idx != std::string_view::npos;
-    if (num_of_dashes == 1) {
-      // short option, e.g. `-O`
-      auto const name = whole_arg.substr(1, 1);
-      auto const it =
-        this->cmd_ref.get().find_arg_if([name](auto const &a) { return a.type == ArgType::OPT && name == a.abbrev; });
-      if (!it) return std::nullopt;
-
-      if (has_equals) {
-        if (whole_arg.length() > 3) {
-          // has equals followed by some value, e.g. `-O=2`
-          return ParsedOption{.arg = *it, .value = whole_arg.substr(3)};
+        if (flg_count > 0) consume_arg<I>(args_map, arg, flg_count, this->cmd_ref.get(), extra_info);
+        break;
+      }
+      case ArgType::OPT: {
+        auto it = strings_map.options.find(arg.name);
+        if (it == strings_map.options.end()) it = strings_map.options.find(arg.abbrev);
+        if (it != strings_map.options.end()) {
+          auto const &arg_value = it->second;
+          consume_arg<I>(args_map, arg, std::cref(arg_value), this->cmd_ref.get(), extra_info);
         }
-        // case left: things like `-O=`
-        return ParsedOption{.arg = *it, .value = ""};
+        break;
       }
-
-      if (whole_arg.length() > 2 && std::isupper(name[0])) {
-        // only followed by some value, e.g. `-O2`
-        return ParsedOption{.arg = *it, .value = whole_arg.substr(2)};
-      }
-
-      // case left: has no value (next CLI argument could be it)
-      return ParsedOption{.arg = *it, .value = std::nullopt};
-    }
-
-    if (num_of_dashes == 2 && whole_arg.length() > 3) {
-      // long option, e.g. `--name`
-
-      if (has_equals) {
-        auto const name = whole_arg.substr(2, eq_idx - 2);
-        auto const it =
-          this->cmd_ref.get().find_arg_if([name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
-        if (!it) return std::nullopt;
-
-        auto const value = whole_arg.substr(eq_idx + 1);
-        return ParsedOption{.arg = *it, .value = value};
-      }
-
-      // has no value (long options cannot have "glued" values like `-O2`; next CLI argument could be it)
-      auto const name = whole_arg.substr(2);
-      auto const it =
-        this->cmd_ref.get().find_arg_if([name](auto const &a) { return a.type == ArgType::OPT && name == a.name; });
-      if (!it) return std::nullopt;
-
-      return ParsedOption{.arg = *it, .value = std::nullopt};
-    }
-
-    // not an option
-    return std::nullopt;
-  }
-
-  std::size_t assign_option(ArgsMap<Cmd const> &map, ParsedOption const &option, std::span<char const *> args) const {
-    std::size_t ret = 1;
-    auto value = option.value.or_else([args, &ret]() -> std::optional<std::string_view> {
-      if (args.size() > 1 && looks_positional(args[1])) {
-        ret = 2;
-        return args[1];
-      }
-      return std::nullopt;
-    });
-
-    try {
-      std::size_t idx = 0;
-      // clang-format off
-      std::apply(
-        [this, &idx, &option, &map, &value](auto&&... arg) {
-          using namespace act;
-          (void)(( // cast to void to suppress unused warning
-          idx == option.arg.tuple_idx
-            ? (process(map, arg, value, this->cmd_ref.get(), this->extra_info), true)
-            : (++idx, false)
-          ) || ...);
-        },
-        this->cmd_ref.get().args
-      );
-      // clang-format on
-      return ret;
-    } catch (std::runtime_error const &e) {
-      throw UserError(e.what(), get_cmd_fmt());
-    }
-  }
-
-  std::size_t assign_long_flag(ArgsMap<Cmd const> &map, std::string_view const flag) const {
-    auto const it = this->cmd_ref.get().find_arg_if([&flag](auto const &a) { return a.name == flag; });
-    if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_fmt());
-    if (it->type != ArgType::FLG) {
-      throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), get_cmd_fmt());
-    }
-
-    try {
-      std::size_t idx = 0;
-      // clang-format off
-      std::apply(
-        [this, &idx, &it, &map](auto&&... arg) {
-          using namespace act;
-          (void)(( // cast to void to suppress unused warning
-          idx == it->tuple_idx
-            ? (process(map, arg, std::nullopt, this->cmd_ref.get(), this->extra_info), true)
-            : (++idx, false)
-          ) || ...);
-        },
-        this->cmd_ref.get().args
-      );
-      // clang-format on
-      return 1;
-    } catch (std::runtime_error const &e) {
-      throw UserError(e.what(), get_cmd_fmt());
-    }
-  }
-
-  std::size_t assign_short_flags(ArgsMap<Cmd const> &map, std::string_view const flags) const {
-    for (std::size_t i = 0; i < flags.size(); ++i) {
-      auto const flag = flags.substr(i, 1);
-      auto const it = this->cmd_ref.get().find_arg_if([&flag](auto const &a) { return a.abbrev == flag; });
-      if (!it) throw UnknownArgument(this->cmd_ref.get().name, flag, get_cmd_fmt());
-      if (it->type != ArgType::FLG) {
-        throw WrongType(this->cmd_ref.get().name, flag, to_string(it->type), to_string(ArgType::FLG), get_cmd_fmt());
-      }
-
-      try {
-        std::size_t idx = 0;
-        // clang-format off
-        std::apply(
-          [this, &idx, &it, &map](auto&&... arg) {
-            using namespace act;
-            (void)(( // cast to void to suppress unused warning
-            idx == it->tuple_idx
-              ? (process(map, arg, std::nullopt, this->cmd_ref.get(), this->extra_info), true)
-              : (++idx, false)
-            ) || ...);
-          },
-          this->cmd_ref.get().args
-        );
-        // clang-format on
-      } catch (std::runtime_error const &e) {
-        throw UserError(e.what(), get_cmd_fmt());
+      case ArgType::POS: [[fallthrough]];
+      default: {
+        // if (auto const idx = find_cmd(this->cmd_ref.get().subcmds, *tok.value); idx != -1) {
+        //   auto const rest = args.subspan(index);
+        //   int i = 0;
+        //   // clang-format off
+        //   std::apply(
+        //     [this, &i, idx, &map, rest](auto&&... cmd) {
+        //       (void)(( // cast to void to suppress unused warning
+        //       i == idx
+        //         ? (map.submap = CmdParser<typename std::remove_reference_t<decltype(cmd)>::type>(
+        //             cmd.get(), this->extra_info, this->cmd_ref.get().name).get_strings_map(rest), true)
+        //         : (++i, false)
+        //       ) || ...);
+        //     },
+        //     this->cmd_ref.get().subcmds
+        //   );
+        //   // clang-format on
+        //   index += rest.size();
+        // }
+        if (cur_pos_idx >= strings_map.positionals.size())
+          throw UnexpectedPositional(this->cmd_ref.get().name, arg.name, this->cmd_ref.get().amount_pos, get_cmd_fmt());
+        auto const &arg_value = strings_map.positionals.at(cur_pos_idx);
+        consume_arg<I>(args_map, arg, arg_value, this->cmd_ref.get(), extra_info);
+        cur_pos_idx += 1;
+        break;
       }
     }
-
-    return 1;
-  }
-
-  void check_contains_required(ArgsMap<Cmd const> const &map) const {
-    std::vector<std::string_view> missing_arg_names;
-    // clang-format off
-    std::apply(
-      [&map, &missing_arg_names](auto&&... arg) {
-        (void)(( // cast to void to suppress unused warning
-          arg.is_required && !map.has(arg.name)
-            ? missing_arg_names.push_back(arg.name)
-            : (void)0
-        ), ...);
-      },
-      this->cmd_ref.get().args
-    );
-    // clang-format on
-
-    if (!missing_arg_names.empty())
-      throw MissingRequiredArguments(this->cmd_ref.get().name, missing_arg_names, get_cmd_fmt());
-  }
-
-  void set_defaults(ArgsMap<Cmd const> &map) const {
-    // clang-format off
-    std::apply(
-      [&map](auto&&... arg) {
-        (void)(( // cast to void to suppress unused warning
-          arg.has_default() && !map.has(arg.name)
-            ? (map.args[arg.name] = *arg.default_value, (void)0)
-            : (void)0
-        ), ...);
-      },
-      this->cmd_ref.get().args
-    );
-    // clang-format on
+    if (!args_map.template has<I>()) {
+      if (arg.is_required)
+        throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
+      if (arg.has_default())
+        std::get<I>(args_map.t_args) = *arg.default_value;
+    }
   }
 };
-
-// +---------------------+
-// |   parsing helpers   |
-// +---------------------+
-
-constexpr bool is_dash_dash(std::string_view const whole_arg) noexcept {
-  return whole_arg.length() == 2 && whole_arg[0] == '-' && whole_arg[1] == '-';
-}
-
-constexpr bool looks_positional(std::string_view const whole_arg) noexcept {
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  return num_of_dashes == 0 || (whole_arg.length() == 1 && num_of_dashes == std::string_view::npos);
-}
-
-constexpr std::string_view get_if_short_flags(std::string_view const whole_arg) noexcept {
-  auto const names = whole_arg.substr(1);
-  auto const all_chars = std::ranges::all_of(names, [](char const c) { return std::isalpha(c); });
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 1 && names.length() >= 1 && all_chars) return names;
-  return {};
-}
-
-constexpr std::string_view get_if_long_flag(std::string_view const whole_arg) noexcept {
-  auto const name = whole_arg.substr(2);
-  auto const num_of_dashes = whole_arg.find_first_not_of('-');
-  if (num_of_dashes == 2 && name.length() >= 2) return name;
-  return {};
-}
 
 } // namespace opz
 

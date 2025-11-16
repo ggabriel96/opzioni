@@ -2,10 +2,13 @@
 #define OPZIONI_ACTIONS_HPP
 
 #include <any>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <optional>
 #include <string_view>
+#include <variant>
+#include <vector>
 
 #include "opzioni/arg.hpp"
 #include "opzioni/args_map.hpp"
@@ -13,8 +16,11 @@
 #include "opzioni/converters.hpp"
 #include "opzioni/extra.hpp"
 #include "opzioni/strings.hpp"
+#include "opzioni/variant.hpp"
 
 namespace opz::act {
+
+using ArgValueType = std::variant<std::size_t, std::string_view, std::reference_wrapper<std::vector<std::string_view> const>>;
 
 namespace detail {
 
@@ -125,7 +131,7 @@ template <int TupleIdx, concepts::Cmd Cmd, typename T, typename Tag>
 void consume_arg(
   ArgsMap<Cmd const> &,
   Arg<T, Tag> const &,
-  std::optional<std::vector<std::string_view>> const &,
+  ArgValueType const &,
   Cmd const &,
   ExtraInfo const &
 ) {
@@ -136,14 +142,23 @@ template <int TupleIdx, concepts::Cmd Cmd, typename T>
 void consume_arg(
   ArgsMap<Cmd const> &args_map,
   Arg<T, act::assign> const &arg,
-  std::optional<std::vector<std::string_view>> const &value,
+  ArgValueType const &value,
   Cmd const &,
   ExtraInfo const &
 ) {
-  if (!value.has_value() && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
-  if (value.has_value() && value->size() > 1) throw UnexpectedValue(arg.name, 1, value->size());
-  std::get<TupleIdx>(args_map.t_args) =
-    arg.type != ArgType::FLG && value ? convert<T>((*value)[0]) : *arg.implicit_value;
+  if (value.index() == 0 && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
+  if (auto const vals = std::get_if<2>(&value); vals != nullptr && vals->get().size() > 1) throw UnexpectedValue(arg.name, 1, vals->get().size());
+  std::visit(overloaded {
+    [&args_map, &arg](std::size_t) {
+      std::get<TupleIdx>(args_map.t_args) = *arg.implicit_value;
+    },
+    [&args_map, &arg](std::string_view sv) {
+      std::get<TupleIdx>(args_map.t_args) = convert<T>(sv);
+    },
+    [&args_map, &arg](std::vector<std::string_view> vec) {
+      std::get<TupleIdx>(args_map.t_args) = convert<T>(vec[0]);
+    },
+  }, value);
   std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.t_args) << '\n';
 }
 

@@ -38,11 +38,11 @@ public:
   UserError(std::string const &msg, CmdFmt const &formatter) : std::runtime_error(msg), formatter(formatter) {}
 };
 
-class MissingRequiredArguments : public UserError {
+class MissingRequiredArgument : public UserError {
 public:
-  MissingRequiredArguments(std::string_view cmd_name, std::ranges::range auto const &names, CmdFmt const &formatter)
+  MissingRequiredArgument(std::string_view cmd_name,std::string_view name, CmdFmt const &formatter)
     : UserError(
-        fmt::format("Missing required arguments for `{}`: `{}`", cmd_name, fmt::join(names, "`, `")), formatter
+        fmt::format("Missing required argument `{}` for command `{}`", name, cmd_name), formatter
       ) {}
 };
 

@@ -11,10 +11,23 @@
 #include "opzioni/exceptions.hpp"
 #include "opzioni/fixed_string.hpp"
 #include "opzioni/get_type.hpp"
+#include "opzioni/string_list.hpp"
 #include "opzioni/type_list.hpp"
 #include "opzioni/variant.hpp"
 
 namespace opz {
+
+struct StringsMap;
+
+struct StringsMap {
+  // vector because each option may have N values
+  using ValueType = std::vector<std::string_view>;
+
+  std::string_view exec_path{};
+  ValueType positionals;
+  std::map<std::string_view, ValueType> options;
+  std::map<std::string_view, std::size_t> flags;
+};
 
 template <concepts::Cmd> struct ArgsMap;
 
@@ -53,10 +66,26 @@ struct ArgsMap {
     return std::get_if<ArgsMap<SubCmd const>>(&submap);
   }
 
-  [[nodiscard]] bool has(std::string_view const name) const noexcept { return args.contains(name); }
+  template <FixedString Name>
+  [[nodiscard]] constexpr int idx_of() const noexcept {
+    return IndexOfStr<0, Name, typename Cmd::arg_names>::value;
+  }
+
+  template <int Idx>
+  [[nodiscard]] bool has() const noexcept {
+    return std::get<Idx>(this->t_args).has_value();
+  }
+
+  template <FixedString Name>
+  [[nodiscard]] bool has() const noexcept {
+    constexpr auto idx = this->idx_of<Name>();
+    return this->template has<idx>();
+  }
 
   [[nodiscard]] bool has_submap() const noexcept { return !std::holds_alternative<empty>(submap); }
 
+  // TODO: size() doens't make sense anymore since t_args is always "full-size"
+  // can we have a set member function to set values in t_args and in that increment a counter?
   [[nodiscard]] auto size() const noexcept { return args.size(); }
 };
 
