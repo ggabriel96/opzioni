@@ -12,7 +12,6 @@ std::string_view to_string(TokenType type) noexcept {
     case TokenType::OPT_LONG_AND_VALUE: return "OPT_LONG_AND_VALUE";
     case TokenType::OPT_SHORT_AND_VALUE: return "OPT_SHORT_AND_VALUE";
     case TokenType::IDENTIFIER: return "IDENTIFIER";
-    case TokenType::END: return "END";
     default: return "ERR";
   }
 }
@@ -29,8 +28,6 @@ std::vector<Token> Scanner::operator()() noexcept {
     this->cur_col = 0;
     this->scan_token();
   }
-  // don't use add_token() because this->args_idx is not valid anymore
-  this->tokens.emplace_back(TokenType::END, this->args_idx, std::nullopt, std::nullopt);
   return this->tokens;
 }
 

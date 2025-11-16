@@ -20,7 +20,6 @@ enum struct TokenType {
   OPT_LONG_AND_VALUE,  // --option=value
   OPT_SHORT_AND_VALUE, // -Ovalue
   IDENTIFIER,          // positional, command, value after OPT_OR_FLG_LONG
-  END,
 };
 
 struct Token {
