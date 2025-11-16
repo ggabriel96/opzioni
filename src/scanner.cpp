@@ -87,10 +87,13 @@ void Scanner::long_opt() noexcept {
 
 void Scanner::short_opt() noexcept {
   // - was already consumed
-  // look for either: -Ovalue or -f or -xpto
+  // look for either: -Ovalue or -O value or -f or -xpto
   if (auto const c = this->peek(); c >= 'A' && c <= 'Z') {
     auto const name = this->advance();
-    auto const value = this->cur_arg().substr(this->cur_col);
+    std::optional<std::string_view> value = std::nullopt;
+    if (this->cur_arg().length() > 2)
+      value.emplace(std::next(this->cur_arg().begin(), this->cur_col), this->cur_arg().end());
+      // value = this->cur_arg().substr(this->cur_col);
     this->add_token(TokenType::OPT_SHORT_AND_VALUE, name, value);
     return;
   }
