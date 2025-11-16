@@ -133,7 +133,14 @@ private:
             break;
           case TokenType::OPT_LONG_AND_VALUE: [[fallthrough]];
           case TokenType::OPT_SHORT_AND_VALUE:
-            map.options[*tok.name].emplace_back(*tok.value);
+            if (tok.value) {
+              map.options[*tok.name].emplace_back(*tok.value);
+            }
+            // the case of `-O value` may have the value as "the next positional"
+            else if (index + 1 < tokens.size() && tokens[index + 1].type == TokenType::IDENTIFIER) {
+              // consider the next token as both possible option value and possible positional below (don't skip next index)
+              map.options[*tok.name].emplace_back(*tokens[index + 1].value);
+            }
             break;
           case TokenType::IDENTIFIER:
             map.positionals.push_back(*tok.value);
@@ -183,9 +190,13 @@ private:
         break;
       }
       case ArgType::OPT: {
-        auto it = strings_map.options.find(arg.name);
-        if (it == strings_map.options.end()) it = strings_map.options.find(arg.abbrev);
-        if (it != strings_map.options.end()) {
+        // gotta consider values supplied via both name and abbrev
+        if (auto const it = strings_map.options.find(arg.name); it != strings_map.options.end()) {
+          auto const &arg_value = it->second;
+          consume_arg<I>(args_map, arg, std::cref(arg_value), this->cmd_ref.get(), extra_info);
+        }
+
+        if (auto const it = strings_map.options.find(arg.abbrev); it != strings_map.options.end()) {
           auto const &arg_value = it->second;
           consume_arg<I>(args_map, arg, std::cref(arg_value), this->cmd_ref.get(), extra_info);
         }
