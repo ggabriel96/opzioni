@@ -135,48 +135,34 @@ void process(
 }
 
 template <int TupleIdx, concepts::Cmd Cmd, typename T, typename Tag>
-void consume_arg(
-  ArgsMap<Cmd const> &,
-  Arg<T, Tag> const &arg,
-  ArgValue const &,
-  Cmd const &,
-  ExtraInfo const &
-) {
+void consume_arg(ArgsMap<Cmd const> &, Arg<T, Tag> const &arg, ArgValue const &, Cmd const &, ExtraInfo const &) {
   std::cout << "base consume_arg " << arg.name << '\n';
 }
 
 template <int TupleIdx, concepts::Cmd Cmd, typename T>
 void consume_arg(
-  ArgsMap<Cmd const> &args_map,
-  Arg<T, act::assign> const &arg,
-  ArgValue const &value,
-  Cmd const &,
-  ExtraInfo const &
+  ArgsMap<Cmd const> &args_map, Arg<T, act::assign> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
 ) {
   // if (value.index() == flg_idx && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
-  if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr && vals->get().size() > 1) throw UnexpectedValue(arg.name, 1, vals->get().size());
-  std::visit(overloaded {
-    [&args_map, &arg](PosValueType sv) {
-      std::get<TupleIdx>(args_map.args) = convert<T>(sv);
+  if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr && vals->get().size() > 1)
+    throw UnexpectedValue(arg.name, 1, vals->get().size());
+  std::visit(
+    overloaded{
+      [&args_map, &arg](PosValueType sv) { std::get<TupleIdx>(args_map.args) = convert<T>(sv); },
+      [&args_map, &arg](FlgValueType) { std::get<TupleIdx>(args_map.args) = *arg.implicit_value; },
+      [&args_map, &arg](OptValueType vec) {
+        // TODO: check that vec is not empty? check it has more than 1 element?
+        std::get<TupleIdx>(args_map.args) = convert<T>(vec.get()[0]);
+      },
     },
-    [&args_map, &arg](FlgValueType) {
-      std::get<TupleIdx>(args_map.args) = *arg.implicit_value;
-    },
-    [&args_map, &arg](OptValueType vec) {
-      // TODO: check that vec is not empty? check it has more than 1 element?
-      std::get<TupleIdx>(args_map.args) = convert<T>(vec.get()[0]);
-    },
-  }, value);
+    value
+  );
   std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.args) << '\n';
 }
 
 template <int TupleIdx, concepts::Cmd Cmd, concepts::Container C>
 void consume_arg(
-  ArgsMap<Cmd const> &args_map,
-  Arg<C, act::append> const &arg,
-  ArgValue const &value,
-  Cmd const &,
-  ExtraInfo const &
+  ArgsMap<Cmd const> &args_map, Arg<C, act::append> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
 ) {
   // if (value.index() == flg_idx) throw MissingValue(arg.name, 1, 0); // TODO: does append work with positionals?
   // auto const converted_value = convert<typename C::value_type>(*value);
@@ -186,25 +172,28 @@ void consume_arg(
   //   detail::assign_to(args_map.args, arg, C{converted_value});
   // }
   auto &target = std::get<TupleIdx>(args_map.args);
-  std::visit(overloaded {
-    [&target](PosValueType sv) {
-      if (target.has_value()) target->emplace_back(convert<typename C::value_type>(sv));
-      else target.emplace(1, convert<typename C::value_type>(sv));
+  std::visit(
+    overloaded{
+      [&target](PosValueType sv) {
+        if (target.has_value()) target->emplace_back(convert<typename C::value_type>(sv));
+        else target.emplace(1, convert<typename C::value_type>(sv));
+      },
+      [&target, &arg](FlgValueType flg_count) {
+        // if (target.has_value()) target->emplace_back(*arg.implicit_value);
+        // else target.emplace(flg_count, *arg.implicit_value);
+        // target.emplace(flg_count, *arg.implicit_value);
+      },
+      [&target, &arg](OptValueType vec) {
+        C converted_values;
+        for (auto const v : vec.get()) {
+          converted_values.emplace_back(convert<typename C::value_type>(v));
+        }
+        if (target.has_value()) target->append_range(converted_values);
+        else target.emplace(std::from_range_t{}, converted_values);
+      },
     },
-    [&target, &arg](FlgValueType flg_count) {
-      // if (target.has_value()) target->emplace_back(*arg.implicit_value);
-      // else target.emplace(flg_count, *arg.implicit_value);
-      // target.emplace(flg_count, *arg.implicit_value);
-    },
-    [&target, &arg](OptValueType vec) {
-      C converted_values;
-      for (auto const v : vec.get()) {
-        converted_values.emplace_back(convert<typename C::value_type>(v));
-      }
-      if (target.has_value()) target->append_range(converted_values);
-      else target.emplace(std::from_range_t{}, converted_values);
-    },
-  }, value);
+    value
+  );
   // std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.args) << '\n';
 }
 

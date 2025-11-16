@@ -11,7 +11,11 @@
 
 namespace opz {
 
-enum struct ArgType { POS, OPT, FLG };
+enum struct ArgType {
+  POS,
+  OPT,
+  FLG,
+};
 std::string_view to_string(ArgType const at) noexcept;
 
 // +----------------------------------+
@@ -85,7 +89,8 @@ struct Arg {
 
 template <FixedString Name, FixedString Abbrev, typename T, typename Tag>
 constexpr void validate_common(ArgMeta<T, Tag> const &meta) {
-  if (Name.size <= 1 || !is_valid_name(Name)) throw "Argument names must be longer than 1 character and not contain any whitespace";
+  if (Name.size <= 1 || !is_valid_name(Name))
+    throw "Argument names must be longer than 1 character and not contain any whitespace";
   if (Abbrev.size != 0 && (Abbrev.size > 1 || !is_valid_name(Abbrev)))
     throw "Argument abbreviations, if specified, must be a single non-whitespace character";
 

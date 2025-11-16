@@ -6,6 +6,10 @@ Standard: c++20
 ColumnLimit: 120
 
 AlignAfterOpenBracket: BlockIndent
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+  # AlignPPAndNotPP: false
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortCaseExpressionOnASingleLine: true
@@ -20,5 +24,10 @@ BreakStringLiterals: false # avoid breaking them because the `throw` message in 
 BreakTemplateDeclarations: Leave
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2
+EmptyLineAfterAccessModifier: Always
+EmptyLineBeforeAccessModifier: LogicalBlock
+EnumTrailingComma: Insert
 IndentCaseLabels: true
 PackConstructorInitializers: NextLine
+ReflowComments: Always
+SpacesBeforeTrailingComments: 1

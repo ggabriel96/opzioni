@@ -53,7 +53,9 @@ void Scanner::consume() noexcept { this->cur_col += 1; }
   return true;
 }
 
-void Scanner::add_token(TokenType type, std::optional<std::string_view> name, std::optional<std::string_view> value) noexcept {
+void Scanner::add_token(
+  TokenType type, std::optional<std::string_view> name, std::optional<std::string_view> value
+) noexcept {
   this->tokens.emplace_back(type, this->args_idx, name, value);
 }
 
@@ -73,7 +75,8 @@ void Scanner::scan_token() noexcept {
 void Scanner::long_opt() noexcept {
   // -- was already consumed
   // look for either: name=value or name
-  while (!this->is_cur_end() && this->peek() != '=') consume();
+  while (!this->is_cur_end() && this->peek() != '=')
+    consume();
   if (this->match('=')) {
     // start at 2 to discard initial dash dash; -3 would be -1 but adds 2 because we start at 2
     auto const name = this->cur_arg().substr(2, this->cur_col - 3);
@@ -92,7 +95,7 @@ void Scanner::short_opt() noexcept {
     std::optional<std::string_view> value = std::nullopt;
     if (this->cur_arg().length() > 2)
       value.emplace(std::next(this->cur_arg().begin(), this->cur_col), this->cur_arg().end());
-      // value = this->cur_arg().substr(this->cur_col);
+    // value = this->cur_arg().substr(this->cur_col);
     this->add_token(TokenType::OPT_SHORT_AND_VALUE, name, value);
     return;
   }

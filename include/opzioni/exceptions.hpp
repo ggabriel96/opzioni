@@ -18,11 +18,13 @@ namespace opz {
 // Base class for exceptions thrown because of errors from the users of our library
 class ConsumerError : public std::logic_error {
 public:
+
   using std::logic_error::logic_error;
 };
 
 class ArgumentNotFound : public ConsumerError {
 public:
+
   explicit ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
 };
 
@@ -33,6 +35,7 @@ public:
 // Base class for exceptions thrown because of errors from the users of the CLI program
 class UserError : public std::runtime_error {
 public:
+
   CmdFmt formatter;
 
   UserError(std::string const &msg, CmdFmt const &formatter) : std::runtime_error(msg), formatter(formatter) {}
@@ -40,14 +43,14 @@ public:
 
 class MissingRequiredArgument : public UserError {
 public:
-  MissingRequiredArgument(std::string_view cmd_name,std::string_view name, CmdFmt const &formatter)
-    : UserError(
-        fmt::format("Missing required argument `{}` for command `{}`", name, cmd_name), formatter
-      ) {}
+
+  MissingRequiredArgument(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
+    : UserError(fmt::format("Missing required argument `{}` for command `{}`", name, cmd_name), formatter) {}
 };
 
 class UnexpectedPositional : public UserError {
 public:
+
   UnexpectedPositional(
     std::string_view cmd_name, std::string_view name, std::size_t expected_amount, CmdFmt const &formatter
   )
@@ -61,12 +64,14 @@ public:
 
 class UnknownArgument : public UserError {
 public:
+
   UnknownArgument(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
     : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name), formatter) {}
 };
 
 class WrongType : public UserError {
 public:
+
   WrongType(
     std::string_view cmd_name,
     std::string_view name,
@@ -88,11 +93,13 @@ public:
 
 class ConversionError : public std::runtime_error {
 public:
+
   ConversionError(auto from, auto to) : std::runtime_error(fmt::format("Cannot convert `{}` to `{}`", from, to)) {}
 };
 
 class MissingValue : public std::runtime_error {
 public:
+
   MissingValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
     : std::runtime_error(
         fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)
@@ -101,6 +108,7 @@ public:
 
 class UnexpectedValue : public std::runtime_error {
 public:
+
   UnexpectedValue(std::string_view name, std::size_t expected_amount, std::size_t received_amount)
     : std::runtime_error(
         fmt::format("Expected {} value(s) for argument `{}`, got {}", expected_amount, name, received_amount)

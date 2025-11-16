@@ -32,6 +32,7 @@ std::string_view to_string(TokenType type) noexcept;
 
 class Scanner {
 public:
+
   Scanner(std::span<char const *> args) {
     this->tokens.reserve(args.size());
     this->args.reserve(args.size());
@@ -45,6 +46,7 @@ public:
   std::vector<Token> operator()() noexcept;
 
 private:
+
   std::vector<std::string_view> args;
 
   std::vector<Token> tokens;
@@ -58,7 +60,11 @@ private:
   void consume() noexcept;
   [[nodiscard]] bool match(char expected) noexcept;
 
-  void add_token(TokenType type, std::optional<std::string_view> name = std::nullopt, std::optional<std::string_view> value = std::nullopt) noexcept;
+  void add_token(
+    TokenType type,
+    std::optional<std::string_view> name = std::nullopt,
+    std::optional<std::string_view> value = std::nullopt
+  ) noexcept;
   void scan_token() noexcept;
   void long_opt() noexcept;
   void short_opt() noexcept;
