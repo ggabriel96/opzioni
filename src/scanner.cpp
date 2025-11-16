@@ -5,7 +5,6 @@ namespace opz {
 std::string_view to_string(TokenType type) noexcept {
   switch (type) {
     case TokenType::PROG_NAME: return "PROG_NAME";
-    case TokenType::DASH: return "DASH";
     case TokenType::DASH_DASH: return "DASH_DASH";
     case TokenType::FLG: return "FLG";
     case TokenType::OPT_OR_FLG_LONG: return "OPT_OR_FLG_LONG";
@@ -64,7 +63,7 @@ void Scanner::scan_token() noexcept {
     return;
   }
 
-  if (this->is_cur_end()) this->add_token(TokenType::DASH);
+  if (this->is_cur_end()) this->add_token(TokenType::IDENTIFIER, std::nullopt, this->cur_arg());
   else if (this->match(dash)) {
     if (this->is_cur_end()) this->add_token(TokenType::DASH_DASH);
     else this->long_opt();

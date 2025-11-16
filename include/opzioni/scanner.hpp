@@ -13,7 +13,6 @@ constexpr static auto dash = '-';
 
 enum struct TokenType {
   PROG_NAME,
-  DASH,                // -
   DASH_DASH,           // --
   FLG,                 // -f (-xpto adds many of this)
   OPT_OR_FLG_LONG,     // --option or --flag
