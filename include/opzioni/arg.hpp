@@ -1,8 +1,6 @@
 #ifndef OPZIONI_ARG_HPP
 #define OPZIONI_ARG_HPP
 
-#include <any>
-#include <map>
 #include <optional>
 #include <string_view>
 
@@ -88,7 +86,7 @@ struct Arg {
 // +---------------------------------+
 
 template <FixedString Name, FixedString Abbrev, typename T, typename Tag>
-constexpr void validate_common(ArgMeta<T, Tag> const &meta) {
+consteval void validate_common(ArgMeta<T, Tag> const &meta) {
   if (Name.size <= 1 || !is_valid_name(Name))
     throw "Argument names must be longer than 1 character and not contain any whitespace";
   if (Abbrev.size != 0 && (Abbrev.size > 1 || !is_valid_name(Abbrev)))
@@ -99,44 +97,44 @@ constexpr void validate_common(ArgMeta<T, Tag> const &meta) {
     if (!*meta.is_required && !meta.default_value.has_value()) throw "Optional arguments must have default values";
   }
 
-  if constexpr (concepts::Container<T>) {
+  if (concepts::Container<T>) {
     if (meta.implicit_value.has_value() && (std::is_same_v<Tag, act::append> || std::is_same_v<Tag, act::csv>))
       throw "The APPEND and CSV actions do not work with implicit value since they require a value from the command-line";
   }
 }
 
 template <typename T, typename Tag>
-constexpr void validate_pos(ArgMeta<T, Tag> const &meta) {
+consteval void validate_pos(ArgMeta<T, Tag> const &meta) {
   if (meta.implicit_value.has_value())
     throw "Implicit value cannot be used with positionals because they always take a value from the command-line";
-  if constexpr (concepts::Integer<T>) {
+  if (concepts::Integer<T>) {
     if (std::is_same_v<Tag, act::count>)
       throw "The COUNT action can only be used with flags because they count how many times an argument was provided; since a positional always takes a value from the command-line, it would be wrongly ignored";
   }
-  if constexpr (std::is_same_v<T, bool>) {
+  if (std::is_same_v<T, bool>) {
     if (std::is_same_v<Tag, act::print_help> || std::is_same_v<Tag, act::print_version>)
       throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not positionals because they always take a value from the command-line)";
   }
 }
 
 template <typename T, typename Tag>
-constexpr void validate_opt(ArgMeta<T, Tag> const &meta) {
-  if constexpr (concepts::Integer<T>) {
+consteval void validate_opt(ArgMeta<T, Tag> const &meta) {
+  if (concepts::Integer<T>) {
     if (std::is_same_v<Tag, act::count>)
       throw "The COUNT action can only be used with flags because they count how many times an argument was provided; since an option might take a value from the command-line, it would be wrongly ignored";
   }
-  if constexpr (std::is_same_v<T, bool>) {
+  if (std::is_same_v<T, bool>) {
     if (std::is_same_v<Tag, act::print_help> || std::is_same_v<Tag, act::print_version>)
       throw "The PRINT_HELP and PRINT_VERSION actions can only be used with flags (and not options because they might take a value from the command-line)";
   }
 }
 
 template <typename T, typename Tag>
-constexpr void validate_flg(ArgMeta<T, Tag> const &meta) {
+consteval void validate_flg(ArgMeta<T, Tag> const &meta) {
   if (meta.is_required.value_or(false)) throw "Flags cannot be required";
   if (!std::is_same_v<T, bool> && !concepts::Integer<T> && !meta.implicit_value.has_value())
     throw "Flags that are neither boolean nor integer types require that the implicit value is specified";
-  if constexpr (std::is_same_v<Tag, act::count> && !concepts::Integer<T>) {
+  if (std::is_same_v<Tag, act::count> && !concepts::Integer<T>) {
     throw "The COUNT action cannot be used with non-integer types";
   }
 }
