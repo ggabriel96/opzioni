@@ -63,7 +63,7 @@ void Scanner::add_token(TokenType type, std::optional<std::string_view> name, st
 
 void Scanner::scan_token() noexcept {
   if (!this->match(dash)) {
-    this->add_token(TokenType::IDENTIFIER, this->cur_arg());
+    this->add_token(TokenType::IDENTIFIER, std::nullopt, this->cur_arg());
     return;
   }
 
