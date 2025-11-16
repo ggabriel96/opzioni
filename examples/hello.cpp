@@ -14,10 +14,10 @@ int main(int argc, char const *argv[]) {
                      .flg<"version", "v">(opz::default_version);
 
   auto const map = hello_cmd(argc, argv);
-  auto const pos1 = *std::get<0>(map.t_args);
-  auto const pos2 = *std::get<1>(map.t_args);
-  auto const opt1 = *std::get<2>(map.t_args);
-  auto const flg1 = *std::get<3>(map.t_args);
+  auto const pos1 = map.get<"pos1">();
+  auto const pos2 = map.get<"pos2">();
+  auto const opt1 = map.get<"opt1">();
+  auto const flg1 = map.get<"flg1">();
   fmt::print("pos1=`{}`\n", pos1);
   fmt::print("pos2=`{}`\n", pos2);
   fmt::print("opt1=`{}`\n", opt1);

@@ -157,17 +157,17 @@ void consume_arg(
   if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr && vals->get().size() > 1) throw UnexpectedValue(arg.name, 1, vals->get().size());
   std::visit(overloaded {
     [&args_map, &arg](PosValueType sv) {
-      std::get<TupleIdx>(args_map.t_args) = convert<T>(sv);
+      std::get<TupleIdx>(args_map.args) = convert<T>(sv);
     },
     [&args_map, &arg](FlgValueType) {
-      std::get<TupleIdx>(args_map.t_args) = *arg.implicit_value;
+      std::get<TupleIdx>(args_map.args) = *arg.implicit_value;
     },
     [&args_map, &arg](OptValueType vec) {
       // TODO: check that vec is not empty? check it has more than 1 element?
-      std::get<TupleIdx>(args_map.t_args) = convert<T>(vec.get()[0]);
+      std::get<TupleIdx>(args_map.args) = convert<T>(vec.get()[0]);
     },
   }, value);
-  std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.t_args) << '\n';
+  std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.args) << '\n';
 }
 
 template <int TupleIdx, concepts::Cmd Cmd, concepts::Container C>
@@ -185,7 +185,7 @@ void consume_arg(
   // } else {
   //   detail::assign_to(args_map.args, arg, C{converted_value});
   // }
-  auto &target = std::get<TupleIdx>(args_map.t_args);
+  auto &target = std::get<TupleIdx>(args_map.args);
   std::visit(overloaded {
     [&target](PosValueType sv) {
       if (target.has_value()) target->emplace_back(convert<typename C::value_type>(sv));
@@ -205,7 +205,7 @@ void consume_arg(
       else target.emplace(std::from_range_t{}, converted_values);
     },
   }, value);
-  // std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.t_args) << '\n';
+  // std::cout << "assign consume_arg to " << arg.name << "=" << *std::get<TupleIdx>(args_map.args) << '\n';
 }
 
 } // namespace opz::act
