@@ -204,7 +204,7 @@ void consume_arg(
   if (value.index() != flg_idx) {
     auto received_amount = 1;
     if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr) received_amount = vals->get().size();
-      throw UnexpectedValue(arg.name, 0, received_amount);
+    throw UnexpectedValue(arg.name, 0, received_amount);
   }
   auto const flg_amount = std::get<flg_idx>(value);
   std::get<TupleIdx>(args_map.args) = flg_amount;
