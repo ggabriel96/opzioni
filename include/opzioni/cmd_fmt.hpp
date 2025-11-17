@@ -1,5 +1,5 @@
-#ifndef OPZIONI_CMD_INFO_HPP
-#define OPZIONI_CMD_INFO_HPP
+#ifndef OPZIONI_CMD_FMT_HPP
+#define OPZIONI_CMD_FMT_HPP
 
 #include <algorithm>
 #include <cstdio>
@@ -126,4 +126,4 @@ struct CmdFmt {
 
 } // namespace opz
 
-#endif // OPZIONI_CMD_INFO_HPP
+#endif // OPZIONI_CMD_FMT_HPP

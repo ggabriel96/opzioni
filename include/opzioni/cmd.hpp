@@ -1,5 +1,5 @@
-#ifndef OPZIONI_COMMAND_HPP
-#define OPZIONI_COMMAND_HPP
+#ifndef OPZIONI_CMD_HPP
+#define OPZIONI_CMD_HPP
 
 #include <functional>
 #include <optional>
@@ -229,4 +229,4 @@ consteval auto new_cmd(std::string_view name, std::string_view version = "") {
 
 } // namespace opz
 
-#endif // OPZIONI_COMMAND_HPP
+#endif // OPZIONI_CMD_HPP
