@@ -20,8 +20,6 @@ std::string_view to_string(ArgType const at) noexcept;
 // |       forward declarations       |
 // +----------------------------------+
 
-template <typename, typename> struct Arg;
-
 namespace act {
 
 struct append {};
