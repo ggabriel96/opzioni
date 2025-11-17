@@ -2,6 +2,7 @@
 #define OPZIONI_ACTIONS_HPP
 
 #include <any>
+#include <format>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -22,7 +23,7 @@ namespace opz::act {
 
 using PosValueType = std::string_view;
 using FlgValueType = std::size_t;
-using OptValueType = std::reference_wrapper<std::vector<std::string_view> const>;
+using OptValueType = std::reference_wrapper<std::vector<std::string_view> const>; // TODO: make it vector of optionals to support implicit value
 using ArgValueTypes = TypeList<PosValueType, FlgValueType, OptValueType>;
 static constexpr auto pos_idx = IndexOfType<0, PosValueType, ArgValueTypes>::value;
 static constexpr auto flg_idx = IndexOfType<0, FlgValueType, ArgValueTypes>::value;
@@ -208,6 +209,28 @@ void consume_arg(
   }
   auto const flg_amount = std::get<flg_idx>(value);
   std::get<TupleIdx>(args_map.args) = flg_amount;
+}
+
+template <int TupleIdx, concepts::Cmd Cmd, concepts::Container C>
+void consume_arg(
+  ArgsMap<Cmd const> &args_map, Arg<C, act::csv> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
+) {
+  auto &target = std::get<TupleIdx>(args_map.args);
+  std::visit(
+    overloaded{
+      [&target](PosValueType sv) {
+        target.emplace(std::from_range_t{}, convert<C>(sv));
+      },
+      [&arg](FlgValueType) {
+        throw std::logic_error(std::format("attempted to use the CSV action with flag `{}`", arg.name));
+      },
+      [&target, &arg](OptValueType vec) {
+        if (vec.get().size() > 1) throw UnexpectedValue(arg.name, 1, vec.get().size());
+        target.emplace(std::from_range_t{}, convert<C>(vec.get()[0]));
+      },
+    },
+    value
+  );
 }
 
 } // namespace opz::act

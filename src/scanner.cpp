@@ -95,7 +95,6 @@ void Scanner::short_opt() noexcept {
     std::optional<std::string_view> value = std::nullopt;
     if (this->cur_arg().length() > 2)
       value.emplace(std::next(this->cur_arg().begin(), this->cur_col), this->cur_arg().end());
-    // value = this->cur_arg().substr(this->cur_col);
     this->add_token(TokenType::OPT_SHORT_AND_VALUE, name, value);
     return;
   }

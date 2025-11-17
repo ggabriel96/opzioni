@@ -96,10 +96,12 @@ consteval void validate_common(ArgMeta<T, Tag> const &meta) {
     if (*meta.is_required && meta.default_value.has_value()) throw "Required arguments cannot have default values";
     if (!*meta.is_required && !meta.default_value.has_value()) throw "Optional arguments must have default values";
   }
-
-  if (concepts::Container<T>) {
+  if constexpr (concepts::Container<T>) {
     if (meta.implicit_value.has_value() && (std::is_same_v<Tag, act::append> || std::is_same_v<Tag, act::csv>))
-      throw "The APPEND and CSV actions do not work with implicit value since they require a value from the command-line";
+      // CSV would be allowed if the next if wasn't needed
+      throw "Implicit value cannot be used with the APPEND or CSV actions since they require a value from the command-line";
+    if ((meta.default_value.has_value() && meta.default_value.value().size() > 0) || (meta.implicit_value.has_value() && meta.implicit_value.value().size() > 0))
+      throw "Arguments of container types (e.g. std::vector) do not support non-empty default or implicit values";
   }
 }
 

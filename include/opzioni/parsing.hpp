@@ -181,7 +181,7 @@ private:
         auto const it_abbrev = indexes.opts_n_flgs.find(arg.abbrev);
         auto const has_abbrev = it_abbrev != indexes.opts_n_flgs.end();
         auto const reserve_size = (has_name ? it_name->second.size() : 0) + (has_abbrev ? it_abbrev->second.size() : 0);
-        std::vector<std::string_view> opt_values;
+        std::vector<std::string_view> opt_values; // TODO: make it vector of optionals to support implicit value
         std::vector<std::size_t> all_idxs;
         if (reserve_size > 0) {
           opt_values.reserve(reserve_size);
@@ -201,7 +201,8 @@ private:
           }
         }
 
-        consume_arg<I>(args_map, arg, std::cref(opt_values), this->cmd_ref.get(), extra_info);
+        if (!opt_values.empty())
+          consume_arg<I>(args_map, arg, std::cref(opt_values), this->cmd_ref.get(), extra_info);
         break;
       }
       // ignore positionals in this call

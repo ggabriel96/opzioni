@@ -150,7 +150,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
         .abbrev = Abbrev,
         .help = meta.help,
         .is_required = meta.is_required.value_or(false),
-        .default_value = meta.default_value,
+        .default_value = meta.default_value.value_or(T{}),
         .implicit_value = meta.implicit_value,
       }
     );
