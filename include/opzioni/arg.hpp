@@ -144,6 +144,8 @@ consteval void validate_flg(ArgMeta<T, Tag> const &meta) {
     throw "The COUNT action cannot be used with non-integer types";
   if constexpr (std::is_same_v<Tag, act::csv>)
     throw "The CSV action cannot be used with flags; use regular ASSIGN instead";
+  if constexpr (concepts::Container<T>)
+    throw "Flags do not support container types (e.g. std::vector)";
 }
 
 } // namespace opz

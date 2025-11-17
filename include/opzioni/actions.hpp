@@ -164,13 +164,6 @@ template <int TupleIdx, concepts::Cmd Cmd, concepts::Container C>
 void consume_arg(
   ArgsMap<Cmd const> &args_map, Arg<C, act::append> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
 ) {
-  // if (value.index() == flg_idx) throw MissingValue(arg.name, 1, 0); // TODO: does append work with positionals?
-  // auto const converted_value = convert<typename C::value_type>(*value);
-  // if (auto it = args_map.args.find(arg.name); it != args_map.args.end()) {
-  //   std::any_cast<C &>(it->second).emplace_back(converted_value);
-  // } else {
-  //   detail::assign_to(args_map.args, arg, C{converted_value});
-  // }
   auto &target = std::get<TupleIdx>(args_map.args);
   std::visit(
     overloaded{
@@ -178,12 +171,10 @@ void consume_arg(
         if (target.has_value()) target->emplace_back(convert<typename C::value_type>(sv));
         else target.emplace(1, convert<typename C::value_type>(sv));
       },
-      [&target, &arg](FlgValueType flg_count) {
-        // if (target.has_value()) target->emplace_back(*arg.implicit_value);
-        // else target.emplace(flg_count, *arg.implicit_value);
-        // target.emplace(flg_count, *arg.implicit_value);
+      [&arg](FlgValueType flg_count) {
+        throw std::logic_error(std::format("attempted to use a container type with flag `{}`", arg.name));
       },
-      [&target, &arg](OptValueType vec) {
+      [&target](OptValueType vec) {
         C converted_values;
         for (auto const v : vec.get()) {
           converted_values.emplace_back(convert<typename C::value_type>(v));
