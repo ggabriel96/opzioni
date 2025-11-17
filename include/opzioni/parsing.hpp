@@ -201,8 +201,7 @@ private:
           }
         }
 
-        if (!opt_values.empty())
-          consume_arg<I>(args_map, arg, std::cref(opt_values), this->cmd_ref.get(), extra_info);
+        if (!opt_values.empty()) consume_arg<I>(args_map, arg, std::cref(opt_values), this->cmd_ref.get(), extra_info);
         break;
       }
       // ignore positionals in this call

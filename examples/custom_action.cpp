@@ -6,7 +6,11 @@ struct double_action {};
 
 template <int TupleIdx, opz::concepts::Cmd Cmd>
 void consume_arg(
-  opz::ArgsMap<Cmd const> &args_map, opz::Arg<int, double_action> const &arg, opz::act::ArgValue const &value, Cmd const &, opz::ExtraInfo const &
+  opz::ArgsMap<Cmd const> &args_map,
+  opz::Arg<int, double_action> const &arg,
+  opz::act::ArgValue const &value,
+  Cmd const &,
+  opz::ExtraInfo const &
 ) {
   if (value.index() != opz::act::pos_idx) throw "double_action can only be used with positionals";
   auto const val = opz::convert<int>(std::get<opz::act::pos_idx>(value));

@@ -20,7 +20,8 @@ namespace opz::act {
 
 using PosValueType = std::string_view;
 using FlgValueType = std::size_t;
-using OptValueType = std::reference_wrapper<std::vector<std::string_view> const>; // TODO: make it vector of optionals to support implicit value
+using OptValueType = std::reference_wrapper<std::vector<std::string_view> const>; // TODO: make it vector of optionals
+                                                                                  // to support implicit value
 using ArgValueTypes = TypeList<PosValueType, FlgValueType, OptValueType>;
 static constexpr auto pos_idx = IndexOfType<0, PosValueType, ArgValueTypes>::value;
 static constexpr auto flg_idx = IndexOfType<0, FlgValueType, ArgValueTypes>::value;
@@ -96,9 +97,7 @@ void consume_arg(
   auto &target = std::get<TupleIdx>(args_map.args);
   std::visit(
     overloaded{
-      [&target](PosValueType sv) {
-        target.emplace(std::from_range_t{}, convert<C>(sv));
-      },
+      [&target](PosValueType sv) { target.emplace(std::from_range_t{}, convert<C>(sv)); },
       [&arg](FlgValueType) {
         throw std::logic_error(std::format("attempted to use the CSV action with flag `{}`", arg.name));
       },
@@ -113,7 +112,11 @@ void consume_arg(
 
 template <int TupleIdx, concepts::Cmd Cmd>
 void consume_arg(
-  ArgsMap<Cmd const> &, Arg<bool, act::print_help> const &, ArgValue const &, Cmd const &cmd, ExtraInfo const &extra_info
+  ArgsMap<Cmd const> &,
+  Arg<bool, act::print_help> const &,
+  ArgValue const &,
+  Cmd const &cmd,
+  ExtraInfo const &extra_info
 ) {
   CmdFmt const formatter(cmd, extra_info);
   formatter.print_title();

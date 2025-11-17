@@ -99,7 +99,8 @@ consteval void validate_common(ArgMeta<T, Tag> const &meta) {
       if (meta.implicit_value.has_value())
         // CSV would be allowed if the next if wasn't needed
         throw "Implicit value cannot be used with the APPEND or CSV actions since they require a value from the command-line";
-    if ((meta.default_value.has_value() && meta.default_value.value().size() > 0) || (meta.implicit_value.has_value() && meta.implicit_value.value().size() > 0))
+    if ((meta.default_value.has_value() && meta.default_value.value().size() > 0) ||
+        (meta.implicit_value.has_value() && meta.implicit_value.value().size() > 0))
       throw "Arguments of container types (e.g. std::vector) do not support non-empty default or implicit values";
   }
 }
@@ -142,8 +143,7 @@ consteval void validate_flg(ArgMeta<T, Tag> const &meta) {
     throw "The COUNT action cannot be used with non-integer types";
   if constexpr (std::is_same_v<Tag, act::csv>)
     throw "The CSV action cannot be used with flags; use regular ASSIGN instead";
-  if constexpr (concepts::Container<T>)
-    throw "Flags do not support container types (e.g. std::vector)";
+  if constexpr (concepts::Container<T>) throw "Flags do not support container types (e.g. std::vector)";
 }
 
 } // namespace opz
