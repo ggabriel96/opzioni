@@ -36,12 +36,12 @@ int main(int argc, char const *argv[]) {
       .sub(pull_cmd);
 
   auto const docker_map = docker_cmd(argc, argv);
-  std::print("{} args docker_map (size {}):\n", docker_map.exec_path, docker_map.size());
+  std::print("{} args docker_map:\n", docker_map.exec_path);
   std::print("config: {}\n", docker_map.get<"config">());
   std::print("debug: {}\n", docker_map.get<"debug">());
 
   if (auto const *exec_map = docker_map.get(exec_cmd); exec_map != nullptr) {
-    std::print("\n{} args map (size {}):\n", exec_map->exec_path, exec_map->size());
+    std::print("\n{} args map:\n", exec_map->exec_path);
     std::print("container: {}\n", exec_map->get<"container">());
     std::print("command: {}\n", exec_map->get<"command">());
     std::print("detach: {}\n", exec_map->get<"detach">());
@@ -51,7 +51,7 @@ int main(int argc, char const *argv[]) {
   }
 
   if (auto const *pull_map = docker_map.get(pull_cmd); pull_map != nullptr) {
-    std::print("\n{} args map (size {}):\n", pull_map->exec_path, pull_map->size());
+    std::print("\n{} args map:\n", pull_map->exec_path);
     std::print("name: {}\n", pull_map->get<"name">());
     std::print("all-tags: {}\n", pull_map->get<"all-tags">());
     std::print("disable-content-trust: {}\n", pull_map->get<"disable-content-trust">());

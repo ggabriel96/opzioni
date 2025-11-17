@@ -15,7 +15,7 @@ constexpr static auto exec_cmd = new_cmd("exec")
                                    .flg<"help", "h">(default_help);
 
 void handle_docker_subcmd(ArgsMap<decltype(exec_cmd)> const &map) {
-  std::print("\n{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("\n{} args map:\n", map.exec_path);
   std::print("container: {}\n", map.get<"container">());
   std::print("command: {}\n", map.get<"command">());
   std::print("detach: {}\n", map.get<"detach">());
@@ -39,7 +39,7 @@ constexpr static auto pull_cmd = new_cmd("pull")
                                    .flg<"help", "h">(default_help);
 
 void handle_docker_subcmd(ArgsMap<decltype(pull_cmd)> const &map) {
-  std::print("\n{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("\n{} args map:\n", map.exec_path);
   std::print("name: {}\n", map.get<"name">());
   std::print("all-tags: {}\n", map.get<"all-tags">());
   std::print("disable-content-trust: {}\n", map.get<"disable-content-trust">());
@@ -66,7 +66,7 @@ int main(int argc, char const *argv[]) {
       .sub(pull_cmd);
 
   auto const map = docker_cmd(argc, argv);
-  std::print("{} args map (size {}):\n", map.exec_path, map.size());
+  std::print("{} args map:\n", map.exec_path);
   std::print("config: {}\n", map.get<"config">());
   std::print("debug: {}\n", map.get<"debug">());
   std::visit(
