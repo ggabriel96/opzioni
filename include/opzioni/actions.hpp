@@ -223,6 +223,33 @@ void consume_arg(
   );
 }
 
+template <int TupleIdx, concepts::Cmd Cmd>
+void consume_arg(
+  ArgsMap<Cmd const> &, Arg<bool, act::print_help> const &, ArgValue const &, Cmd const &cmd, ExtraInfo const &extra_info
+) {
+  CmdFmt const formatter(cmd, extra_info);
+  formatter.print_title();
+  if (!formatter.introduction.empty()) {
+    std::cout << nl;
+    formatter.print_intro();
+  }
+  std::cout << nl;
+  formatter.print_usage();
+  std::cout << nl;
+  formatter.print_help();
+  std::cout << nl;
+  formatter.print_details();
+  std::exit(0);
+}
+
+template <int TupleIdx, concepts::Cmd Cmd>
+void consume_arg(
+  ArgsMap<Cmd const> &, Arg<bool, act::print_version> const &, ArgValue const &, Cmd const &cmd, ExtraInfo const &
+) {
+  fmt::print("{} {}\n", cmd.name, cmd.version);
+  std::exit(0);
+}
+
 } // namespace opz::act
 
 #endif // OPZIONI_ACTIONS_HPP
