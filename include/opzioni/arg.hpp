@@ -110,6 +110,8 @@ template <typename T, typename Tag>
 consteval void validate_pos(ArgMeta<T, Tag> const &meta) {
   if (meta.implicit_value.has_value())
     throw "Implicit value cannot be used with positionals because they always take a value from the command-line";
+  if constexpr (std::is_same_v<Tag, act::append>)
+    throw "The APPEND action cannot yet be used with positional arguments";
   if constexpr (concepts::Integer<T>) {
     if constexpr (std::is_same_v<Tag, act::count>)
       throw "The COUNT action can only be used with flags because they count how many times an argument was provided; since a positional always takes a value from the command-line, it would be wrongly ignored";
