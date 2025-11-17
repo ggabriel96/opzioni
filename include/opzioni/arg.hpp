@@ -134,9 +134,10 @@ consteval void validate_flg(ArgMeta<T, Tag> const &meta) {
   if (meta.is_required.value_or(false)) throw "Flags cannot be required";
   if (!std::is_same_v<T, bool> && !concepts::Integer<T> && !meta.implicit_value.has_value())
     throw "Flags that are neither boolean nor integer types require that the implicit value is specified";
-  if (std::is_same_v<Tag, act::count> && !concepts::Integer<T>) {
+  if (std::is_same_v<Tag, act::count> && !concepts::Integer<T>)
     throw "The COUNT action cannot be used with non-integer types";
-  }
+  if (std::is_same_v<Tag, act::csv>)
+    throw "The CSV action cannot be used with flags; use regular ASSIGN instead";
 }
 
 } // namespace opz
