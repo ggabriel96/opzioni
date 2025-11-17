@@ -12,11 +12,7 @@ test:
 	meson test -C build/ --print-errorlogs
 
 format:
-	clang-format --verbose -i \
-		examples/*.cpp \
-		include/opzioni/*.hpp \
-		src/*.cpp \
-		tests/*.cpp
+	ninja -C build/ clang-format
 
 clean:
 	rm -rf build/
