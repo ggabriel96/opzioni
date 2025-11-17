@@ -1,7 +1,7 @@
 #include <print>
 #include <variant>
 
-#include "opzioni/all.hpp"
+#include "opzioni/cmd.hpp"
 
 using namespace opz;
 

@@ -53,7 +53,7 @@ Feel free to take a look at the other, more complex, examples in the same direct
 ```cpp
 #include <print>
 
-#include <opzioni/all.hpp>
+#include <opzioni/cmd.hpp>
 
 int main(int argc, char const *argv[]) {
   auto hello_cmd = opz::new_cmd("hello", "1.0")

@@ -1,6 +1,6 @@
 #include <print>
 
-#include "opzioni/all.hpp"
+#include "opzioni/cmd.hpp"
 
 struct double_action {};
 

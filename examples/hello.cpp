@@ -1,7 +1,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include "opzioni/all.hpp"
+#include "opzioni/cmd.hpp"
 
 int main(int argc, char const *argv[]) {
   auto hello_cmd = opz::new_cmd("hello", "1.0")
