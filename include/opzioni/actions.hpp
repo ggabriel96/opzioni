@@ -144,7 +144,6 @@ template <int TupleIdx, concepts::Cmd Cmd, typename T>
 void consume_arg(
   ArgsMap<Cmd const> &args_map, Arg<T, act::assign> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
 ) {
-  // if (value.index() == flg_idx && !arg.has_implicit()) throw MissingValue(arg.name, 1, 0);
   if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr && vals->get().size() > 1)
     throw UnexpectedValue(arg.name, 1, vals->get().size());
   std::visit(
@@ -152,7 +151,7 @@ void consume_arg(
       [&args_map, &arg](PosValueType sv) { std::get<TupleIdx>(args_map.args) = convert<T>(sv); },
       [&args_map, &arg](FlgValueType) { std::get<TupleIdx>(args_map.args) = *arg.implicit_value; },
       [&args_map, &arg](OptValueType vec) {
-        // TODO: check that vec is not empty? check it has more than 1 element?
+        if (vec.get().size() > 1) throw UnexpectedValue(arg.name, 1, vec.get().size());
         std::get<TupleIdx>(args_map.args) = convert<T>(vec.get()[0]);
       },
     },
