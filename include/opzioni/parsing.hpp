@@ -112,7 +112,7 @@ private:
 
   std::set<std::size_t> ignore_idxs;
 
-  CmdParser(Cmd const &cmd, ExtraInfo extra_info, std::string_view parent_cmd_name) : cmd_ref(cmd) {
+  CmdParser(Cmd const &cmd, ExtraInfo const &extra_info, std::string_view parent_cmd_name) : cmd_ref(cmd) {
     this->extra_info.parent_cmds_names.reserve(extra_info.parent_cmds_names.size() + 1);
     for (auto const name : extra_info.parent_cmds_names) {
       this->extra_info.parent_cmds_names.push_back(name);
@@ -159,13 +159,7 @@ private:
     this->parse_possible_subcmd(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx);
     // further args have to be > recursion_start_idx and <= recursion_end_idx
     this->process_tokens(
-      args_map,
-      tokens,
-      indexes,
-      recursion_start_idx,
-      recursion_end_idx,
-      this->extra_info,
-      std::make_index_sequence<args_size>()
+      args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, std::make_index_sequence<args_size>()
     );
     return args_map;
   }
@@ -211,15 +205,14 @@ private:
     TokensIndexes const &indexes,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx,
-    ExtraInfo extra_info,
     std::index_sequence<Is...>
   ) {
     try {
-      (this->process_ith_arg<Is>(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, extra_info), ...);
+      (this->process_ith_arg<Is>(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx), ...);
       if (!args_map.has_submap()) { // commands can't have both positionals and subcommands
         std::size_t cur_pos_idx = 0;
         // clang-format off
-        (this->process_ith_arg<Is>(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, extra_info, cur_pos_idx), ...);
+        (this->process_ith_arg<Is>(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, cur_pos_idx), ...);
         // clang-format on
       }
       (this->check_ith_arg<Is>(args_map), ...);
@@ -234,8 +227,7 @@ private:
     std::span<Token const> const tokens,
     TokensIndexes const &indexes,
     std::size_t const recursion_start_idx,
-    std::size_t const recursion_end_idx,
-    ExtraInfo extra_info
+    std::size_t const recursion_end_idx
   ) {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     switch (arg.type) {
@@ -252,7 +244,7 @@ private:
           }
         }
 
-        if (flg_count > 0) consume_arg<I>(args_map, arg, flg_count, this->cmd_ref.get(), extra_info);
+        if (flg_count > 0) consume_arg<I>(args_map, arg, flg_count, this->cmd_ref.get(), this->extra_info);
         break;
       }
       case ArgType::OPT: {
@@ -293,7 +285,8 @@ private:
           }
         }
 
-        if (!opt_values.empty()) consume_arg<I>(args_map, arg, std::cref(opt_values), this->cmd_ref.get(), extra_info);
+        if (!opt_values.empty())
+          consume_arg<I>(args_map, arg, std::cref(opt_values), this->cmd_ref.get(), this->extra_info);
         else throw MissingValue(has_name ? arg.name : arg.abbrev, 1, 0);
         break;
       }
@@ -310,7 +303,6 @@ private:
     TokensIndexes const &indexes,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx,
-    ExtraInfo extra_info,
     std::size_t &cur_pos_idx
   ) {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
@@ -330,7 +322,7 @@ private:
 
     cur_pos_idx += 1;
     auto const &tok = tokens[tok_idx];
-    if (tok.value) consume_arg<I>(args_map, arg, *tok.value, this->cmd_ref.get(), extra_info);
+    if (tok.value) consume_arg<I>(args_map, arg, *tok.value, this->cmd_ref.get(), this->extra_info);
   }
 
   template <std::size_t I>
