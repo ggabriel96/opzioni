@@ -105,6 +105,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   consteval auto sub(NewSubCmd const &subcmd) const {
     if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
       throw "Subcommand with this name already exists";
+    auto const existing_pos = this->find_arg_if([](auto const &arg) { return arg.type == ArgType::POS; });
+    if (existing_pos.has_value()) throw "Commands that have positional arguments cannot have subcommands";
     Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(
       *this, subcmd
     );
@@ -116,6 +118,9 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_common<Name, "">(meta);
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
+    static_assert(
+      std::tuple_size_v<decltype(subcmds)> == 0, "Commands that have subcommands cannot have positional arguments"
+    );
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
