@@ -60,22 +60,6 @@ find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack,
   // clang-format on
 }
 
-struct TokensIndexes {
-  std::vector<std::size_t> positionals;
-  std::map<std::string_view, std::vector<std::size_t>> opts_n_flgs;
-
-  [[nodiscard]] std::optional<std::size_t> first_pos_idx_after(std::size_t const offset) const noexcept {
-    if (this->positionals.empty()) return std::nullopt;
-    std::size_t i = 0;
-    auto idx = this->positionals[i];
-    while (idx <= offset) {
-      if (i + 1 >= this->positionals.size()) return std::nullopt;
-      idx = this->positionals[++i];
-    }
-    return idx;
-  }
-};
-
 // +-----------------------+
 // |       CmdParser       |
 // +-----------------------+
@@ -94,9 +78,9 @@ public:
   ArgsMap<Cmd const> operator()(std::span<char const *> args) {
     auto scanner = Scanner(args);
     auto const tokens = scanner();
-    auto const tokens_indexes = this->index_tokens(tokens);
+    auto const indexes = index_tokens(tokens);
     // TODO: check we did not receive unknown arguments (throw UnknownArgument)
-    auto map = this->get_args_map(tokens, tokens_indexes, 0, -1);
+    auto map = this->get_args_map(tokens, indexes, 0, -1);
     return map;
   }
 
@@ -121,31 +105,6 @@ private:
   }
 
   auto get_cmd_fmt() const noexcept { return CmdFmt(this->cmd_ref.get(), this->extra_info); }
-
-  auto index_tokens(std::span<Token const> const tokens) {
-    auto indexes = TokensIndexes();
-    if (!tokens.empty()) { // should never happen
-      for (std::size_t index = 1; index < tokens.size(); ++index) {
-        auto const &tok = tokens[index];
-        switch (tok.type) {
-          case TokenType::PROG_NAME: break;
-          case TokenType::DASH_DASH:
-            // +1 to ignore the dash-dash
-            for (std::size_t offset = index + 1; offset < tokens.size(); ++offset) {
-              indexes.positionals.push_back(offset);
-            }
-            index = tokens.size(); // break below refers to the switch, not the for loop
-            break;
-          case TokenType::FLG: [[fallthrough]];
-          case TokenType::OPT_OR_FLG_LONG: [[fallthrough]];
-          case TokenType::OPT_LONG_AND_VALUE: [[fallthrough]];
-          case TokenType::OPT_SHORT_AND_VALUE: indexes.opts_n_flgs[*tok.name].push_back(index); break;
-          case TokenType::IDENTIFIER: indexes.positionals.push_back(index); break;
-        }
-      }
-    }
-    return indexes;
-  }
 
   auto get_args_map(
     std::span<Token const> const tokens,

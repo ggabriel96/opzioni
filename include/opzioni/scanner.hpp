@@ -2,6 +2,7 @@
 #define OPZIONI_SCANNER_HPP
 
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -28,12 +29,29 @@ struct Token {
   std::optional<std::string_view> value;
 };
 
+struct TokensIndexes {
+  std::vector<std::size_t> positionals;
+  std::map<std::string_view, std::vector<std::size_t>> opts_n_flgs;
+
+  [[nodiscard]] std::optional<std::size_t> first_pos_idx_after(std::size_t const offset) const noexcept {
+    if (this->positionals.empty()) return std::nullopt;
+    std::size_t i = 0;
+    auto idx = this->positionals[i];
+    while (idx <= offset) {
+      if (i + 1 >= this->positionals.size()) return std::nullopt;
+      idx = this->positionals[++i];
+    }
+    return idx;
+  }
+};
+
 std::string_view to_string(TokenType type) noexcept;
+TokensIndexes index_tokens(std::span<Token const> const tokens);
 
 class Scanner {
 public:
 
-  Scanner(std::span<char const *> args) {
+  explicit Scanner(std::span<char const *> args) {
     this->tokens.reserve(args.size());
     this->args.reserve(args.size());
     for (char const *a : args) {
