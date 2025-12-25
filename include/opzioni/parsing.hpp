@@ -112,7 +112,7 @@ private:
 
   auto get_cmd_fmt() const noexcept { return CmdFmt(this->cmd_ref.get(), this->extra_info); }
 
-  auto index_tokens(std::vector<Token> const &tokens) {
+  auto index_tokens(std::span<Token const> const tokens) {
     auto indexes = TokensIndexes();
     if (!tokens.empty()) { // should never happen
       for (std::size_t index = 1; index < tokens.size(); ++index) {
@@ -137,14 +137,14 @@ private:
     return indexes;
   }
 
-  auto get_args_map(std::vector<Token> const &tokens, TokensIndexes const &indexes) {
+  auto get_args_map(std::span<Token const> const tokens, TokensIndexes const &indexes) {
     constexpr auto args_size = std::tuple_size_v<decltype(this->cmd_ref.get().args)>;
     return process_tokens(tokens, indexes, this->extra_info, std::make_index_sequence<args_size>());
   }
 
   template <std::size_t... Is>
   auto process_tokens(
-    std::vector<Token> const &tokens, TokensIndexes const &indexes, ExtraInfo extra_info, std::index_sequence<Is...>
+    std::span<Token const> const tokens, TokensIndexes const &indexes, ExtraInfo extra_info, std::index_sequence<Is...>
   ) {
     auto args_map = ArgsMap<Cmd const>();
     args_map.exec_path = *tokens[0].value;
@@ -161,7 +161,7 @@ private:
 
   template <std::size_t I>
   void process_ith_arg(
-    ArgsMap<Cmd const> &args_map, std::vector<Token> const &tokens, TokensIndexes const &indexes, ExtraInfo extra_info
+    ArgsMap<Cmd const> &args_map, std::span<Token const> const tokens, TokensIndexes const &indexes, ExtraInfo extra_info
   ) {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     switch (arg.type) {
@@ -213,7 +213,7 @@ private:
   template <std::size_t I>
   void process_ith_arg(
     ArgsMap<Cmd const> &args_map,
-    std::vector<Token> const &tokens,
+    std::span<Token const> const tokens,
     TokensIndexes const &indexes,
     ExtraInfo extra_info,
     std::size_t &cur_pos_idx
