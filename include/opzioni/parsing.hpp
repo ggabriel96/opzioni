@@ -111,7 +111,8 @@ private:
     constexpr auto args_size = std::tuple_size_v<decltype(this->cmd_ref.get().args)>;
     auto args_map = ArgsMap<Cmd const>();
     args_map.exec_path = *tokens[recursion_start_idx].value;
-    this->parse_possible_subcmd(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx);
+    if (this->cmd_ref.get().has_subcmds())
+      this->parse_possible_subcmd(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx);
     // further args have to be > recursion_start_idx and <= recursion_end_idx
     this->process_tokens(
       args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, std::make_index_sequence<args_size>()

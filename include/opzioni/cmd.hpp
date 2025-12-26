@@ -119,9 +119,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_common<Name, "">(meta);
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
-    static_assert(
-      std::tuple_size_v<decltype(subcmds)> == 0, "Commands that have subcommands cannot have positional arguments"
-    );
+    static_assert(!this->has_subcmds(), "Commands that have subcommands cannot have positional arguments");
     Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
@@ -226,6 +224,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       this->args
     );
   }
+
+  [[nodiscard]] constexpr bool has_subcmds() const noexcept { return std::tuple_size_v<decltype(subcmds)> > 0; }
 };
 
 consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
