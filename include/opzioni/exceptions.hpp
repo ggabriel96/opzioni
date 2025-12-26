@@ -12,21 +12,22 @@
 
 namespace opz {
 
-// +-----------------+
-// | consumer errors |
-// +-----------------+
+// +-------------------+
+// | programmer errors |
+// +-------------------+
 
 // Base class for exceptions thrown because of errors from the users of our library
-class ConsumerError : public std::logic_error {
+class ProgrammerError : public std::logic_error {
 public:
 
   using std::logic_error::logic_error;
 };
 
-class ArgumentNotFound : public ConsumerError {
+class ArgumentNotFound : public ProgrammerError {
 public:
 
-  explicit ArgumentNotFound(std::string_view name) : ConsumerError(fmt::format("Could not find argument `{}`", name)) {}
+  explicit ArgumentNotFound(std::string_view name)
+    : ProgrammerError(fmt::format("Could not find argument `{}`", name)) {}
 };
 
 // +-------------+
@@ -63,11 +64,22 @@ public:
       ) {}
 };
 
-class UnknownArgument : public UserError {
+class UnknownArguments : public UserError {
 public:
 
-  UnknownArgument(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
-    : UserError(fmt::format("Unknown argument for `{}`: `{}`", cmd_name, name), formatter) {}
+  UnknownArguments(
+    std::string_view cmd_name, std::vector<std::string_view> const &unknown_args, CmdFmt const &formatter
+  )
+    : UserError(
+        fmt::format("Unknown arguments for `{}` command: `{}`", cmd_name, fmt::join(unknown_args, "`, `")), formatter
+      ) {}
+};
+
+class UnknownSubcommand : public UserError {
+public:
+
+  UnknownSubcommand(std::string_view cmd_name, std::string_view subcmd_name, CmdFmt const &formatter)
+    : UserError(fmt::format("Unknown subcommand `{}` for command `{}`", subcmd_name, cmd_name), formatter) {}
 };
 
 class WrongType : public UserError {
