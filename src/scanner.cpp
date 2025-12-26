@@ -19,8 +19,7 @@ TokenIndices index_tokens(std::span<Token const> const tokens) {
   auto indices = TokenIndices();
   if (!tokens.empty()) { // should never happen
     for (std::size_t index = 1; index < tokens.size(); ++index) {
-      auto const &tok = tokens[index];
-      switch (tok.type) {
+      switch (auto const &tok = tokens[index]; tok.type) {
         case TokenType::PROG_NAME: break;
         case TokenType::DASH_DASH:
           // +1 to ignore the dash-dash
@@ -70,7 +69,7 @@ std::vector<Token> Scanner::operator()() noexcept {
 
 void Scanner::consume() noexcept { this->cur_col += 1; }
 
-[[nodiscard]] bool Scanner::match(char expected) noexcept {
+[[nodiscard]] bool Scanner::match(char const expected) noexcept {
   // if (this->is_cur_end()) return false;
   // if (this->cur_arg()[this->current_col] != expected) return false;
   if (this->peek() != expected) return false;
@@ -103,12 +102,12 @@ void Scanner::long_opt() noexcept {
   while (!this->is_cur_end() && this->peek() != '=')
     consume();
   if (this->match('=')) {
-    // start at 2 to discard initial dash dash; -3 would be -1 but adds 2 because we start at 2
+    // start at 2 to discard initial dash-dash; -3 would be -1 but adds 2 because we start at 2
     auto const name = this->cur_arg().substr(2, this->cur_col - 3);
     auto const value = this->cur_arg().substr(this->cur_col);
     this->add_token(TokenType::OPT_LONG_AND_VALUE, name, value);
   } else {
-    this->add_token(TokenType::OPT_OR_FLG_LONG, this->cur_arg().substr(2)); // 2 to discard initial dash dash
+    this->add_token(TokenType::OPT_OR_FLG_LONG, this->cur_arg().substr(2)); // 2 to discard initial dash-dash
   }
 }
 

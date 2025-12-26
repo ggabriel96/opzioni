@@ -266,8 +266,8 @@ private:
     if (cur_pos_idx >= indices.positionals.size()) return;
     /* Note: things like `-O value` are scanned as an option followed by an identifier, since the scanner doesn't know
      * if -O is valid or not. So when we encounter that in the process_ith_arg, and it indeed was an option, we save the
-     * token index in this->indices_used_as_opt_values to be ignored here. When we hit such a case, we need to loop until we find the
-     * next index that is just an identifier (not one that follows a short valueless option).
+     * token index in this->indices_used_as_opt_values to be ignored here. When we hit such a case, we need to loop
+     * until we find the next index that is just an identifier (not one that follows a short valueless option).
      **/
     auto tok_idx = indices.positionals[cur_pos_idx];
     while (this->indices_used_as_opt_values.contains(tok_idx) || tok_idx <= recursion_start_idx) {

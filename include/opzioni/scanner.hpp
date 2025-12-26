@@ -59,7 +59,7 @@ public:
     }
   }
 
-  Scanner(int argc, char const *argv[]) : Scanner(std::span{argv, static_cast<std::size_t>(argc)}) {}
+  Scanner(int const argc, char const *argv[]) : Scanner(std::span{argv, static_cast<std::size_t>(argc)}) {}
 
   std::vector<Token> operator()() noexcept;
 
