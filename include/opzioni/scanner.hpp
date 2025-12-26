@@ -29,7 +29,7 @@ struct Token {
   std::optional<std::string_view> value;
 };
 
-struct TokensIndexes {
+struct TokenIndices {
   std::vector<std::size_t> positionals;
   std::map<std::string_view, std::vector<std::size_t>> opts_n_flgs;
 
@@ -46,7 +46,7 @@ struct TokensIndexes {
 };
 
 std::string_view to_string(TokenType type) noexcept;
-TokensIndexes index_tokens(std::span<Token const> tokens);
+TokenIndices index_tokens(std::span<Token const> tokens);
 
 class Scanner {
 public:

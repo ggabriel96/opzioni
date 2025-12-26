@@ -74,9 +74,9 @@ public:
   ArgsMap<Cmd const> operator()(std::span<char const *> const args) {
     auto scanner = Scanner(args);
     auto const tokens = scanner();
-    auto const indexes = index_tokens(tokens);
+    auto const indices = index_tokens(tokens);
     // TODO: check we did not receive unknown arguments (throw UnknownArgument)
-    auto map = this->get_args_map(tokens, indexes, 0, -1);
+    auto map = this->get_args_map(tokens, indices, 0, -1);
     return map;
   }
 
@@ -90,7 +90,7 @@ private:
   template <concepts::Cmd>
   friend class CmdParser;
 
-  std::set<std::size_t> indexes_used_as_opt_values;
+  std::set<std::size_t> indices_used_as_opt_values;
 
   CmdParser(Cmd const &cmd, ExtraInfo const &extra_info, std::string_view parent_cmd_name) : cmd_ref(cmd) {
     this->extra_info.parent_cmds_names.reserve(extra_info.parent_cmds_names.size() + 1);
@@ -104,7 +104,7 @@ private:
 
   auto get_args_map(
     std::span<Token const> const tokens,
-    TokensIndexes const &indexes,
+    TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t recursion_end_idx
   ) {
@@ -112,10 +112,10 @@ private:
     auto args_map = ArgsMap<Cmd const>();
     args_map.exec_path = *tokens[recursion_start_idx].value;
     if (this->cmd_ref.get().has_subcmds())
-      this->parse_possible_subcmd(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx);
+      this->parse_possible_subcmd(args_map, tokens, indices, recursion_start_idx, recursion_end_idx);
     // further args have to be > recursion_start_idx and <= recursion_end_idx
     this->process_tokens(
-      args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, std::make_index_sequence<args_size>()
+      args_map, tokens, indices, recursion_start_idx, recursion_end_idx, std::make_index_sequence<args_size>()
     );
     return args_map;
   }
@@ -123,14 +123,14 @@ private:
   void parse_possible_subcmd(
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
-    TokensIndexes const &indexes,
+    TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t &recursion_end_idx
   ) {
     // Note: a command can't have positionals if it has subcommands, so it suffices to check if first positional token
     // is a subcommand. If it isn't, everything is considered as positionals. Also, the command name is not present in
-    // the indexes, so 0 really is the first positional.
-    auto const tok_idx = indexes.first_pos_idx_after(recursion_start_idx);
+    // the indices, so 0 really is the first positional.
+    auto const tok_idx = indices.first_pos_idx_after(recursion_start_idx);
     if (!tok_idx.has_value()) return;
     auto const &tok = tokens[*tok_idx];
     if (!tok.value) return;
@@ -138,11 +138,11 @@ private:
       int i = 0;
       // clang-format off
       std::apply(
-        [this, &i, cmd_idx, &args_map, tokens, &indexes, recursion_end_idx, tok_idx](auto&&... cmd) {
+        [this, &i, cmd_idx, &args_map, tokens, &indices, recursion_end_idx, tok_idx](auto&&... cmd) {
           (void)(( // cast to void to suppress unused warning
           i == cmd_idx
             ? (args_map.submap = CmdParser<typename std::remove_reference_t<decltype(cmd)>::type>(
-                cmd.get(), this->extra_info, this->cmd_ref.get().name).get_args_map(tokens, indexes, *tok_idx, recursion_end_idx), true)
+                cmd.get(), this->extra_info, this->cmd_ref.get().name).get_args_map(tokens, indices, *tok_idx, recursion_end_idx), true)
             : (++i, false)
           ) || ...);
         },
@@ -158,17 +158,17 @@ private:
   void process_tokens(
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
-    TokensIndexes const &indexes,
+    TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx,
     std::index_sequence<Is...>
   ) {
     try {
-      (this->process_ith_arg<Is>(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx), ...);
+      (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx), ...);
       if (!args_map.has_submap()) { // commands can't have both positionals and subcommands
         std::size_t cur_pos_idx = 0;
         // clang-format off
-        (this->process_ith_arg<Is>(args_map, tokens, indexes, recursion_start_idx, recursion_end_idx, cur_pos_idx), ...);
+        (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, cur_pos_idx), ...);
         // clang-format on
       }
       (this->check_ith_arg<Is>(args_map), ...);
@@ -181,7 +181,7 @@ private:
   void process_ith_arg(
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
-    TokensIndexes const &indexes,
+    TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx
   ) {
@@ -189,12 +189,12 @@ private:
     switch (arg.type) {
       case ArgType::FLG: {
         std::size_t flg_count = 0;
-        if (auto const it = indexes.opts_n_flgs.find(arg.name); it != indexes.opts_n_flgs.end()) {
+        if (auto const it = indices.opts_n_flgs.find(arg.name); it != indices.opts_n_flgs.end()) {
           for (auto const idx : it->second) {
             if (idx > recursion_start_idx && idx <= recursion_end_idx) flg_count += 1;
           }
         }
-        if (auto const it = indexes.opts_n_flgs.find(arg.abbrev); it != indexes.opts_n_flgs.end()) {
+        if (auto const it = indices.opts_n_flgs.find(arg.abbrev); it != indices.opts_n_flgs.end()) {
           for (auto const idx : it->second) {
             if (idx > recursion_start_idx && idx <= recursion_end_idx) flg_count += 1;
           }
@@ -204,10 +204,10 @@ private:
         break;
       }
       case ArgType::OPT: {
-        auto const it_name = indexes.opts_n_flgs.find(arg.name);
-        auto const has_name = it_name != indexes.opts_n_flgs.end();
-        auto const it_abbrev = indexes.opts_n_flgs.find(arg.abbrev);
-        auto const has_abbrev = it_abbrev != indexes.opts_n_flgs.end();
+        auto const it_name = indices.opts_n_flgs.find(arg.name);
+        auto const has_name = it_name != indices.opts_n_flgs.end();
+        auto const it_abbrev = indices.opts_n_flgs.find(arg.abbrev);
+        auto const has_abbrev = it_abbrev != indices.opts_n_flgs.end();
         if (!has_name && !has_abbrev) return;
 
         auto const reserve_size = (has_name ? it_name->second.size() : 0) + (has_abbrev ? it_abbrev->second.size() : 0);
@@ -237,7 +237,7 @@ private:
           // see note in the other process_ith_arg member function
           else if (idx + 1 < tokens.size() && tokens[idx + 1].type == TokenType::IDENTIFIER) {
             opt_values.push_back(*tokens[idx + 1].value);
-            this->indexes_used_as_opt_values.insert(idx + 1);
+            this->indices_used_as_opt_values.insert(idx + 1);
           }
         }
 
@@ -256,23 +256,23 @@ private:
   void process_ith_arg(
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
-    TokensIndexes const &indexes,
+    TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx,
     std::size_t &cur_pos_idx
   ) {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     if (arg.type != ArgType::POS) return;
-    if (cur_pos_idx >= indexes.positionals.size()) return;
+    if (cur_pos_idx >= indices.positionals.size()) return;
     /* Note: things like `-O value` are scanned as an option followed by an identifier, since the scanner doesn't know
      * if -O is valid or not. So when we encounter that in the process_ith_arg, and it indeed was an option, we save the
-     * token index in this->indexes_used_as_opt_values to be ignored here. When we hit such a case, we need to loop until we find the
+     * token index in this->indices_used_as_opt_values to be ignored here. When we hit such a case, we need to loop until we find the
      * next index that is just an identifier (not one that follows a short valueless option).
      **/
-    auto tok_idx = indexes.positionals[cur_pos_idx];
-    while (this->indexes_used_as_opt_values.contains(tok_idx) || tok_idx <= recursion_start_idx) {
-      if (cur_pos_idx + 1 >= indexes.positionals.size() || tok_idx > recursion_end_idx) return;
-      tok_idx = indexes.positionals[++cur_pos_idx];
+    auto tok_idx = indices.positionals[cur_pos_idx];
+    while (this->indices_used_as_opt_values.contains(tok_idx) || tok_idx <= recursion_start_idx) {
+      if (cur_pos_idx + 1 >= indices.positionals.size() || tok_idx > recursion_end_idx) return;
+      tok_idx = indices.positionals[++cur_pos_idx];
     }
     if (tok_idx >= tokens.size()) return;
 

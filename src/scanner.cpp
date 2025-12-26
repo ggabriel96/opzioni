@@ -15,8 +15,8 @@ std::string_view to_string(TokenType type) noexcept {
   }
 }
 
-TokensIndexes index_tokens(std::span<Token const> const tokens) {
-  auto indexes = TokensIndexes();
+TokenIndices index_tokens(std::span<Token const> const tokens) {
+  auto indices = TokenIndices();
   if (!tokens.empty()) { // should never happen
     for (std::size_t index = 1; index < tokens.size(); ++index) {
       auto const &tok = tokens[index];
@@ -25,19 +25,19 @@ TokensIndexes index_tokens(std::span<Token const> const tokens) {
         case TokenType::DASH_DASH:
           // +1 to ignore the dash-dash
           for (std::size_t offset = index + 1; offset < tokens.size(); ++offset) {
-            indexes.positionals.push_back(offset);
+            indices.positionals.push_back(offset);
           }
           index = tokens.size(); // break below refers to the switch, not the for loop
           break;
         case TokenType::FLG: [[fallthrough]];
         case TokenType::OPT_OR_FLG_LONG: [[fallthrough]];
         case TokenType::OPT_LONG_AND_VALUE: [[fallthrough]];
-        case TokenType::OPT_SHORT_AND_VALUE: indexes.opts_n_flgs[*tok.name].push_back(index); break;
-        case TokenType::IDENTIFIER: indexes.positionals.push_back(index); break;
+        case TokenType::OPT_SHORT_AND_VALUE: indices.opts_n_flgs[*tok.name].push_back(index); break;
+        case TokenType::IDENTIFIER: indices.positionals.push_back(index); break;
       }
     }
   }
-  return indexes;
+  return indices;
 }
 
 // +-----------------------------------------+
