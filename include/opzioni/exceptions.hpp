@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -38,7 +39,7 @@ public:
 
   CmdFmt formatter;
 
-  UserError(std::string const &msg, CmdFmt const &formatter) : std::runtime_error(msg), formatter(formatter) {}
+  UserError(std::string const &msg, CmdFmt formatter) : std::runtime_error(msg), formatter(std::move(formatter)) {}
 };
 
 class MissingRequiredArgument : public UserError {

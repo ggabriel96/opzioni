@@ -12,7 +12,7 @@ struct TypeList;
 // |            IndexOfType            |
 // +-----------------------------------+
 
-template <int, typename... Ts>
+template <int, typename...>
 struct IndexOfType : std::integral_constant<int, -1> {};
 
 template <int Idx, typename T, typename... Ts>

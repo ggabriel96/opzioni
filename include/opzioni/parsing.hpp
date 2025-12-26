@@ -9,9 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-
 #include "opzioni/actions.hpp"
 #include "opzioni/arg.hpp"
 #include "opzioni/args_map.hpp"
@@ -32,7 +29,7 @@ struct ArgView {
   bool has_implicit = false;
 
   template <typename T, typename Tag>
-  constexpr static ArgView from(std::size_t tuple_idx, Arg<T, Tag> const &other) {
+  constexpr static ArgView from(std::size_t const tuple_idx, Arg<T, Tag> const &other) {
     return ArgView{
       .tuple_idx = tuple_idx,
       .type = other.type,
@@ -47,7 +44,6 @@ struct ArgView {
 template <concepts::Cmd... Cmds>
 constexpr int
 find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
-  // TODO: use something like the frozen library instead of this
   // clang-format off
   return std::apply(
     [name](auto &&...elem) {
@@ -75,7 +71,7 @@ public:
 
   explicit CmdParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
-  ArgsMap<Cmd const> operator()(std::span<char const *> args) {
+  ArgsMap<Cmd const> operator()(std::span<char const *> const args) {
     auto scanner = Scanner(args);
     auto const tokens = scanner();
     auto const indexes = index_tokens(tokens);
@@ -84,7 +80,7 @@ public:
     return map;
   }
 
-  ArgsMap<Cmd const> operator()(int argc, char const *argv[]) {
+  ArgsMap<Cmd const> operator()(int const argc, char const *argv[]) {
     auto const args = std::span{argv, static_cast<std::size_t>(argc)};
     return (*this)(args);
   }

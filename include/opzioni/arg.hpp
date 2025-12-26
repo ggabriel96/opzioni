@@ -14,7 +14,7 @@ enum struct ArgType {
   OPT,
   FLG,
 };
-std::string_view to_string(ArgType const at) noexcept;
+std::string_view to_string(ArgType at) noexcept;
 
 // +----------------------------------+
 // |       forward declarations       |

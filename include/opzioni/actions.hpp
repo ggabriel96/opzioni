@@ -82,7 +82,7 @@ void consume_arg(
   ArgsMap<Cmd const> &args_map, Arg<I, act::count> const &arg, ArgValue const &value, Cmd const &, ExtraInfo const &
 ) {
   if (value.index() != flg_idx) {
-    auto received_amount = 1;
+    std::size_t received_amount = 1;
     if (auto const vals = std::get_if<opt_idx>(&value); vals != nullptr) received_amount = vals->get().size();
     throw UnexpectedValue(arg.name, 0, received_amount);
   }

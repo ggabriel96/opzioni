@@ -45,7 +45,8 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   std::tuple<std::reference_wrapper<SubCmds const> const...> subcmds;
 
   consteval Cmd() = default;
-  explicit consteval Cmd(std::string_view name, std::string_view version = "") : name(name), version(version) {
+  explicit consteval Cmd(std::string_view const name, std::string_view const version = "")
+    : name(name), version(version) {
     if (!is_valid_name(name)) throw "Command names must neither be empty nor contain any whitespace";
   }
 
@@ -61,7 +62,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       subcmds(other.subcmds) {}
 
   template <concepts::Cmd OtherCmd, typename T, typename Tag>
-  explicit consteval Cmd(OtherCmd const &other, Arg<T, Tag> new_arg)
+  explicit consteval Cmd(OtherCmd const &other, Arg<T, Tag> const new_arg)
     : name(other.name),
       version(other.version),
       introduction(other.introduction),
@@ -82,14 +83,14 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       args(other.args),
       subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
 
-  consteval auto intro(std::string_view intro) {
+  consteval auto intro(std::string_view const intro) {
     if (!is_valid_intro(intro))
       throw "Command intros, if specified, must neither be empty nor start or end with whitespace";
     this->introduction = intro;
     return *this;
   }
 
-  consteval auto with(ExtraConfig cfg) {
+  consteval auto with(ExtraConfig const cfg) {
     if (cfg.msg_width.has_value()) {
       if (*cfg.msg_width == 0) throw "The message width must be greater than zero";
       this->msg_width = *cfg.msg_width;
@@ -114,7 +115,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   }
 
   template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
-  consteval auto pos(ArgMeta<T, Tag> meta) const {
+  consteval auto pos(ArgMeta<T, Tag> const meta) const {
     validate_common<Name, "">(meta);
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
@@ -137,7 +138,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view, typename Tag = act::assign>
-  consteval auto opt(ArgMeta<T, Tag> meta) const {
+  consteval auto opt(ArgMeta<T, Tag> const meta) const {
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
@@ -163,12 +164,12 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   }
 
   template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
-  consteval auto opt(ArgMeta<T, Tag> meta) const {
+  consteval auto opt(ArgMeta<T, Tag> const meta) const {
     return opt<Name, "", T, Tag>(meta);
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = bool, typename Tag = act::assign>
-  consteval auto flg(ArgMeta<T, Tag> meta) const {
+  consteval auto flg(ArgMeta<T, Tag> const meta) const {
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
@@ -198,11 +199,11 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   }
 
   template <FixedString Name, typename T = bool, typename Tag = act::assign>
-  consteval auto flg(ArgMeta<T, Tag> meta) const {
+  consteval auto flg(ArgMeta<T, Tag> const meta) const {
     return flg<Name, "", T, Tag>(meta);
   }
 
-  auto operator()(int argc, char const *argv[]) const noexcept {
+  auto operator()(int const argc, char const *argv[]) const noexcept {
     try {
       auto parser = CmdParser(*this);
       return parser(argc, argv);
@@ -211,8 +212,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     }
   }
 
-  constexpr auto find_arg_if(std::predicate<ArgView> auto p) const noexcept {
-    // TODO: use something like the frozen library instead of this
+  constexpr auto find_arg_if(std::predicate<ArgView> auto const p) const noexcept {
     return std::apply(
       [&p](auto &&...elem) {
         std::size_t idx = 0;
@@ -228,7 +228,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
   }
 };
 
-consteval auto new_cmd(std::string_view name, std::string_view version = "") {
+consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
   return Cmd<StringList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 

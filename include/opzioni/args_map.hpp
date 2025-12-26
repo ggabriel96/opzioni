@@ -1,10 +1,8 @@
 #ifndef OPZIONI_ARGS_MAP_HPP
 #define OPZIONI_ARGS_MAP_HPP
 
-#include <any>
 #include <map>
 #include <string_view>
-#include <type_traits>
 #include <variant>
 
 #include "opzioni/concepts.hpp"
@@ -36,11 +34,11 @@ struct ArgsMap {
   using cmd_type = Cmd;
 
   std::string_view exec_path{};
-  typename TupleOf<typename Cmd::arg_types>::type args;
-  typename ArgsMapOf<typename Cmd::subcmd_types>::type submap{};
+  TupleOf<typename Cmd::arg_types>::type args;
+  ArgsMapOf<typename Cmd::subcmd_types>::type submap{};
 
   template <FixedString Name>
-  [[nodiscard]] typename GetType<Name, typename cmd_type::arg_names, typename cmd_type::arg_types>::type get() const {
+  [[nodiscard]] GetType<Name, typename cmd_type::arg_names, typename cmd_type::arg_types>::type get() const {
     constexpr auto idx = this->idx_of<Name>();
     auto const arg = std::get<idx>(args);
     if (!arg) throw ArgumentNotFound(Name.data);

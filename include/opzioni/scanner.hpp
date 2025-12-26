@@ -46,12 +46,12 @@ struct TokensIndexes {
 };
 
 std::string_view to_string(TokenType type) noexcept;
-TokensIndexes index_tokens(std::span<Token const> const tokens);
+TokensIndexes index_tokens(std::span<Token const> tokens);
 
 class Scanner {
 public:
 
-  explicit Scanner(std::span<char const *> args) {
+  explicit Scanner(std::span<char const *> const args) {
     this->tokens.reserve(args.size());
     this->args.reserve(args.size());
     for (char const *a : args) {
