@@ -2,7 +2,7 @@
 
 namespace opz {
 
-std::string_view to_string(TokenType type) noexcept {
+std::string_view to_string(TokenType const type) noexcept {
   switch (type) {
     case TokenType::PROG_NAME: return "PROG_NAME";
     case TokenType::DASH_DASH: return "DASH_DASH";
