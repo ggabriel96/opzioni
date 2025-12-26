@@ -185,8 +185,7 @@ private:
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx
   ) {
-    auto const &arg = std::get<I>(this->cmd_ref.get().args);
-    switch (arg.type) {
+    switch (auto const &arg = std::get<I>(this->cmd_ref.get().args); arg.type) {
       case ArgType::FLG: {
         std::size_t flg_count = 0;
         if (auto const it = indices.opts_n_flgs.find(arg.name); it != indices.opts_n_flgs.end()) {
@@ -277,8 +276,8 @@ private:
     if (tok_idx >= tokens.size()) return;
 
     cur_pos_idx += 1;
-    auto const &tok = tokens[tok_idx];
-    if (tok.value) consume_arg<I>(args_map, arg, *tok.value, this->cmd_ref.get(), this->extra_info);
+    if (auto const &tok = tokens[tok_idx]; tok.value)
+      consume_arg<I>(args_map, arg, *tok.value, this->cmd_ref.get(), this->extra_info);
   }
 
   template <std::size_t I>
