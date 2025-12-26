@@ -225,7 +225,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     );
   }
 
-  [[nodiscard]] constexpr bool has_subcmds() const noexcept { return std::tuple_size_v<decltype(subcmds)> > 0; }
+  [[nodiscard]] constexpr bool has_subcmds() const noexcept { return std::tuple_size_v<decltype(this->subcmds)> > 0; }
 };
 
 consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
