@@ -92,7 +92,7 @@ private:
 
   std::set<std::size_t> indices_used_as_opt_values;
 
-  CmdParser(Cmd const &cmd, ExtraInfo const &extra_info, std::string_view parent_cmd_name) : cmd_ref(cmd) {
+  CmdParser(Cmd const &cmd, ExtraInfo const &extra_info, std::string_view const parent_cmd_name) : cmd_ref(cmd) {
     this->extra_info.parent_cmds_names.reserve(extra_info.parent_cmds_names.size() + 1);
     for (auto const name : extra_info.parent_cmds_names) {
       this->extra_info.parent_cmds_names.push_back(name);
