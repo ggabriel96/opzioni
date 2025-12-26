@@ -90,7 +90,7 @@ private:
   template <concepts::Cmd>
   friend class CmdParser;
 
-  std::set<std::size_t> ignore_idxs;
+  std::set<std::size_t> indexes_used_as_opt_values;
 
   CmdParser(Cmd const &cmd, ExtraInfo const &extra_info, std::string_view parent_cmd_name) : cmd_ref(cmd) {
     this->extra_info.parent_cmds_names.reserve(extra_info.parent_cmds_names.size() + 1);
@@ -237,7 +237,7 @@ private:
           // see note in the other process_ith_arg member function
           else if (idx + 1 < tokens.size() && tokens[idx + 1].type == TokenType::IDENTIFIER) {
             opt_values.push_back(*tokens[idx + 1].value);
-            this->ignore_idxs.insert(idx + 1);
+            this->indexes_used_as_opt_values.insert(idx + 1);
           }
         }
 
@@ -266,11 +266,11 @@ private:
     if (cur_pos_idx >= indexes.positionals.size()) return;
     /* Note: things like `-O value` are scanned as an option followed by an identifier, since the scanner doesn't know
      * if -O is valid or not. So when we encounter that in the process_ith_arg, and it indeed was an option, we save the
-     * token index in this->ignore_idxs to be ignored here. When we hit such a case, we need to loop until we find the
+     * token index in this->indexes_used_as_opt_values to be ignored here. When we hit such a case, we need to loop until we find the
      * next index that is just an identifier (not one that follows a short valueless option).
      **/
     auto tok_idx = indexes.positionals[cur_pos_idx];
-    while (this->ignore_idxs.contains(tok_idx) || tok_idx <= recursion_start_idx) {
+    while (this->indexes_used_as_opt_values.contains(tok_idx) || tok_idx <= recursion_start_idx) {
       if (cur_pos_idx + 1 >= indexes.positionals.size() || tok_idx > recursion_end_idx) return;
       tok_idx = indexes.positionals[++cur_pos_idx];
     }
