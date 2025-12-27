@@ -110,7 +110,7 @@ private:
   ) {
     auto args_map = ArgsMap<Cmd const>();
     args_map.exec_path = *tokens[recursion_start_idx].value;
-    if (this->cmd_ref.get().has_subcmds()) {
+    if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> > 0) {
       this->parse_possible_subcmd(args, args_map, tokens, indices, recursion_start_idx, recursion_end_idx);
     }
     // further args have to be > recursion_start_idx and <= recursion_end_idx
@@ -181,7 +181,9 @@ private:
     try {
       // clang-format off
       (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices), ...);
-      if (!args_map.has_submap()) { // commands can't have both positionals and subcommands
+      // only try and process positionals if there are no subcommands
+      // because commands can't have both them and positionals
+      if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> == 0) {
         std::size_t cur_pos_idx = 0;
         (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices, cur_pos_idx), ...);
       }
