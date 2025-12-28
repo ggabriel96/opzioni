@@ -27,9 +27,10 @@ struct ExtraConfig {
 
 template <typename...> struct Cmd;
 
-template <FixedString... Names, typename... Types, typename... Tags, concepts::Cmd... SubCmds>
-struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds...>> {
+template <FixedString... Names, FixedString... Abbrevs, typename... Types, typename... Tags, concepts::Cmd... SubCmds>
+struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds...>> {
   using arg_names = StringList<Names...>;
+  using arg_abbrevs = StringList<Abbrevs...>;
   using arg_types = TypeList<Types...>;
   using arg_tags = TypeList<Tags...>;
   using subcmd_types = TypeList<SubCmds...>;
@@ -108,7 +109,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       throw "Subcommand with this name already exists";
     auto const existing_pos = this->find_arg_if([](auto const &arg) { return arg.type == ArgType::POS; });
     if (existing_pos.has_value()) throw "Commands that have positional arguments cannot have subcommands";
-    Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(
+    Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(
       *this, subcmd
     );
     return new_cmd;
@@ -120,7 +121,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     static_assert(!this->has_subcmds(), "Commands that have subcommands cannot have positional arguments");
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
+    Cmd<StringList<Names..., Name>, StringList<Abbrevs..., "">, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
         .type = ArgType::POS,
@@ -140,13 +141,12 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
-    if (Abbrev.size > 0) {
+    if constexpr (Abbrev.size > 0) {
       if (Abbrev.size > 1) throw "Abbreviations must be a single character";
       if (Abbrev[0] < 'A' || Abbrev[0] > 'Z') throw "Option abbreviations must be uppercase";
-      auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
-      if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
+      static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
     }
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
+    Cmd<StringList<Names..., Name>, StringList<Abbrevs..., Abbrev>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
         .type = ArgType::OPT,
@@ -171,16 +171,15 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
-    if (Abbrev.size > 0) {
+    if constexpr (Abbrev.size > 0) {
       if (Abbrev.size > 1) throw "Abbreviations must be a single character";
       if (Abbrev[0] < 'a' || Abbrev[0] > 'z') throw "Flag abbreviations must be lowercase";
-      auto const existing_arg = this->find_arg_if([](auto const &arg) { return arg.abbrev == Abbrev; });
-      if (existing_arg.has_value()) throw "Argument with this abbreviation already exists";
+      static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
     }
     std::optional<T> default_implicit_value = std::nullopt;
     if constexpr (std::is_same_v<T, bool>) default_implicit_value.emplace(true);
     else if constexpr (concepts::Integer<T>) default_implicit_value.emplace(T{});
-    Cmd<StringList<Names..., Name>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
+    Cmd<StringList<Names..., Name>, StringList<Abbrevs..., Abbrev>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
         .type = ArgType::FLG,
@@ -229,7 +228,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
 };
 
 consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
-  return Cmd<StringList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
+  return Cmd<StringList<>, StringList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 
 } // namespace opz
