@@ -62,7 +62,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       subcmds(other.subcmds) {}
 
   template <concepts::Cmd OtherCmd, typename T, typename Tag>
-  explicit consteval Cmd(OtherCmd const &other, Arg<T, Tag> const new_arg)
+  consteval Cmd(OtherCmd const &other, Arg<T, Tag> const new_arg)
     : name(other.name),
       version(other.version),
       introduction(other.introduction),
@@ -73,7 +73,7 @@ struct Cmd<StringList<Names...>, TypeList<Types...>, TypeList<Tags...>, TypeList
       subcmds(other.subcmds) {}
 
   template <concepts::Cmd OtherCmd, concepts::Cmd NewSubCmd>
-  explicit consteval Cmd(OtherCmd const &other, NewSubCmd const &new_subcmd)
+  consteval Cmd(OtherCmd const &other, NewSubCmd const &new_subcmd)
     : name(other.name),
       version(other.version),
       introduction(other.introduction),
