@@ -96,6 +96,56 @@ struct Cmd<
       args(other.args),
       subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
 
+  template <concepts::Cmd OtherCmd, typename... OtherTypes, typename... OtherTags>
+  consteval Cmd(OtherCmd const &other, std::tuple<Arg<OtherTypes, OtherTags> const...> new_args)
+    : name(other.name),
+      version(other.version),
+      introduction(other.introduction),
+      msg_width(other.msg_width),
+      error_handler(other.error_handler),
+      args(std::tuple_cat(other.args, new_args)),
+      subcmds(other.subcmds) {}
+
+  template <
+    FixedString... OtherNames,
+    FixedString... OtherAbbrevs,
+    ArgKind... OtherKinds,
+    typename... OtherTypes,
+    typename... OtherTags>
+  consteval auto grp(
+    Cmd<
+      StringList<OtherNames...>,
+      StringList<OtherAbbrevs...>,
+      ArgKindList<OtherKinds...>,
+      TypeList<OtherTypes...>,
+      TypeList<OtherTags...>,
+      TypeList<>> const &group
+  ) const {
+    static_assert(sizeof...(OtherNames) > 1, "Groups must have at least 2 arguments");
+    static_assert((!InStringList<OtherNames, arg_names>::value && ...), "Argument with this name already exists");
+    static_assert(
+      ((OtherAbbrevs.size == 0 || !InStringList<OtherAbbrevs, arg_abbrevs>::value) && ...),
+      "Argument with this abbreviation already exists"
+    );
+    static_assert(
+      !InArgKindList<ArgKind::POS, ArgKindList<OtherKinds...>>::value || !this->has_subcmds(),
+      "Commands that have positional arguments cannot have subcommands and vice-versa"
+    );
+    static_assert(
+      (0 + ... + static_cast<std::size_t>(OtherKinds == ArgKind::POS)) <= 1,
+      "Groups may have at most 1 positional argument each"
+    );
+    Cmd<
+      StringList<Names..., OtherNames...>,
+      StringList<Abbrevs..., OtherAbbrevs...>,
+      ArgKindList<Kinds..., OtherKinds...>,
+      TypeList<Types..., OtherTypes...>,
+      TypeList<Tags..., OtherTags...>,
+      TypeList<SubCmds...>>
+      new_cmd(*this, group.args);
+    return new_cmd;
+  }
+
   consteval auto intro(std::string_view const intro) {
     if (!is_valid_intro(intro))
       throw "Command intros, if specified, must neither be empty nor start or end with whitespace";
@@ -254,6 +304,10 @@ struct Cmd<
 
 consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
   return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
+}
+
+consteval auto new_grp() {
+  return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>();
 }
 
 } // namespace opz
