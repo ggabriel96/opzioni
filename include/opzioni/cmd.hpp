@@ -164,8 +164,8 @@ struct Cmd<
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if constexpr (Abbrev.size > 0) {
       static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
-      if (Abbrev.size > 1) throw "Abbreviations must be a single character";
-      if (Abbrev[0] < 'A' || Abbrev[0] > 'Z') throw "Option abbreviations must be uppercase";
+      static_assert(Abbrev.size == 1, "Abbreviations must be a single character");
+      static_assert(Abbrev[0] >= 'A' || Abbrev[0] <= 'Z', "Option abbreviations must be an uppercase Latin letter");
     }
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
@@ -201,8 +201,8 @@ struct Cmd<
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if constexpr (Abbrev.size > 0) {
       static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
-      if (Abbrev.size > 1) throw "Abbreviations must be a single character";
-      if (Abbrev[0] < 'a' || Abbrev[0] > 'z') throw "Flag abbreviations must be lowercase";
+      static_assert(Abbrev.size == 1, "Abbreviations must be a single character");
+      static_assert(Abbrev[0] >= 'a' || Abbrev[0] <= 'z', "Flag abbreviations must be a lowercase Latin letter");
     }
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
