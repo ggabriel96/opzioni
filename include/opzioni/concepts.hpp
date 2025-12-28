@@ -17,6 +17,8 @@ concept Container = std::ranges::range<T> && std::is_default_constructible_v<T> 
 template <typename T>
 concept Cmd = requires(T) {
   typename T::arg_names;
+  typename T::arg_abbrevs;
+  typename T::arg_kinds;
   typename T::arg_types;
   typename T::arg_tags;
   typename T::subcmd_types;
