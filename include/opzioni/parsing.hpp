@@ -19,28 +19,6 @@
 
 namespace opz {
 
-// TODO: is ArgView still necessary?
-struct ArgView {
-  std::size_t tuple_idx{};
-  ArgKind kind = ArgKind::POS;
-  std::string_view name{};
-  std::string_view abbrev{};
-  bool is_required = false;
-  bool has_implicit = false;
-
-  template <typename T, typename Tag>
-  constexpr static ArgView from(std::size_t const tuple_idx, Arg<T, Tag> const &other) {
-    return ArgView{
-      .tuple_idx = tuple_idx,
-      .kind = other.kind,
-      .name = other.name,
-      .abbrev = other.abbrev,
-      .is_required = other.is_required,
-      .has_implicit = other.implicit_value.has_value()
-    };
-  }
-};
-
 template <concepts::Cmd... Cmds>
 constexpr int
 find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {

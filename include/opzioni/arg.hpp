@@ -6,6 +6,7 @@
 
 #include "opzioni/concepts.hpp"
 #include "opzioni/fixed_string.hpp"
+#include "opzioni/value_list.hpp"
 
 namespace opz {
 
@@ -15,6 +16,16 @@ enum struct ArgKind {
   FLG,
 };
 std::string_view to_string(ArgKind at) noexcept;
+
+// ArgKind specialization of ValueList
+template <ArgKind... AKs>
+using ArgKindList = ValueList<ArgKind, AKs...>;
+
+template <ArgKind, typename>
+struct InArgKindList;
+
+template <ArgKind Needle, ArgKind... Haystack>
+struct InArgKindList<Needle, ArgKindList<Haystack...>> : InValueList<ArgKind, Needle, ArgKindList<Haystack...>> {};
 
 // +----------------------------------+
 // |       forward declarations       |

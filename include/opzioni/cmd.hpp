@@ -27,10 +27,23 @@ struct ExtraConfig {
 
 template <typename...> struct Cmd;
 
-template <FixedString... Names, FixedString... Abbrevs, typename... Types, typename... Tags, concepts::Cmd... SubCmds>
-struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds...>> {
+template <
+  FixedString... Names,
+  FixedString... Abbrevs,
+  ArgKind... Kinds,
+  typename... Types,
+  typename... Tags,
+  concepts::Cmd... SubCmds>
+struct Cmd<
+  StringList<Names...>,
+  StringList<Abbrevs...>,
+  ArgKindList<Kinds...>,
+  TypeList<Types...>,
+  TypeList<Tags...>,
+  TypeList<SubCmds...>> {
   using arg_names = StringList<Names...>;
   using arg_abbrevs = StringList<Abbrevs...>;
+  using arg_kinds = ArgKindList<Kinds...>;
   using arg_types = TypeList<Types...>;
   using arg_tags = TypeList<Tags...>;
   using subcmd_types = TypeList<SubCmds...>;
@@ -107,11 +120,17 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
   consteval auto sub(NewSubCmd const &subcmd) const {
     if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
       throw "Subcommand with this name already exists";
-    auto const existing_pos = this->find_arg_if([](auto const &arg) { return arg.kind == ArgKind::POS; });
-    if (existing_pos.has_value()) throw "Commands that have positional arguments cannot have subcommands";
-    Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(
-      *this, subcmd
+    static_assert(
+      !InArgKindList<ArgKind::POS, arg_kinds>::value, "Commands that have positional arguments cannot have subcommands"
     );
+    Cmd<
+      StringList<Names...>,
+      StringList<Abbrevs...>,
+      ArgKindList<Kinds...>,
+      TypeList<Types...>,
+      TypeList<Tags...>,
+      TypeList<SubCmds..., NewSubCmd>>
+      new_cmd(*this, subcmd);
     return new_cmd;
   }
 
@@ -121,18 +140,25 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
     validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     static_assert(!this->has_subcmds(), "Commands that have subcommands cannot have positional arguments");
-    Cmd<StringList<Names..., Name>, StringList<Abbrevs..., "">, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
-      *this,
-      Arg<T, Tag>{
-        .kind = ArgKind::POS,
-        .name = Name,
-        .abbrev = "",
-        .help = meta.help,
-        .is_required = meta.is_required.value_or(true),
-        .default_value = meta.default_value,
-        .implicit_value = std::nullopt,
-      }
-    );
+    Cmd<
+      StringList<Names..., Name>,
+      StringList<Abbrevs..., "">,
+      ArgKindList<Kinds..., ArgKind::POS>,
+      TypeList<Types..., T>,
+      TypeList<Tags..., Tag>,
+      TypeList<SubCmds...>>
+      new_cmd(
+        *this,
+        Arg<T, Tag>{
+          .kind = ArgKind::POS,
+          .name = Name,
+          .abbrev = "",
+          .help = meta.help,
+          .is_required = meta.is_required.value_or(true),
+          .default_value = meta.default_value,
+          .implicit_value = std::nullopt,
+        }
+      );
     return new_cmd;
   }
 
@@ -146,18 +172,25 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
       if (Abbrev[0] < 'A' || Abbrev[0] > 'Z') throw "Option abbreviations must be uppercase";
       static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
     }
-    Cmd<StringList<Names..., Name>, StringList<Abbrevs..., Abbrev>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
-      *this,
-      Arg<T, Tag>{
-        .kind = ArgKind::OPT,
-        .name = Name,
-        .abbrev = Abbrev,
-        .help = meta.help,
-        .is_required = meta.is_required.value_or(false),
-        .default_value = meta.default_value.value_or(T{}),
-        .implicit_value = meta.implicit_value,
-      }
-    );
+    Cmd<
+      StringList<Names..., Name>,
+      StringList<Abbrevs..., Abbrev>,
+      ArgKindList<Kinds..., ArgKind::OPT>,
+      TypeList<Types..., T>,
+      TypeList<Tags..., Tag>,
+      TypeList<SubCmds...>>
+      new_cmd(
+        *this,
+        Arg<T, Tag>{
+          .kind = ArgKind::OPT,
+          .name = Name,
+          .abbrev = Abbrev,
+          .help = meta.help,
+          .is_required = meta.is_required.value_or(false),
+          .default_value = meta.default_value.value_or(T{}),
+          .implicit_value = meta.implicit_value,
+        }
+      );
     return new_cmd;
   }
 
@@ -179,19 +212,27 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
     std::optional<T> default_implicit_value = std::nullopt;
     if constexpr (std::is_same_v<T, bool>) default_implicit_value.emplace(true);
     else if constexpr (concepts::Integer<T>) default_implicit_value.emplace(T{});
-    Cmd<StringList<Names..., Name>, StringList<Abbrevs..., Abbrev>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
-      *this,
-      Arg<T, Tag>{
-        .kind = ArgKind::FLG,
-        .name = Name,
-        .abbrev = Abbrev,
-        .help = meta.help,
-        .is_required = false,
-        .default_value = meta.default_value.value_or(T{}),
-        // the following dereference will not crash because we are validating non-bool non-int flags have implicit_value
-        .implicit_value = meta.implicit_value.value_or(*default_implicit_value),
-      }
-    );
+    Cmd<
+      StringList<Names..., Name>,
+      StringList<Abbrevs..., Abbrev>,
+      ArgKindList<Kinds..., ArgKind::FLG>,
+      TypeList<Types..., T>,
+      TypeList<Tags..., Tag>,
+      TypeList<SubCmds...>>
+      new_cmd(
+        *this,
+        Arg<T, Tag>{
+          .kind = ArgKind::FLG,
+          .name = Name,
+          .abbrev = Abbrev,
+          .help = meta.help,
+          .is_required = false,
+          .default_value = meta.default_value.value_or(T{}),
+          // the following dereference will not crash because we are validating non-bool non-int flags have
+          // implicit_value
+          .implicit_value = meta.implicit_value.value_or(*default_implicit_value),
+        }
+      );
     return new_cmd;
   }
 
@@ -209,26 +250,11 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
     }
   }
 
-  constexpr auto find_arg_if(std::predicate<ArgView> auto const p) const noexcept {
-    return std::apply(
-      [&p](auto &&...elem) {
-        std::size_t idx = 0;
-        std::optional<ArgView> ret = std::nullopt;
-        // clang-format off
-          (void) // cast to void to suppress unused warning
-          ((p(elem) ? (ret = ArgView::from(idx, elem), true) : (++idx, false)) || ...);
-        // clang-format on
-        return ret;
-      },
-      this->args
-    );
-  }
-
   [[nodiscard]] constexpr bool has_subcmds() const noexcept { return std::tuple_size_v<decltype(this->subcmds)> > 0; }
 };
 
 consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
-  return Cmd<StringList<>, StringList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
+  return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 
 } // namespace opz

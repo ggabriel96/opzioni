@@ -5,6 +5,8 @@
 
 namespace opz {
 
+// Note: can't create a specialization of ValueList and friends for FixedString because it itself is a template type
+
 template <FixedString...>
 struct StringList;
 
