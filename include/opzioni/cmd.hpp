@@ -135,6 +135,7 @@ struct Cmd<
       (0 + ... + static_cast<std::size_t>(OtherKinds == ArgKind::POS)) <= 1,
       "Groups may have at most 1 positional argument each"
     );
+    // TODO: check for regular Cmd fields that aren't used in Grps
     Cmd<
       StringList<Names..., OtherNames...>,
       StringList<Abbrevs..., OtherAbbrevs...>,
