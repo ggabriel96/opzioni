@@ -73,7 +73,6 @@ struct CmdFmt {
   std::vector<std::string_view> parent_cmds_names;
   std::vector<ArgHelpEntry> args;
   std::vector<CmdHelpEntry> subcmds;
-  std::size_t amount_pos;
   std::size_t msg_width;
 
   CmdFmt(concepts::Cmd auto const &cmd, ExtraInfo const &extra_info)
@@ -81,7 +80,6 @@ struct CmdFmt {
       version(cmd.version),
       introduction(cmd.introduction),
       parent_cmds_names(extra_info.parent_cmds_names),
-      amount_pos(cmd.amount_pos),
       msg_width(cmd.msg_width) {
     args.reserve(std::tuple_size_v<decltype(cmd.args)>);
     // clang-format off

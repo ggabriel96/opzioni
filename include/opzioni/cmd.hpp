@@ -47,6 +47,7 @@ struct Cmd<
   using arg_types = TypeList<Types...>;
   using arg_tags = TypeList<Tags...>;
   using subcmd_types = TypeList<SubCmds...>;
+  // using amount_pos = std::integral_constant<std::size_t, (0 + ... + static_cast<std::size_t>(Kinds == ArgKind::POS))>;
 
   std::string_view name{};
   std::string_view version{};
@@ -54,7 +55,6 @@ struct Cmd<
   std::size_t msg_width{100};
   ErrorHandler error_handler{print_error_and_usage};
 
-  std::size_t amount_pos{0};
   std::tuple<Arg<Types, Tags> const...> args;
   std::tuple<std::reference_wrapper<SubCmds const> const...> subcmds;
 
@@ -71,7 +71,6 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
-      amount_pos(other.amount_pos),
       args(other.args),
       subcmds(other.subcmds) {}
 
@@ -82,7 +81,6 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
-      amount_pos(other.amount_pos + static_cast<std::size_t>(new_arg.kind == ArgKind::POS)),
       args(std::tuple_cat(other.args, std::make_tuple(new_arg))),
       subcmds(other.subcmds) {}
 
@@ -93,7 +91,6 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
-      amount_pos(other.amount_pos),
       args(other.args),
       subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
 
