@@ -47,7 +47,9 @@ struct Cmd<
   using arg_types = TypeList<Types...>;
   using arg_tags = TypeList<Tags...>;
   using subcmd_types = TypeList<SubCmds...>;
+  // clang-format off
   // using amount_pos = std::integral_constant<std::size_t, (0 + ... + static_cast<std::size_t>(Kinds == ArgKind::POS))>;
+  // clang-format on
 
   std::string_view name{};
   std::string_view version{};

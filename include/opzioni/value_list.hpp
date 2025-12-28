@@ -35,8 +35,8 @@ struct IndexOfValue<Idx, T, Needle, ValueList<T, Needle, Haystack...>> : std::in
 
 // recursive case (keep looking)
 template <int Idx, typename T, T Needle, T Other, T... Haystack>
-struct IndexOfValue<Idx, T, Needle, ValueList<T, Other, Haystack...>> : IndexOfValue<Idx + 1, T, Needle, ValueList<T, Haystack...>> {
-};
+struct IndexOfValue<Idx, T, Needle, ValueList<T, Other, Haystack...>>
+  : IndexOfValue<Idx + 1, T, Needle, ValueList<T, Haystack...>> {};
 
 } // namespace opz
 
