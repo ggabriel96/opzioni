@@ -118,11 +118,11 @@ struct Cmd<
 
   template <concepts::Cmd NewSubCmd>
   consteval auto sub(NewSubCmd const &subcmd) const {
-    if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
-      throw "Subcommand with this name already exists";
     static_assert(
       !InArgKindList<ArgKind::POS, arg_kinds>::value, "Commands that have positional arguments cannot have subcommands"
     );
+    if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
+      throw "Subcommand with this name already exists";
     Cmd<
       StringList<Names...>,
       StringList<Abbrevs...>,
@@ -136,10 +136,10 @@ struct Cmd<
 
   template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
   consteval auto pos(ArgMeta<T, Tag> const meta) const {
-    validate_common<Name, "">(meta);
-    validate_pos(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     static_assert(!this->has_subcmds(), "Commands that have subcommands cannot have positional arguments");
+    validate_common<Name, "">(meta);
+    validate_pos(meta);
     Cmd<
       StringList<Names..., Name>,
       StringList<Abbrevs..., "">,
@@ -164,14 +164,14 @@ struct Cmd<
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view, typename Tag = act::assign>
   consteval auto opt(ArgMeta<T, Tag> const meta) const {
-    validate_common<Name, Abbrev>(meta);
-    validate_opt(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if constexpr (Abbrev.size > 0) {
+      static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
       if (Abbrev.size > 1) throw "Abbreviations must be a single character";
       if (Abbrev[0] < 'A' || Abbrev[0] > 'Z') throw "Option abbreviations must be uppercase";
-      static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
     }
+    validate_common<Name, Abbrev>(meta);
+    validate_opt(meta);
     Cmd<
       StringList<Names..., Name>,
       StringList<Abbrevs..., Abbrev>,
@@ -201,14 +201,14 @@ struct Cmd<
 
   template <FixedString Name, FixedString Abbrev, typename T = bool, typename Tag = act::assign>
   consteval auto flg(ArgMeta<T, Tag> const meta) const {
-    validate_common<Name, Abbrev>(meta);
-    validate_flg(meta);
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if constexpr (Abbrev.size > 0) {
+      static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
       if (Abbrev.size > 1) throw "Abbreviations must be a single character";
       if (Abbrev[0] < 'a' || Abbrev[0] > 'z') throw "Flag abbreviations must be lowercase";
-      static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
     }
+    validate_common<Name, Abbrev>(meta);
+    validate_flg(meta);
     std::optional<T> default_implicit_value = std::nullopt;
     if constexpr (std::is_same_v<T, bool>) default_implicit_value.emplace(true);
     else if constexpr (concepts::Integer<T>) default_implicit_value.emplace(T{});
