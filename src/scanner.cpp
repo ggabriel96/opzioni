@@ -2,15 +2,15 @@
 
 namespace opz {
 
-std::string_view to_string(TokenType const type) noexcept {
-  switch (type) {
-    case TokenType::PROG_NAME: return "PROG_NAME";
-    case TokenType::DASH_DASH: return "DASH_DASH";
-    case TokenType::FLG: return "FLG";
-    case TokenType::OPT_OR_FLG_LONG: return "OPT_OR_FLG_LONG";
-    case TokenType::OPT_LONG_AND_VALUE: return "OPT_LONG_AND_VALUE";
-    case TokenType::OPT_SHORT_AND_VALUE: return "OPT_SHORT_AND_VALUE";
-    case TokenType::IDENTIFIER: return "IDENTIFIER";
+std::string_view to_string(TokenKind const kind) noexcept {
+  switch (kind) {
+    case TokenKind::PROG_NAME: return "PROG_NAME";
+    case TokenKind::DASH_DASH: return "DASH_DASH";
+    case TokenKind::FLG: return "FLG";
+    case TokenKind::OPT_OR_FLG_LONG: return "OPT_OR_FLG_LONG";
+    case TokenKind::OPT_LONG_AND_VALUE: return "OPT_LONG_AND_VALUE";
+    case TokenKind::OPT_SHORT_AND_VALUE: return "OPT_SHORT_AND_VALUE";
+    case TokenKind::IDENTIFIER: return "IDENTIFIER";
     default: return "ERR";
   }
 }
@@ -19,20 +19,20 @@ TokenIndices index_tokens(std::span<Token const> const tokens) {
   auto indices = TokenIndices();
   if (!tokens.empty()) { // should never happen
     for (std::size_t index = 1; index < tokens.size(); ++index) {
-      switch (auto const &tok = tokens[index]; tok.type) {
-        case TokenType::PROG_NAME: break;
-        case TokenType::DASH_DASH:
+      switch (auto const &tok = tokens[index]; tok.kind) {
+        case TokenKind::PROG_NAME: break;
+        case TokenKind::DASH_DASH:
           // +1 to ignore the dash-dash
           for (std::size_t offset = index + 1; offset < tokens.size(); ++offset) {
             indices.positionals.push_back(offset);
           }
           index = tokens.size(); // break below refers to the switch, not the for loop
           break;
-        case TokenType::FLG: [[fallthrough]];
-        case TokenType::OPT_OR_FLG_LONG: [[fallthrough]];
-        case TokenType::OPT_LONG_AND_VALUE: [[fallthrough]];
-        case TokenType::OPT_SHORT_AND_VALUE: indices.opts_n_flgs[*tok.name].push_back(index); break;
-        case TokenType::IDENTIFIER: indices.positionals.push_back(index); break;
+        case TokenKind::FLG: [[fallthrough]];
+        case TokenKind::OPT_OR_FLG_LONG: [[fallthrough]];
+        case TokenKind::OPT_LONG_AND_VALUE: [[fallthrough]];
+        case TokenKind::OPT_SHORT_AND_VALUE: indices.opts_n_flgs[*tok.name].push_back(index); break;
+        case TokenKind::IDENTIFIER: indices.positionals.push_back(index); break;
       }
     }
   }
@@ -46,7 +46,7 @@ TokenIndices index_tokens(std::span<Token const> const tokens) {
 /* public */
 
 std::vector<Token> Scanner::operator()() noexcept {
-  this->add_token(TokenType::PROG_NAME, std::nullopt, this->cur_arg());
+  this->add_token(TokenKind::PROG_NAME, std::nullopt, this->cur_arg());
   for (this->args_idx = 1; this->args_idx < this->args.size(); ++this->args_idx) {
     this->cur_col = 0;
     this->scan_token();
@@ -78,20 +78,20 @@ void Scanner::consume() noexcept { this->cur_col += 1; }
 }
 
 void Scanner::add_token(
-  TokenType type, std::optional<std::string_view> name, std::optional<std::string_view> value
+  TokenKind kind, std::optional<std::string_view> name, std::optional<std::string_view> value
 ) noexcept {
-  this->tokens.emplace_back(type, this->args_idx, name, value);
+  this->tokens.emplace_back(kind, this->args_idx, name, value);
 }
 
 void Scanner::scan_token() noexcept {
   if (!this->match(dash)) {
-    this->add_token(TokenType::IDENTIFIER, std::nullopt, this->cur_arg());
+    this->add_token(TokenKind::IDENTIFIER, std::nullopt, this->cur_arg());
     return;
   }
 
-  if (this->is_cur_end()) this->add_token(TokenType::IDENTIFIER, std::nullopt, this->cur_arg());
+  if (this->is_cur_end()) this->add_token(TokenKind::IDENTIFIER, std::nullopt, this->cur_arg());
   else if (this->match(dash)) {
-    if (this->is_cur_end()) this->add_token(TokenType::DASH_DASH);
+    if (this->is_cur_end()) this->add_token(TokenKind::DASH_DASH);
     else this->long_opt();
   } else this->short_opt();
 }
@@ -105,9 +105,9 @@ void Scanner::long_opt() noexcept {
     // start at 2 to discard initial dash-dash; -3 would be -1 but adds 2 because we start at 2
     auto const name = this->cur_arg().substr(2, this->cur_col - 3);
     auto const value = this->cur_arg().substr(this->cur_col);
-    this->add_token(TokenType::OPT_LONG_AND_VALUE, name, value);
+    this->add_token(TokenKind::OPT_LONG_AND_VALUE, name, value);
   } else {
-    this->add_token(TokenType::OPT_OR_FLG_LONG, this->cur_arg().substr(2)); // 2 to discard initial dash-dash
+    this->add_token(TokenKind::OPT_OR_FLG_LONG, this->cur_arg().substr(2)); // 2 to discard initial dash-dash
   }
 }
 
@@ -119,17 +119,17 @@ void Scanner::short_opt() noexcept {
     std::optional<std::string_view> value = std::nullopt;
     if (this->cur_arg().length() > 2)
       value.emplace(std::next(this->cur_arg().begin(), this->cur_col), this->cur_arg().end());
-    this->add_token(TokenType::OPT_SHORT_AND_VALUE, name, value);
+    this->add_token(TokenKind::OPT_SHORT_AND_VALUE, name, value);
     return;
   }
 
   if (this->cur_arg().length() == 2) {
-    this->add_token(TokenType::FLG, this->advance());
+    this->add_token(TokenKind::FLG, this->advance());
     return;
   }
 
   while (!this->is_cur_end()) {
-    this->add_token(TokenType::FLG, this->advance());
+    this->add_token(TokenKind::FLG, this->advance());
   }
 }
 

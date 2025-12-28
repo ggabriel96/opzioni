@@ -69,7 +69,7 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
-      amount_pos(other.amount_pos + static_cast<std::size_t>(new_arg.type == ArgType::POS)),
+      amount_pos(other.amount_pos + static_cast<std::size_t>(new_arg.kind == ArgKind::POS)),
       args(std::tuple_cat(other.args, std::make_tuple(new_arg))),
       subcmds(other.subcmds) {}
 
@@ -107,7 +107,7 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
   consteval auto sub(NewSubCmd const &subcmd) const {
     if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
       throw "Subcommand with this name already exists";
-    auto const existing_pos = this->find_arg_if([](auto const &arg) { return arg.type == ArgType::POS; });
+    auto const existing_pos = this->find_arg_if([](auto const &arg) { return arg.kind == ArgKind::POS; });
     if (existing_pos.has_value()) throw "Commands that have positional arguments cannot have subcommands";
     Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, TypeList<Tags...>, TypeList<SubCmds..., NewSubCmd>> new_cmd(
       *this, subcmd
@@ -124,7 +124,7 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
     Cmd<StringList<Names..., Name>, StringList<Abbrevs..., "">, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
-        .type = ArgType::POS,
+        .kind = ArgKind::POS,
         .name = Name,
         .abbrev = "",
         .help = meta.help,
@@ -149,7 +149,7 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
     Cmd<StringList<Names..., Name>, StringList<Abbrevs..., Abbrev>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
-        .type = ArgType::OPT,
+        .kind = ArgKind::OPT,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,
@@ -182,7 +182,7 @@ struct Cmd<StringList<Names...>, StringList<Abbrevs...>, TypeList<Types...>, Typ
     Cmd<StringList<Names..., Name>, StringList<Abbrevs..., Abbrev>, TypeList<Types..., T>, TypeList<Tags..., Tag>, TypeList<SubCmds...>> new_cmd(
       *this,
       Arg<T, Tag>{
-        .type = ArgType::FLG,
+        .kind = ArgKind::FLG,
         .name = Name,
         .abbrev = Abbrev,
         .help = meta.help,

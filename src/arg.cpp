@@ -2,11 +2,11 @@
 
 namespace opz {
 
-std::string_view to_string(ArgType const at) noexcept {
+std::string_view to_string(ArgKind const at) noexcept {
   switch (at) {
-    case ArgType::POS: return "positional";
-    case ArgType::OPT: return "option";
-    case ArgType::FLG: return "flag";
+    case ArgKind::POS: return "positional";
+    case ArgKind::OPT: return "option";
+    case ArgKind::FLG: return "flag";
     default: return "unknown";
   }
 }

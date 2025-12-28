@@ -23,10 +23,10 @@ namespace opz {
 [[nodiscard]] bool ArgHelpEntry::has_implicit() const noexcept { return implicit_value.has_value(); }
 
 [[nodiscard]] std::string ArgHelpEntry::format_base_usage() const noexcept {
-  if (type == ArgType::POS) return std::string(name);
+  if (kind == ArgKind::POS) return std::string(name);
 
   auto const dashes = name.length() > 1 ? "--" : "-";
-  if (type == ArgType::OPT) {
+  if (kind == ArgKind::OPT) {
     auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
     if (implicit_value) val = "[" + val + "]";
     return fmt::format("{}{} {}", dashes, name, val);
@@ -37,13 +37,13 @@ namespace opz {
 
 [[nodiscard]] std::string ArgHelpEntry::format_for_usage() const noexcept {
   auto format = format_base_usage();
-  if (type == ArgType::POS) format = "<" + format + ">";
+  if (kind == ArgKind::POS) format = "<" + format + ">";
   if (!is_required) format = "[" + format + "]";
   return format;
 }
 
 [[nodiscard]] std::string ArgHelpEntry::format_for_index_entry() const noexcept {
-  if (type == ArgType::POS) return format_base_usage();
+  if (kind == ArgKind::POS) return format_base_usage();
   if (has_abbrev()) return fmt::format("-{}, {}", abbrev, format_base_usage());
   if (name.length() == 1) return format_base_usage();
   return fmt::format("    {}", format_base_usage());
@@ -62,8 +62,8 @@ namespace opz {
 }
 
 bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
-  bool const lhs_is_positional = this->type == ArgType::POS;
-  bool const rhs_is_positional = other.type == ArgType::POS;
+  bool const lhs_is_positional = this->kind == ArgKind::POS;
+  bool const rhs_is_positional = other.kind == ArgKind::POS;
 
   if (lhs_is_positional && rhs_is_positional) return false; // don't move positionals relative to each other
   if (!lhs_is_positional && !rhs_is_positional) return this->name < other.name; // sort non-positionals by name

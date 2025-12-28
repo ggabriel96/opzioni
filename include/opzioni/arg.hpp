@@ -9,12 +9,12 @@
 
 namespace opz {
 
-enum struct ArgType {
+enum struct ArgKind {
   POS,
   OPT,
   FLG,
 };
-std::string_view to_string(ArgType at) noexcept;
+std::string_view to_string(ArgKind at) noexcept;
 
 // +----------------------------------+
 // |       forward declarations       |
@@ -66,7 +66,7 @@ struct Arg {
   using value_type = T;
   using tag_type = Tag;
 
-  ArgType type{ArgType::POS};
+  ArgKind kind{ArgKind::POS};
   std::string_view name{};
   std::string_view abbrev{};
   std::string_view help{};

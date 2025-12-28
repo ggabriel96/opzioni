@@ -12,7 +12,7 @@ namespace opz {
 
 constexpr static auto dash = '-';
 
-enum struct TokenType {
+enum struct TokenKind {
   PROG_NAME,
   DASH_DASH,           // --
   FLG,                 // -f (-xpto adds many of this)
@@ -23,7 +23,7 @@ enum struct TokenType {
 };
 
 struct Token {
-  TokenType type;
+  TokenKind kind;
   std::uint32_t args_idx;
   std::optional<std::string_view> name;
   std::optional<std::string_view> value;
@@ -45,7 +45,7 @@ struct TokenIndices {
   }
 };
 
-std::string_view to_string(TokenType type) noexcept;
+std::string_view to_string(TokenKind kind) noexcept;
 TokenIndices index_tokens(std::span<Token const> tokens);
 
 class Scanner {
@@ -79,7 +79,7 @@ private:
   [[nodiscard]] bool match(char expected) noexcept;
 
   void add_token(
-    TokenType type,
+    TokenKind kind,
     std::optional<std::string_view> name = std::nullopt,
     std::optional<std::string_view> value = std::nullopt
   ) noexcept;

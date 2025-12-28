@@ -33,7 +33,7 @@ struct CmdHelpEntry {
 };
 
 struct ArgHelpEntry {
-  ArgType type;
+  ArgKind kind;
   std::string_view name;
   std::string_view cmd_name;
   std::string_view abbrev;
@@ -43,8 +43,8 @@ struct ArgHelpEntry {
   std::optional<std::string> implicit_value;
 
   template <typename T, typename Tag>
-  ArgHelpEntry(std::string_view cmd_name, Arg<T, Tag> from)
-    : type(from.type),
+  ArgHelpEntry(std::string_view const cmd_name, Arg<T, Tag> const &from)
+    : kind(from.kind),
       name(from.name),
       cmd_name(cmd_name),
       abbrev(from.abbrev),

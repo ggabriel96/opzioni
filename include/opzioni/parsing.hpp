@@ -22,7 +22,7 @@ namespace opz {
 // TODO: is ArgView still necessary?
 struct ArgView {
   std::size_t tuple_idx{};
-  ArgType type = ArgType::POS;
+  ArgKind kind = ArgKind::POS;
   std::string_view name{};
   std::string_view abbrev{};
   bool is_required = false;
@@ -32,7 +32,7 @@ struct ArgView {
   constexpr static ArgView from(std::size_t const tuple_idx, Arg<T, Tag> const &other) {
     return ArgView{
       .tuple_idx = tuple_idx,
-      .type = other.type,
+      .kind = other.kind,
       .name = other.name,
       .abbrev = other.abbrev,
       .is_required = other.is_required,
@@ -203,8 +203,8 @@ private:
     std::size_t const recursion_end_idx,
     std::set<std::size_t> &consumed_indices
   ) {
-    switch (auto const &arg = std::get<I>(this->cmd_ref.get().args); arg.type) {
-      case ArgType::FLG: {
+    switch (auto const &arg = std::get<I>(this->cmd_ref.get().args); arg.kind) {
+      case ArgKind::FLG: {
         std::size_t flg_count = 0;
         if (auto const it = indices.opts_n_flgs.find(arg.name); it != indices.opts_n_flgs.end()) {
           for (auto const idx : it->second) {
@@ -226,7 +226,7 @@ private:
         if (flg_count > 0) consume_arg<I>(args_map, arg, flg_count, this->cmd_ref.get(), this->extra_info);
         break;
       }
-      case ArgType::OPT: {
+      case ArgKind::OPT: {
         auto const it_name = indices.opts_n_flgs.find(arg.name);
         auto const has_name = it_name != indices.opts_n_flgs.end();
         auto const it_abbrev = indices.opts_n_flgs.find(arg.abbrev);
@@ -262,7 +262,7 @@ private:
           if (tokens[idx].value) opt_values.push_back(*tokens[idx].value);
           // the case of `--option value` or `-O value` may have the value as "the next positional"
           // see note in the other process_ith_arg member function
-          else if (idx + 1 < tokens.size() && tokens[idx + 1].type == TokenType::IDENTIFIER) {
+          else if (idx + 1 < tokens.size() && tokens[idx + 1].kind == TokenKind::IDENTIFIER) {
             opt_values.push_back(*tokens[idx + 1].value);
             this->indices_used_as_opt_values.insert(idx + 1);
             consumed_indices.insert(idx + 1);
@@ -275,7 +275,7 @@ private:
         break;
       }
       // ignore positionals in this call
-      case ArgType::POS: [[fallthrough]];
+      case ArgKind::POS: [[fallthrough]];
       default: break;
     }
   }
@@ -291,7 +291,7 @@ private:
     std::size_t &cur_pos_idx
   ) {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
-    if (arg.type != ArgType::POS) return;
+    if (arg.kind != ArgKind::POS) return;
     if (cur_pos_idx >= indices.positionals.size()) return;
     /* Note: things like `-O value` are scanned as an option followed by an identifier, since the scanner doesn't know
      * if -O is valid or not. So when we encounter that in the process_ith_arg, and it indeed was an option, we save the
