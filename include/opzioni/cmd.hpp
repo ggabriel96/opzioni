@@ -317,6 +317,7 @@ consteval auto new_cmd(std::string_view const name, std::string_view const versi
 }
 
 consteval auto new_grp(std::source_location const loc = std::source_location::current()) {
+  // TODO: there should be a group feature that requires the presence of all args in the group, so maybe rename this?
   auto grp = Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>();
   grp.msg_width = 0;
   grp.error_handler = nullptr;
