@@ -1,6 +1,7 @@
 #ifndef OPZIONI_ARG_HPP
 #define OPZIONI_ARG_HPP
 
+#include <cstdint>
 #include <optional>
 #include <string_view>
 
@@ -84,10 +85,12 @@ struct Arg {
   bool is_required{false};
   std::optional<T> default_value{};
   std::optional<T> implicit_value{};
+  std::uint_least32_t grp_id{0};
 
   [[nodiscard]] constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   [[nodiscard]] constexpr bool has_default() const noexcept { return default_value.has_value(); }
   [[nodiscard]] constexpr bool has_implicit() const noexcept { return implicit_value.has_value(); }
+  [[nodiscard]] constexpr bool has_group() const noexcept { return grp_id != 0; }
 };
 
 // +---------------------------------+

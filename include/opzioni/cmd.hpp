@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <optional>
+#include <source_location>
 #include <tuple>
 
 #include "opzioni/arg.hpp"
@@ -56,6 +57,7 @@ struct Cmd<
   std::string_view introduction{};
   std::size_t msg_width{100};
   ErrorHandler error_handler{print_error_and_usage};
+  std::uint_least32_t grp_id{0};
 
   std::tuple<Arg<Types, Tags> const...> args;
   std::tuple<std::reference_wrapper<SubCmds const> const...> subcmds;
@@ -73,6 +75,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_id(other.grp_id),
       args(other.args),
       subcmds(other.subcmds) {}
 
@@ -83,6 +86,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_id(other.grp_id),
       args(std::tuple_cat(other.args, std::make_tuple(new_arg))),
       subcmds(other.subcmds) {}
 
@@ -93,6 +97,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_id(other.grp_id),
       args(other.args),
       subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
 
@@ -103,6 +108,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_id(other.grp_id),
       args(std::tuple_cat(other.args, new_args)),
       subcmds(other.subcmds) {}
 
@@ -207,6 +213,7 @@ struct Cmd<
           .is_required = meta.is_required.value_or(true),
           .default_value = meta.default_value,
           .implicit_value = std::nullopt,
+          .grp_id = this->grp_id,
         }
       );
     return new_cmd;
@@ -239,6 +246,7 @@ struct Cmd<
           .is_required = meta.is_required.value_or(false),
           .default_value = meta.default_value.value_or(T{}),
           .implicit_value = meta.implicit_value,
+          .grp_id = this->grp_id,
         }
       );
     return new_cmd;
@@ -281,6 +289,7 @@ struct Cmd<
           // the following dereference will not crash because we are validating non-bool non-int flags have
           // implicit_value
           .implicit_value = meta.implicit_value.value_or(*default_implicit_value),
+          .grp_id = this->grp_id,
         }
       );
     return new_cmd;
@@ -307,8 +316,12 @@ consteval auto new_cmd(std::string_view const name, std::string_view const versi
   return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 
-consteval auto new_grp() {
-  return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>();
+consteval auto new_grp(std::source_location const loc = std::source_location::current()) {
+  auto grp = Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>();
+  grp.msg_width = 0;
+  grp.error_handler = nullptr;
+  grp.grp_id = loc.line();
+  return grp;
 }
 
 } // namespace opz

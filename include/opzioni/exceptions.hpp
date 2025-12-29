@@ -82,19 +82,18 @@ public:
     : UserError(fmt::format("Unknown subcommand `{}` for command `{}`", subcmd_name, cmd_name), formatter) {}
 };
 
-class WrongType : public UserError {
+class ConflictingArguments : public UserError {
 public:
 
-  WrongType(
-    std::string_view cmd_name,
-    std::string_view name,
-    std::string_view expected_type,
-    std::string_view received_type,
-    CmdFmt const &formatter
+  ConflictingArguments(
+    std::string_view cmd_name, std::string_view arg_name, std::string_view other_arg_name, CmdFmt const &formatter
   )
     : UserError(
         fmt::format(
-          "Argument `{}` is a known {} of `{}`, but was provided as {}", name, expected_type, cmd_name, received_type
+          "Argument `{}` conflicts with previously provided `{}` argument for command `{}`, please check help for more details",
+          arg_name,
+          other_arg_name,
+          cmd_name
         ),
         formatter
       ) {}

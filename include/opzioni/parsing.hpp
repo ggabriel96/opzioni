@@ -1,8 +1,10 @@
 #ifndef OPZIONI_PARSING_HPP
 #define OPZIONI_PARSING_HPP
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <set>
 #include <span>
 #include <string_view>
@@ -68,6 +70,7 @@ private:
   friend class CmdParser;
 
   std::set<std::size_t> indices_used_as_opt_values;
+  std::map<std::uint_least32_t, std::size_t> parsed_arg_idx_for_group;
 
   CmdParser(Cmd const &cmd, ExtraInfo const &extra_info, std::string_view const parent_cmd_name) : cmd_ref(cmd) {
     this->extra_info.parent_cmds_names.reserve(extra_info.parent_cmds_names.size() + 1);
@@ -166,7 +169,7 @@ private:
         (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices, cur_pos_idx), ...);
       }
       // clang-format on
-      (this->check_ith_arg<Is>(args_map), ...);
+      (this->post_process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx), ...);
     } catch (std::runtime_error const &e) {
       throw UserError(e.what(), get_cmd_fmt());
     }
@@ -290,12 +293,46 @@ private:
   }
 
   template <std::size_t I>
-  void check_ith_arg(ArgsMap<Cmd const> &args_map) {
+  void post_process_ith_arg(
+    ArgsMap<Cmd const> &args_map,
+    std::span<Token const> const tokens,
+    TokenIndices const &indices,
+    std::size_t const recursion_start_idx
+  ) {
+    static std::size_t cur_pos_idx = 0;
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
-    if (!args_map.template has_value<I>()) {
+    if (args_map.template has_value<I>()) {
+      // get index of arg in argv (we know it exists because it's present in args_map)
+      auto const arg_idx = [&arg, &indices, recursion_start_idx] {
+        if (arg.kind == ArgKind::POS) return *indices.nth_pos_idx_after(recursion_start_idx, cur_pos_idx);
+        if (auto const it_name = indices.opts_n_flgs.find(arg.name); it_name != indices.opts_n_flgs.end())
+          return it_name->second[0];
+        auto const it_abbrev = indices.opts_n_flgs.find(arg.abbrev);
+        return it_abbrev->second[0];
+      }();
+
+      // check if we already have parsed an argument of the same group
+      if (auto const grp_it = this->parsed_arg_idx_for_group.find(arg.grp_id);
+          grp_it != this->parsed_arg_idx_for_group.end()) {
+        auto const tok_current = std::find_if(tokens.begin(), tokens.end(), [arg_idx](auto const &t) {
+          return t.args_idx == arg_idx;
+        });
+        auto const tok_previous =
+          std::find_if(tokens.begin(), tokens.end(), [&grp_it](auto const &t) { return t.args_idx == grp_it->second; });
+        throw ConflictingArguments(
+          this->cmd_ref.get().name, tok_current->get_id(), tok_previous->get_id(), this->get_cmd_fmt()
+        );
+      }
+
+      // if not, register we now have
+      if (arg.has_group()) {
+        this->parsed_arg_idx_for_group[arg.grp_id] = arg_idx;
+      }
+    } else {
       if (arg.is_required) throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
       if (arg.has_default()) std::get<I>(args_map.args) = *arg.default_value;
     }
+    cur_pos_idx += static_cast<std::size_t>(arg.kind == ArgKind::POS);
   }
 
   void check_unknown_args(

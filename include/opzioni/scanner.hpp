@@ -27,13 +27,19 @@ struct Token {
   std::uint32_t args_idx;
   std::optional<std::string_view> name;
   std::optional<std::string_view> value;
+
+  [[nodiscard]] std::string_view get_id() const noexcept {
+    if (this->kind == TokenKind::IDENTIFIER) return *this->value;
+    return *this->name;
+  }
 };
 
 struct TokenIndices {
   std::vector<std::size_t> positionals;
   std::map<std::string_view, std::vector<std::size_t>> opts_n_flgs;
 
-  [[nodiscard]] std::optional<std::size_t> first_pos_idx_after(std::size_t const offset) const noexcept {
+  [[nodiscard]] std::optional<std::size_t>
+  nth_pos_idx_after(std::size_t const offset, std::size_t const n) const noexcept {
     if (this->positionals.empty()) return std::nullopt;
     std::size_t i = 0;
     auto idx = this->positionals[i];
@@ -41,7 +47,17 @@ struct TokenIndices {
       if (i + 1 >= this->positionals.size()) return std::nullopt;
       idx = this->positionals[++i];
     }
+    std::size_t count = 0;
+    while (count < n) {
+      if (i + 1 >= this->positionals.size()) return std::nullopt;
+      idx = this->positionals[++i];
+      count += 1;
+    }
     return idx;
+  }
+
+  [[nodiscard]] std::optional<std::size_t> first_pos_idx_after(std::size_t const offset) const noexcept {
+    return this->nth_pos_idx_after(offset, 0);
   }
 };
 
