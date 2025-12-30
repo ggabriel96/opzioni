@@ -123,7 +123,7 @@ struct Cmd<
     ArgKind... OtherKinds,
     typename... OtherTypes,
     typename... OtherTags>
-  consteval auto grp(
+  [[nodiscard]] consteval auto grp(
     Cmd<
       StringList<OtherNames...>,
       StringList<OtherAbbrevs...>,
@@ -159,14 +159,14 @@ struct Cmd<
     return new_cmd;
   }
 
-  consteval auto intro(std::string_view const intro) {
+  [[nodiscard]] consteval auto intro(std::string_view const intro) {
     if (!is_valid_intro(intro))
       throw "Command intros, if specified, must neither be empty nor start or end with whitespace";
     this->introduction = intro;
     return *this;
   }
 
-  consteval auto with(ExtraConfig const cfg) {
+  [[nodiscard]] consteval auto with(ExtraConfig const cfg) {
     if (cfg.msg_width.has_value()) {
       if (*cfg.msg_width == 0) throw "The message width must be greater than zero";
       this->msg_width = *cfg.msg_width;
@@ -179,7 +179,7 @@ struct Cmd<
   }
 
   template <concepts::Cmd NewSubCmd>
-  consteval auto sub(NewSubCmd const &subcmd) const {
+  [[nodiscard]] consteval auto sub(NewSubCmd const &subcmd) const {
     static_assert(
       !InArgKindList<ArgKind::POS, arg_kinds>::value, "Commands that have positional arguments cannot have subcommands"
     );
@@ -198,7 +198,7 @@ struct Cmd<
   }
 
   template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
-  consteval auto pos(ArgMeta<T, Tag> const meta) const {
+  [[nodiscard]] consteval auto pos(ArgMeta<T, Tag> const meta) const {
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     static_assert(!this->has_subcmds(), "Commands that have subcommands cannot have positional arguments");
     validate_common<Name, "">(meta);
@@ -228,7 +228,7 @@ struct Cmd<
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = std::string_view, typename Tag = act::assign>
-  consteval auto opt(ArgMeta<T, Tag> const meta) const {
+  [[nodiscard]] consteval auto opt(ArgMeta<T, Tag> const meta) const {
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if constexpr (Abbrev.size > 0) {
       static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
@@ -262,12 +262,12 @@ struct Cmd<
   }
 
   template <FixedString Name, typename T = std::string_view, typename Tag = act::assign>
-  consteval auto opt(ArgMeta<T, Tag> const meta) const {
+  [[nodiscard]] consteval auto opt(ArgMeta<T, Tag> const meta) const {
     return opt<Name, "", T, Tag>(meta);
   }
 
   template <FixedString Name, FixedString Abbrev, typename T = bool, typename Tag = act::assign>
-  consteval auto flg(ArgMeta<T, Tag> const meta) const {
+  [[nodiscard]] consteval auto flg(ArgMeta<T, Tag> const meta) const {
     static_assert(!InStringList<Name, arg_names>::value, "Argument with this name already exists");
     if constexpr (Abbrev.size > 0) {
       static_assert(!InStringList<Abbrev, arg_abbrevs>::value, "Argument with this abbreviation already exists");
@@ -306,11 +306,11 @@ struct Cmd<
   }
 
   template <FixedString Name, typename T = bool, typename Tag = act::assign>
-  consteval auto flg(ArgMeta<T, Tag> const meta) const {
+  [[nodiscard]] consteval auto flg(ArgMeta<T, Tag> const meta) const {
     return flg<Name, "", T, Tag>(meta);
   }
 
-  auto operator()(int const argc, char const *argv[]) const noexcept {
+  [[nodiscard]] auto operator()(int const argc, char const *argv[]) const noexcept {
     try {
       auto parser = CmdParser(*this);
       return parser(argc, argv);
@@ -322,11 +322,11 @@ struct Cmd<
   [[nodiscard]] constexpr bool has_subcmds() const noexcept { return std::tuple_size_v<decltype(this->subcmds)> > 0; }
 };
 
-consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
+[[nodiscard]] consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
   return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 
-consteval auto new_grp(
+[[nodiscard]] consteval auto new_grp(
   GroupKind const kind = GroupKind::ALL_REQUIRED, std::source_location const loc = std::source_location::current()
 ) {
   if (kind == GroupKind::NONE) throw "Please specify a group kind other than NONE";

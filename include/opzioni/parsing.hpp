@@ -22,7 +22,7 @@
 namespace opz {
 
 template <concepts::Cmd... Cmds>
-constexpr int
+[[nodiscard]] constexpr int
 find_cmd(std::tuple<std::reference_wrapper<Cmds const> const...> const haystack, std::string_view const name) {
   // clang-format off
   return std::apply(
@@ -51,7 +51,7 @@ public:
 
   explicit CmdParser(Cmd const &cmd) : cmd_ref(cmd) {}
 
-  ArgsMap<Cmd const> operator()(std::span<char const *> const args) {
+  [[nodiscard]] ArgsMap<Cmd const> operator()(std::span<char const *> const args) {
     auto scanner = Scanner(args);
     auto const tokens = scanner();
     auto const indices = index_tokens(tokens);
@@ -59,7 +59,7 @@ public:
     return map;
   }
 
-  ArgsMap<Cmd const> operator()(int const argc, char const *argv[]) {
+  [[nodiscard]] ArgsMap<Cmd const> operator()(int const argc, char const *argv[]) {
     auto const args = std::span{argv, static_cast<std::size_t>(argc)};
     return (*this)(args);
   }
@@ -80,9 +80,9 @@ private:
     this->extra_info.parent_cmds_names.push_back(parent_cmd_name);
   }
 
-  auto get_cmd_fmt() const noexcept { return CmdFmt(this->cmd_ref.get(), this->extra_info); }
+  [[nodiscard]] auto get_cmd_fmt() const noexcept { return CmdFmt(this->cmd_ref.get(), this->extra_info); }
 
-  auto get_args_map(
+  [[nodiscard]] auto get_args_map(
     std::span<char const *> const args,
     std::span<Token const> const tokens,
     TokenIndices const &indices,
