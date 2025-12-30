@@ -57,6 +57,7 @@ struct Cmd<
   std::string_view introduction{};
   std::size_t msg_width{100};
   ErrorHandler error_handler{print_error_and_usage};
+  GroupKind grp_kind{GroupKind::NONE};
   std::uint_least32_t grp_id{0};
 
   std::tuple<Arg<Types, Tags> const...> args;
@@ -75,6 +76,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_kind(other.grp_kind),
       grp_id(other.grp_id),
       args(other.args),
       subcmds(other.subcmds) {}
@@ -86,6 +88,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_kind(other.grp_kind),
       grp_id(other.grp_id),
       args(std::tuple_cat(other.args, std::make_tuple(new_arg))),
       subcmds(other.subcmds) {}
@@ -97,6 +100,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_kind(other.grp_kind),
       grp_id(other.grp_id),
       args(other.args),
       subcmds(std::tuple_cat(other.subcmds, std::make_tuple(std::cref(new_subcmd)))) {}
@@ -108,6 +112,7 @@ struct Cmd<
       introduction(other.introduction),
       msg_width(other.msg_width),
       error_handler(other.error_handler),
+      grp_kind(other.grp_kind),
       grp_id(other.grp_id),
       args(std::tuple_cat(other.args, new_args)),
       subcmds(other.subcmds) {}
@@ -137,6 +142,7 @@ struct Cmd<
       !InArgKindList<ArgKind::POS, ArgKindList<OtherKinds...>>::value || !this->has_subcmds(),
       "Commands that have positional arguments cannot have subcommands and vice-versa"
     );
+    // TODO: this requirement for positionals only apply for GroupKind::MUTUALLY_EXCLUSIVE
     static_assert(
       (0 + ... + static_cast<std::size_t>(OtherKinds == ArgKind::POS)) <= 1,
       "Groups may have at most 1 positional argument each"
@@ -179,6 +185,7 @@ struct Cmd<
     );
     if (auto const existing_cmd_idx = find_cmd(subcmds, subcmd.name); existing_cmd_idx != -1)
       throw "Subcommand with this name already exists";
+    if (subcmd.grp_kind != GroupKind::NONE) throw "Subcommands cannot be in groups of any kind";
     Cmd<
       StringList<Names...>,
       StringList<Abbrevs...>,
@@ -213,6 +220,7 @@ struct Cmd<
           .is_required = meta.is_required.value_or(true),
           .default_value = meta.default_value,
           .implicit_value = std::nullopt,
+          .grp_kind = this->grp_kind,
           .grp_id = this->grp_id,
         }
       );
@@ -246,6 +254,7 @@ struct Cmd<
           .is_required = meta.is_required.value_or(false),
           .default_value = meta.default_value.value_or(T{}),
           .implicit_value = meta.implicit_value,
+          .grp_kind = this->grp_kind,
           .grp_id = this->grp_id,
         }
       );
@@ -289,6 +298,7 @@ struct Cmd<
           // the following dereference will not crash because we are validating non-bool non-int flags have
           // implicit_value
           .implicit_value = meta.implicit_value.value_or(*default_implicit_value),
+          .grp_kind = this->grp_kind,
           .grp_id = this->grp_id,
         }
       );
@@ -316,11 +326,14 @@ consteval auto new_cmd(std::string_view const name, std::string_view const versi
   return Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>(name, version);
 }
 
-consteval auto new_grp(std::source_location const loc = std::source_location::current()) {
-  // TODO: there should be a group feature that requires the presence of all args in the group, so maybe rename this?
+consteval auto new_grp(
+  GroupKind const kind = GroupKind::ALL_REQUIRED, std::source_location const loc = std::source_location::current()
+) {
+  if (kind == GroupKind::NONE) throw "Please specify a group kind other than NONE";
   auto grp = Cmd<StringList<>, StringList<>, ArgKindList<>, TypeList<>, TypeList<>, TypeList<>>();
   grp.msg_width = 0;
   grp.error_handler = nullptr;
+  grp.grp_kind = kind;
   grp.grp_id = loc.line();
   return grp;
 }

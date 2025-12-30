@@ -91,6 +91,7 @@ private:
   ) {
     auto args_map = ArgsMap<Cmd const>();
     args_map.exec_path = *tokens[recursion_start_idx].value;
+    // TODO: checking for subcommand before checking for options break the `--opt val` format for ill-formed params
     if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> > 0) {
       this->parse_possible_subcmd(args, args_map, tokens, indices, recursion_start_idx, recursion_end_idx);
     }
@@ -170,6 +171,7 @@ private:
       }
       // clang-format on
       (this->post_process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx), ...);
+      (this->check_missing_ith_arg<Is>(args_map), ...);
     } catch (std::runtime_error const &e) {
       throw UserError(e.what(), get_cmd_fmt());
     }
@@ -312,27 +314,37 @@ private:
       }();
 
       // check if we already have parsed an argument of the same group
-      if (auto const grp_it = this->parsed_arg_idx_for_group.find(arg.grp_id);
-          grp_it != this->parsed_arg_idx_for_group.end()) {
-        auto const tok_current = std::find_if(tokens.begin(), tokens.end(), [arg_idx](auto const &t) {
-          return t.args_idx == arg_idx;
-        });
-        auto const tok_previous =
-          std::find_if(tokens.begin(), tokens.end(), [&grp_it](auto const &t) { return t.args_idx == grp_it->second; });
-        throw ConflictingArguments(
-          this->cmd_ref.get().name, tok_current->get_id(), tok_previous->get_id(), this->get_cmd_fmt()
-        );
+      if (arg.grp_kind == GroupKind::MUTUALLY_EXCLUSIVE) {
+        if (auto const grp_it = this->parsed_arg_idx_for_group.find(arg.grp_id);
+            grp_it != this->parsed_arg_idx_for_group.end()) {
+          auto const tok_current =
+            std::find_if(tokens.begin(), tokens.end(), [arg_idx](auto const &t) { return t.args_idx == arg_idx; });
+          auto const tok_previous = std::find_if(tokens.begin(), tokens.end(), [&grp_it](auto const &t) {
+            return t.args_idx == grp_it->second;
+          });
+          throw ConflictingArguments(
+            this->cmd_ref.get().name, tok_current->get_id(), tok_previous->get_id(), this->get_cmd_fmt()
+          );
+        }
       }
 
       // if not, register we now have
       if (arg.has_group()) {
         this->parsed_arg_idx_for_group[arg.grp_id] = arg_idx;
       }
-    } else {
-      if (arg.is_required) throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
-      if (arg.has_default()) std::get<I>(args_map.args) = *arg.default_value;
     }
     cur_pos_idx += static_cast<std::size_t>(arg.kind == ArgKind::POS);
+  }
+
+  template <std::size_t I>
+  void check_missing_ith_arg(ArgsMap<Cmd const> &args_map) const {
+    auto const &arg = std::get<I>(this->cmd_ref.get().args);
+    if (!args_map.template has_value<I>()) {
+      if (arg.is_required) throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
+      if (arg.has_default()) std::get<I>(args_map.args) = *arg.default_value;
+      if (arg.grp_kind == GroupKind::ALL_REQUIRED && this->parsed_arg_idx_for_group.contains(arg.grp_id))
+        throw MissingGroupedArguments(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
+    }
   }
 
   void check_unknown_args(

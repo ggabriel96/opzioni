@@ -90,9 +90,23 @@ public:
   )
     : UserError(
         fmt::format(
-          "Argument `{}` conflicts with previously provided `{}` argument for command `{}`, please check help for more details",
+          "Arguments `{}` and `{}` for command `{}` are mutually exclusive. Please check help for more details",
           arg_name,
           other_arg_name,
+          cmd_name
+        ),
+        formatter
+      ) {}
+};
+
+class MissingGroupedArguments : public UserError {
+public:
+
+  MissingGroupedArguments(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
+    : UserError(
+        fmt::format(
+          "Argument `{}` of command `{}` is missing and it is part of a group which requires that either all or none of its arguments be present. Please check help for more details",
+          name,
           cmd_name
         ),
         formatter

@@ -73,6 +73,12 @@ constexpr static ArgMeta<bool, act::print_version> default_version = {
 // |               Arg               |
 // +---------------------------------+
 
+enum struct GroupKind {
+  NONE,
+  ALL_REQUIRED,
+  MUTUALLY_EXCLUSIVE,
+};
+
 template <typename T, typename Tag = act::assign>
 struct Arg {
   using value_type = T;
@@ -85,12 +91,13 @@ struct Arg {
   bool is_required{false};
   std::optional<T> default_value{};
   std::optional<T> implicit_value{};
+  GroupKind grp_kind{GroupKind::NONE};
   std::uint_least32_t grp_id{0};
 
   [[nodiscard]] constexpr bool has_abbrev() const noexcept { return !abbrev.empty(); }
   [[nodiscard]] constexpr bool has_default() const noexcept { return default_value.has_value(); }
   [[nodiscard]] constexpr bool has_implicit() const noexcept { return implicit_value.has_value(); }
-  [[nodiscard]] constexpr bool has_group() const noexcept { return grp_id != 0; }
+  [[nodiscard]] constexpr bool has_group() const noexcept { return grp_kind != GroupKind::NONE; }
 };
 
 // +---------------------------------+
