@@ -95,7 +95,7 @@ private:
     if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> > 0) {
       this->parse_possible_subcmd(args, args_map, tokens, indices, recursion_start_idx, recursion_end_idx);
     }
-    // further args have to be > recursion_start_idx and <= recursion_end_idx
+    // further args have to be > recursion_start_idx (because at recursion_start_idx is the subcmd) and <= recursion_end_idx
     std::set<std::size_t> consumed_indices;
     consumed_indices.insert(recursion_start_idx);
     constexpr auto args_size = std::tuple_size_v<decltype(this->cmd_ref.get().args)>;
@@ -166,10 +166,12 @@ private:
       // only try and process positionals if there are no subcommands
       // because commands can't have both them and positionals
       if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> == 0) {
-        (this->process_ith_pos<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices), ...);
+        std::size_t cur_pos_idx = 0;
+        (this->process_ith_pos<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices, cur_pos_idx), ...);
       }
       // clang-format on
-      (this->post_process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx), ...);
+      std::size_t cur_pos_idx = 0;
+      (this->post_process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, cur_pos_idx), ...);
       (this->check_missing_ith_arg<Is>(args_map), ...);
     } catch (std::runtime_error const &e) {
       throw UserError(e.what(), get_cmd_fmt());
@@ -269,9 +271,9 @@ private:
     TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx,
-    std::set<std::size_t> &consumed_indices
+    std::set<std::size_t> &consumed_indices,
+    std::size_t &cur_pos_idx // can't use this as static variable because this is a function *template*
   ) {
-    static std::size_t cur_pos_idx = 0;
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     if (arg.kind != ArgKind::POS) return;
     if (cur_pos_idx >= indices.positionals.size()) return;
@@ -298,13 +300,13 @@ private:
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
     TokenIndices const &indices,
-    std::size_t const recursion_start_idx
+    std::size_t const recursion_start_idx,
+    std::size_t &cur_pos_idx // can't use this as static variable because this is a function *template*
   ) {
-    static std::size_t cur_pos_idx = 0;
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     if (args_map.template has_value<I>()) {
       // get index of arg in argv (we know it exists because it's present in args_map)
-      auto const arg_idx = [&arg, &indices, recursion_start_idx] {
+      auto const arg_idx = [&arg, &indices, recursion_start_idx, cur_pos_idx] {
         if (arg.kind == ArgKind::POS) return *indices.nth_pos_idx_after(recursion_start_idx, cur_pos_idx);
         if (auto const it_name = indices.opts_n_flgs.find(arg.name); it_name != indices.opts_n_flgs.end())
           return it_name->second[0];
