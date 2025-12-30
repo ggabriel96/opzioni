@@ -162,12 +162,11 @@ private:
   ) {
     try {
       // clang-format off
-      (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices), ...);
+      (this->process_ith_flg_or_opt<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices), ...);
       // only try and process positionals if there are no subcommands
       // because commands can't have both them and positionals
       if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> == 0) {
-        std::size_t cur_pos_idx = 0;
-        (this->process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices, cur_pos_idx), ...);
+        (this->process_ith_pos<Is>(args_map, tokens, indices, recursion_start_idx, recursion_end_idx, consumed_indices), ...);
       }
       // clang-format on
       (this->post_process_ith_arg<Is>(args_map, tokens, indices, recursion_start_idx), ...);
@@ -178,7 +177,7 @@ private:
   }
 
   template <std::size_t I>
-  void process_ith_arg(
+  void process_ith_flg_or_opt(
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
     TokenIndices const &indices,
@@ -264,15 +263,15 @@ private:
   }
 
   template <std::size_t I>
-  void process_ith_arg(
+  void process_ith_pos(
     ArgsMap<Cmd const> &args_map,
     std::span<Token const> const tokens,
     TokenIndices const &indices,
     std::size_t const recursion_start_idx,
     std::size_t const recursion_end_idx,
-    std::set<std::size_t> &consumed_indices,
-    std::size_t &cur_pos_idx
+    std::set<std::size_t> &consumed_indices
   ) {
+    static std::size_t cur_pos_idx = 0;
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     if (arg.kind != ArgKind::POS) return;
     if (cur_pos_idx >= indices.positionals.size()) return;
