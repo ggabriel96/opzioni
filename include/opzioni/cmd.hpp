@@ -142,17 +142,14 @@ struct Cmd<
       !InArgKindList<ArgKind::POS, ArgKindList<OtherKinds...>>::value || !this->has_subcmds(),
       "Commands that have positional arguments cannot have subcommands and vice-versa"
     );
-    // TODO: this requirement for positionals only apply for GroupKind::MUTUALLY_EXCLUSIVE
-    static_assert(
-      (0 + ... + static_cast<std::size_t>(OtherKinds == ArgKind::POS)) <= 1,
-      "Groups may have at most 1 positional argument each"
-    );
+    constexpr auto amount_pos = (0 + ... + static_cast<std::size_t>(OtherKinds == ArgKind::POS));
     if (group.grp_kind == GroupKind::MUTUALLY_EXCLUSIVE) {
+      if (amount_pos > 1) throw "Mutually exclusive groups may have at most 1 positional argument";
       bool const start_value = std::get<0>(group.args).is_required;
       std::apply(
         [start_value](auto &&...arg) {
           ((arg.is_required != start_value
-              ? throw "In a mutually-exclusive group, either all arguments should be required or none should."
+              ? throw "In a mutually exclusive group, either all arguments should be required or none should."
                       "The former means the group as a whole is required and the latter that it is optional"
               : (void)0),
            ...);
