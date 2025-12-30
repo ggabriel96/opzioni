@@ -339,10 +339,13 @@ private:
   void check_missing_ith_arg(ArgsMap<Cmd const> &args_map) const {
     auto const &arg = std::get<I>(this->cmd_ref.get().args);
     if (!args_map.template has_value<I>()) {
-      if (arg.is_required) throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
-      if (arg.has_default()) std::get<I>(args_map.args) = *arg.default_value;
+      if (arg.is_required && !arg.has_group())
+        throw MissingRequiredArgument(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
       if (arg.grp_kind == GroupKind::ALL_REQUIRED && this->parsed_arg_idx_for_group.contains(arg.grp_id))
-        throw MissingGroupedArguments(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
+        throw MissingAllRequiredGroupedArguments(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
+      if (arg.grp_kind == GroupKind::MUTUALLY_EXCLUSIVE && !this->parsed_arg_idx_for_group.contains(arg.grp_id))
+        throw MissingMutuallyExclusiveGroupedArguments(this->cmd_ref.get().name, arg.name, get_cmd_fmt());
+      if (arg.has_default()) std::get<I>(args_map.args) = *arg.default_value;
     }
   }
 

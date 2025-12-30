@@ -99,13 +99,29 @@ public:
       ) {}
 };
 
-class MissingGroupedArguments : public UserError {
+class MissingAllRequiredGroupedArguments : public UserError {
 public:
 
-  MissingGroupedArguments(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
+  MissingAllRequiredGroupedArguments(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
     : UserError(
         fmt::format(
-          "Argument `{}` of command `{}` is missing and it is part of a group which requires that either all or none of its arguments be present. Please check help for more details",
+          "Argument `{}` of command `{}` is missing and it is part of a group which requires that either all"
+          " or none of its arguments be present. Please check help for more details",
+          name,
+          cmd_name
+        ),
+        formatter
+      ) {}
+};
+
+class MissingMutuallyExclusiveGroupedArguments : public UserError {
+public:
+
+  MissingMutuallyExclusiveGroupedArguments(std::string_view cmd_name, std::string_view name, CmdFmt const &formatter)
+    : UserError(
+        fmt::format(
+          "Argument `{}` of command `{}` is missing and it is part of a group which requires that exactly"
+          " one of its arguments be present. Please check help for more details",
           name,
           cmd_name
         ),

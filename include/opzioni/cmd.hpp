@@ -147,6 +147,19 @@ struct Cmd<
       (0 + ... + static_cast<std::size_t>(OtherKinds == ArgKind::POS)) <= 1,
       "Groups may have at most 1 positional argument each"
     );
+    if (group.grp_kind == GroupKind::MUTUALLY_EXCLUSIVE) {
+      bool const start_value = std::get<0>(group.args).is_required;
+      std::apply(
+        [start_value](auto &&...arg) {
+          ((arg.is_required != start_value
+              ? throw "In a mutually-exclusive group, either all arguments should be required or none should."
+                      "The former means the group as a whole is required and the latter that it is optional"
+              : (void)0),
+           ...);
+        },
+        group.args
+      );
+    }
     // TODO: check for regular Cmd fields that aren't used in Grps
     Cmd<
       StringList<Names..., OtherNames...>,
@@ -203,6 +216,9 @@ struct Cmd<
     static_assert(!this->has_subcmds(), "Commands that have subcommands cannot have positional arguments");
     validate_common<Name, "">(meta);
     validate_pos(meta);
+    if (this->grp_kind == GroupKind::ALL_REQUIRED && meta.is_required.has_value())
+      throw "Setting the argument as required (or not) within an all-required group has no effect."
+            "The group as whole is optional and, if one of its arguments is present, the group as a whole is required";
     Cmd<
       StringList<Names..., Name>,
       StringList<Abbrevs..., "">,
@@ -237,6 +253,9 @@ struct Cmd<
     }
     validate_common<Name, Abbrev>(meta);
     validate_opt(meta);
+    if (this->grp_kind == GroupKind::ALL_REQUIRED && meta.is_required.has_value())
+      throw "Setting the argument as required (or not) within an all-required group has no effect."
+            "The group as whole is optional and, if one of its arguments is present, the group as a whole is required";
     Cmd<
       StringList<Names..., Name>,
       StringList<Abbrevs..., Abbrev>,
@@ -276,6 +295,9 @@ struct Cmd<
     }
     validate_common<Name, Abbrev>(meta);
     validate_flg(meta);
+    if (this->grp_kind == GroupKind::ALL_REQUIRED && meta.is_required.has_value())
+      throw "Setting the argument as required (or not) within an all-required group has no effect."
+            "The group as whole is optional and, if one of its arguments is present, the group as a whole is required";
     std::optional<T> default_implicit_value = std::nullopt;
     if constexpr (std::is_same_v<T, bool>) default_implicit_value.emplace(true);
     else if constexpr (concepts::Integer<T>) default_implicit_value.emplace(T{});
