@@ -25,14 +25,13 @@ namespace opz {
 [[nodiscard]] std::string ArgHelpEntry::format_base_usage() const noexcept {
   if (kind == ArgKind::POS) return std::string(name);
 
-  auto const dashes = name.length() > 1 ? "--" : "-";
   if (kind == ArgKind::OPT) {
     auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
     if (implicit_value) val = "[" + val + "]";
-    return fmt::format("{}{} {}", dashes, name, val);
+    return fmt::format("--{} {}", name, val);
   }
 
-  return fmt::format("{}{}", dashes, name);
+  return fmt::format("--{}", name);
 }
 
 [[nodiscard]] std::string ArgHelpEntry::format_for_usage() const noexcept {
@@ -45,7 +44,6 @@ namespace opz {
 [[nodiscard]] std::string ArgHelpEntry::format_for_index_entry() const noexcept {
   if (kind == ArgKind::POS) return format_base_usage();
   if (has_abbrev()) return fmt::format("-{}, {}", abbrev, format_base_usage());
-  if (name.length() == 1) return format_base_usage();
   return fmt::format("    {}", format_base_usage());
 }
 
