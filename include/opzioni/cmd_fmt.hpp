@@ -41,6 +41,8 @@ struct ArgHelpEntry {
   bool is_required;
   std::optional<std::string> default_value;
   std::optional<std::string> implicit_value;
+  GroupKind grp_kind{GroupKind::NONE};
+  std::uint_least32_t grp_id{0};
 
   template <typename T, typename Tag>
   ArgHelpEntry(std::string_view const cmd_name, Arg<T, Tag> const &from)
@@ -49,7 +51,9 @@ struct ArgHelpEntry {
       cmd_name(cmd_name),
       abbrev(from.abbrev),
       help(from.help),
-      is_required(from.is_required) {
+      is_required(from.is_required),
+      grp_kind(from.grp_kind),
+      grp_id(from.grp_id) {
     if (from.default_value) default_value = fmt::format("{}", *from.default_value);
     if (from.implicit_value) implicit_value = fmt::format("{}", *from.implicit_value);
   }
@@ -70,19 +74,18 @@ struct CmdFmt {
   std::string_view name;
   std::string_view version;
   std::string_view introduction;
+  std::size_t msg_width;
   std::vector<std::string_view> parent_cmds_names;
   std::vector<ArgHelpEntry> args;
   std::vector<CmdHelpEntry> subcmds;
-  std::size_t msg_width;
 
   CmdFmt(concepts::Cmd auto const &cmd, ExtraInfo const &extra_info)
     : name(cmd.name),
       version(cmd.version),
       introduction(cmd.introduction),
-      parent_cmds_names(extra_info.parent_cmds_names),
-      msg_width(cmd.msg_width) {
+      msg_width(cmd.msg_width),
+      parent_cmds_names(extra_info.parent_cmds_names) {
     args.reserve(std::tuple_size_v<decltype(cmd.args)>);
-    // clang-format off
     std::apply( // cast to void to suppress unused warning
       [this, &cmd](auto&&... arg) { (void) ((this->args.emplace_back(cmd.name, arg)), ...); },
       cmd.args
@@ -91,7 +94,6 @@ struct CmdFmt {
       [this](auto&&... cmd) { (void) ((this->subcmds.emplace_back(cmd.get())), ...); },
       cmd.subcmds
     );
-    // clang-format on
     std::sort(args.begin(), args.end());
     std::sort(subcmds.begin(), subcmds.end());
   }
