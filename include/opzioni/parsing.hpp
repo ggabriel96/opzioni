@@ -91,11 +91,12 @@ private:
   ) {
     auto args_map = ArgsMap<Cmd const>();
     args_map.exec_path = *tokens[recursion_start_idx].value;
-    // TODO: checking for subcommand before checking for options break the `--opt val` format for ill-formed params
     if constexpr (std::tuple_size_v<decltype(this->cmd_ref.get().subcmds)> > 0) {
       this->parse_possible_subcmd(args, args_map, tokens, indices, recursion_start_idx, recursion_end_idx);
     }
-    // further args have to be > recursion_start_idx (because at recursion_start_idx is the subcmd) and <= recursion_end_idx
+    // further args have to be
+    // > recursion_start_idx (because at recursion_start_idx is the subcmd)
+    // and <= recursion_end_idx
     std::set<std::size_t> consumed_indices;
     consumed_indices.insert(recursion_start_idx);
     constexpr auto args_size = std::tuple_size_v<decltype(this->cmd_ref.get().args)>;
@@ -124,7 +125,7 @@ private:
     // is a subcommand. If it's not, then the user provided an unknown subcommand, since this method is only called
     // if the command has any subcommand. Also, the command name is not present in the indices,
     // so 0 (or recursion_start_idx) really is the first positional.
-    auto const tok_idx = indices.first_pos_idx_after(recursion_start_idx);
+    auto const tok_idx = this->find_subcmd_idx(tokens, indices, recursion_start_idx);
     if (!tok_idx.has_value()) return;
     auto const &tok = tokens[*tok_idx];
     if (!tok.value) return;
@@ -148,6 +149,32 @@ private:
     } else {
       throw UnknownSubcommand(this->cmd_ref.get().name, *tok.value, this->get_cmd_fmt());
     }
+  }
+
+  auto find_subcmd_idx(
+    std::span<Token const> const tokens, TokenIndices const &indices, std::size_t const recursion_start_idx
+  ) const noexcept {
+    auto tok_idx = indices.first_pos_idx_after(recursion_start_idx);
+    if (!tok_idx.has_value()) return tok_idx;
+    // don't need to look further if the candidate is right after the "root" cmd name
+    if (*tok_idx == recursion_start_idx + 1) return tok_idx;
+    // otherwise, check if previous arg isn't an option (so this positional could be its value)
+    if (auto const &prev_tok = tokens[*tok_idx - 1]; prev_tok.kind == TokenKind::OPT_OR_FLG_LONG) {
+      auto const arg_idx = std::apply(
+        [&prev_tok](auto &&...arg) {
+          int idx = 0, ret = -1;
+          (void) // cast to void to suppress unused warning
+            ((arg.kind == ArgKind::OPT && arg.name == *prev_tok.name ? (ret = idx, true) : (++idx, false)) || ...);
+          return ret;
+        },
+        this->cmd_ref.get().args
+      );
+      // look for another candidate if we found a matching opt argument for the previous one
+      if (arg_idx != -1) {
+        tok_idx = indices.first_pos_idx_after(*tok_idx);
+      }
+    }
+    return tok_idx;
   }
 
   template <std::size_t... Is>
