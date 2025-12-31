@@ -103,9 +103,8 @@ struct CmdFmt {
   void print_usage(std::FILE *f = stdout) const noexcept;
   void print_help(std::FILE *f = stdout) const noexcept;
   void print_details(std::FILE *f = stdout) const noexcept;
-  [[nodiscard]] std::size_t help_padding_size() const noexcept;
 
-  void print_arg_help(auto const &arg, std::size_t const padding_size, std::FILE *f = stdout) const noexcept {
+  void print_arg_help(auto const &arg, std::string const &index_entry, std::size_t const padding_size, std::FILE *f = stdout) const noexcept {
     using std::views::drop;
     auto const description = arg.format_for_index_description();
     // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
@@ -113,7 +112,7 @@ struct CmdFmt {
     auto const description_lines = limit_within(description, msg_width - padding_size - 8 - 4);
 
     fmt::print(
-      "    {:<{}}    {}\n", arg.format_for_index_entry(), padding_size, fmt::join(description_lines.front(), " ")
+      "    {:<{}}    {}\n", index_entry, padding_size, fmt::join(description_lines.front(), " ")
     );
 
     for (auto const &line : description_lines | drop(1)) {

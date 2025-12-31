@@ -121,14 +121,23 @@ void CmdFmt::print_usage(std::FILE *f) const noexcept {
 }
 
 void CmdFmt::print_help(std::FILE *f) const noexcept {
-  std::string_view pending_nl;
-  // using same padding size for all arguments so they stay aligned
-  auto const padding_size = help_padding_size();
+  using std::ranges::to;
+  using std::views::transform;
 
+  // using same padding size for all arguments so they stay aligned
+  auto const arg_index_entries = args | transform(&ArgHelpEntry::format_for_index_entry) | to<std::vector<std::string>>();
+  auto const subcmd_index_entries = subcmds | transform(&CmdHelpEntry::format_for_index_entry) | to<std::vector<std::string>>();
+  std::size_t const required_length_args = arg_index_entries.empty() ? 0 : std::ranges::max(arg_index_entries | transform(&std::string::length));
+  std::size_t const required_length_cmds = subcmd_index_entries.empty() ? 0 : std::ranges::max(subcmd_index_entries | transform(&std::string::length));
+  auto const padding_size = std::max(required_length_args, required_length_cmds);
+
+  std::string_view pending_nl;
   if (!args.empty()) {
     fmt::print(f, "Arguments:\n");
+    int i = 0;
     for (auto const &arg : args) {
-      print_arg_help(arg, padding_size, f);
+      print_arg_help(arg, arg_index_entries[i], padding_size, f);
+      i += 1;
     }
     pending_nl = "\n";
   } else {
@@ -137,8 +146,10 @@ void CmdFmt::print_help(std::FILE *f) const noexcept {
 
   if (!subcmds.empty()) {
     fmt::print(f, "{}Subcommands:\n", pending_nl);
+    int i = 0;
     for (auto const &arg : subcmds) {
-      print_arg_help(arg, padding_size, f);
+      print_arg_help(arg, subcmd_index_entries[i], padding_size, f);
+      i += 1;
     }
   }
 }
@@ -150,14 +161,6 @@ void CmdFmt::print_details(std::FILE *f) const noexcept {
   //   out << details << nl;
   // else
   //   out << limit_string_within(details, msg_width) << nl;
-}
-
-[[nodiscard]] std::size_t CmdFmt::help_padding_size() const noexcept {
-  using std::views::transform;
-  auto const required_length = [](auto const &arg) -> std::size_t { return arg.format_for_index_entry().length(); };
-  std::size_t const required_length_args = args.empty() ? 0 : std::ranges::max(args | transform(required_length));
-  std::size_t const required_length_cmds = subcmds.empty() ? 0 : std::ranges::max(subcmds | transform(required_length));
-  return std::max(required_length_args, required_length_cmds);
 }
 
 } // namespace opz
