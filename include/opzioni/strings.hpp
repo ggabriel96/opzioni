@@ -12,10 +12,35 @@ namespace opz {
 constexpr char nl = '\n';
 constexpr std::string_view whitespace = " \f\n\r\t\v";
 
-auto trim(std::string_view) noexcept -> std::string;
-auto limit_within(std::span<std::string>, std::size_t) noexcept -> std::vector<std::vector<std::string>>;
-auto limit_within(std::string_view, std::size_t) noexcept -> std::vector<std::vector<std::string>>;
-auto limit_string_within(std::string_view, std::size_t) noexcept -> std::string;
+class Line {
+public:
+
+  void add_word(std::string_view);
+  [[nodiscard]] std::vector<std::string> const &words() const noexcept;
+
+private:
+
+  std::vector<std::string> _words;
+};
+
+class Paragraph {
+public:
+
+  explicit Paragraph(std::size_t);
+
+  void add_word(std::string_view);
+  [[nodiscard]] std::vector<Line> const &lines() const noexcept;
+  [[nodiscard]] std::string to_str_lines() const;
+
+private:
+
+  std::size_t max_width;
+  std::size_t width_left;
+  std::vector<Line> _lines;
+};
+
+Paragraph limit_within(std::span<std::string const>, std::size_t) noexcept;
+Paragraph limit_line_within(std::string_view, std::size_t) noexcept;
 
 constexpr bool is_valid_name(std::string_view name) noexcept {
   return !name.empty() && !std::ranges::any_of(name, [](char const ch) { return whitespace.contains(ch); });

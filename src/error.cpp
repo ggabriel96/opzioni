@@ -7,7 +7,7 @@
 namespace opz {
 
 int print_error(UserError &ue) noexcept {
-  auto const msg = limit_string_within(ue.what(), ue.formatter.msg_width);
+  auto const msg = limit_line_within(ue.what(), ue.formatter.msg_width).to_str_lines();
   std::fputs(msg.c_str(), stderr);
   return -1;
 }

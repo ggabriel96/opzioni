@@ -6,45 +6,53 @@
 #include <fmt/ranges.h>
 
 namespace opz {
+// +------------------------------------------------+
+// |                Paragraph & Line                |
+// +------------------------------------------------+
 
-auto trim(std::string_view sv) noexcept -> std::string {
-  auto const begin = sv.find_first_not_of(whitespace);
-  auto const end = sv.find_last_not_of(whitespace);
-  return {sv, begin, end + 1 - begin};
+void Line::add_word(std::string_view const word) { this->_words.emplace_back(word); }
+
+[[nodiscard]] std::vector<std::string> const &Line::words() const noexcept { return this->_words; }
+
+Paragraph::Paragraph(std::size_t const max_width) : max_width(max_width), width_left(max_width), _lines(1) {}
+
+void Paragraph::add_word(std::string_view const word) {
+  if (word.length() < this->width_left) {
+    this->_lines.back().add_word(word);
+    this->width_left -= (word.length() + 1); // +1 for space in between
+  } else {
+    this->_lines.emplace_back();
+    this->_lines.back().add_word(word);
+    this->width_left = this->max_width - word.length();
+  }
 }
 
-auto limit_within(std::span<std::string> words, std::size_t const max_width) noexcept
-  -> std::vector<std::vector<std::string>> {
-  std::size_t cur_max = max_width;
-  std::vector<std::vector<std::string>> lines(1);
+[[nodiscard]] std::vector<Line> const &Paragraph::lines() const noexcept { return this->_lines; }
+
+[[nodiscard]] std::string Paragraph::to_str_lines() const {
+  auto const str_lines =
+    this->_lines | std::views::transform([](auto const &line) { return fmt::join(line.words(), " "); });
+  return fmt::format("{}", fmt::join(str_lines, "\n"));
+}
+
+// +------------------------------------------------+
+// |                Helper functions                |
+// +------------------------------------------------+
+
+Paragraph limit_within(std::span<std::string const> const words, std::size_t const max_width) noexcept {
+  Paragraph paragraph(max_width);
   for (auto const &word : words) {
-    auto const trimmed_word = trim(word);
-    if (trimmed_word.length() < cur_max) {
-      lines.back().emplace_back(trimmed_word);
-      cur_max -= (trimmed_word.length() + 1); // +1 for space in between
-    } else {
-      lines.emplace_back();
-      lines.back().emplace_back(trimmed_word);
-      cur_max = max_width - trimmed_word.length();
-    }
+    paragraph.add_word(word);
   }
-  return lines;
+  return paragraph;
 }
 
-auto limit_within(std::string_view const text, std::size_t const max_width) noexcept
-  -> std::vector<std::vector<std::string>> {
-  std::vector<std::string> words;
-  words.reserve(text.size()); // TODO: keep this reserve?
-  for (auto const word : text | std::views::split(' ')) {
-    words.emplace_back(word.begin(), std::ranges::distance(word));
+Paragraph limit_line_within(std::string_view line, std::size_t const max_width) noexcept {
+  Paragraph paragraph(max_width);
+  for (auto const word : line | std::views::split(' ')) {
+    paragraph.add_word({word.begin(), word.end()});
   }
-  return limit_within(std::span(words), max_width);
-}
-
-auto limit_string_within(std::string_view const text, std::size_t const max_width) noexcept -> std::string {
-  auto const split_lines = limit_within(text, max_width);
-  auto const lines = split_lines | std::views::transform([](auto const &words) { return fmt::join(words, " "); });
-  return fmt::format("{}", fmt::join(lines, "\n"));
+  return paragraph;
 }
 
 } // namespace opz

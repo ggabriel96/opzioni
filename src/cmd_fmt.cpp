@@ -83,7 +83,7 @@ void CmdFmt::print_intro(std::FILE *f) const noexcept {
   if (introduction.length() <= msg_width) {
     fmt::print(f, "{}\n", introduction);
   } else {
-    fmt::print(f, "{}\n", limit_string_within(introduction, msg_width));
+    fmt::print(f, "{}\n", limit_line_within(introduction, msg_width).to_str_lines());
   }
 }
 
@@ -92,6 +92,8 @@ void CmdFmt::print_usage(std::FILE *f) const noexcept {
   using std::ranges::transform;
   using std::views::drop, std::views::filter, std::views::take;
 
+  // using a vector of words to represent indivisible substrings,
+  // otherwise we could add a newline in unwanted places line [--config\n<config>]
   std::vector<std::string> words;
   words.reserve(1 + args.size() + subcmds.size());
   for (auto const name : parent_cmds_names) {
@@ -113,10 +115,10 @@ void CmdFmt::print_usage(std::FILE *f) const noexcept {
   }
 
   // -4 because we'll later print a left margin of 4 spaces
-  auto const split_lines = limit_within(std::span(words), msg_width - 4);
+  auto const paragraph = limit_within(std::span(words), msg_width - 4);
   fmt::print(f, "Usage:\n");
-  for (auto const &line : split_lines) {
-    fmt::print(f, "    {}\n", join(line, " "));
+  for (auto const &line : paragraph.lines()) {
+    fmt::print(f, "    {}\n", join(line.words(), " "));
   }
 }
 
@@ -125,10 +127,14 @@ void CmdFmt::print_help(std::FILE *f) const noexcept {
   using std::views::transform;
 
   // using same padding size for all arguments so they stay aligned
-  auto const arg_index_entries = args | transform(&ArgHelpEntry::format_for_index_entry) | to<std::vector<std::string>>();
-  auto const subcmd_index_entries = subcmds | transform(&CmdHelpEntry::format_for_index_entry) | to<std::vector<std::string>>();
-  std::size_t const required_length_args = arg_index_entries.empty() ? 0 : std::ranges::max(arg_index_entries | transform(&std::string::length));
-  std::size_t const required_length_cmds = subcmd_index_entries.empty() ? 0 : std::ranges::max(subcmd_index_entries | transform(&std::string::length));
+  auto const arg_index_entries =
+    args | transform(&ArgHelpEntry::format_for_index_entry) | to<std::vector<std::string>>();
+  auto const subcmd_index_entries =
+    subcmds | transform(&CmdHelpEntry::format_for_index_entry) | to<std::vector<std::string>>();
+  std::size_t const required_length_args =
+    arg_index_entries.empty() ? 0 : std::ranges::max(arg_index_entries | transform(&std::string::length));
+  std::size_t const required_length_cmds =
+    subcmd_index_entries.empty() ? 0 : std::ranges::max(subcmd_index_entries | transform(&std::string::length));
   auto const padding_size = std::max(required_length_args, required_length_cmds);
 
   std::string_view pending_nl;
