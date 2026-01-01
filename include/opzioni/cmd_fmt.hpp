@@ -111,9 +111,7 @@ struct CmdFmt {
     // then -4 again because we add 4 spaces between the arg usage and description
     auto const description_lines = limit_within(description, msg_width - padding_size - 8 - 4);
 
-    fmt::print(
-      "    {:<{}}    {}\n", index_entry, padding_size, fmt::join(description_lines.front(), " ")
-    );
+    fmt::print(f, "    {:<{}}    {}\n", index_entry, padding_size, fmt::join(description_lines.front(), " "));
 
     for (auto const &line : description_lines | drop(1)) {
       // the same 4 spaces of left margin, then additional 4 spaces of indentation
