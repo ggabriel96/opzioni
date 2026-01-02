@@ -84,7 +84,8 @@ void CmdFmt::print_intro(std::FILE *f) const noexcept {
 
 std::string
 format_group(std::vector<ArgHelpEntry>::const_iterator &it, std::vector<ArgHelpEntry>::const_iterator const container_end) noexcept {
-  std::string line(1, it->is_required ? '(' : '[');
+  bool const required_group = it->is_required;
+  std::string line(1, required_group ? '(' : '[');
   auto const separator = it->grp_kind == GroupKind::MUTUALLY_EXCLUSIVE ? " | " : " ";
   auto const end_it = std::find_if(std::next(it), container_end, [it](auto const &entry) {
     return entry.grp_id != it->grp_id;
@@ -93,7 +94,7 @@ format_group(std::vector<ArgHelpEntry>::const_iterator &it, std::vector<ArgHelpE
     line += it->format_for_usage();
     if (std::next(it) != end_it) line += separator;
   }
-  line.push_back(it->is_required ? ')' : ']');
+  line.push_back(required_group ? ')' : ']');
   return line;
 }
 
