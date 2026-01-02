@@ -132,11 +132,11 @@ void CmdFmt::print_usage(std::FILE *f) const noexcept {
     words.push_back(format("{}}}", subcmds.back().format_for_index_entry()));
   }
 
-  // -4 because we'll later print a left margin of 4 spaces
-  auto const paragraph = limit_within(std::span(words), msg_width - 4);
+  // -2 because we'll print a left margin of 2 spaces in the for-loop below
+  auto const paragraph = limit_within(std::span(words), msg_width - 2);
   fmt::print(f, "USAGE:\n");
   for (auto const &line : paragraph.lines()) {
-    fmt::print(f, "    {}\n", join(line.words(), " "));
+    fmt::print(f, "  {}\n", join(line.words(), " "));
   }
 }
 

@@ -109,15 +109,15 @@ struct CmdFmt {
     auto const &arg, std::string const &index_entry, std::size_t const padding_size, std::FILE *f = stdout
   ) const noexcept {
     auto const description = arg.format_for_index_description();
-    // -8 because we print 4 spaces of left margin and 4 spaces of indentation for descriptions longer than 1 line
-    // then -4 again because we add 4 spaces between the arg usage and description
-    auto const paragraph = limit_line_within(description, msg_width - padding_size - 8 - 4);
+    // -8 because we print 2 spaces of left margin and 2 spaces of indentation for descriptions longer than 1 line
+    // then add 4 spaces between the arg usage and description
+    auto const paragraph = limit_line_within(description, msg_width - padding_size - 8);
 
-    fmt::print(f, "    {:<{}}    {}\n", index_entry, padding_size, fmt::join(paragraph.lines().front().words(), " "));
+    fmt::print(f, "  {:<{}}    {}\n", index_entry, padding_size, fmt::join(paragraph.lines().front().words(), " "));
 
     for (auto const &line : paragraph.lines() | std::views::drop(1)) {
-      // the same 4 spaces of left margin, then additional 4 spaces of indentation
-      fmt::print(f, "    {: >{}}        {}\n", ' ', padding_size, fmt::join(line.words(), " "));
+      // the same 2 spaces of left margin, then additional 4 spaces of indentation
+      fmt::print(f, "  {: >{}}      {}\n", ' ', padding_size, fmt::join(line.words(), " "));
     }
   }
 };
