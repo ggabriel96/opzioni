@@ -133,7 +133,7 @@ void CmdFmt::print_usage(std::FILE *f) const noexcept {
 
   // -4 because we'll later print a left margin of 4 spaces
   auto const paragraph = limit_within(std::span(words), msg_width - 4);
-  fmt::print(f, "Usage:\n");
+  fmt::print(f, "USAGE:\n");
   for (auto const &line : paragraph.lines()) {
     fmt::print(f, "    {}\n", join(line.words(), " "));
   }
@@ -156,7 +156,7 @@ void CmdFmt::print_help(std::FILE *f) const noexcept {
 
   std::string_view pending_nl;
   if (!args.empty()) {
-    fmt::print(f, "Arguments:\n");
+    fmt::print(f, "ARGUMENTS:\n");
     int i = 0;
     for (auto const &arg : args) {
       print_arg_help(arg, arg_index_entries[i], padding_size, f);
@@ -168,7 +168,7 @@ void CmdFmt::print_help(std::FILE *f) const noexcept {
   }
 
   if (!subcmds.empty()) {
-    fmt::print(f, "{}Subcommands:\n", pending_nl);
+    fmt::print(f, "{}SUBCOMMANDS:\n", pending_nl);
     int i = 0;
     for (auto const &arg : subcmds) {
       print_arg_help(arg, subcmd_index_entries[i], padding_size, f);
