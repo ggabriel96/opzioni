@@ -61,13 +61,15 @@ struct ArgHelpEntry {
   [[nodiscard]] bool has_abbrev() const noexcept;
   [[nodiscard]] bool has_default() const noexcept;
   [[nodiscard]] bool has_implicit() const noexcept;
+  [[nodiscard]] bool has_group() const noexcept;
+  [[nodiscard]] bool not_has_group() const noexcept;
 
   [[nodiscard]] std::string format_base_usage() const noexcept;
   [[nodiscard]] std::string format_for_usage() const noexcept;
   [[nodiscard]] std::string format_for_index_entry() const noexcept;
   [[nodiscard]] std::string format_for_index_description() const noexcept;
 
-  bool operator<(ArgHelpEntry const &other) const noexcept;
+  bool operator<(ArgHelpEntry const &) const noexcept;
 };
 
 struct CmdFmt {
@@ -94,7 +96,6 @@ struct CmdFmt {
       [this](auto&&... cmd) { (void) ((this->subcmds.emplace_back(cmd.get())), ...); },
       cmd.subcmds
     );
-    std::sort(args.begin(), args.end());
     std::sort(subcmds.begin(), subcmds.end());
   }
 

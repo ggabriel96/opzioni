@@ -21,6 +21,8 @@ namespace opz {
 [[nodiscard]] bool ArgHelpEntry::has_abbrev() const noexcept { return !abbrev.empty(); }
 [[nodiscard]] bool ArgHelpEntry::has_default() const noexcept { return default_value.has_value(); }
 [[nodiscard]] bool ArgHelpEntry::has_implicit() const noexcept { return implicit_value.has_value(); }
+[[nodiscard]] bool ArgHelpEntry::has_group() const noexcept { return grp_kind != GroupKind::NONE; }
+[[nodiscard]] bool ArgHelpEntry::not_has_group() const noexcept { return !this->has_group(); }
 
 [[nodiscard]] std::string ArgHelpEntry::format_base_usage() const noexcept {
   if (kind == ArgKind::POS) return std::string(name);
@@ -28,7 +30,9 @@ namespace opz {
   if (kind == ArgKind::OPT) {
     auto val = fmt::format("<{}>", has_abbrev() ? abbrev : name);
     if (implicit_value) val = "[" + val + "]";
-    return fmt::format("--{} {}", name, val);
+    // TODO: can we do something other than putting the equal sign here
+    // to differentiate option values and positionals?
+    return fmt::format("--{}={}", name, val);
   }
 
   return fmt::format("--{}", name);
@@ -37,7 +41,7 @@ namespace opz {
 [[nodiscard]] std::string ArgHelpEntry::format_for_usage() const noexcept {
   auto format = format_base_usage();
   if (kind == ArgKind::POS) format = "<" + format + ">";
-  if (!is_required) format = "[" + format + "]";
+  if (!is_required && !has_group()) format = "[" + format + "]";
   return format;
 }
 
@@ -59,15 +63,6 @@ namespace opz {
   // fmt::arg("gather_amount", gather_amount));
 }
 
-bool ArgHelpEntry::operator<(ArgHelpEntry const &other) const noexcept {
-  bool const lhs_is_positional = this->kind == ArgKind::POS;
-  bool const rhs_is_positional = other.kind == ArgKind::POS;
-
-  if (lhs_is_positional && rhs_is_positional) return false; // don't move positionals relative to each other
-  if (!lhs_is_positional && !rhs_is_positional) return this->name < other.name; // sort non-positionals by name
-  return lhs_is_positional;                                                     // sort positionals before other types
-}
-
 // +--------------------------------------+
 // |                CmdFmt                |
 // +--------------------------------------+
@@ -87,13 +82,28 @@ void CmdFmt::print_intro(std::FILE *f) const noexcept {
   }
 }
 
+std::string
+format_group(std::vector<ArgHelpEntry>::const_iterator &it, std::vector<ArgHelpEntry>::const_iterator const container_end) noexcept {
+  std::string line(1, it->is_required ? '(' : '[');
+  auto const separator = it->grp_kind == GroupKind::MUTUALLY_EXCLUSIVE ? " | " : " ";
+  auto const end_it = std::find_if(std::next(it), container_end, [it](auto const &entry) {
+    return entry.grp_id != it->grp_id;
+  });
+  for (; it < end_it; std::advance(it, 1)) {
+    line += it->format_for_usage();
+    if (std::next(it) != end_it) line += separator;
+  }
+  line.push_back(it->is_required ? ')' : ']');
+  return line;
+}
+
 void CmdFmt::print_usage(std::FILE *f) const noexcept {
   using fmt::format, fmt::join;
   using std::ranges::transform;
-  using std::views::drop, std::views::filter, std::views::take;
+  using std::views::drop, std::views::take;
 
   // using a vector of words to represent indivisible substrings,
-  // otherwise we could add a newline in unwanted places line [--config\n<config>]
+  // otherwise we could add a newline in unwanted places like [--config\n<config>]
   std::vector<std::string> words;
   words.reserve(1 + args.size() + subcmds.size());
   for (auto const name : parent_cmds_names) {
@@ -101,16 +111,23 @@ void CmdFmt::print_usage(std::FILE *f) const noexcept {
   }
   words.emplace_back(name);
 
-  auto insert = std::back_inserter(words);
-  transform(args | filter(&ArgHelpEntry::is_required), insert, &ArgHelpEntry::format_for_usage);
-  transform(args | filter(&ArgHelpEntry::has_default), insert, &ArgHelpEntry::format_for_usage);
+  for (auto it = args.begin(); it < args.end();) {
+    if (it->has_group()) {
+      words.push_back(format_group(it, args.end()));
+    } else {
+      words.push_back(it->format_for_usage());
+      std::advance(it, 1);
+    }
+  }
 
   if (subcmds.size() == 1) {
     words.push_back(format("{{{}}}", subcmds.front().format_for_index_entry()));
   } else if (subcmds.size() > 1) {
     // don't need space after commas because we'll join words with spaces afterwards
     words.push_back(format("{{{},", subcmds.front().format_for_index_entry()));
-    transform(subcmds | drop(1) | take(subcmds.size() - 2), insert, &CmdHelpEntry::format_for_index_entry);
+    transform(
+      subcmds | drop(1) | take(subcmds.size() - 2), std::back_inserter(words), &CmdHelpEntry::format_for_index_entry
+    );
     words.push_back(format("{}}}", subcmds.back().format_for_index_entry()));
   }
 
