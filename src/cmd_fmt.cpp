@@ -82,14 +82,14 @@ void CmdFmt::print_intro(std::FILE *f) const noexcept {
   }
 }
 
-std::string
-format_group(std::vector<ArgHelpEntry>::const_iterator &it, std::vector<ArgHelpEntry>::const_iterator const container_end) noexcept {
+std::string format_group(
+  std::vector<ArgHelpEntry>::const_iterator &it, std::vector<ArgHelpEntry>::const_iterator const container_end
+) noexcept {
   bool const required_group = it->is_required;
   std::string line(1, required_group ? '(' : '[');
   auto const separator = it->grp_kind == GroupKind::MUTUALLY_EXCLUSIVE ? " | " : " ";
-  auto const end_it = std::find_if(std::next(it), container_end, [it](auto const &entry) {
-    return entry.grp_id != it->grp_id;
-  });
+  auto const end_it =
+    std::find_if(std::next(it), container_end, [it](auto const &entry) { return entry.grp_id != it->grp_id; });
   for (; it < end_it; std::advance(it, 1)) {
     line += it->format_for_usage();
     if (std::next(it) != end_it) line += separator;
@@ -160,7 +160,7 @@ void CmdFmt::print_help(std::FILE *f) const noexcept {
     fmt::print(f, "ARGUMENTS:\n");
     int i = 0;
     for (auto const &arg : args) {
-      print_arg_help(arg, arg_index_entries[i], padding_size, f);
+      print_arg_help(f, arg_index_entries[i], arg.format_for_index_description(), padding_size);
       i += 1;
     }
     pending_nl = "\n";
@@ -171,8 +171,8 @@ void CmdFmt::print_help(std::FILE *f) const noexcept {
   if (!subcmds.empty()) {
     fmt::print(f, "{}SUBCOMMANDS:\n", pending_nl);
     int i = 0;
-    for (auto const &arg : subcmds) {
-      print_arg_help(arg, subcmd_index_entries[i], padding_size, f);
+    for (auto const &subcmd : subcmds) {
+      print_arg_help(f, subcmd_index_entries[i], subcmd.format_for_index_description(), padding_size);
       i += 1;
     }
   }
@@ -185,6 +185,21 @@ void CmdFmt::print_details(std::FILE *f) const noexcept {
   //   out << details << nl;
   // else
   //   out << limit_string_within(details, msg_width) << nl;
+}
+
+void CmdFmt::print_arg_help(
+  std::FILE *f, std::string const &index_entry, std::string const &index_description, std::size_t const padding_size
+) const noexcept {
+  // -8 because we print 2 spaces of left margin and 2 spaces of indentation for descriptions longer than 1 line
+  // then add 4 spaces between the arg usage and description
+  auto const paragraph = limit_line_within(index_description, msg_width - padding_size - 8);
+
+  fmt::print(f, "  {:<{}}    {}\n", index_entry, padding_size, fmt::join(paragraph.lines().front().words(), " "));
+
+  for (auto const &line : paragraph.lines() | std::views::drop(1)) {
+    // the same 2 spaces of left margin, then additional 4 spaces of indentation
+    fmt::print(f, "  {: >{}}      {}\n", ' ', padding_size, fmt::join(line.words(), " "));
+  }
 }
 
 } // namespace opz
