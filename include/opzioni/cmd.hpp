@@ -230,7 +230,7 @@ struct Cmd<
           .name = Name,
           .abbrev = "",
           .help = meta.help,
-          .is_required = meta.is_required.value_or(true),
+          .is_required = meta.is_required.value_or(!this->has_group()),
           .default_value = meta.default_value,
           .implicit_value = std::nullopt,
           .grp_kind = this->grp_kind,
@@ -339,6 +339,7 @@ struct Cmd<
   }
 
   [[nodiscard]] constexpr bool has_subcmds() const noexcept { return std::tuple_size_v<decltype(this->subcmds)> > 0; }
+  [[nodiscard]] constexpr bool has_group() const noexcept { return grp_kind != GroupKind::NONE; }
 };
 
 [[nodiscard]] consteval auto new_cmd(std::string_view const name, std::string_view const version = "") {
